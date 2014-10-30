@@ -27,20 +27,6 @@ protected:
 	PANEL *_panel = nullptr;
 };
 
-class Console : public Window::Controller
-{
-public:
-	virtual bool process(Window &window, int ch) override;
-	virtual std::string title() const override { return "Console"; }
-};
-
-class Browser : public Window::Controller
-{
-public:
-	virtual bool process(Window &window, int ch) override;
-	virtual std::string title() const override { return "Browser"; }
-};
-
 class UI
 {
 public:

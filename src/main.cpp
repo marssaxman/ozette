@@ -1,4 +1,6 @@
 #include "ui.h"
+#include "console.h"
+#include "browser.h"
 
 int main()
 {

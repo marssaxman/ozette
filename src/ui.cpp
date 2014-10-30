@@ -19,16 +19,6 @@ void Window::move_to(int ypos, int xpos)
 	move_panel(_panel, ypos, xpos);
 }
 
-bool Console::process(Window &window, int ch)
-{
-	return false;
-}
-
-bool Browser::process(Window &window, int ch)
-{
-	return false;
-}
-
 UI::UI()
 {
 	// Set up ncurses.
