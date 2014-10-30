@@ -192,33 +192,24 @@ void UI::set_focus(size_t index)
 	_columns[_focus]->set_focus();
 }
 
-int UI::column_left(size_t index)
-{
-	// What is the best X coordinate to use for this column?
-	// It is possible that the number of columns does not divide
-	// evenly into the screen space available. We will pin the
-	// zero column to the left, then distribute other columns
-	// from the right, to create a pleasing appearance.
-	if (index == 0) return 0;
-	size_t ubound = _columns.size() - 1;
-	return _width - _columnWidth - (ubound - index) * _spacing;
-}
-
 void UI::relayout()
 {
 	// The leftmost window owns column zero and covers no more than 80
 	// characters' width.
 	// Divide any remaining space among any remaining windows and stagger
 	// each remaining window proportionally across the screen.
+	assert(_width >= _columnWidth);
 	_spacing = _width - _columnWidth;
-	if (_columns.size() > 1) {
-		_spacing /= (_columns.size() - 1);
-	}
 	size_t ubound = _columns.size() - 1;
+	if (ubound > 0) {
+		_spacing /= ubound;
+	}
 	for (unsigned i = 0; i <= ubound; ++i) {
-		bool lframe = i > 0;
-		bool rframe = i < ubound;
-		_columns[i]->layout(column_left(i), _height, _columnWidth, lframe, rframe);
+		bool lframe = i > 0 && _width > _columnWidth;
+		bool rframe = i < ubound && _width > _columnWidth;
+		int offset = (ubound - i) * _spacing;
+		int xpos = (i > 0) ? _width - _columnWidth - offset : 0;
+		_columns[i]->layout(xpos, _height, _columnWidth, lframe, rframe);
 	}
 }
 

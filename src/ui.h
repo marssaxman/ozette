@@ -50,8 +50,6 @@ protected:
 	void set_focus(size_t index);
 	// reposition all the windows after create/remove/resize
 	void relayout();
-	// compute the desired X position for a given column
-	int column_left(size_t index);
 private:
 	int _width = 0;
 	int _height = 0;
