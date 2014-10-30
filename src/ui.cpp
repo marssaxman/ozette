@@ -116,6 +116,18 @@ void UI::set_focus(size_t index)
 	drawtitlebar();
 }
 
+int UI::column_left(size_t index)
+{
+	// What is the best X coordinate to use for this column?
+	// It is possible that the number of columns does not divide
+	// evenly into the screen space available. We will pin the
+	// zero column to the left, then distribute other columns
+	// from the right, to create a pleasing appearance.
+	if (index == 0) return 0;
+	size_t ubound = _columns.size() - 1;
+	return _width - 80 - (ubound - index) * _spacing;
+}
+
 void UI::relayout()
 {
 	// The leftmost window owns column zero and covers no more than 80
@@ -127,7 +139,7 @@ void UI::relayout()
 		_spacing /= (_columns.size() - 1);
 	}
 	for (unsigned i = 0; i < _columns.size(); ++i) {
-		_columns[i]->move_to(1, _spacing * i);
+		_columns[i]->move_to(1, column_left(i));
 	}
 	drawtitlebar();
 }
@@ -138,11 +150,11 @@ void UI::drawtitlebar()
 	for (unsigned i = 0; i < _columns.size(); ++i) {
 		if (i == _focus) continue;
 		std::string title = preptitle(_columns[i]->title(), _spacing);
-		mvprintw(0, i * _spacing, title.c_str());
+		mvprintw(0, column_left(i), title.c_str());
 	}
 	// Draw the focus title bar in emphasis (reverse),
 	// over the top of all other menu title bars.
-	int focusx = _focus * _spacing;
+	int focusx = column_left(_focus);
 	mvchgat(0, 0, -1, A_NORMAL, 0, NULL);
 	std::string focustitle = preptitle(_columns[_focus]->title(), 80);
 	mvprintw(0, focusx, focustitle.c_str());

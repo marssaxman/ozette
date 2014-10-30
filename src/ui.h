@@ -47,6 +47,8 @@ protected:
 	void drawtitlebar();
 	// truncate a window title bar to some length, with padding
 	std::string preptitle(std::string title, int barwidth);
+	// compute the desired X position for a given column
+	int column_left(size_t index);
 private:
 	int _width = 0;
 	int _height = 0;
