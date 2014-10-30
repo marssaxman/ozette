@@ -17,7 +17,18 @@ Window::~Window()
 
 void Window::move_to(int ypos, int xpos)
 {
-	move_panel(_panel, ypos, xpos);
+	if (ypos == _ypos && xpos == _xpos) return;
+	_ypos = ypos;
+	_xpos = xpos;
+	move_panel(_panel, _ypos, _xpos);
+}
+
+void Window::resize(int height, int width)
+{
+	WINDOW *replacement = newwin(height, width, _ypos, _xpos);
+	replace_panel(_panel, replacement);
+	delwin(_window);
+	_window = replacement;
 }
 
 void Window::set_focus()
@@ -67,7 +78,13 @@ bool UI::process(int ch)
 			set_focus(next);
 		} break;
 		case KEY_RESIZE: {
-			// TODO: lay everything out over again
+			getmaxyx(stdscr, _height, _width);
+			int newwidth = std::min(_width, 80);
+			int newheight = _height - 1;
+			for (auto &win: _columns) {
+				win->resize(newheight, newwidth);
+			}
+			relayout();
 		} break;
 		default: {
 			_columns[_focus]->process(ch);
@@ -136,7 +153,9 @@ std::string UI::preptitle(std::string title, int barwidth)
 {
 	// Menu bar titles always begin and end with a space.
 	// We will return a string whose length equals barwidth.
-	title.resize(barwidth - 2, ' ');
+	barwidth -= 2;
+	if (barwidth < 0) barwidth = 0;
+	title.resize(barwidth, ' ');
 	return " " + title + " ";
 }
 

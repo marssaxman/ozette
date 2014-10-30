@@ -19,6 +19,7 @@ public:
 	Window(std::unique_ptr<Controller> &&controller, int height, int width);
 	~Window();
 	void move_to(int ypos, int xpos);
+	void resize(int height, int width);
 	void set_focus();
 	bool process(int ch) { return _controller->process(*this, ch); }
 	std::string title() const { return _controller->title(); }
@@ -26,6 +27,8 @@ protected:
 	std::unique_ptr<Controller> _controller;
 	WINDOW *_window = nullptr;
 	PANEL *_panel = nullptr;
+	int _xpos = 0;
+	int _ypos = 0;
 };
 
 class UI
