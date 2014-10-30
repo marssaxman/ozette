@@ -68,20 +68,40 @@ void Window::clear_focus()
 void Window::draw_chrome()
 {
 	// Draw the title bar.
+	mvwchgat(_window, 0, 0, _width, A_NORMAL, 0, NULL);
 	int barx = 0 + (_lframe ? 1 : 0);
-	int barwidth = std::max(0, _width + (_lframe ? -1 : 0) - (_rframe ? -1 : 0));
+	int barwidth = std::max(0, _width + (_lframe ? -1 : 0) + (_rframe ? -1 : 0));
 	int titlex = barx + 1;
 	int titlewidth = std::max(0, barwidth - 2);
 	std::string title = _controller->title();
-	title.resize(titlewidth, ' ');
-	mvwprintw(_window, 0, titlex, title.c_str());
-        mvwchgat(_window, 0, 0, _width, _has_focus ? A_REVERSE : A_NORMAL, 0, NULL);
+	if (_has_focus) {
+		// Highlight the target with a big reverse-text title.
+		title.resize(titlewidth, ' ');
+		mvwaddch(_window, 0, titlex-1, ' ');
+		mvwprintw(_window, 0, titlex, title.c_str());
+		waddch(_window, ' ');
+		mvwchgat(_window, 0, barx, barwidth, A_REVERSE, 0, NULL);
+	} else if (title.size() >= (size_t)titlewidth) {
+		// The text will completely fill the space.
+		title.resize(titlewidth);
+		mvwprintw(_window, 0, titlex, title.c_str());
+	} else {
+		// The text will not completely fill the bar.
+		// Draw a continuing horizontal line following.
+		mvwprintw(_window, 0, titlex, title.c_str());
+		int extra = titlewidth - title.size();
+		while (extra > 0) {
+			mvwaddch(_window, 0, barx + barwidth - extra, ACS_HLINE);
+			extra--;
+		}
+	}
 	// Draw the left frame, if we have one.
 	if (_lframe) {
 		mvwaddch(_window, 0, 0, ACS_ULCORNER);
 		for (int i = 1; i < _height; ++i) {
 			mvwaddch(_window, i, 0, ACS_VLINE);
 		}
+		mvwaddch(_window, _height - 1, 0, ACS_LLCORNER);
 	}
 	// Draw the right frame, if we have one.
 	if (_rframe) {
@@ -90,6 +110,7 @@ void Window::draw_chrome()
 		for (int i = 1;  i < _height; ++i) {
 			mvwaddch(_window, i, col, ACS_VLINE);
 		}
+		mvwaddch(_window, _height - 1, col, ACS_LRCORNER);
 	}
 }
 
