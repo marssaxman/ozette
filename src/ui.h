@@ -18,7 +18,7 @@ public:
 	};
 	Window(std::unique_ptr<Controller> &&controller, int height, int width);
 	~Window();
-	void layout(int xpos, int height, int width);
+	void layout(int xpos, int height, int width, bool lframe, bool rframe);
 	void set_focus();
 	void clear_focus();
 	bool process(int ch) { return _controller->process(*this, ch); }
@@ -32,6 +32,8 @@ private:
 	WINDOW *_window = nullptr;
 	PANEL *_panel = nullptr;
 	bool _has_focus = false;
+	bool _lframe = false;
+	bool _rframe = false;
 };
 
 class UI

@@ -19,8 +19,21 @@ Window::~Window()
 	delwin(_window);
 }
 
-void Window::layout(int xpos, int height, int width)
+void Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
 {
+	bool needs_chrome = false;
+	if (lframe != _lframe || rframe != _rframe) {
+		_lframe = lframe;
+		_rframe = rframe;
+		needs_chrome = true;
+	}
+	if (_lframe) {
+		xpos -= 1;
+		width += 1;
+	}
+	if (_rframe) {
+		width += 1;
+	}
 	if (height != _height || width != _width) {
 		_height = height;
 		_width = width;
@@ -29,10 +42,13 @@ void Window::layout(int xpos, int height, int width)
 		replace_panel(_panel, replacement);
 		delwin(_window);
 		_window = replacement;
-		draw_chrome();
+		needs_chrome = true;
 	} else if (xpos != _xpos) {
 		_xpos = xpos;
 		move_panel(_panel, 0, _xpos);
+	}
+	if (needs_chrome) {
+		draw_chrome();
 	}
 }
 
@@ -52,9 +68,29 @@ void Window::clear_focus()
 void Window::draw_chrome()
 {
 	// Draw the title bar.
-	mvwprintw(_window, 0, 1, _controller->title().c_str());
-	clrtoeol();
+	int barx = 0 + (_lframe ? 1 : 0);
+	int barwidth = std::max(0, _width + (_lframe ? -1 : 0) - (_rframe ? -1 : 0));
+	int titlex = barx + 1;
+	int titlewidth = std::max(0, barwidth - 2);
+	std::string title = _controller->title();
+	title.resize(titlewidth, ' ');
+	mvwprintw(_window, 0, titlex, title.c_str());
         mvwchgat(_window, 0, 0, _width, _has_focus ? A_REVERSE : A_NORMAL, 0, NULL);
+	// Draw the left frame, if we have one.
+	if (_lframe) {
+		mvwaddch(_window, 0, 0, ACS_ULCORNER);
+		for (int i = 1; i < _height; ++i) {
+			mvwaddch(_window, i, 0, ACS_VLINE);
+		}
+	}
+	// Draw the right frame, if we have one.
+	if (_rframe) {
+		int col = _width - 1;
+		mvwaddch(_window, 0, col, ACS_URCORNER);
+		for (int i = 1;  i < _height; ++i) {
+			mvwaddch(_window, i, col, ACS_VLINE);
+		}
+	}
 }
 
 UI::UI()
@@ -157,8 +193,11 @@ void UI::relayout()
 	if (_columns.size() > 1) {
 		_spacing /= (_columns.size() - 1);
 	}
-	for (unsigned i = 0; i < _columns.size(); ++i) {
-		_columns[i]->layout(column_left(i), _height, _columnWidth);
+	size_t ubound = _columns.size() - 1;
+	for (unsigned i = 0; i <= ubound; ++i) {
+		bool lframe = i > 0;
+		bool rframe = i < ubound;
+		_columns[i]->layout(column_left(i), _height, _columnWidth, lframe, rframe);
 	}
 }
 
