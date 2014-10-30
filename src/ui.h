@@ -9,29 +9,35 @@
 class Window
 {
 public:
-	virtual ~Window();
-	Window(int height, int width);
+	class Controller
+	{
+	public:
+		virtual ~Controller() = default;
+		virtual bool process(Window &window, int ch) = 0;
+		virtual std::string title() const = 0;
+	};
+	Window(std::unique_ptr<Controller> &&controller, int height, int width);
+	~Window();
 	void move_to(int ypos, int xpos);
-	virtual bool process(int ch) = 0;
-	virtual std::string title() const = 0;
+	bool process(int ch) { return _controller->process(*this, ch); }
+	std::string title() const { return _controller->title(); }
 protected:
+	std::unique_ptr<Controller> _controller;
 	WINDOW *_window = nullptr;
 	PANEL *_panel = nullptr;
 };
 
-class Console : public Window
+class Console : public Window::Controller
 {
 public:
-	Console(int height, int width);
-	virtual bool process(int ch) override;
+	virtual bool process(Window &window, int ch) override;
 	virtual std::string title() const override { return "Console"; }
 };
 
-class Browser : public Window
+class Browser : public Window::Controller
 {
 public:
-	Browser(int height, int width);
-	virtual bool process(int ch) override;
+	virtual bool process(Window &window, int ch) override;
 	virtual std::string title() const override { return "Browser"; }
 };
 

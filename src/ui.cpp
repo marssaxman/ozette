@@ -1,7 +1,8 @@
 #include "ui.h"
 #include <algorithm>
 
-Window::Window(int height, int width):
+Window::Window(std::unique_ptr<Controller> &&controller, int height, int width):
+	_controller(std::move(controller)),
 	_window(newwin(height, width, 0, 0)),
 	_panel(new_panel(_window))
 {
@@ -18,24 +19,12 @@ void Window::move_to(int ypos, int xpos)
 	move_panel(_panel, ypos, xpos);
 }
 
-Console::Console(int height, int width):
-	Window(height, width)
-{
-	wprintw(_window, "Console\n");
-}
-
-bool Console::process(int ch)
+bool Console::process(Window &window, int ch)
 {
 	return false;
 }
 
-Browser::Browser(int height, int width):
-	Window(height, width)
-{
-	wprintw(_window, "Browser\n");
-}
-
-bool Browser::process(int ch)
+bool Browser::process(Window &window, int ch)
 {
 	return false;
 }
@@ -57,8 +46,10 @@ UI::UI()
 	// The windows are never wider than 80 columns.
 	int colwidth = std::min(_width, 80);
 	int colheight = _height - ypos;
-	_columns.emplace_back(new Console(colheight, colwidth));
-	_columns.emplace_back(new Browser(colheight, colwidth));
+	std::unique_ptr<Window::Controller> console(new Console);
+	_columns.emplace_back(new Window(std::move(console), colheight, colwidth));
+	std::unique_ptr<Window::Controller> browser(new Browser);
+	_columns.emplace_back(new Window(std::move(browser), colheight, colwidth));
 	// Lay the windows out proportionally across the terminal.
 	relayout();
 }
