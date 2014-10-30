@@ -40,18 +40,19 @@ UI::UI()
 	keypad(stdscr, true);
 	// Find out how big the terminal is.
 	getmaxyx(stdscr, _height, _width);
-	// Build our two starting windows.
-	// We reserve the top line for the title bar.
-	const int ypos = 1;
-	// The windows are never wider than 80 columns.
+}
+
+void UI::open(std::unique_ptr<Window::Controller> &&wincontrol)
+{
+	// We reserve the top row for the title bar.
+	// Aside from that, new windows fill the terminal rows.
+	// Windows are never wider than 80 columns.
 	int colwidth = std::min(_width, 80);
-	int colheight = _height - ypos;
-	std::unique_ptr<Window::Controller> console(new Console);
-	_columns.emplace_back(new Window(std::move(console), colheight, colwidth));
-	std::unique_ptr<Window::Controller> browser(new Browser);
-	_columns.emplace_back(new Window(std::move(browser), colheight, colwidth));
-	// Lay the windows out proportionally across the terminal.
+	int colheight = _height - 1;
+	_columns.emplace_back(new Window(std::move(wincontrol), colheight, colwidth));
+	_focus = _columns.size() - 1;
 	relayout();
+	drawtitlebar();
 }
 
 UI::~UI()

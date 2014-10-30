@@ -47,6 +47,7 @@ public:
 	UI();
 	~UI();
 	bool process(int ch) { return false; }
+	void open(std::unique_ptr<Window::Controller> &&wincontrol);
 protected:
 	// reposition all the windows after create/remove/resize
 	void relayout();
