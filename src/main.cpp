@@ -1,8 +1,9 @@
 #include "ui.h"
 #include "console.h"
 #include "browser.h"
+#include "editor.h"
 
-int main()
+int main(int argc, char **argv)
 {
 	UI ui;
         // Build our two starting windows.
@@ -10,6 +11,10 @@ int main()
         ui.open_window(std::move(console));
         std::unique_ptr<Window::Controller> browser(new Browser);
         ui.open_window(std::move(browser));
+	// If we got a list of arguments, create editors for them.
+	for (int i = 1; i < argc; ++i) {
+		ui.open_window(std::unique_ptr<Window::Controller>(new Editor(argv[i])));
+	}
 	do {
 		update_panels();
 		doupdate();
