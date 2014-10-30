@@ -2,12 +2,15 @@
 #include <algorithm>
 #include <assert.h>
 
+// We allocate two columns more than requested for the window borders.
 Window::Window(std::unique_ptr<Controller> &&controller, int height, int width):
+	_height(height),
+	_width(width),
 	_controller(std::move(controller)),
-	_window(newwin(height, width, 0, 0)),
+	_window(newwin(_height, _width, 0, 0)),
 	_panel(new_panel(_window))
 {
-	draw_title();
+	draw_chrome();
 }
 
 Window::~Window()
@@ -16,40 +19,42 @@ Window::~Window()
 	delwin(_window);
 }
 
-void Window::move_to(int xpos)
+void Window::layout(int xpos, int height, int width)
 {
-	if (xpos == _xpos) return;
-	_xpos = xpos;
-	move_panel(_panel, 0, _xpos);
-}
-
-void Window::resize(int height, int width)
-{
-	WINDOW *replacement = newwin(height, width, 0, _xpos);
-	replace_panel(_panel, replacement);
-	delwin(_window);
-	_window = replacement;
-	draw_title();
+	if (height != _height || width != _width) {
+		_height = height;
+		_width = width;
+		_xpos = xpos;
+		WINDOW *replacement = newwin(_height, _width, 0, _xpos);
+		replace_panel(_panel, replacement);
+		delwin(_window);
+		_window = replacement;
+		draw_chrome();
+	} else if (xpos != _xpos) {
+		_xpos = xpos;
+		move_panel(_panel, 0, _xpos);
+	}
 }
 
 void Window::set_focus()
 {
 	_has_focus = true;
 	top_panel(_panel);
-	draw_title();
+	draw_chrome();
 }
 
 void Window::clear_focus()
 {
 	_has_focus = false;
-	draw_title();
+	draw_chrome();
 }
 
-void Window::draw_title()
+void Window::draw_chrome()
 {
+	// Draw the title bar.
 	mvwprintw(_window, 0, 1, _controller->title().c_str());
 	clrtoeol();
-        mvwchgat(_window, 0, 0, -1, _has_focus ? A_REVERSE : A_NORMAL, 0, NULL);
+        mvwchgat(_window, 0, 0, _width, _has_focus ? A_REVERSE : A_NORMAL, 0, NULL);
 }
 
 UI::UI()
@@ -62,7 +67,7 @@ UI::UI()
 	intrflush(stdscr, FALSE);
 	keypad(stdscr, true);
 	// Find out how big the terminal is.
-	getmaxyx(stdscr, _height, _width);
+	get_screen_size();
 }
 
 UI::~UI()
@@ -94,12 +99,7 @@ bool UI::process(int ch)
 			set_focus(next);
 		} break;
 		case KEY_RESIZE: {
-			getmaxyx(stdscr, _height, _width);
-			int newwidth = std::min(_width, 80);
-			int newheight = _height - 1;
-			for (auto &win: _columns) {
-				win->resize(newheight, newwidth);
-			}
+			get_screen_size();
 			relayout();
 		} break;
 		default: {
@@ -110,14 +110,18 @@ bool UI::process(int ch)
 	return ch != 9;
 }
 
+void UI::get_screen_size()
+{
+	getmaxyx(stdscr, _height, _width);
+	_columnWidth = std::min(80, _width);
+}
+
 void UI::open_window(std::unique_ptr<Window::Controller> &&controller)
 {
 	// We reserve the top row for the title bar.
 	// Aside from that, new windows fill the terminal rows.
 	// Windows are never wider than 80 columns.
-	int width = std::min(_width, 80);
-	int height = _height - 1;
-	_columns.emplace_back(new Window(std::move(controller), height, width));
+	_columns.emplace_back(new Window(std::move(controller), _height, _columnWidth));
 	relayout();
 	set_focus(_columns.size() - 1);
 }
@@ -140,7 +144,7 @@ int UI::column_left(size_t index)
 	// from the right, to create a pleasing appearance.
 	if (index == 0) return 0;
 	size_t ubound = _columns.size() - 1;
-	return _width - 80 - (ubound - index) * _spacing;
+	return _width - _columnWidth - (ubound - index) * _spacing;
 }
 
 void UI::relayout()
@@ -149,40 +153,12 @@ void UI::relayout()
 	// characters' width.
 	// Divide any remaining space among any remaining windows and stagger
 	// each remaining window proportionally across the screen.
-	_spacing = _width - 80;
+	_spacing = _width - _columnWidth;
 	if (_columns.size() > 1) {
 		_spacing /= (_columns.size() - 1);
 	}
 	for (unsigned i = 0; i < _columns.size(); ++i) {
-		_columns[i]->move_to(column_left(i));
+		_columns[i]->layout(column_left(i), _height, _columnWidth);
 	}
 }
 
-/*
-void UI::drawtitlebar()
-{
-	// Draw all the non-active titles using normal text.
-	for (unsigned i = 0; i < _columns.size(); ++i) {
-		if (i == _focus) continue;
-		std::string title = preptitle(_columns[i]->title(), _spacing);
-		mvprintw(0, column_left(i), title.c_str());
-	}
-	// Draw the focus title bar in emphasis (reverse),
-	// over the top of all other menu title bars.
-	int focusx = column_left(_focus);
-	mvchgat(0, 0, -1, A_NORMAL, 0, NULL);
-	std::string focustitle = preptitle(_columns[_focus]->title(), 80);
-	mvprintw(0, focusx, focustitle.c_str());
-	mvchgat(0, focusx, focustitle.size(), A_REVERSE, 0, NULL);
-}
-
-std::string UI::preptitle(std::string title, int barwidth)
-{
-	// Menu bar titles always begin and end with a space.
-	// We will return a string whose length equals barwidth.
-	barwidth -= 2;
-	if (barwidth < 0) barwidth = 0;
-	title.resize(barwidth, ' ');
-	return " " + title + " ";
-}
-*/
