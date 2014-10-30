@@ -18,17 +18,19 @@ public:
 	};
 	Window(std::unique_ptr<Controller> &&controller, int height, int width);
 	~Window();
-	void move_to(int ypos, int xpos);
+	void move_to(int xpos);
 	void resize(int height, int width);
 	void set_focus();
+	void clear_focus();
 	bool process(int ch) { return _controller->process(*this, ch); }
-	std::string title() const { return _controller->title(); }
 protected:
+	void draw_title();
+private:
 	std::unique_ptr<Controller> _controller;
 	WINDOW *_window = nullptr;
 	PANEL *_panel = nullptr;
 	int _xpos = 0;
-	int _ypos = 0;
+	bool _has_focus = false;
 };
 
 class UI
@@ -43,10 +45,6 @@ protected:
 	void set_focus(size_t index);
 	// reposition all the windows after create/remove/resize
 	void relayout();
-	// redraw the title bar line at the top
-	void drawtitlebar();
-	// truncate a window title bar to some length, with padding
-	std::string preptitle(std::string title, int barwidth);
 	// compute the desired X position for a given column
 	int column_left(size_t index);
 private:

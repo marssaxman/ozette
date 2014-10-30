@@ -7,6 +7,7 @@ Window::Window(std::unique_ptr<Controller> &&controller, int height, int width):
 	_window(newwin(height, width, 0, 0)),
 	_panel(new_panel(_window))
 {
+	draw_title();
 }
 
 Window::~Window()
@@ -15,25 +16,40 @@ Window::~Window()
 	delwin(_window);
 }
 
-void Window::move_to(int ypos, int xpos)
+void Window::move_to(int xpos)
 {
-	if (ypos == _ypos && xpos == _xpos) return;
-	_ypos = ypos;
+	if (xpos == _xpos) return;
 	_xpos = xpos;
-	move_panel(_panel, _ypos, _xpos);
+	move_panel(_panel, 0, _xpos);
 }
 
 void Window::resize(int height, int width)
 {
-	WINDOW *replacement = newwin(height, width, _ypos, _xpos);
+	WINDOW *replacement = newwin(height, width, 0, _xpos);
 	replace_panel(_panel, replacement);
 	delwin(_window);
 	_window = replacement;
+	draw_title();
 }
 
 void Window::set_focus()
 {
+	_has_focus = true;
 	top_panel(_panel);
+	draw_title();
+}
+
+void Window::clear_focus()
+{
+	_has_focus = false;
+	draw_title();
+}
+
+void Window::draw_title()
+{
+	mvwprintw(_window, 0, 1, _controller->title().c_str());
+	clrtoeol();
+        mvwchgat(_window, 0, 0, -1, _has_focus ? A_REVERSE : A_NORMAL, 0, NULL);
 }
 
 UI::UI()
@@ -102,18 +118,17 @@ void UI::open_window(std::unique_ptr<Window::Controller> &&controller)
 	int width = std::min(_width, 80);
 	int height = _height - 1;
 	_columns.emplace_back(new Window(std::move(controller), height, width));
-	_focus = _columns.size() - 1;
 	relayout();
-	drawtitlebar();
+	set_focus(_columns.size() - 1);
 }
 
 void UI::set_focus(size_t index)
 {
 	assert(index >= 0 && index < _columns.size());
 	if (_focus == index) return;
+	_columns[_focus]->clear_focus();
 	_focus = index;
 	_columns[_focus]->set_focus();
-	drawtitlebar();
 }
 
 int UI::column_left(size_t index)
@@ -139,11 +154,11 @@ void UI::relayout()
 		_spacing /= (_columns.size() - 1);
 	}
 	for (unsigned i = 0; i < _columns.size(); ++i) {
-		_columns[i]->move_to(1, column_left(i));
+		_columns[i]->move_to(column_left(i));
 	}
-	drawtitlebar();
 }
 
+/*
 void UI::drawtitlebar()
 {
 	// Draw all the non-active titles using normal text.
@@ -170,4 +185,4 @@ std::string UI::preptitle(std::string title, int barwidth)
 	title.resize(barwidth, ' ');
 	return " " + title + " ";
 }
-
+*/
