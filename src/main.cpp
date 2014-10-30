@@ -7,9 +7,9 @@ int main()
 	UI ui;
         // Build our two starting windows.
         std::unique_ptr<Window::Controller> console(new Console);
-        ui.open(std::move(console));
+        ui.open_window(std::move(console));
         std::unique_ptr<Window::Controller> browser(new Browser);
-        ui.open(std::move(browser));
+        ui.open_window(std::move(browser));
 	do {
 		update_panels();
 		doupdate();

@@ -19,6 +19,7 @@ public:
 	Window(std::unique_ptr<Controller> &&controller, int height, int width);
 	~Window();
 	void move_to(int ypos, int xpos);
+	void set_focus();
 	bool process(int ch) { return _controller->process(*this, ch); }
 	std::string title() const { return _controller->title(); }
 protected:
@@ -32,9 +33,11 @@ class UI
 public:
 	UI();
 	~UI();
-	bool process(int ch) { return false; }
-	void open(std::unique_ptr<Window::Controller> &&wincontrol);
+	bool process(int ch);
+	void open_window(std::unique_ptr<Window::Controller> &&wincontrol);
 protected:
+	// change the focus to a specific window
+	void set_focus(size_t index);
 	// reposition all the windows after create/remove/resize
 	void relayout();
 	// redraw the title bar line at the top
