@@ -61,7 +61,7 @@ void UI::get_screen_size()
 	_columnWidth = std::min(80, _width);
 }
 
-void UI::open_window(std::unique_ptr<Window::Controller> &&controller)
+void UI::open_window(std::unique_ptr<Controller> &&controller)
 {
 	// We reserve the top row for the title bar.
 	// Aside from that, new windows fill the terminal rows.
@@ -87,16 +87,16 @@ void UI::relayout()
 	// Divide any remaining space among any remaining windows and stagger
 	// each remaining window proportionally across the screen.
 	assert(_width >= _columnWidth);
-	_spacing = _width - _columnWidth;
+	assert(!_columns.empty());
 	size_t ubound = _columns.size() - 1;
-	if (ubound > 0) {
-		_spacing /= ubound;
-	}
+	int right_edge = _width - _columnWidth;
+	_spacing = (ubound > 0) ? right_edge / ubound : 0;
+	bool is_cramped = 0 == right_edge || 0 == _spacing;
 	for (unsigned i = 0; i <= ubound; ++i) {
-		bool lframe = i > 0 && _width > _columnWidth;
-		bool rframe = i < ubound && _width > _columnWidth;
+		bool lframe = i > 0 && !is_cramped;
+		bool rframe = i < ubound && !is_cramped;
 		int offset = (ubound - i) * _spacing;
-		int xpos = (i > 0) ? _width - _columnWidth - offset : 0;
+		int xpos = (i > 0) ? right_edge - offset : 0;
 		_columns[i]->layout(xpos, _height, _columnWidth, lframe, rframe);
 	}
 }

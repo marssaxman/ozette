@@ -10,7 +10,7 @@ public:
 	UI();
 	~UI();
 	bool process(int ch);
-	void open_window(std::unique_ptr<Window::Controller> &&wincontrol);
+	void open_window(std::unique_ptr<Controller> &&wincontrol);
 protected:
 	// get the terminal width and height, then calculate column width
 	void get_screen_size();

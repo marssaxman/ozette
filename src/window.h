@@ -5,23 +5,17 @@
 #include <panel.h>
 #include <memory>
 #include <vector>
+#include "controller.h"
 
 class Window
 {
 public:
-	class Controller
-	{
-	public:
-		virtual ~Controller() = default;
-		virtual bool process(Window &window, int ch) = 0;
-		virtual std::string title() const = 0;
-	};
 	Window(std::unique_ptr<Controller> &&controller, int height, int width);
 	~Window();
 	void layout(int xpos, int height, int width, bool lframe, bool rframe);
 	void set_focus();
 	void clear_focus();
-	bool process(int ch) { return _controller->process(*this, ch); }
+	bool process(int ch);
 protected:
 	void draw_chrome();
 private:
@@ -34,6 +28,7 @@ private:
 	bool _has_focus = false;
 	bool _lframe = false;
 	bool _rframe = false;
+	View _contents;
 };
 
 #endif // WINDOW_H

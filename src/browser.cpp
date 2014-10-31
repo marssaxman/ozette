@@ -1,6 +1,10 @@
 #include "browser.h"
 
-bool Browser::process(Window &window, int ch)
+void Browser::paint(View &view)
+{
+}
+
+bool Browser::process(View &view, int ch)
 {
 	return false;
 }

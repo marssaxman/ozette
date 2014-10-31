@@ -1,12 +1,13 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-#include "ui.h"
+#include "controller.h"
 
-class Console : public Window::Controller
+class Console : public Controller
 {
 public:
-	virtual bool process(Window &window, int ch) override;
+	virtual void paint(View &view) override;
+	virtual bool process(View &view, int ch) override;
 	virtual std::string title() const override { return "Console"; }
 };
 

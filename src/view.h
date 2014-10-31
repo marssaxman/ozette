@@ -1,11 +1,11 @@
-#ifndef BUFFER_H
-#define BUFFER_H
+#ifndef VIEW_H
+#define VIEW_H
 
 #include <ncurses.h>
 #include <string>
 #include <vector>
 
-class Buffer
+class View
 {
 public:
 	void layout(WINDOW *dest, int yoff, int xoff, int height, int width);
@@ -24,4 +24,4 @@ private:
 	int _ycursor = 0;
 };
 
-#endif // CONTROLLER_H
+#endif // VIEW_H
