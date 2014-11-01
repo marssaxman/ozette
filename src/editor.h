@@ -10,6 +10,8 @@ public:
 	virtual void paint(View &view) override;
 	virtual bool process(View &view, int ch) override;
 	virtual std::string title() const override { return _targetpath; }
+protected:
+	size_t maxscroll(View &view);
 private:
 	std::string _targetpath;
 	std::vector<std::string> _lines;
