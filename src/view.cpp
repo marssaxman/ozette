@@ -28,24 +28,24 @@ void View::fill(std::string text)
 	while (lineend != std::string::npos) {
 		size_t nextstart = lineend + 1;
 		std::string line = text.substr(linestart, nextstart - linestart);
-		blitline(index++, line);
+		write_line(index++, line);
 		linestart = nextstart;
 		lineend = text.find_first_of('\n', linestart);
 	}
 	std::string tail = text.substr(linestart, text.size() - linestart);
 	if (index < (size_t)_height) {
-		blitline(index, tail);
+		write_line(index, tail);
 	}
 	_xcursor = index;
 	_ycursor = 0;
 	std::string blankline;
 	while (++index < (size_t)_height) {
-		blitline(index, blankline);
+		write_line(index, blankline);
 	}
 	position_cursor();
 }
 
-void View::blitline(int index, std::string line)
+void View::write_line(int index, std::string line)
 {
 	if (index < 0 || index >= _height) return;
 	mvwprintw(_window, index + _yoff, _xoff, "%s", line.c_str());
