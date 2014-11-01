@@ -110,7 +110,6 @@ void Window::draw_chrome()
 		for (int i = 1; i < _height; ++i) {
 			mvwaddch(_window, i, 0, ACS_VLINE);
 		}
-		mvwaddch(_window, _height - 1, 0, ACS_LLCORNER);
 	}
 	// Draw the right frame, if we have one.
 	if (_rframe) {
@@ -119,7 +118,6 @@ void Window::draw_chrome()
 		for (int i = 1;  i < _height; ++i) {
 			mvwaddch(_window, i, col, ACS_VLINE);
 		}
-		mvwaddch(_window, _height - 1, col, ACS_LRCORNER);
 	}
 }
 
