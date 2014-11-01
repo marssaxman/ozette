@@ -60,7 +60,6 @@ void Window::set_focus()
 	_has_focus = true;
 	top_panel(_panel);
 	draw_chrome();
-	_contents.set_focus();
 }
 
 void Window::clear_focus()

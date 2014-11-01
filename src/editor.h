@@ -12,7 +12,8 @@ public:
 	virtual std::string title() const override { return _targetpath; }
 private:
 	std::string _targetpath;
-	std::string _text;
+	std::vector<std::string> _lines;
+	size_t _scrollpos = 0;
 };
 
 #endif // CONSOLE_H

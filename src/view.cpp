@@ -7,17 +7,12 @@ void View::layout(WINDOW *window, int yoff, int xoff, int height, int width)
 	_xoff = xoff;
 	_height = height;
 	_width = width;
-	position_cursor();
+	_blank.resize(width, ' ');
 }
 
-void View::set_focus()
+void View::move_cursor(int y, int x)
 {
-	position_cursor();
-}
-
-void View::position_cursor()
-{
-	move(_ycursor + _yoff, _xcursor + _xoff);
+	move(std::min(y, _height) + _yoff, std::min(x, _width) + _xoff);
 }
 
 void View::fill(std::string text)
@@ -36,17 +31,30 @@ void View::fill(std::string text)
 	if (index < (size_t)_height) {
 		write_line(index, tail);
 	}
-	_xcursor = index;
-	_ycursor = 0;
 	std::string blankline;
 	while (++index < (size_t)_height) {
 		write_line(index, blankline);
 	}
-	position_cursor();
 }
 
 void View::write_line(int index, std::string line)
 {
 	if (index < 0 || index >= _height) return;
-	mvwprintw(_window, index + _yoff, _xoff, "%s", line.c_str());
+	mvwaddnstr(_window, index + _yoff, _xoff, line.c_str(), _width);
+	// clear the rest of the line
+	int cury, curx;
+	getyx(_window, cury, curx);
+	curx -= _xoff;
+	cury -= _yoff;
+	if (cury == index) {
+		while (curx++ < _width) {
+			waddch(_window, ' ');
+		}
+	}
+}
+
+void View::clear_line(int index)
+{
+	if (index < 0 || index >= _height) return;
+	mvwprintw(_window, index + _yoff, _xoff, _blank.c_str());
 }
