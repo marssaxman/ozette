@@ -64,7 +64,7 @@ void Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
 	if (needs_chrome) {
 		draw_chrome();
 	}
-	_contentsview.layout(_framewin, 1, _lframe ? 1 : 0, height, width);
+	_contentsview.layout(_contentwin, 0, 0, height, width);
 	_controller->paint(_contentsview);
 }
 
@@ -73,6 +73,7 @@ void Window::set_focus()
 	_has_focus = true;
 	top_panel(_framepanel);
 	draw_chrome();
+	top_panel(_contentpanel);
 }
 
 void Window::clear_focus()
