@@ -6,8 +6,8 @@
 class Browser : public Controller
 {
 public:
-	virtual void paint(View &view) override;
-	virtual bool process(View &view, int ch) override;
+	virtual void paint(WINDOW *view) override;
+	virtual bool process(WINDOW *view, int ch) override;
 	virtual std::string title() const override { return "Browser"; }
 };
 

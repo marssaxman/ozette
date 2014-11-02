@@ -2,16 +2,17 @@
 #define EDITOR_H
 
 #include "controller.h"
+#include <vector>
 
 class Editor : public Controller
 {
 public:
 	Editor(std::string targetpath);
-	virtual void paint(View &view) override;
-	virtual bool process(View &view, int ch) override;
+	virtual void paint(WINDOW *view) override;
+	virtual bool process(WINDOW *view, int ch) override;
 	virtual std::string title() const override { return _targetpath; }
 protected:
-	size_t maxscroll(View &view);
+	size_t maxscroll(WINDOW *view);
 private:
 	std::string _targetpath;
 	std::vector<std::string> _lines;

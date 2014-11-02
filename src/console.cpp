@@ -1,10 +1,10 @@
 #include "console.h"
 
-void Console::paint(View &view)
+void Console::paint(WINDOW *view)
 {
 }
 
-bool Console::process(View &view, int ch)
+bool Console::process(WINDOW *view, int ch)
 {
 	return false;
 }

@@ -1,5 +1,6 @@
 #include "editor.h"
 #include <fstream>
+#include "view.h"
 
 Editor::Editor(std::string targetpath):
 	_targetpath(targetpath)
@@ -11,9 +12,10 @@ Editor::Editor(std::string targetpath):
 	}
 }
 
-void Editor::paint(View &view)
+void Editor::paint(WINDOW *dest)
 {
-	size_t effscroll = std::min(maxscroll(view), _scrollpos);
+	View view(dest);
+	size_t effscroll = std::min(maxscroll(dest), _scrollpos);
 	for (int i = 0; i < view.height(); ++i) {
 		size_t line = i + effscroll;
 		if (line < _lines.size()) {
@@ -24,39 +26,41 @@ void Editor::paint(View &view)
 	}
 }
 
-bool Editor::process(View &view, int ch)
+bool Editor::process(WINDOW *dest, int ch)
 {
+	View view(dest);
 	switch (ch) {
 		case 258: {	// down arrow
-			if (_scrollpos < maxscroll(view)) {
+			if (_scrollpos < maxscroll(dest)) {
 				_scrollpos++;
-				paint(view);
+				paint(dest);
 			}
 		} break;
 		case 259: {	// up arrow
 			size_t minscroll = 0;
 			if (_scrollpos > minscroll) {
 				_scrollpos--;
-				paint(view);
+				paint(dest);
 			}
 		} break;
 		case 338: { 	// page down
 			size_t step = view.height() / 2;
-			_scrollpos = std::min(_scrollpos + step, maxscroll(view));
-			paint(view);
+			_scrollpos = std::min(_scrollpos + step, maxscroll(dest));
+			paint(dest);
 		} break;
 		case 339: {	// page up
 			size_t step = view.height() / 2;
 			_scrollpos = std::max((int)_scrollpos - (int)step, 0);
-			paint(view);
+			paint(dest);
 		} break;
 		default: break;
 	}
 	return true;
 }
 
-size_t Editor::maxscroll(View &view)
+size_t Editor::maxscroll(WINDOW *dest)
 {
+	View view(dest);
 	if (_lines.size() > (size_t)view.height()) {
 		return _lines.size() - view.height();
 	} else {
