@@ -25,6 +25,8 @@ private:
 	std::unique_ptr<Controller> _controller;
 	WINDOW *_framewin = nullptr;
 	PANEL *_framepanel = nullptr;
+	WINDOW *_contentwin = nullptr;
+	PANEL *_contentpanel = nullptr;
 	bool _has_focus = false;
 	bool _lframe = false;
 	bool _rframe = false;

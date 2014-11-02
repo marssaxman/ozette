@@ -5,7 +5,9 @@
 Window::Window(std::unique_ptr<Controller> &&controller):
 	_controller(std::move(controller)),
 	_framewin(newwin(0, 0, 0, 0)),
-	_framepanel(new_panel(_framewin))
+	_framepanel(new_panel(_framewin)),
+	_contentwin(newwin(0, 0, 0, 0)),
+	_contentpanel(new_panel(_contentwin))
 {
 	draw_chrome();
 	_controller->paint(_contentsview);
@@ -15,6 +17,8 @@ Window::~Window()
 {
 	del_panel(_framepanel);
 	delwin(_framewin);
+	del_panel(_contentpanel);
+	delwin(_contentwin);
 }
 
 void Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
@@ -22,13 +26,14 @@ void Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
 	bool needs_chrome = false;
 	int frameheight = height--;
 	int framewidth = width;
+	int framepos = xpos;
 	if (lframe != _lframe || rframe != _rframe) {
 		_lframe = lframe;
 		_rframe = rframe;
 		needs_chrome = true;
 	}
 	if (_lframe) {
-		xpos -= 1;
+		framepos -= 1;
 		framewidth += 1;
 	}
 	if (_rframe) {
@@ -37,15 +42,24 @@ void Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
 	if (frameheight != _height || framewidth != _width) {
 		_height = frameheight;
 		_width = framewidth;
-		_xpos = xpos;
+		_xpos = framepos;
+		// Resize the frame panel and create a new window with
+		// the new dimensions, since you can't resize a window.
 		WINDOW *replacement = newwin(_height, _width, 0, _xpos);
 		replace_panel(_framepanel, replacement);
 		delwin(_framewin);
 		_framewin = replacement;
 		needs_chrome = true;
-	} else if (xpos != _xpos) {
-		_xpos = xpos;
+		// Resize the content panel and give it a new window
+		// as well.
+		replacement = newwin(height, width, 1, xpos);
+		replace_panel(_contentpanel, replacement);
+		delwin(_contentwin);
+		_contentwin = replacement;
+	} else if (framepos != _xpos) {
+		_xpos = framepos;
 		move_panel(_framepanel, 0, _xpos);
+		move_panel(_contentpanel, 1, xpos);
 	}
 	if (needs_chrome) {
 		draw_chrome();
