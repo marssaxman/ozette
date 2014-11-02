@@ -57,5 +57,9 @@ bool Editor::process(View &view, int ch)
 
 size_t Editor::maxscroll(View &view)
 {
-	return _lines.size() - view.height();
+	if (_lines.size() > (size_t)view.height()) {
+		return _lines.size() - view.height();
+	} else {
+		return 0;
+	}
 }
