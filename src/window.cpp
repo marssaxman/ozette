@@ -10,7 +10,8 @@ Window::Window(std::unique_ptr<Controller> &&controller):
 	_contentpanel(new_panel(_contentwin))
 {
 	draw_chrome();
-	_controller->paint(_contentsview);
+	View view(_contentwin);
+	_controller->paint(view);
 }
 
 Window::~Window()
@@ -64,8 +65,8 @@ void Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
 	if (needs_chrome) {
 		draw_chrome();
 	}
-	_contentsview.layout(_contentwin);
-	_controller->paint(_contentsview);
+	View view(_contentwin);
+	_controller->paint(view);
 }
 
 void Window::set_focus()
@@ -84,7 +85,8 @@ void Window::clear_focus()
 
 bool Window::process(int ch)
 {
-	return _controller->process(_contentsview, ch);
+	View view(_contentwin);
+	return _controller->process(view, ch);
 }
 
 void Window::draw_chrome()

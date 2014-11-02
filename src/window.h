@@ -30,7 +30,6 @@ private:
 	bool _has_focus = false;
 	bool _lframe = false;
 	bool _rframe = false;
-	View _contentsview;
 };
 
 #endif // WINDOW_H

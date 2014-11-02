@@ -1,7 +1,7 @@
 #include "view.h"
 #include <assert.h>
 
-void View::layout(WINDOW *window)
+View::View(WINDOW *window)
 {
 	_window = window;
 	getmaxyx(window, _height, _width);
