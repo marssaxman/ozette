@@ -10,7 +10,7 @@
 class Window
 {
 public:
-	Window(std::unique_ptr<Controller> &&controller, int height, int width);
+	Window(std::unique_ptr<Controller> &&controller);
 	~Window();
 	void layout(int xpos, int height, int width, bool lframe, bool rframe);
 	void set_focus();

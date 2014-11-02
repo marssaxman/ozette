@@ -66,7 +66,7 @@ void UI::open_window(std::unique_ptr<Controller> &&controller)
 	// We reserve the top row for the title bar.
 	// Aside from that, new windows fill the terminal rows.
 	// Windows are never wider than 80 columns.
-	_columns.emplace_back(new Window(std::move(controller), _height, _columnWidth));
+	_columns.emplace_back(new Window(std::move(controller)));
 	relayout();
 	set_focus(_columns.size() - 1);
 }

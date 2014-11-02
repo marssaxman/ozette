@@ -2,11 +2,9 @@
 #include <algorithm>
 #include <assert.h>
 
-Window::Window(std::unique_ptr<Controller> &&controller, int height, int width):
-	_height(height),
-	_width(width),
+Window::Window(std::unique_ptr<Controller> &&controller):
 	_controller(std::move(controller)),
-	_framewin(newwin(_height, _width, 0, 0)),
+	_framewin(newwin(0, 0, 0, 0)),
 	_framepanel(new_panel(_framewin))
 {
 	draw_chrome();
