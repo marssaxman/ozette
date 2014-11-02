@@ -28,34 +28,47 @@ void Editor::paint(WINDOW *dest)
 
 bool Editor::process(WINDOW *dest, int ch)
 {
-	View view(dest);
 	switch (ch) {
-		case 258: {	// down arrow
-			if (_scrollpos < maxscroll(dest)) {
-				_scrollpos++;
-				paint(dest);
-			}
-		} break;
-		case 259: {	// up arrow
-			size_t minscroll = 0;
-			if (_scrollpos > minscroll) {
-				_scrollpos--;
-				paint(dest);
-			}
-		} break;
-		case 338: { 	// page down
-			size_t step = view.height() / 2;
-			_scrollpos = std::min(_scrollpos + step, maxscroll(dest));
-			paint(dest);
-		} break;
-		case 339: {	// page up
-			size_t step = view.height() / 2;
-			_scrollpos = std::max((int)_scrollpos - (int)step, 0);
-			paint(dest);
-		} break;
+		case 258: arrow_down(dest); break;
+		case 259: arrow_up(dest); break;
+		case 338: page_down(dest); break;
+		case 339: page_up(dest); break;
 		default: break;
 	}
 	return true;
+}
+
+void Editor::arrow_down(WINDOW *dest)
+{
+	if (_scrollpos < maxscroll(dest)) {
+		_scrollpos++;
+		paint(dest);
+	}
+}
+
+void Editor::arrow_up(WINDOW *dest)
+{
+	size_t minscroll = 0;
+	if (_scrollpos > minscroll) {
+		_scrollpos--;
+		paint(dest);
+	}
+}
+
+void Editor::page_down(WINDOW *dest)
+{
+	View view(dest);
+	size_t step = view.height() / 2;
+	_scrollpos = std::min(_scrollpos + step, maxscroll(dest));
+	paint(dest);
+}
+
+void Editor::page_up(WINDOW *dest)
+{
+	View view(dest);
+	size_t step = view.height() / 2;
+	_scrollpos = std::max((int)_scrollpos - (int)step, 0);
+	paint(dest);
 }
 
 size_t Editor::maxscroll(WINDOW *dest)

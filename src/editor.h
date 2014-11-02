@@ -12,6 +12,10 @@ public:
 	virtual bool process(WINDOW *view, int ch) override;
 	virtual std::string title() const override { return _targetpath; }
 protected:
+	void arrow_up(WINDOW *view);
+	void arrow_down(WINDOW *view);
+	void page_up(WINDOW *view);
+	void page_down(WINDOW *view);
 	size_t maxscroll(WINDOW *view);
 private:
 	std::string _targetpath;
