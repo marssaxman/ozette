@@ -1,10 +1,8 @@
 #include "view.h"
 
-void View::layout(WINDOW *window, int yoff, int xoff, int height, int width)
+void View::layout(WINDOW *window, int height, int width)
 {
 	_window = window;
-	_yoff = yoff;
-	_xoff = xoff;
 	_height = height;
 	_width = width;
 	_blank.resize(width, ' ');
@@ -12,7 +10,7 @@ void View::layout(WINDOW *window, int yoff, int xoff, int height, int width)
 
 void View::move_cursor(int y, int x)
 {
-	move(std::min(y, _height) + _yoff, std::min(x, _width) + _xoff);
+	move(std::min(y, _height), std::min(x, _width));
 }
 
 void View::fill(std::string text)
@@ -40,12 +38,10 @@ void View::fill(std::string text)
 void View::write_line(int index, std::string line)
 {
 	if (index < 0 || index >= _height) return;
-	mvwaddnstr(_window, index + _yoff, _xoff, line.c_str(), _width);
+	mvwaddnstr(_window, index, 0, line.c_str(), _width);
 	// clear the rest of the line
 	int cury, curx;
 	getyx(_window, cury, curx);
-	curx -= _xoff;
-	cury -= _yoff;
 	if (cury == index) {
 		while (curx++ < _width) {
 			waddch(_window, ' ');
@@ -56,5 +52,5 @@ void View::write_line(int index, std::string line)
 void View::clear_line(int index)
 {
 	if (index < 0 || index >= _height) return;
-	mvwprintw(_window, index + _yoff, _xoff, _blank.c_str());
+	mvwprintw(_window, index, 0, _blank.c_str());
 }

@@ -12,7 +12,7 @@ public:
 	int width() const { return _width; }
 	int height() const { return _height; }
 	// The view should apply to a region of this window.
-	void layout(WINDOW *dest, int yoff, int xoff, int height, int width);
+	void layout(WINDOW *dest, int height, int width);
 	// Place the cursor at this location.
 	void move_cursor(int y, int x);
 	// Starting at the top left corner of the view, write the contents
@@ -25,8 +25,6 @@ public:
 	void clear_line(int index);
 private:
 	WINDOW *_window = nullptr;
-	int _yoff = 0;
-	int _xoff = 0;
 	int _width = 0;
 	int _height = 0;
 	std::string _blank;
