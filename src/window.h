@@ -23,12 +23,12 @@ private:
 	int _height = 0;
 	int _width = 0;
 	std::unique_ptr<Controller> _controller;
-	WINDOW *_window = nullptr;
-	PANEL *_panel = nullptr;
+	WINDOW *_framewin = nullptr;
+	PANEL *_framepanel = nullptr;
 	bool _has_focus = false;
 	bool _lframe = false;
 	bool _rframe = false;
-	View _contents;
+	View _contentsview;
 };
 
 #endif // WINDOW_H
