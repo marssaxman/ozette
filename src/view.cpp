@@ -1,11 +1,11 @@
 #include "view.h"
+#include <assert.h>
 
-void View::layout(WINDOW *window, int height, int width)
+void View::layout(WINDOW *window)
 {
 	_window = window;
-	_height = height;
-	_width = width;
-	_blank.resize(width, ' ');
+	getmaxyx(window, _height, _width);
+	_blank.resize(_width, ' ');
 }
 
 void View::move_cursor(int y, int x)

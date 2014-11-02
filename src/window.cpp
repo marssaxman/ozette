@@ -64,7 +64,7 @@ void Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
 	if (needs_chrome) {
 		draw_chrome();
 	}
-	_contentsview.layout(_contentwin, height, width);
+	_contentsview.layout(_contentwin);
 	_controller->paint(_contentsview);
 }
 

@@ -12,7 +12,7 @@ public:
 	int width() const { return _width; }
 	int height() const { return _height; }
 	// The view should apply to a region of this window.
-	void layout(WINDOW *dest, int height, int width);
+	void layout(WINDOW *dest);
 	// Place the cursor at this location.
 	void move_cursor(int y, int x);
 	// Starting at the top left corner of the view, write the contents
