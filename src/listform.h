@@ -17,6 +17,7 @@ public:
 	virtual bool cancel() { return false; }
 	virtual unsigned indent() const { return 0; }
 	virtual void paint(WINDOW *view, size_t width) = 0;
+	virtual void highlight(WINDOW *view, size_t width);
 };
 
 class Builder

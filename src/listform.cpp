@@ -12,6 +12,11 @@ public:
 
 } // namespace ListForm
 
+void ListForm::Field::highlight(WINDOW *view, size_t width)
+{
+	wchgat(view, width, A_REVERSE, 0, NULL);
+}
+
 void ListForm::Controller::paint(WINDOW *view)
 {
 	if (_dirty) {
@@ -93,22 +98,22 @@ void ListForm::Controller::paint_line(WINDOW *view, int y, int height, int width
 {
 	size_t line = (size_t)y + _scrollpos;
 	wmove(view, y, 0);
-	bool selected = false;
-	if (line < _lines.size() && width > 2) {
-		auto &field = _lines[line];
-		size_t chars_left = (size_t)width;
-		size_t indent = 1 + field->indent() * 4;
-		while (indent > 0 && chars_left > 0) {
-			waddch(view, ' ');
-			indent--;
-			chars_left--;
-		}
-		_lines[line]->paint(view, chars_left);
-		selected = (line == _selpos);
+	if (line >= _lines.size()) {
+		wclrtoeol(view);
 	}
+	auto &field = _lines[line];
+	size_t chars_left = (size_t)width;
+	size_t indent = 1 + field->indent() * 4;
+	while (indent > 0 && chars_left > 0) {
+		waddch(view, ' ');
+		indent--;
+		chars_left--;
+	}
+	field->paint(view, chars_left);
 	wclrtoeol(view);
-	if (selected) {
-		mvwchgat(view, y, 1, width-2, A_REVERSE, 0, NULL);
+	if (line == _selpos) {
+		wmove(view, y, 1);
+		field->highlight(view, (size_t)width-1);
 	}
 }
 
