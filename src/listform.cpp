@@ -1,7 +1,7 @@
 #include "listform.h"
 #include <assert.h>
 
-void ListForm::paint(WINDOW *view)
+void ListForm::Controller::paint(WINDOW *view)
 {
 	if (_dirty) {
 		_dirty = false;
@@ -14,7 +14,7 @@ void ListForm::paint(WINDOW *view)
 	}
 }
 
-bool ListForm::process(WINDOW *view, int ch)
+bool ListForm::Controller::process(WINDOW *view, int ch)
 {
         switch (ch) {
                 case 258: arrow_down(view); break;
@@ -26,12 +26,23 @@ bool ListForm::process(WINDOW *view, int ch)
 	return true;
 }
 
-bool ListForm::poll(WINDOW *view)
+bool ListForm::Controller::poll(WINDOW *view)
 {
 	return true;
 }
 
-void ListForm::refresh()
+namespace {
+class LineBuilder : public ListForm::Builder
+{
+public:
+	LineBuilder(std::vector<std::unique_ptr<ListForm::Field>> &lines): _lines(lines) {}
+	virtual void entry(std::string text, std::function<void()> action) override;
+private:
+	std::vector<std::unique_ptr<ListForm::Field>> &_lines;
+        };
+}
+
+void ListForm::Controller::refresh()
 {
 	// Render our commands and entries down to some text lines.
 	_lines.clear();
@@ -62,7 +73,7 @@ void ListForm::refresh()
 
 }
 
-void ListForm::paint_line(WINDOW *view, int y, int height, int width)
+void ListForm::Controller::paint_line(WINDOW *view, int y, int height, int width)
 {
 	size_t line = (size_t)y + _scrollpos;
 	wmove(view, y, 0);
@@ -77,14 +88,14 @@ void ListForm::paint_line(WINDOW *view, int y, int height, int width)
 	}
 }
 
-bool ListForm::is_selectable(ssize_t line)
+bool ListForm::Controller::is_selectable(ssize_t line)
 {
 	if (line < 0) return false;
 	if ((size_t)line >= _lines.size()) return false;
 	return _lines[line]->active();
 }
 
-void ListForm::arrow_down(WINDOW *view)
+void ListForm::Controller::arrow_down(WINDOW *view)
 {
 	// Look for a selectable line past the current one.
 	// If we find one, select it, then repaint.
@@ -97,7 +108,7 @@ void ListForm::arrow_down(WINDOW *view)
 	}
 }
 
-void ListForm::arrow_up(WINDOW *view)
+void ListForm::Controller::arrow_up(WINDOW *view)
 {
 	// Look for a selectable line before the current one.
 	// If we find one, select it, then repaint.
@@ -111,7 +122,7 @@ void ListForm::arrow_up(WINDOW *view)
 	}
 }
 
-void ListForm::commit(WINDOW *view)
+void ListForm::Controller::commit(WINDOW *view)
 {
 	assert(_selpos < _lines.size());
 	if (_lines[_selpos]->invoke()) {
@@ -120,7 +131,7 @@ void ListForm::commit(WINDOW *view)
 	}
 }
 
-void ListForm::escape(WINDOW *view)
+void ListForm::Controller::escape(WINDOW *view)
 {
 	assert(_selpos < _lines.size());
 	if (_lines[_selpos]->cancel()) {
@@ -129,7 +140,7 @@ void ListForm::escape(WINDOW *view)
 	}
 }
 
-void ListForm::scroll_to_selection(WINDOW *view)
+void ListForm::Controller::scroll_to_selection(WINDOW *view)
 {
 	// If the selected item is not visible, adjust the scroll
 	// position until it becomes visible, then repaint.
@@ -155,7 +166,7 @@ void ListForm::scroll_to_selection(WINDOW *view)
 	paint(view);
 }
 
-void ListForm::LineBuilder::entry(std::string text, std::function<void()> action)
+void LineBuilder::entry(std::string text, std::function<void()> action)
 {
 	std::string datecolumn;
 	size_t split = text.find_first_of('\t');
@@ -163,7 +174,7 @@ void ListForm::LineBuilder::entry(std::string text, std::function<void()> action
 		datecolumn = text.substr(split+1, std::string::npos);
 		text.resize(split);
 	}
-	_lines.emplace_back(new Line(text, datecolumn, action));
+	_lines.emplace_back(new ListForm::Line(text, datecolumn, action));
 }
 
 bool ListForm::Line::invoke()

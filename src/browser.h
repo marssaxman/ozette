@@ -6,7 +6,7 @@
 #include "projectlist.h"
 #include <memory>
 
-class Browser : public ListForm, private ProjectList::Delegate
+class Browser : public ListForm::Controller, private ProjectList::Delegate
 {
 public:
 	Browser();
