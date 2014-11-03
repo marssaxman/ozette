@@ -31,37 +31,34 @@ bool ListForm::poll(WINDOW *view)
 	return true;
 }
 
+void ListForm::render(Fields &fields)
+{
+	fields.blank();
+	if (!_commands.empty()) {
+		for (auto &field: _commands) {
+			auto fptr = field.get();
+			fields.entry(field->text(), [fptr](){fptr->invoke();});
+		}
+		fields.blank();
+	}
+	if (!_entries.empty()) {
+		if (!_entry_label.empty()) {
+			fields.label(_entry_label);
+		}
+		for (auto &field: _entries) {
+			auto fptr = field.get();
+			fields.entry(field->text(), [fptr](){fptr->invoke();});
+		}
+		fields.blank();
+	}
+}
+
 void ListForm::refresh()
 {
 	// Render our commands and entries down to some text lines.
 	_lines.clear();
-	Line blank;
-	_lines.push_back(blank);
-	if (!_commands.empty()) {
-		for (auto &field: _commands) {
-			Line command;
-			command.text = field->text();
-			auto fptr = field.get();
-			command.action = [fptr](){fptr->invoke();};
-			_lines.push_back(command);
-		}
-		_lines.push_back(blank);
-	}
-	if (!_entries.empty()) {
-		if (!_entry_label.empty()) {
-			Line label;
-			label.text = _entry_label;
-			_lines.push_back(label);
-		}
-		for (auto &field: _entries) {
-			Line entry;
-			entry.text = field->text();
-			auto fptr = field.get();
-			entry.action = [fptr](){fptr->invoke();};
-			_lines.push_back(entry);
-		}
-		_lines.push_back(blank);
-	}
+	LineBuilder fields(_lines);
+	render(fields);
 	// If the cursor has gone out of range, bring it back.
 	if (_selpos >= _lines.size()) {
 		_selpos = _lines.size();
@@ -176,4 +173,12 @@ void ListForm::scroll_to_selection(WINDOW *view)
 	// which move the selection, and such operations require us to
 	// repaint the window anyway.
 	paint(view);
+}
+
+void ListForm::LineBuilder::entry(std::string text, std::function<void()> action)
+{
+	ListForm::Line line;
+	line.text = text;
+	line.action = action;
+	_lines.push_back(line);
 }

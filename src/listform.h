@@ -6,12 +6,11 @@
 #include <vector>
 #include <functional>
 
-// ListForm implements the UI for the browser controllers.
-// It expects the view to contain an array of lines, which
-// may be selectable or nonselectable, and which may either
-// invoke some action or which may open a text field, which
-// may invoke an action when the enter key is pressed.
-
+// A list form is an array of fields, which may have text
+// and/or an action. The list controller allows the user to
+// scroll between fields with the up and down arrow keys.
+// Pressing enter invokes the selected field. Invoking a
+// field may cause the list of fields to change.
 
 class ListForm : public Controller
 {
@@ -20,17 +19,6 @@ public:
 	virtual bool process(WINDOW *view, int ch) override;
 	virtual bool poll(WINDOW *view) override;
 protected:
-	// A form is a scrollable area beginning with some
-	// number of command entries and following with a tree
-	// of file or directory entries.
-	// You can navigate up and down inside this form using
-	// the arrow keys.
-	// Pressing enter on a command entry opens a text entry
-	// area at the bottom of the window. Pressing escape
-	// closes the text area back up again; pressing enter
-	// invokes the command with that text as parameter.
-	// Pressing enter on a file or directory entry invokes
-	// some action depending on the specific form.
 	class Field
 	{
 	public:
@@ -41,6 +29,16 @@ protected:
 	std::vector<std::unique_ptr<Field>> _commands;
 	std::string _entry_label;
 	std::vector<std::unique_ptr<Field>> _entries;
+
+	class Fields
+	{
+	public:
+		virtual ~Fields() = default;
+		void blank() { entry("", nullptr); }
+		void label(std::string text) { entry(text, nullptr); }
+		virtual void entry(std::string text, std::function<void()> action) = 0;
+	};
+	virtual void render(Fields &fields);
 private:
 	void paint_line(WINDOW *view, int y, int height, int width);
 	bool is_selectable(ssize_t line);
@@ -55,6 +53,14 @@ private:
 		std::string text;
 	};
 	std::vector<Line> _lines;
+	class LineBuilder : public Fields
+	{
+		friend class ListForm;
+		LineBuilder(std::vector<Line> &lines): _lines(lines) {}
+		std::vector<Line> &_lines;
+	public:
+		virtual void entry(std::string text, std::function<void()> action) override;
+	};
 	bool _dirty = true;
 	void refresh();
 	size_t _scrollpos = 0;
