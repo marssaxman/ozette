@@ -16,14 +16,17 @@ int main(int argc, char **argv)
 {
 	(void)signal(SIGINT, finish);
 	s_ui.reset(new UI);
-        // Build our two starting windows.
-        std::unique_ptr<Controller> console(new Console);
-        s_ui->open_window(std::move(console));
+	// Leftmost window is the lindi project browser.
         std::unique_ptr<Controller> browser(new Browser);
         s_ui->open_window(std::move(browser));
+	// Next window is a console with the login shell.
+        std::unique_ptr<Controller> console(new Console("ping -c 60 8.8.4.4"));
+        s_ui->open_window(std::move(console));
 	// If we got a list of arguments, create editors for them.
 	for (int i = 1; i < argc; ++i) {
-		s_ui->open_window(std::unique_ptr<Controller>(new Editor(argv[i])));
+		std::string editcmd = "nano ";
+		auto ed = new Console(editcmd + argv[i]);
+		s_ui->open_window(std::unique_ptr<Controller>(ed));
 	}
 	timeout(20);
 	do {

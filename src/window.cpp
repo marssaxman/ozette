@@ -86,6 +86,11 @@ bool Window::process(int ch)
 	return _controller->process(_contentwin, ch);
 }
 
+void Window::poll()
+{
+	_controller->poll(_contentwin);
+}
+
 void Window::draw_chrome()
 {
 	// Draw the title bar.

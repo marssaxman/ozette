@@ -9,6 +9,7 @@ UI::UI()
 	cbreak();
 	noecho();
 	nonl();
+	raw();
 	intrflush(stdscr, FALSE);
 	keypad(stdscr, true);
 	// Find out how big the terminal is.
@@ -29,6 +30,11 @@ bool UI::process(int ch)
 	// the focus window. All other keypresses are delegated to
 	// the focus window.
 	switch (ch) {
+		case ERR: {	// timeout
+			for (auto &win: _columns) {
+				win->poll();
+			}
+		} break;
 		case 0x21D: {	// Control-shift-left arrow
 			if (_focus > 0) {
 				set_focus(_focus - 1);

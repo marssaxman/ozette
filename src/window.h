@@ -16,6 +16,7 @@ public:
 	void set_focus();
 	void clear_focus();
 	bool process(int ch);
+	void poll();
 protected:
 	void draw_chrome();
 private:
