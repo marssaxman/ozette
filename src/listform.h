@@ -26,6 +26,12 @@ public:
 		void label(std::string text) { entry(text, nullptr); }
 		virtual void entry(std::string text, std::function<void()> action) = 0;
 	};
+	class Source
+	{
+	public:
+		virtual ~Source() = default;
+		virtual void render(Builder &lines) = 0;
+	};
 protected:
 	virtual void render(Builder &fields) = 0;
 private:
