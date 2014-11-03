@@ -68,7 +68,7 @@ void ListForm::paint_line(WINDOW *view, int y, int height, int width)
 	wmove(view, y, 0);
 	bool selected = false;
 	if (line < _lines.size() && width > 2) {
-		_lines[line].paint(view, (size_t)width);
+		_lines[line]->paint(view, (size_t)width);
 		selected = (line == _selpos);
 	}
 	wclrtoeol(view);
@@ -81,7 +81,7 @@ bool ListForm::is_selectable(ssize_t line)
 {
 	if (line < 0) return false;
 	if ((size_t)line >= _lines.size()) return false;
-	return _lines[line].active();
+	return _lines[line]->active();
 }
 
 void ListForm::arrow_down(WINDOW *view)
@@ -114,7 +114,7 @@ void ListForm::arrow_up(WINDOW *view)
 void ListForm::commit(WINDOW *view)
 {
 	assert(_selpos < _lines.size());
-	if (_lines[_selpos].invoke()) {
+	if (_lines[_selpos]->invoke()) {
 		_dirty = true;
 		paint(view);
 	}
@@ -123,7 +123,7 @@ void ListForm::commit(WINDOW *view)
 void ListForm::escape(WINDOW *view)
 {
 	assert(_selpos < _lines.size());
-	if (_lines[_selpos].cancel()) {
+	if (_lines[_selpos]->cancel()) {
 		_dirty = true;
 		paint(view);
 	}
@@ -163,7 +163,7 @@ void ListForm::LineBuilder::entry(std::string text, std::function<void()> action
 		datecolumn = text.substr(split+1, std::string::npos);
 		text.resize(split);
 	}
-	_lines.emplace_back(text, datecolumn, action);
+	_lines.emplace_back(new Line(text, datecolumn, action));
 }
 
 bool ListForm::Line::invoke()

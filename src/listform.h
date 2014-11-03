@@ -65,12 +65,12 @@ private:
 		std::string left_text;
 		std::string right_text;
 	};
-	std::vector<Line> _lines;
+	std::vector<std::unique_ptr<Field>> _lines;
 	class LineBuilder : public Builder
 	{
 		friend class ListForm;
-		LineBuilder(std::vector<Line> &lines): _lines(lines) {}
-		std::vector<Line> &_lines;
+		LineBuilder(std::vector<std::unique_ptr<Field>> &lines): _lines(lines) {}
+		std::vector<std::unique_ptr<Field>> &_lines;
 	public:
 		virtual void entry(std::string text, std::function<void()> action) override;
 	};
