@@ -86,9 +86,9 @@ bool Window::process(int ch)
 	return _controller->process(_contentwin, ch);
 }
 
-void Window::poll()
+bool Window::poll()
 {
-	_controller->poll(_contentwin);
+	return _controller->poll(_contentwin);
 }
 
 void Window::draw_chrome()

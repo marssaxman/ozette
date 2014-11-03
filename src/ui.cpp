@@ -1,6 +1,7 @@
 #include "ui.h"
 #include <algorithm>
 #include <assert.h>
+#include <list>
 
 UI::UI()
 {
@@ -14,6 +15,9 @@ UI::UI()
 	keypad(stdscr, true);
 	// Find out how big the terminal is.
 	get_screen_size();
+	// temporary: there will have to be some logic
+	// for showing the cursor in editor windows
+	curs_set(0);
 }
 
 UI::~UI()
@@ -31,9 +35,17 @@ bool UI::process(int ch)
 	// the focus window.
 	switch (ch) {
 		case ERR: {	// timeout
-			for (auto &win: _columns) {
-				win->poll();
+			std::list<size_t> dead;
+			for (size_t i = 0; i < _columns.size(); ++i) {
+				auto &win = _columns[i];
+				if (!win->poll()) {
+					dead.push_front(i);
+				}
 			}
+			for (auto i: dead) {
+				_columns.erase(_columns.begin() + i);
+			}
+			relayout();
 		} break;
 		case 0x21D: {	// Control-shift-left arrow
 			if (_focus > 0) {
@@ -54,7 +66,7 @@ bool UI::process(int ch)
 			relayout();
 		} break;
 		default: {
-			_columns[_focus]->process(ch);
+			send_to_focus(ch);
 		} break;
 	}
 	// quit on tab press for now... temporary
@@ -108,3 +120,10 @@ void UI::relayout()
 	}
 }
 
+void UI::send_to_focus(int ch)
+{
+	bool more = _columns[_focus]->process(ch);
+	if (more) return;
+	_columns.erase(_columns.begin()+_focus);
+	relayout();
+}

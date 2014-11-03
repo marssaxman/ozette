@@ -10,10 +10,11 @@ public:
 	~Console();
 	virtual void paint(WINDOW *view) override;
 	virtual bool process(WINDOW *view, int ch) override;
-	virtual void poll(WINDOW *view) override;
+	virtual bool poll(WINDOW *view) override;
 	virtual std::string title() const override { return "Console"; }
 protected:
 	static void set_nonblocking(int fd);
+	void receive(WINDOW *view, char *buf, size_t bytes);
 private:
 	int _pid = 0;
 	// These are the file descriptors for the streams

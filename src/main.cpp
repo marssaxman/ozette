@@ -3,30 +3,34 @@
 #include "browser.h"
 #include "editor.h"
 #include <signal.h>
+#include <sys/wait.h>
 
 static std::unique_ptr<UI> s_ui;
 
-static void finish(int sig)
+static void handle_sigint(int)
 {
 	s_ui.reset();
 	exit(0);
 }
 
+static void handle_sigchld(int)
+{
+	pid_t pid = 0;
+	do {
+		pid = waitpid(-1, NULL, WNOHANG);
+	} while (pid > 0);
+}
+
 int main(int argc, char **argv)
 {
-	(void)signal(SIGINT, finish);
+	(void)signal(SIGINT, handle_sigint);
+	(void)signal(SIGCHLD, handle_sigchld);
 	s_ui.reset(new UI);
-	// Leftmost window is the lindi project browser.
         std::unique_ptr<Controller> browser(new Browser);
         s_ui->open_window(std::move(browser));
-	// Next window is a console with the login shell.
-        std::unique_ptr<Controller> console(new Console("ping -c 60 8.8.4.4"));
-        s_ui->open_window(std::move(console));
-	// If we got a list of arguments, create editors for them.
 	for (int i = 1; i < argc; ++i) {
-		std::string editcmd = "nano ";
-		auto ed = new Console(editcmd + argv[i]);
-		s_ui->open_window(std::unique_ptr<Controller>(ed));
+		std::unique_ptr<Controller> ed(new Editor(argv[i]));
+		s_ui->open_window(std::move(ed));
 	}
 	timeout(20);
 	do {

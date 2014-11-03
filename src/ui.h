@@ -18,6 +18,8 @@ protected:
 	void set_focus(size_t index);
 	// reposition all the windows after create/remove/resize
 	void relayout();
+	// send this char to the focus window
+	void send_to_focus(int ch);
 private:
 	int _width = 0;
 	int _height = 0;

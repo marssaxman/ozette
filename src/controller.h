@@ -16,7 +16,9 @@ public:
 	// the keypress represented a close action.
 	virtual bool process(WINDOW *view, int ch) = 0;
 	// Time has passed. Poll the inputs, if relevant.
-	virtual void poll(WINDOW *view) {}
+	// Return true if the process should continue, false if
+	// some input has occurred which signals process completion.
+	virtual bool poll(WINDOW *view) = 0;
 	// Human-readable string identifying the object.
 	virtual std::string title() const = 0;
 };

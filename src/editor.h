@@ -10,6 +10,7 @@ public:
 	Editor(std::string targetpath);
 	virtual void paint(WINDOW *view) override;
 	virtual bool process(WINDOW *view, int ch) override;
+	virtual bool poll(WINDOW *view) override { return true; }
 	virtual std::string title() const override { return _targetpath; }
 protected:
 	void arrow_up(WINDOW *view);
