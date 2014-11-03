@@ -14,7 +14,6 @@ void Browser::render(ListForm::Builder &lines)
 {
 	_repos.render(lines);
 	if (_project) {
-		lines.blank();
 		_project->render(lines);
 	}
 }
