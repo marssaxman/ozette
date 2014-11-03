@@ -9,7 +9,7 @@ class RepoList : public ListForm
 {
 public:
 	RepoList(Browser &host);
-	virtual std::string title() const override { return "Lindi"; }
+	virtual std::string title() const override { return ""; }
 private:
 	enum class VCS {
 		none = 0,

@@ -11,7 +11,7 @@ public:
 	virtual void paint(WINDOW *view) override;
 	virtual bool process(WINDOW *view, int ch) override;
 	virtual bool poll(WINDOW *view) override;
-	virtual std::string title() const override { return "Lindi"; }
+	virtual std::string title() const override;
 	void delegate(std::unique_ptr<Controller> &&sub);
 private:
 	// The browser operates in different modes.

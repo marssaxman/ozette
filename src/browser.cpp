@@ -41,6 +41,15 @@ bool Browser::poll(WINDOW *view)
 	return out;
 }
 
+std::string Browser::title() const
+{
+	std::string more = _sub->title();
+	if (!more.empty()) {
+		more = ": " + more;
+	}
+	return "Lindi" + more;
+}
+
 void Browser::delegate(std::unique_ptr<Controller> &&sub)
 {
 	assert(sub.get() != nullptr);

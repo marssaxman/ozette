@@ -1,4 +1,5 @@
 #include "listform.h"
+#include <assert.h>
 
 void ListForm::paint(WINDOW *view)
 {
@@ -18,6 +19,8 @@ bool ListForm::process(WINDOW *view, int ch)
         switch (ch) {
                 case 258: arrow_down(view); break;
                 case 259: arrow_up(view); break;
+		case '\r': commit(view); break;
+		case 28: escape(view); break;
 		default: break;
 	}
 	return true;
@@ -119,3 +122,22 @@ void ListForm::arrow_up(WINDOW *view)
 		break;
 	}
 }
+
+void ListForm::commit(WINDOW *view)
+{
+	// Invoke the selected field.
+	assert(_selpos < _lines.size());
+	auto &line = _lines[_selpos];
+	if (line.field) {
+		line.field->invoke(line.text);
+		_dirty = true;
+		paint(view);
+	}
+}
+
+void ListForm::escape(WINDOW *view)
+{
+	// If we had a text edit field open, close it.
+}
+
+

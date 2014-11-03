@@ -1,4 +1,5 @@
 #include "repolist.h"
+#include "treeview.h"
 #include <dirent.h>
 #include <sys/stat.h>
 
@@ -67,4 +68,6 @@ void RepoList::RepoField::invoke(std::string)
 {
 	// Create a viewer for this repository, based on its type.
 	// Instruct the browser to delegate itself to this viewer.
+	std::unique_ptr<Controller> sub(new TreeView(_host, _target.path));
+	_host.delegate(std::move(sub));
 }

@@ -45,6 +45,8 @@ private:
 	bool is_selectable(ssize_t line);
 	void arrow_down(WINDOW *view);
 	void arrow_up(WINDOW *view);
+	void commit(WINDOW *view);
+	void escape(WINDOW *view);
 	struct Line
 	{
 		Line(): field(nullptr), text("") {}
