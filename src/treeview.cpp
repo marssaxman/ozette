@@ -4,18 +4,16 @@
 
 TreeView::TreeView(Browser &host, std::string path):
 	_host(host),
-	_dirpath(path)
+	_path(path),
+	_dir(path)
 {
-	enumerate(path, 0);
 }
 
 void TreeView::render(Fields &fields)
 {
 	fields.entry("Switch Repository", [this](){switchrepo();});
 	fields.blank();
-	for (auto &entry: _entries) {
-		fields.entry(entry.text, [](){});
-	}
+	_dir.render(fields);
 }
 
 void TreeView::switchrepo()
@@ -24,7 +22,8 @@ void TreeView::switchrepo()
 	_host.delegate(std::move(sub));
 }
 
-void TreeView::enumerate(std::string path, unsigned indent)
+TreeView::Directory::Directory(std::string path):
+	Node(path)
 {
 	DIR *pdir = opendir(path.c_str());
 	if (!pdir) return;
@@ -33,30 +32,55 @@ void TreeView::enumerate(std::string path, unsigned indent)
 		std::string name(entry->d_name);
 		std::string subpath(path + "/" + name);
 		switch (entry->d_type) {
-		case DT_DIR: subdir(name, subpath, indent); break;
-		case DT_REG: subfile(name, subpath, indent); break;
+		case DT_DIR: {
+			auto sub = new Branch(name + "/", subpath);
+			_items.emplace_back(sub);
+		} break;
+		case DT_REG: {
+			auto sub = new File(name, subpath);
+			_items.emplace_back(sub);
+		} break;
+		default: break;
 		}
 	}
 	closedir(pdir);
 }
 
-void TreeView::subdir(std::string name, std::string subpath, unsigned indent)
+TreeView::Root::Root(std::string path):
+	Directory(path)
 {
-	std::string text = tab(indent) + name + "/";
-	_entries.emplace_back(entry(text, subpath));
-	enumerate(subpath, indent + 1);
 }
 
-void TreeView::subfile(std::string name, std::string subpath, unsigned indent)
+void TreeView::Root::render(Fields &fields)
 {
-	std::string text = tab(indent) + name;
-	_entries.emplace_back(entry(text, subpath));
+	for (auto &node: _items) {
+		node->render(fields);
+	}
 }
 
-std::string TreeView::tab(unsigned indent)
+TreeView::Branch::Branch(std::string name, std::string path):
+	Directory(path),
+	_name(name)
 {
-	std::string out;
-	out.resize(indent * 4, ' ');
-	return out;
+}
+
+void TreeView::Branch::render(Fields &fields)
+{
+	fields.entry(_name, [this](){_open = !_open;});
+	if (!_open) return;
+	for (auto &node: _items) {
+		node->render(fields);
+	}
+}
+
+TreeView::File::File(std::string name, std::string path):
+	Node(path),
+	_name(name)
+{
+}
+
+void TreeView::File::render(Fields &fields)
+{
+	fields.entry(_name, [this](){});
 }
 

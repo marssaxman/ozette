@@ -8,25 +8,61 @@ class TreeView : public ListForm
 {
 public:
 	TreeView(Browser &host, std::string path);
-	virtual std::string title() const { return _dirpath; }
+	virtual std::string title() const { return _path; }
 protected:
 	virtual void render(Fields &fields);
 private:
-	struct entry
+	// Every item in the directory tree is a node.
+	class Node
 	{
-		entry(std::string t, std::string p): text(t), path(p) {}
-		std::string text;
-		std::string path;
+	public:
+		Node(std::string path): _path(path) {}
+		virtual ~Node() = default;
+		virtual void render(Fields &fields) = 0;
+	private:
+		std::string _path;
 	};
-	std::vector<entry> _entries;
-
-	void enumerate(std::string path, unsigned indent);
-	void subdir(std::string name, std::string path, unsigned indent);
-	void subfile(std::string name, std::string path, unsigned indent);
-	std::string tab(unsigned indent);
+	// A directory is a node which contains other items.
+	class Directory : public Node
+	{
+	public:
+		Directory(std::string path);
+	protected:
+		std::vector<std::unique_ptr<Node>> _items;
+	private:
+		void subdir(std::string name, std::string path);
+		void subfile(std::string name, std::string path);
+	};
+	// The root directory is the beginning of our search.
+	class Root : public Directory
+	{
+	public:
+		Root(std::string path);
+		virtual void render(Fields &fields) override;
+	};
+	// A branch is a directory which lives inside another.
+	class Branch : public Directory
+	{
+	public:
+		Branch(std::string name, std::string path);
+		virtual void render(Fields &fields) override;
+	private:
+		std::string _name;
+		bool _open = false;
+	};
+	// Files are the editable units of the source tree.
+	class File : public Node
+	{
+	public:
+		File(std::string name, std::string path);
+		virtual void render(Fields &fields) override;
+	private:
+		std::string _name;
+	};
 	void switchrepo();
 	Browser &_host;
-	std::string _dirpath;
+	std::string _path;
+	Root _dir;
 };
 
 #endif	//TREEVIEW_H
