@@ -49,6 +49,11 @@ public:
 		}
 		emit(view, boxright(), width);
 	}
+	virtual void get_highlight(size_t &off, size_t &len) override
+	{
+		off = 1;
+		len = _maxlen + 2;
+	}
 protected:
 	virtual int boxleft() const = 0;
 	virtual int spacer() const = 0;
@@ -105,7 +110,7 @@ public:
 	}
 protected:
 	virtual int boxleft() const override { return ACS_ULCORNER; }
-	virtual int spacer() const override { return ACS_HLINE; }
+	virtual int spacer() const override { return ' '; }
 	virtual int boxright() const override { return ACS_URCORNER; }
 private:
 	ProjectList &_list;
