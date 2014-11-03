@@ -15,7 +15,6 @@ public:
 	virtual bool active() const { return true; }
 	virtual bool invoke() { return false; }
 	virtual bool cancel() { return false; }
-	virtual unsigned indent() const { return 0; }
 	virtual void paint(WINDOW *view, size_t width) = 0;
 	virtual void highlight(WINDOW *view, size_t width);
 };

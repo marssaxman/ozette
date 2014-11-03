@@ -100,20 +100,14 @@ void ListForm::Controller::paint_line(WINDOW *view, int y, int height, int width
 	wmove(view, y, 0);
 	if (line >= _lines.size()) {
 		wclrtoeol(view);
+		return;
 	}
 	auto &field = _lines[line];
-	size_t chars_left = (size_t)width;
-	size_t indent = 1 + field->indent() * 4;
-	while (indent > 0 && chars_left > 0) {
-		waddch(view, ' ');
-		indent--;
-		chars_left--;
-	}
-	field->paint(view, chars_left);
+	field->paint(view, (size_t)width);
 	wclrtoeol(view);
 	if (line == _selpos) {
-		wmove(view, y, 1);
-		field->highlight(view, (size_t)width-1);
+		wmove(view, y, 0);
+		field->highlight(view, (size_t)width);
 	}
 }
 

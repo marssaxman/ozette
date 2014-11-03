@@ -8,6 +8,22 @@ DirTree::Node::Node(std::string path, unsigned indent):
 {
 }
 
+namespace {
+class NodeField : public ListForm::Field
+{
+protected:
+	void indent(WINDOW *view, unsigned tabs, size_t &width)
+	{
+	        size_t columns = 1 + tabs * 4;
+		while (columns > 0 && width > 0) {
+			waddch(view, ' ');
+			columns--;
+			width--;
+		}
+	}
+};
+} // namespace
+
 DirTree::Directory::Directory(std::string path, unsigned indent, unsigned subindent):
 	Node(path, indent)
 {
@@ -51,7 +67,7 @@ DirTree::Branch::Branch(std::string name, std::string path, unsigned indent):
 }
 
 namespace {
-class BranchField : public ListForm::Field
+class BranchField : public NodeField
 {
 public:
 	BranchField(DirTree::Branch &branch): _branch(branch) {}
@@ -60,12 +76,9 @@ public:
 		_branch.toggle();
 		return true;
 	}
-	virtual unsigned indent() const override
-	{
-		return _branch.indent();
-	}
 	virtual void paint(WINDOW *view, size_t width) override
 	{
+		indent(view, _branch.indent(), width);
 		waddnstr(view, _branch.name().c_str(), width);
 	}
 private:
@@ -90,7 +103,7 @@ DirTree::File::File(std::string name, std::string path, unsigned indent):
 }
 
 namespace {
-class FileField : public ListForm::Field
+class FileField : public NodeField
 {
 public:
 	FileField(DirTree::File &file): _file(file)
@@ -102,9 +115,9 @@ public:
 			_modtime = ctime_r(&st.st_mtime, buf);
 		}
 	}
-	virtual unsigned indent() const { return _file.indent(); }
 	virtual void paint(WINDOW *view, size_t width)
 	{
+		indent(view, _file.indent(), width);
 		std::string name = _file.name();
 		size_t namelen = name.size();
 		size_t datelen = _modtime.size();
