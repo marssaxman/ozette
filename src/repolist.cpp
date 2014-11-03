@@ -68,8 +68,5 @@ void RepoList::check_dir(std::string name)
 
 void RepoList::open_repo(const repo_t &target)
 {
-	// Create a viewer for this repository, based on its type.
-	// Instruct the browser to delegate itself to this viewer.
-	std::unique_ptr<Controller> sub(new TreeView(_host, target.path));
-	_host.delegate(std::move(sub));
+	_host.set_project(target.path);
 }

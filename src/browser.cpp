@@ -1,5 +1,6 @@
 #include "browser.h"
 #include "repolist.h"
+#include "treeview.h"
 #include <assert.h>
 
 // In order to avoid deleting the subcontroller out from underneath
@@ -50,8 +51,12 @@ std::string Browser::title() const
 	return "Lindi" + more;
 }
 
-void Browser::delegate(std::unique_ptr<Controller> &&sub)
+void Browser::set_project(std::string path)
 {
-	assert(sub.get() != nullptr);
-	_sub = std::move(sub);
+	_sub.reset(new TreeView(*this, path));
+}
+
+void Browser::close_project()
+{
+	_sub.reset(new RepoList(*this));
 }

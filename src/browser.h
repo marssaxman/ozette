@@ -12,7 +12,8 @@ public:
 	virtual bool process(WINDOW *view, int ch) override;
 	virtual bool poll(WINDOW *view) override;
 	virtual std::string title() const override;
-	void delegate(std::unique_ptr<Controller> &&sub);
+	void set_project(std::string path);
+	void close_project();
 private:
 	// The browser operates in different modes.
 	// Each mode is provided by a different controller.

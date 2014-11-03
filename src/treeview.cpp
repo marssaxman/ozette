@@ -19,6 +19,5 @@ void TreeView::render(Builder &fields)
 
 void TreeView::switchrepo()
 {
-	std::unique_ptr<Controller> sub(new RepoList(_host));
-	_host.delegate(std::move(sub));
+	_host.close_project();
 }
