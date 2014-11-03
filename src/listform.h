@@ -16,7 +16,7 @@ public:
 	virtual bool invoke() { return false; }
 	virtual bool cancel() { return false; }
 	virtual void paint(WINDOW *view, size_t width) = 0;
-	virtual void highlight(WINDOW *view, size_t width);
+	virtual void get_highlight(size_t &offset, size_t &len) {}
 };
 
 class Builder

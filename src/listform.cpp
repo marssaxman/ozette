@@ -12,11 +12,6 @@ public:
 
 } // namespace ListForm
 
-void ListForm::Field::highlight(WINDOW *view, size_t width)
-{
-	wchgat(view, width, A_REVERSE, 0, NULL);
-}
-
 void ListForm::Controller::paint(WINDOW *view)
 {
 	if (_dirty) {
@@ -106,8 +101,11 @@ void ListForm::Controller::paint_line(WINDOW *view, int y, int height, int width
 	field->paint(view, (size_t)width);
 	wclrtoeol(view);
 	if (line == _selpos) {
-		wmove(view, y, 0);
-		field->highlight(view, (size_t)width);
+		size_t high_off = 0;
+		size_t high_len = (size_t)width;
+		field->get_highlight(high_off, high_len);
+		int x = std::min((int)high_off, width);
+		mvwchgat(view, y, x, (int)high_len, A_REVERSE, 0, NULL);
 	}
 }
 
