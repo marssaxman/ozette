@@ -19,7 +19,7 @@ private:
 		Node(std::string path): _path(path) {}
 		virtual ~Node() = default;
 		virtual void render(Builder &fields) = 0;
-	private:
+	protected:
 		std::string _path;
 	};
 	// A directory is a node which contains other items.

@@ -1,6 +1,7 @@
 #include "treeview.h"
 #include "repolist.h"
 #include <dirent.h>
+#include <sys/stat.h>
 
 TreeView::TreeView(Browser &host, std::string path):
 	_host(host),
@@ -96,6 +97,16 @@ TreeView::File::File(std::string name, std::string path):
 
 void TreeView::File::render(Builder &fields)
 {
-	fields.entry(_name, [this](){});
+	std::string text = _name;
+	struct stat st;
+	if (!stat(_path.c_str(), &st)) {
+		char buf[32];
+		char *dt = ctime_r(&st.st_mtime, buf);
+		if (dt) {
+			text.push_back('\t');
+			text += std::string(dt);
+		}
+	}
+	fields.entry(text, [this](){});
 }
 
