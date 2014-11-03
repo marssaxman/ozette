@@ -35,7 +35,7 @@ protected:
 	public:
 		virtual ~Field() = default;
 		virtual std::string text() const = 0;
-		virtual void invoke(std::string value) = 0;
+		virtual void invoke() = 0;
 	};
 	std::vector<std::unique_ptr<Field>> _commands;
 	std::string _entry_label;

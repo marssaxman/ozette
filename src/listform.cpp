@@ -129,7 +129,7 @@ void ListForm::commit(WINDOW *view)
 	assert(_selpos < _lines.size());
 	auto &line = _lines[_selpos];
 	if (line.field) {
-		line.field->invoke(line.text);
+		line.field->invoke();
 		_dirty = true;
 		paint(view);
 	}

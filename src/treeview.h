@@ -15,7 +15,7 @@ private:
 	public:
 		EntryField(std::string text, std::string path): _text(text), _path(path) {}
 		virtual std::string text() const override { return _text; }
-		virtual void invoke(std::string) override {}
+		virtual void invoke() override {}
 	private:
 		std::string _text;
 		std::string _path;

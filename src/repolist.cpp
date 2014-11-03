@@ -64,7 +64,7 @@ RepoList::RepoField::RepoField(Browser &host, const repo_t &target):
 {
 }
 
-void RepoList::RepoField::invoke(std::string)
+void RepoList::RepoField::invoke()
 {
 	// Create a viewer for this repository, based on its type.
 	// Instruct the browser to delegate itself to this viewer.

@@ -29,7 +29,7 @@ private:
 	public:
 		RepoField(Browser &host, const repo_t &target);
 		virtual std::string text() const override { return _target.title; }
-		virtual void invoke(std::string) override;
+		virtual void invoke() override;
 	private:
 		Browser &_host;
 		repo_t _target;
