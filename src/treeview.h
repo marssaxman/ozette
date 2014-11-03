@@ -9,33 +9,24 @@ class TreeView : public ListForm
 public:
 	TreeView(Browser &host, std::string path);
 	virtual std::string title() const { return _dirpath; }
+protected:
+	virtual void render(Fields &fields);
 private:
-	class CloseRepoField : public Field
+	struct entry
 	{
-	public:
-		CloseRepoField(Browser &host): _host(host) {}
-		virtual std::string text() const override { return "Switch Repository"; }
-		virtual void invoke() override;
-	private:
-		Browser &_host;
+		entry(std::string t, std::string p): text(t), path(p) {}
+		std::string text;
+		std::string path;
 	};
-	class EntryField : public Field
-	{
-	public:
-		EntryField(std::string text, std::string path): _text(text), _path(path) {}
-		virtual std::string text() const override { return _text; }
-		virtual void invoke() override {}
-	private:
-		std::string _text;
-		std::string _path;
-	};
+	std::vector<entry> _entries;
 
-	Browser &_host;
-	std::string _dirpath;
 	void enumerate(std::string path, unsigned indent);
 	void subdir(std::string name, std::string path, unsigned indent);
 	void subfile(std::string name, std::string path, unsigned indent);
 	std::string tab(unsigned indent);
+	void switchrepo();
+	Browser &_host;
+	std::string _dirpath;
 };
 
 #endif	//TREEVIEW_H

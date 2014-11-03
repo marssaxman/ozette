@@ -18,7 +18,6 @@ RepoList::RepoList(Browser &host):
 	// Iterate through the directories in the homedir.
 	// Check each one to see if it is a VCS directory.
 	// If it is, add its path to our list.
-	_entry_label = "Repositories:";
 	DIR *pdir = opendir(_homedir.c_str());
 	if (!pdir) return;
 	while (dirent *entry = readdir(pdir)) {
@@ -27,6 +26,15 @@ RepoList::RepoList(Browser &host):
 		check_dir(entry->d_name);
 	}
 	closedir(pdir);
+}
+
+void RepoList::render(Fields &fields)
+{
+	fields.label("Repositories:");
+	for (auto &repo: _repos) {
+		auto action = [this, repo](){open_repo(repo);};
+		fields.entry(repo.title, action);
+	}
 }
 
 RepoList::VCS RepoList::dir_repo_type(std::string path)
@@ -54,20 +62,14 @@ void RepoList::check_dir(std::string name)
 		repo.title = "  ~/" + name;
 		repo.path = path;
 		repo.type = type;
-		_entries.emplace_back(new RepoField(_host, repo));
+		_repos.push_back(repo);
 	}
 }
 
-RepoList::RepoField::RepoField(Browser &host, const repo_t &target):
-	_host(host),
-	_target(target)
-{
-}
-
-void RepoList::RepoField::invoke()
+void RepoList::open_repo(const repo_t &target)
 {
 	// Create a viewer for this repository, based on its type.
 	// Instruct the browser to delegate itself to this viewer.
-	std::unique_ptr<Controller> sub(new TreeView(_host, _target.path));
+	std::unique_ptr<Controller> sub(new TreeView(_host, target.path));
 	_host.delegate(std::move(sub));
 }

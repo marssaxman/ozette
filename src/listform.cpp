@@ -31,34 +31,14 @@ bool ListForm::poll(WINDOW *view)
 	return true;
 }
 
-void ListForm::render(Fields &fields)
-{
-	fields.blank();
-	if (!_commands.empty()) {
-		for (auto &field: _commands) {
-			auto fptr = field.get();
-			fields.entry(field->text(), [fptr](){fptr->invoke();});
-		}
-		fields.blank();
-	}
-	if (!_entries.empty()) {
-		if (!_entry_label.empty()) {
-			fields.label(_entry_label);
-		}
-		for (auto &field: _entries) {
-			auto fptr = field.get();
-			fields.entry(field->text(), [fptr](){fptr->invoke();});
-		}
-		fields.blank();
-	}
-}
-
 void ListForm::refresh()
 {
 	// Render our commands and entries down to some text lines.
 	_lines.clear();
 	LineBuilder fields(_lines);
+	fields.blank();
 	render(fields);
+	fields.blank();
 	// If the cursor has gone out of range, bring it back.
 	if (_selpos >= _lines.size()) {
 		_selpos = _lines.size();

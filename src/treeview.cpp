@@ -6,11 +6,19 @@ TreeView::TreeView(Browser &host, std::string path):
 	_host(host),
 	_dirpath(path)
 {
-	_commands.emplace_back(new CloseRepoField(host));
 	enumerate(path, 0);
 }
 
-void TreeView::CloseRepoField::invoke()
+void TreeView::render(Fields &fields)
+{
+	fields.entry("Switch Repository", [this](){switchrepo();});
+	fields.blank();
+	for (auto &entry: _entries) {
+		fields.entry(entry.text, [](){});
+	}
+}
+
+void TreeView::switchrepo()
 {
 	std::unique_ptr<Controller> sub(new RepoList(_host));
 	_host.delegate(std::move(sub));
@@ -35,14 +43,14 @@ void TreeView::enumerate(std::string path, unsigned indent)
 void TreeView::subdir(std::string name, std::string subpath, unsigned indent)
 {
 	std::string text = tab(indent) + name + "/";
-	_entries.emplace_back(new EntryField(text, subpath));
+	_entries.emplace_back(entry(text, subpath));
 	enumerate(subpath, indent + 1);
 }
 
 void TreeView::subfile(std::string name, std::string subpath, unsigned indent)
 {
 	std::string text = tab(indent) + name;
-	_entries.emplace_back(new EntryField(text, subpath));
+	_entries.emplace_back(entry(text, subpath));
 }
 
 std::string TreeView::tab(unsigned indent)

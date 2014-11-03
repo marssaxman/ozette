@@ -19,17 +19,6 @@ public:
 	virtual bool process(WINDOW *view, int ch) override;
 	virtual bool poll(WINDOW *view) override;
 protected:
-	class Field
-	{
-	public:
-		virtual ~Field() = default;
-		virtual std::string text() const = 0;
-		virtual void invoke() = 0;
-	};
-	std::vector<std::unique_ptr<Field>> _commands;
-	std::string _entry_label;
-	std::vector<std::unique_ptr<Field>> _entries;
-
 	class Fields
 	{
 	public:
@@ -38,7 +27,7 @@ protected:
 		void label(std::string text) { entry(text, nullptr); }
 		virtual void entry(std::string text, std::function<void()> action) = 0;
 	};
-	virtual void render(Fields &fields);
+	virtual void render(Fields &fields) = 0;
 private:
 	void paint_line(WINDOW *view, int y, int height, int width);
 	bool is_selectable(ssize_t line);
