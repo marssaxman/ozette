@@ -23,9 +23,10 @@ class Builder
 {
 public:
 	virtual ~Builder() = default;
-	void blank() { entry("", nullptr); }
+	void blank();
 	void label(std::string text) { entry(text, nullptr); }
-	virtual void entry(std::string text, std::function<void()> action) = 0;
+	void entry(std::string text, std::function<void()> action);
+	virtual void add(std::unique_ptr<Field> &&field) = 0;
 };
 
 class Source
@@ -33,20 +34,6 @@ class Source
 public:
 	virtual ~Source() = default;
 	virtual void render(Builder &lines) = 0;
-};
-
-class Line : public Field
-{
-public:
-	Line(std::string l, std::string r, std::function<void()> a):
-		action(a), left_text(l), right_text(r) {}
-	virtual bool active() const override { return action != nullptr; }
-	virtual bool invoke() override;
-	virtual void paint(WINDOW *view, size_t width) override;
-private:
-	std::function<void()> action = nullptr;
-	std::string left_text;
-	std::string right_text;
 };
 
 // A list form is an array of fields, which may have text

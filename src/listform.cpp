@@ -1,6 +1,49 @@
 #include "listform.h"
 #include <assert.h>
 
+namespace ListForm {
+
+class Blank : public Field
+{
+public:
+	virtual bool active() const override { return false; }
+	virtual void paint(WINDOW *view, size_t width) override {}
+};
+
+class Line : public Field
+{
+public:
+        Line(std::string l, std::string r, std::function<void()> a):
+                action(a), left_text(l), right_text(r) {}
+        virtual bool active() const override { return action != nullptr; }
+        virtual bool invoke() override;
+        virtual void paint(WINDOW *view, size_t width) override;
+private:
+        std::function<void()> action = nullptr;
+        std::string left_text;
+        std::string right_text;
+};
+
+} // namespace ListForm
+
+void ListForm::Builder::blank()
+{
+	std::unique_ptr<Field> field(new Blank);
+	add(std::move(field));
+}
+
+void ListForm::Builder::entry(std::string text, std::function<void()> action)
+{
+	std::string datecolumn;
+	size_t split = text.find_first_of('\t');
+	if (split != std::string::npos) {
+		datecolumn = text.substr(split+1, std::string::npos);
+		text.resize(split);
+	}
+	std::unique_ptr<Field> field(new ListForm::Line(text, datecolumn, action));
+	add(std::move(field));
+}
+
 void ListForm::Controller::paint(WINDOW *view)
 {
 	if (_dirty) {
@@ -17,8 +60,8 @@ void ListForm::Controller::paint(WINDOW *view)
 bool ListForm::Controller::process(WINDOW *view, int ch)
 {
         switch (ch) {
-                case 258: arrow_down(view); break;
-                case 259: arrow_up(view); break;
+                case KEY_DOWN: arrow_down(view); break;
+                case KEY_UP: arrow_up(view); break;
 		case '\r': commit(view); break;
 		case 28: escape(view); break;
 		default: break;
@@ -36,7 +79,11 @@ class LineBuilder : public ListForm::Builder
 {
 public:
 	LineBuilder(std::vector<std::unique_ptr<ListForm::Field>> &lines): _lines(lines) {}
-	virtual void entry(std::string text, std::function<void()> action) override;
+protected:
+	virtual void add(std::unique_ptr<ListForm::Field> &&field) override
+	{
+		_lines.emplace_back(std::move(field));
+	}
 private:
 	std::vector<std::unique_ptr<ListForm::Field>> &_lines;
         };
@@ -79,7 +126,15 @@ void ListForm::Controller::paint_line(WINDOW *view, int y, int height, int width
 	wmove(view, y, 0);
 	bool selected = false;
 	if (line < _lines.size() && width > 2) {
-		_lines[line]->paint(view, (size_t)width);
+		auto &field = _lines[line];
+		size_t chars_left = (size_t)width;
+		size_t indent = 1 + field->indent() * 4;
+		while (indent > 0 && width > 0) {
+			waddch(view, ' ');
+			indent--;
+			width--;
+		}
+		_lines[line]->paint(view, chars_left);
 		selected = (line == _selpos);
 	}
 	wclrtoeol(view);
@@ -164,17 +219,6 @@ void ListForm::Controller::scroll_to_selection(WINDOW *view)
 	// which move the selection, and such operations require us to
 	// repaint the window anyway.
 	paint(view);
-}
-
-void LineBuilder::entry(std::string text, std::function<void()> action)
-{
-	std::string datecolumn;
-	size_t split = text.find_first_of('\t');
-	if (split != std::string::npos) {
-		datecolumn = text.substr(split+1, std::string::npos);
-		text.resize(split);
-	}
-	_lines.emplace_back(new ListForm::Line(text, datecolumn, action));
 }
 
 bool ListForm::Line::invoke()

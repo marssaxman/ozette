@@ -2,8 +2,14 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-DirTree::Directory::Directory(std::string path):
-	Node(path)
+DirTree::Node::Node(std::string path, unsigned indent):
+	_path(path),
+	_indent(indent)
+{
+}
+
+DirTree::Directory::Directory(std::string path, unsigned indent, unsigned subindent):
+	Node(path, indent)
 {
 	DIR *pdir = opendir(path.c_str());
 	if (!pdir) return;
@@ -13,11 +19,11 @@ DirTree::Directory::Directory(std::string path):
 		std::string subpath(path + "/" + name);
 		switch (entry->d_type) {
 		case DT_DIR: {
-			auto sub = new Branch(name + "/", subpath);
+			auto sub = new Branch(name + "/", subpath, subindent);
 			_items.emplace_back(sub);
 		} break;
 		case DT_REG: {
-			auto sub = new File(name, subpath);
+			auto sub = new File(name, subpath, subindent);
 			_items.emplace_back(sub);
 		} break;
 		default: break;
@@ -27,7 +33,7 @@ DirTree::Directory::Directory(std::string path):
 }
 
 DirTree::Root::Root(std::string path):
-	Directory(path)
+	Directory(path, 0, 0)
 {
 }
 
@@ -38,54 +44,78 @@ void DirTree::Root::render(ListForm::Builder &fields)
 	}
 }
 
-DirTree::Branch::Branch(std::string name, std::string path):
-	Directory(path),
+DirTree::Branch::Branch(std::string name, std::string path, unsigned indent):
+	Directory(path, indent, indent + 1),
 	_name(name)
 {
 }
 
 namespace {
-class Indenter : public ListForm::Builder
+class BranchField : public ListForm::Field
 {
 public:
-	Indenter(ListForm::Builder &dest): _dest(dest) {}
-	virtual void entry(std::string text, std::function<void()> action) override
+	BranchField(DirTree::Branch &branch): _branch(branch) {}
+	virtual bool invoke() override
 	{
-		_dest.entry("    " + text, action);
+		_branch.toggle();
+		return true;
+	}
+	virtual unsigned indent() const override
+	{
+		return _branch.indent();
+	}
+	virtual void paint(WINDOW *view, size_t width) override
+	{
+		waddnstr(view, _branch.name().c_str(), width);
 	}
 private:
-	ListForm::Builder &_dest;
+	DirTree::Branch &_branch;
 };
 }
 
 void DirTree::Branch::render(ListForm::Builder &fields)
 {
-	fields.entry(_name, [this](){_open = !_open;});
+	std::unique_ptr<ListForm::Field> field(new BranchField(*this));
+	fields.add(std::move(field));
 	if (!_open) return;
-	Indenter subfields(fields);
 	for (auto &node: _items) {
-		node->render(subfields);
+		node->render(fields);
 	}
 }
 
-DirTree::File::File(std::string name, std::string path):
-	Node(path),
+DirTree::File::File(std::string name, std::string path, unsigned indent):
+	Node(path, indent),
 	_name(name)
 {
 }
 
-void DirTree::File::render(ListForm::Builder &fields)
+namespace {
+class FileField : public ListForm::Field
 {
-	std::string text = _name;
-	struct stat st;
-	if (!stat(_path.c_str(), &st)) {
-		char buf[32];
-		char *dt = ctime_r(&st.st_mtime, buf);
-		if (dt) {
-			text.push_back('\t');
-			text += std::string(dt);
+public:
+	FileField(DirTree::File &file): _file(file)
+	{
+		struct stat st;
+		std::string path = _file.path();
+		if (!stat(path.c_str(), &st)) {
+			char buf[32];
+			_modtime = ctime_r(&st.st_mtime, buf);
 		}
 	}
-	fields.entry(text, [this](){});
+	virtual unsigned indent() const { return _file.indent(); }
+	virtual void paint(WINDOW *view, size_t width)
+	{
+		waddnstr(view, _file.name().c_str(), width);
+	}
+private:
+	DirTree::File &_file;
+	std::string _modtime;
+};
+}
+
+void DirTree::File::render(ListForm::Builder &fields)
+{
+	std::unique_ptr<ListForm::Field> field(new FileField(*this));
+	fields.add(std::move(field));
 }
 

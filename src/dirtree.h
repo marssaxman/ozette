@@ -9,22 +9,22 @@ namespace DirTree {
 class Node : public ListForm::Source
 {
 public:
-	Node(std::string path): _path(path) {}
+	Node(std::string path, unsigned indent);
 	virtual ~Node() = default;
-protected:
+	std::string path() const { return _path; }
+	unsigned indent() const { return _indent; }
+private:
 	std::string _path;
+	unsigned _indent = 0;
 };
 
 // A directory is a node which contains other items.
 class Directory : public Node
 {
 public:
-	Directory(std::string path);
+	Directory(std::string path, unsigned indent, unsigned subindent);
 protected:
 	std::vector<std::unique_ptr<Node>> _items;
-private:
-	void subdir(std::string name, std::string path);
-	void subfile(std::string name, std::string path);
 };
 
 // The root directory is the beginning of our search.
@@ -39,8 +39,10 @@ public:
 class Branch : public Directory
 {
 public:
-	Branch(std::string name, std::string path);
+	Branch(std::string name, std::string path, unsigned indent);
 	virtual void render(ListForm::Builder &fields) override;
+	std::string name() const { return _name; }
+	void toggle() { _open = !_open; }
 private:
 	std::string _name;
 	bool _open = false;
@@ -50,8 +52,9 @@ private:
 class File : public Node
 {
 public:
-	File(std::string name, std::string path);
+	File(std::string name, std::string path, unsigned indent);
 	virtual void render(ListForm::Builder &fields) override;
+	std::string name() const { return _name; }
 private:
 	std::string _name;
 };
