@@ -10,39 +10,7 @@ public:
 	virtual void paint(WINDOW *view, size_t width) override {}
 };
 
-class Line : public Field
-{
-public:
-        Line(std::string l, std::string r, std::function<void()> a):
-                action(a), left_text(l), right_text(r) {}
-        virtual bool active() const override { return action != nullptr; }
-        virtual bool invoke() override;
-        virtual void paint(WINDOW *view, size_t width) override;
-private:
-        std::function<void()> action = nullptr;
-        std::string left_text;
-        std::string right_text;
-};
-
 } // namespace ListForm
-
-void ListForm::Builder::blank()
-{
-	std::unique_ptr<Field> field(new Blank);
-	add(std::move(field));
-}
-
-void ListForm::Builder::entry(std::string text, std::function<void()> action)
-{
-	std::string datecolumn;
-	size_t split = text.find_first_of('\t');
-	if (split != std::string::npos) {
-		datecolumn = text.substr(split+1, std::string::npos);
-		text.resize(split);
-	}
-	std::unique_ptr<Field> field(new ListForm::Line(text, datecolumn, action));
-	add(std::move(field));
-}
 
 void ListForm::Controller::paint(WINDOW *view)
 {
@@ -79,7 +47,6 @@ class LineBuilder : public ListForm::Builder
 {
 public:
 	LineBuilder(std::vector<std::unique_ptr<ListForm::Field>> &lines): _lines(lines) {}
-protected:
 	virtual void add(std::unique_ptr<ListForm::Field> &&field) override
 	{
 		_lines.emplace_back(std::move(field));
@@ -94,9 +61,11 @@ void ListForm::Controller::refresh()
 	// Render our commands and entries down to some text lines.
 	_lines.clear();
 	LineBuilder fields(_lines);
-	fields.blank();
+	std::unique_ptr<Field> field(new Blank);
+	fields.add(std::move(field));
 	render(fields);
-	fields.blank();
+	field.reset(new Blank);
+	fields.add(std::move(field));
 	// If the cursor has gone out of range, bring it back.
 	if (_selpos >= _lines.size()) {
 		_selpos = _lines.size();
@@ -219,28 +188,4 @@ void ListForm::Controller::scroll_to_selection(WINDOW *view)
 	// which move the selection, and such operations require us to
 	// repaint the window anyway.
 	paint(view);
-}
-
-bool ListForm::Line::invoke()
-{
-	if (action) {
-		action();
-		return true;
-	} else {
-		return false;
-	}
-}
-
-void ListForm::Line::paint(WINDOW *view, size_t width)
-{
-	size_t lwid = width-2;
-	size_t rchars = std::min(right_text.size(), lwid/2);
-	size_t lchars = std::min(left_text.size(), lwid-rchars);
-	size_t gapchars = lwid - rchars - lchars;
-	waddch(view, ' ');
-	waddnstr(view, left_text.c_str(), lchars);
-	while (gapchars--) {
-		waddch(view, ' ');
-	}
-	waddnstr(view, right_text.c_str(), rchars);
 }

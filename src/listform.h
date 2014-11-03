@@ -23,9 +23,6 @@ class Builder
 {
 public:
 	virtual ~Builder() = default;
-	void blank();
-	void label(std::string text) { entry(text, nullptr); }
-	void entry(std::string text, std::function<void()> action);
 	virtual void add(std::unique_ptr<Field> &&field) = 0;
 };
 
