@@ -39,16 +39,26 @@ void ListForm::refresh()
 	_lines.push_back(blank);
 	if (!_commands.empty()) {
 		for (auto &field: _commands) {
-			_lines.push_back(field.get());
+			Line command;
+			command.text = field->text();
+			auto fptr = field.get();
+			command.action = [fptr](){fptr->invoke();};
+			_lines.push_back(command);
 		}
 		_lines.push_back(blank);
 	}
 	if (!_entries.empty()) {
 		if (!_entry_label.empty()) {
-			_lines.push_back(_entry_label);
+			Line label;
+			label.text = _entry_label;
+			_lines.push_back(label);
 		}
 		for (auto &field: _entries) {
-			_lines.push_back(field.get());
+			Line entry;
+			entry.text = field->text();
+			auto fptr = field.get();
+			entry.action = [fptr](){fptr->invoke();};
+			_lines.push_back(entry);
 		}
 		_lines.push_back(blank);
 	}
@@ -95,7 +105,7 @@ bool ListForm::is_selectable(ssize_t line)
 {
 	if (line < 0) return false;
 	if ((size_t)line >= _lines.size()) return false;
-	return _lines[line].field != nullptr;
+	return _lines[line].action != nullptr;
 }
 
 void ListForm::arrow_down(WINDOW *view)
@@ -130,8 +140,8 @@ void ListForm::commit(WINDOW *view)
 	// Invoke the selected field.
 	assert(_selpos < _lines.size());
 	auto &line = _lines[_selpos];
-	if (line.field) {
-		line.field->invoke();
+	if (line.action) {
+		line.action();
 		_dirty = true;
 		paint(view);
 	}

@@ -4,6 +4,7 @@
 #include "controller.h"
 #include <memory>
 #include <vector>
+#include <functional>
 
 // ListForm implements the UI for the browser controllers.
 // It expects the view to contain an array of lines, which
@@ -50,10 +51,7 @@ private:
 	void scroll_to_selection(WINDOW *view);
 	struct Line
 	{
-		Line(): field(nullptr), text("") {}
-		Line(std::string t): field(nullptr), text(t) {}
-		Line(Field *f): field(f), text(f->text()) {}
-		Field *field;
+		std::function<void()> action = nullptr;
 		std::string text;
 	};
 	std::vector<Line> _lines;
