@@ -1,10 +1,10 @@
-#ifndef REPOLIST_H
-#define REPOLIST_H
+#ifndef PROJECTLIST_H
+#define PROJECTLIST_H
 
 #include "listform.h"
 #include <vector>
 
-class RepoList : public ListForm::Source
+class ProjectList : public ListForm::Source
 {
 public:
 	class Delegate
@@ -13,7 +13,7 @@ public:
 		virtual ~Delegate() = default;
 		virtual void open_project(std::string path) = 0;
 	};
-	RepoList(Delegate &host);
+	ProjectList(Delegate &host);
 	virtual void render(ListForm::Builder &fields) override;
 private:
 	enum class VCS {
@@ -38,4 +38,4 @@ private:
 	std::vector<repo_t> _repos;
 };
 
-#endif // REPOLIST_H
+#endif // PROJECTLIST_H

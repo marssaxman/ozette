@@ -1,16 +1,13 @@
-#include "repolist.h"
+#include "projectlist.h"
 #include <dirent.h>
 #include <sys/stat.h>
 
-// List all of the repositories we know about.
-// This will be all of the VCS repos in the user's
-// home directory.
-// We may eventually provide a way to create a new
-// repo or to locate one outside the homedir.
-// Also list options allowing the user to create a
-// new repository or locate one outside ~.
+// The project list is a popup menu listing all of the
+// directories we think the user might care about.
+// For the time being this is just a list of all the
+// VCS repositories in the home directory.
 
-RepoList::RepoList(Delegate &host):
+ProjectList::ProjectList(Delegate &host):
 	_host(host),
 	_homedir(getenv("HOME"))
 {
@@ -27,7 +24,7 @@ RepoList::RepoList(Delegate &host):
 	closedir(pdir);
 }
 
-void RepoList::render(ListForm::Builder &fields)
+void ProjectList::render(ListForm::Builder &fields)
 {
 	fields.label("Repositories:");
 	for (auto &repo: _repos) {
@@ -36,7 +33,7 @@ void RepoList::render(ListForm::Builder &fields)
 	}
 }
 
-RepoList::VCS RepoList::dir_repo_type(std::string path)
+ProjectList::VCS ProjectList::dir_repo_type(std::string path)
 {
 	// is this a path to some repository under version control?
 	// return the VCS type, if any, or none if not a repository
@@ -46,13 +43,13 @@ RepoList::VCS RepoList::dir_repo_type(std::string path)
 	return VCS::none;
 }
 
-bool RepoList::dir_exists(std::string path)
+bool ProjectList::dir_exists(std::string path)
 {
 	struct stat sb;
 	return (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode));
 }
 
-void RepoList::check_dir(std::string name)
+void ProjectList::check_dir(std::string name)
 {
 	std::string path = _homedir + "/" + name;
 	VCS type = dir_repo_type(path);
@@ -65,7 +62,7 @@ void RepoList::check_dir(std::string name)
 	}
 }
 
-void RepoList::open_repo(const repo_t &target)
+void ProjectList::open_repo(const repo_t &target)
 {
 	_host.open_project(target.path);
 }

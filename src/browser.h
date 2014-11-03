@@ -3,10 +3,10 @@
 
 #include "listform.h"
 #include "dirtree.h"
-#include "repolist.h"
+#include "projectlist.h"
 #include <memory>
 
-class Browser : public ListForm, private RepoList::Delegate
+class Browser : public ListForm, private ProjectList::Delegate
 {
 public:
 	Browser();
@@ -15,7 +15,7 @@ protected:
 	virtual void render(ListForm::Builder &lines) override;
 private:
 	virtual void open_project(std::string path) override;
-	RepoList _repos;
+	ProjectList _repos;
 	std::unique_ptr<DirTree::Root> _project;
 };
 
