@@ -47,6 +47,7 @@ private:
 	void arrow_up(WINDOW *view);
 	void commit(WINDOW *view);
 	void escape(WINDOW *view);
+	void scroll_to_selection(WINDOW *view);
 	struct Line
 	{
 		Line(): field(nullptr), text("") {}

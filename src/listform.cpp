@@ -106,7 +106,7 @@ void ListForm::arrow_down(WINDOW *view)
 	for (size_t i = _selpos + 1; i < _lines.size(); ++i) {
 		if (!is_selectable(i)) continue;
 		_selpos = i;
-		paint(view);
+		scroll_to_selection(view);
 		break;
 	}
 }
@@ -120,7 +120,7 @@ void ListForm::arrow_up(WINDOW *view)
 		size_t next = i - 1;
 		if (!is_selectable(next)) continue;
 		_selpos = next;
-		paint(view);
+		scroll_to_selection(view);
 		break;
 	}
 }
@@ -142,4 +142,28 @@ void ListForm::escape(WINDOW *view)
 	// If we had a text edit field open, close it.
 }
 
+void ListForm::scroll_to_selection(WINDOW *view)
+{
+	// If the selected item is not visible, adjust the scroll
+	// position until it becomes visible, then repaint.
+	int height, width;
+	getmaxyx(view, height, width);
+	(void)width; 	//unused
+	size_t heightz = static_cast<size_t>(height);
+	size_t half_page = heightz / 2;
+	size_t first_visible = _scrollpos;
+	size_t last_visible = _scrollpos + heightz;
+	if (_selpos < first_visible) {
+		_scrollpos = (_selpos > half_page) ? _selpos - half_page : 0;
+	}
+	if (_selpos >= last_visible) {
+		size_t max_scroll = (_lines.size() > heightz) ? _lines.size() - heightz : 0;
+		_scrollpos = std::min(max_scroll, _selpos - half_page);
+	}
 
+	// This function will ALWAYS repaint, whether or not it moved
+	// the cursor, because it is intended for use after operations
+	// which move the selection, and such operations require us to
+	// repaint the window anyway.
+	paint(view);
+}
