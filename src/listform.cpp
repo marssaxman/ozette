@@ -39,7 +39,7 @@ void ListForm::refresh()
 	_lines.push_back(blank);
 	if (!_commands.empty()) {
 		for (auto &field: _commands) {
-			_lines.push_back(field->text());
+			_lines.push_back(field.get());
 		}
 		_lines.push_back(blank);
 	}
@@ -79,9 +79,11 @@ void ListForm::paint_line(WINDOW *view, int y, int height, int width)
 {
 	size_t line = (size_t)y + _scrollpos;
 	int lwid = std::max(0, width - 2);
+	wmove(view, y, 0);
 	if (line < _lines.size()) {
 		std::string text = _lines[line].text;
-		mvwaddnstr(view, y, 1, text.c_str(), lwid);
+		waddch(view, ' ');
+		waddnstr(view, text.c_str(), lwid);
 	}
 	wclrtoeol(view);
 	if (line == _selpos) {

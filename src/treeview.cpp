@@ -1,11 +1,19 @@
 #include "treeview.h"
+#include "repolist.h"
 #include <dirent.h>
 
 TreeView::TreeView(Browser &host, std::string path):
 	_host(host),
 	_dirpath(path)
 {
+	_commands.emplace_back(new CloseRepoField(host));
 	enumerate(path, 0);
+}
+
+void TreeView::CloseRepoField::invoke()
+{
+	std::unique_ptr<Controller> sub(new RepoList(_host));
+	_host.delegate(std::move(sub));
 }
 
 void TreeView::enumerate(std::string path, unsigned indent)
@@ -43,3 +51,4 @@ std::string TreeView::tab(unsigned indent)
 	out.resize(indent * 4, ' ');
 	return out;
 }
+

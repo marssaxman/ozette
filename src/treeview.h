@@ -10,6 +10,15 @@ public:
 	TreeView(Browser &host, std::string path);
 	virtual std::string title() const { return _dirpath; }
 private:
+	class CloseRepoField : public Field
+	{
+	public:
+		CloseRepoField(Browser &host): _host(host) {}
+		virtual std::string text() const override { return "Switch Repository"; }
+		virtual void invoke() override;
+	private:
+		Browser &_host;
+	};
 	class EntryField : public Field
 	{
 	public:
