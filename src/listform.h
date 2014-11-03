@@ -47,6 +47,7 @@ private:
 		std::function<void()> action = nullptr;
 		std::string left_text;
 		std::string right_text;
+		void paint(WINDOW *view, size_t width);
 	};
 	std::vector<Line> _lines;
 	class LineBuilder : public Builder

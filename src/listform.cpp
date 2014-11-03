@@ -65,22 +65,15 @@ void ListForm::refresh()
 void ListForm::paint_line(WINDOW *view, int y, int height, int width)
 {
 	size_t line = (size_t)y + _scrollpos;
-	int lwid = std::max(0, width - 2);
 	wmove(view, y, 0);
-	if (line < _lines.size()) {
-		std::string left = _lines[line].left_text;
-		std::string right = _lines[line].right_text;
-		int rchars = std::min((int)right.size(), lwid/2);
-		int lchars = std::min((int)left.size(), lwid-rchars);
-		waddch(view, ' ');
-		waddnstr(view, left.c_str(), lchars);
-		wclrtoeol(view);
-		mvwaddnstr(view,y, width - 1 - rchars, right.c_str(), rchars);
-	} else {
-		wclrtoeol(view);
+	bool selected = false;
+	if (line < _lines.size() && width > 2) {
+		_lines[line].paint(view, (size_t)width);
+		selected = (line == _selpos);
 	}
-	if (line == _selpos) {
-		mvwchgat(view, y, 1, lwid, A_REVERSE, 0, NULL);
+	wclrtoeol(view);
+	if (selected) {
+		mvwchgat(view, y, 1, width-2, A_REVERSE, 0, NULL);
 	}
 }
 
@@ -173,4 +166,18 @@ void ListForm::LineBuilder::entry(std::string text, std::function<void()> action
 	}
 	line.action = action;
 	_lines.push_back(line);
+}
+
+void ListForm::Line::paint(WINDOW *view, size_t width)
+{
+	size_t lwid = width-2;
+	size_t rchars = std::min(right_text.size(), lwid/2);
+	size_t lchars = std::min(left_text.size(), lwid-rchars);
+	size_t gapchars = lwid - rchars - lchars;
+	waddch(view, ' ');
+	waddnstr(view, left_text.c_str(), lchars);
+	while (gapchars--) {
+		waddch(view, ' ');
+	}
+	waddnstr(view, right_text.c_str(), rchars);
 }
