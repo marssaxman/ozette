@@ -28,7 +28,7 @@ RepoList::RepoList(Browser &host):
 	closedir(pdir);
 }
 
-void RepoList::render(Fields &fields)
+void RepoList::render(Builder &fields)
 {
 	fields.label("Repositories:");
 	for (auto &repo: _repos) {

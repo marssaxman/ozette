@@ -11,7 +11,7 @@ public:
 	RepoList(Browser &host);
 	virtual std::string title() const override { return ""; }
 protected:
-	virtual void render(Fields &fields) override;
+	virtual void render(Builder &fields) override;
 private:
 	enum class VCS {
 		none = 0,

@@ -10,7 +10,7 @@ public:
 	TreeView(Browser &host, std::string path);
 	virtual std::string title() const { return _path; }
 protected:
-	virtual void render(Fields &fields);
+	virtual void render(Builder &fields);
 private:
 	// Every item in the directory tree is a node.
 	class Node
@@ -18,7 +18,7 @@ private:
 	public:
 		Node(std::string path): _path(path) {}
 		virtual ~Node() = default;
-		virtual void render(Fields &fields) = 0;
+		virtual void render(Builder &fields) = 0;
 	private:
 		std::string _path;
 	};
@@ -38,14 +38,14 @@ private:
 	{
 	public:
 		Root(std::string path);
-		virtual void render(Fields &fields) override;
+		virtual void render(Builder &fields) override;
 	};
 	// A branch is a directory which lives inside another.
 	class Branch : public Directory
 	{
 	public:
 		Branch(std::string name, std::string path);
-		virtual void render(Fields &fields) override;
+		virtual void render(Builder &fields) override;
 	private:
 		std::string _name;
 		bool _open = false;
@@ -55,7 +55,7 @@ private:
 	{
 	public:
 		File(std::string name, std::string path);
-		virtual void render(Fields &fields) override;
+		virtual void render(Builder &fields) override;
 	private:
 		std::string _name;
 	};

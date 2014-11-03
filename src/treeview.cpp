@@ -9,7 +9,7 @@ TreeView::TreeView(Browser &host, std::string path):
 {
 }
 
-void TreeView::render(Fields &fields)
+void TreeView::render(Builder &fields)
 {
 	fields.entry("Switch Repository", [this](){switchrepo();});
 	fields.blank();
@@ -51,7 +51,7 @@ TreeView::Root::Root(std::string path):
 {
 }
 
-void TreeView::Root::render(Fields &fields)
+void TreeView::Root::render(Builder &fields)
 {
 	for (auto &node: _items) {
 		node->render(fields);
@@ -64,12 +64,27 @@ TreeView::Branch::Branch(std::string name, std::string path):
 {
 }
 
-void TreeView::Branch::render(Fields &fields)
+namespace {
+class Indenter : public ListForm::Builder
+{
+public:
+	Indenter(ListForm::Builder &dest): _dest(dest) {}
+	virtual void entry(std::string text, std::function<void()> action) override
+	{
+		_dest.entry("    " + text, action);
+	}
+private:
+	ListForm::Builder &_dest;
+};
+}
+
+void TreeView::Branch::render(Builder &fields)
 {
 	fields.entry(_name, [this](){_open = !_open;});
 	if (!_open) return;
+	Indenter subfields(fields);
 	for (auto &node: _items) {
-		node->render(fields);
+		node->render(subfields);
 	}
 }
 
@@ -79,7 +94,7 @@ TreeView::File::File(std::string name, std::string path):
 {
 }
 
-void TreeView::File::render(Fields &fields)
+void TreeView::File::render(Builder &fields)
 {
 	fields.entry(_name, [this](){});
 }

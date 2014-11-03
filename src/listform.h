@@ -18,16 +18,16 @@ public:
 	virtual void paint(WINDOW *view) override;
 	virtual bool process(WINDOW *view, int ch) override;
 	virtual bool poll(WINDOW *view) override;
-protected:
-	class Fields
+	class Builder
 	{
 	public:
-		virtual ~Fields() = default;
+		virtual ~Builder() = default;
 		void blank() { entry("", nullptr); }
 		void label(std::string text) { entry(text, nullptr); }
 		virtual void entry(std::string text, std::function<void()> action) = 0;
 	};
-	virtual void render(Fields &fields) = 0;
+protected:
+	virtual void render(Builder &fields) = 0;
 private:
 	void paint_line(WINDOW *view, int y, int height, int width);
 	bool is_selectable(ssize_t line);
@@ -42,7 +42,7 @@ private:
 		std::string text;
 	};
 	std::vector<Line> _lines;
-	class LineBuilder : public Fields
+	class LineBuilder : public Builder
 	{
 		friend class ListForm;
 		LineBuilder(std::vector<Line> &lines): _lines(lines) {}
