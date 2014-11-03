@@ -81,7 +81,7 @@ bool ListForm::is_selectable(ssize_t line)
 {
 	if (line < 0) return false;
 	if ((size_t)line >= _lines.size()) return false;
-	return _lines[line].action != nullptr;
+	return _lines[line].active();
 }
 
 void ListForm::arrow_down(WINDOW *view)
@@ -113,11 +113,8 @@ void ListForm::arrow_up(WINDOW *view)
 
 void ListForm::commit(WINDOW *view)
 {
-	// Invoke the selected field.
 	assert(_selpos < _lines.size());
-	auto &line = _lines[_selpos];
-	if (line.action) {
-		line.action();
+	if (_lines[_selpos].invoke()) {
 		_dirty = true;
 		paint(view);
 	}
@@ -125,7 +122,11 @@ void ListForm::commit(WINDOW *view)
 
 void ListForm::escape(WINDOW *view)
 {
-	// If we had a text edit field open, close it.
+	assert(_selpos < _lines.size());
+	if (_lines[_selpos].cancel()) {
+		_dirty = true;
+		paint(view);
+	}
 }
 
 void ListForm::scroll_to_selection(WINDOW *view)
@@ -156,16 +157,23 @@ void ListForm::scroll_to_selection(WINDOW *view)
 
 void ListForm::LineBuilder::entry(std::string text, std::function<void()> action)
 {
-	ListForm::Line line;
+	std::string datecolumn;
 	size_t split = text.find_first_of('\t');
 	if (split != std::string::npos) {
-		line.left_text = text.substr(0, split);
-		line.right_text = text.substr(split+1, std::string::npos);
-	} else {
-		line.left_text = text;
+		datecolumn = text.substr(split+1, std::string::npos);
+		text.resize(split);
 	}
-	line.action = action;
-	_lines.push_back(line);
+	_lines.emplace_back(text, datecolumn, action);
+}
+
+bool ListForm::Line::invoke()
+{
+	if (action) {
+		action();
+		return true;
+	} else {
+		return false;
+	}
 }
 
 void ListForm::Line::paint(WINDOW *view, size_t width)

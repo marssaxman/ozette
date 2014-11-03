@@ -18,6 +18,16 @@ public:
 	virtual void paint(WINDOW *view) override;
 	virtual bool process(WINDOW *view, int ch) override;
 	virtual bool poll(WINDOW *view) override;
+	class Field
+	{
+	public:
+		virtual ~Field() = default;
+		virtual bool active() const { return true; }
+		virtual bool invoke() { return false; }
+		virtual bool cancel() { return false; }
+		virtual unsigned indent() const { return 0; }
+		virtual void paint(WINDOW *view, size_t width) = 0;
+	};
 	class Builder
 	{
 	public:
@@ -42,12 +52,18 @@ private:
 	void commit(WINDOW *view);
 	void escape(WINDOW *view);
 	void scroll_to_selection(WINDOW *view);
-	struct Line
+	class Line : public Field
 	{
+	public:
+		Line(std::string l, std::string r, std::function<void()> a):
+			action(a), left_text(l), right_text(r) {}
+		virtual bool active() const override { return action != nullptr; }
+		virtual bool invoke() override;
+		virtual void paint(WINDOW *view, size_t width) override;
+	private:
 		std::function<void()> action = nullptr;
 		std::string left_text;
 		std::string right_text;
-		void paint(WINDOW *view, size_t width);
 	};
 	std::vector<Line> _lines;
 	class LineBuilder : public Builder
