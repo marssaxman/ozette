@@ -39,7 +39,8 @@ private:
 	struct Line
 	{
 		std::function<void()> action = nullptr;
-		std::string text;
+		std::string left_text;
+		std::string right_text;
 	};
 	std::vector<Line> _lines;
 	class LineBuilder : public Builder

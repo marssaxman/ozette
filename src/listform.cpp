@@ -68,11 +68,17 @@ void ListForm::paint_line(WINDOW *view, int y, int height, int width)
 	int lwid = std::max(0, width - 2);
 	wmove(view, y, 0);
 	if (line < _lines.size()) {
-		std::string text = _lines[line].text;
+		std::string left = _lines[line].left_text;
+		std::string right = _lines[line].right_text;
+		int rchars = std::min((int)right.size(), lwid/2);
+		int lchars = std::min((int)left.size(), lwid-rchars);
 		waddch(view, ' ');
-		waddnstr(view, text.c_str(), lwid);
+		waddnstr(view, left.c_str(), lchars);
+		wclrtoeol(view);
+		mvwaddnstr(view,y, width - 1 - rchars, right.c_str(), rchars);
+	} else {
+		wclrtoeol(view);
 	}
-	wclrtoeol(view);
 	if (line == _selpos) {
 		mvwchgat(view, y, 1, lwid, A_REVERSE, 0, NULL);
 	}
@@ -158,7 +164,13 @@ void ListForm::scroll_to_selection(WINDOW *view)
 void ListForm::LineBuilder::entry(std::string text, std::function<void()> action)
 {
 	ListForm::Line line;
-	line.text = text;
+	size_t split = text.find_first_of('\t');
+	if (split != std::string::npos) {
+		line.left_text = text.substr(0, split);
+		line.right_text = text.substr(split+1, std::string::npos);
+	} else {
+		line.left_text = text;
+	}
 	line.action = action;
 	_lines.push_back(line);
 }
