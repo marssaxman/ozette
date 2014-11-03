@@ -1,26 +1,22 @@
 #ifndef BROWSER_H
 #define BROWSER_H
 
-#include "controller.h"
+#include "listform.h"
+#include "dirtree.h"
+#include "repolist.h"
 #include <memory>
 
-class Browser : public Controller
+class Browser : public ListForm, private RepoList::Delegate
 {
 public:
 	Browser();
-	virtual void paint(WINDOW *view) override;
-	virtual bool process(WINDOW *view, int ch) override;
-	virtual bool poll(WINDOW *view) override;
-	virtual std::string title() const override;
-	void set_project(std::string path);
-	void close_project();
+	virtual std::string title() const override { return "Lindi"; }
+protected:
+	virtual void render(ListForm::Builder &lines) override;
 private:
-	// The browser operates in different modes.
-	// Each mode is provided by a different controller.
-	// Since the window is bound to a single controller, the
-	// browser will delegate to the current subcontroller, which
-	// can replace itself as the browser's target.
-	std::unique_ptr<Controller> _sub;
+	virtual void open_project(std::string path) override;
+	RepoList _repos;
+	std::unique_ptr<DirTree::Root> _project;
 };
 
 #endif // BROWSER_H

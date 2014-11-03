@@ -1,17 +1,20 @@
 #ifndef REPOLIST_H
 #define REPOLIST_H
 
-#include "browser.h"
 #include "listform.h"
 #include <vector>
 
-class RepoList : public ListForm
+class RepoList : public ListForm::Source
 {
 public:
-	RepoList(Browser &host);
-	virtual std::string title() const override { return ""; }
-protected:
-	virtual void render(Builder &fields) override;
+	class Delegate
+	{
+	public:
+		virtual ~Delegate() = default;
+		virtual void open_project(std::string path) = 0;
+	};
+	RepoList(Delegate &host);
+	virtual void render(ListForm::Builder &fields) override;
 private:
 	enum class VCS {
 		none = 0,
@@ -28,9 +31,7 @@ private:
 	void check_dir(std::string name);
 	void open_repo(const repo_t &repo);
 
-	// When we pick a repository, create a repo viewer,
-	// then tell the browser to use it as the new delegate.
-	Browser &_host;
+	Delegate &_host;
 	// User's home directory, where we expect to find repositories.
 	std::string _homedir;
 	// These are the repositories we currently know about.

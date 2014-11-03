@@ -1,5 +1,4 @@
 #include "repolist.h"
-#include "treeview.h"
 #include <dirent.h>
 #include <sys/stat.h>
 
@@ -11,7 +10,7 @@
 // Also list options allowing the user to create a
 // new repository or locate one outside ~.
 
-RepoList::RepoList(Browser &host):
+RepoList::RepoList(Delegate &host):
 	_host(host),
 	_homedir(getenv("HOME"))
 {
@@ -28,7 +27,7 @@ RepoList::RepoList(Browser &host):
 	closedir(pdir);
 }
 
-void RepoList::render(Builder &fields)
+void RepoList::render(ListForm::Builder &fields)
 {
 	fields.label("Repositories:");
 	for (auto &repo: _repos) {
@@ -68,5 +67,5 @@ void RepoList::check_dir(std::string name)
 
 void RepoList::open_repo(const repo_t &target)
 {
-	_host.set_project(target.path);
+	_host.open_project(target.path);
 }
