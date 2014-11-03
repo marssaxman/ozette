@@ -129,10 +129,10 @@ void ListForm::Controller::paint_line(WINDOW *view, int y, int height, int width
 		auto &field = _lines[line];
 		size_t chars_left = (size_t)width;
 		size_t indent = 1 + field->indent() * 4;
-		while (indent > 0 && width > 0) {
+		while (indent > 0 && chars_left > 0) {
 			waddch(view, ' ');
 			indent--;
-			width--;
+			chars_left--;
 		}
 		_lines[line]->paint(view, chars_left);
 		selected = (line == _selpos);

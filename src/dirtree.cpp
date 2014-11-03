@@ -105,7 +105,21 @@ public:
 	virtual unsigned indent() const { return _file.indent(); }
 	virtual void paint(WINDOW *view, size_t width)
 	{
-		waddnstr(view, _file.name().c_str(), width);
+		std::string name = _file.name();
+		size_t namelen = name.size();
+		size_t datelen = _modtime.size();
+		if (namelen + datelen < width) {
+			// We can display both name and date.
+			size_t gap = width - namelen - datelen;
+			waddnstr(view, name.c_str(), namelen);
+			while (gap-- > 0) {
+				waddch(view, ' ');
+			}
+			waddnstr(view, _modtime.c_str(), datelen);
+		} else {
+			// Too much text, so skip the date.
+			waddnstr(view, name.c_str(), width);
+		}
 	}
 private:
 	DirTree::File &_file;
