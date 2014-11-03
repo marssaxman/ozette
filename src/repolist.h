@@ -23,13 +23,15 @@ private:
 	};
 	static VCS dir_repo_type(std::string path);
 	static bool dir_exists(std::string path);
+	void check_dir(std::string name);
 	class RepoField : public Field
 	{
 	public:
-		RepoField(const repo_t &target): _target(target) {}
+		RepoField(Browser &host, const repo_t &target);
 		virtual std::string text() const override { return _target.title; }
 		virtual void invoke(std::string) override;
 	private:
+		Browser &_host;
 		repo_t _target;
 	};
 
@@ -38,8 +40,6 @@ private:
 	Browser &_host;
 	// User's home directory, where we expect to find repositories.
 	std::string _homedir;
-	// List of repository paths we know about.
-	std::vector<repo_t> _repos;
 };
 
 #endif // REPOLIST_H

@@ -23,16 +23,7 @@ RepoList::RepoList(Browser &host):
 	while (dirent *entry = readdir(pdir)) {
 		// We are looking only for directories.
 		if (entry->d_type != DT_DIR) continue;
-		std::string name(entry->d_name);
-		std::string path = _homedir + "/" + name;
-		VCS type = dir_repo_type(path);
-		if (type != VCS::none) {
-			repo_t repo;
-			repo.title = "  ~/" + name;
-			repo.path = path;
-			repo.type = type;
-			_entries.emplace_back(new RepoField(repo));
-		}
+		check_dir(entry->d_name);
 	}
 	closedir(pdir);
 }
@@ -51,6 +42,25 @@ bool RepoList::dir_exists(std::string path)
 {
 	struct stat sb;
 	return (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode));
+}
+
+void RepoList::check_dir(std::string name)
+{
+	std::string path = _homedir + "/" + name;
+	VCS type = dir_repo_type(path);
+	if (type != VCS::none) {
+		repo_t repo;
+		repo.title = "  ~/" + name;
+		repo.path = path;
+		repo.type = type;
+		_entries.emplace_back(new RepoField(_host, repo));
+	}
+}
+
+RepoList::RepoField::RepoField(Browser &host, const repo_t &target):
+	_host(host),
+	_target(target)
+{
 }
 
 void RepoList::RepoField::invoke(std::string)
