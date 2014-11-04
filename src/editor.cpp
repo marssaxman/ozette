@@ -2,6 +2,8 @@
 #include <fstream>
 #include "view.h"
 
+const unsigned Editor::kTabWidth = 4;
+
 Editor::Editor(std::string targetpath):
 	_targetpath(targetpath)
 {
@@ -30,24 +32,18 @@ bool Editor::process(WINDOW *dest, int ch, App &app)
 {
 	update_dimensions(dest);
 	switch (ch) {
-		case KEY_DOWN: cursor_vert(1, false); break;
-		case KEY_UP: cursor_vert(-1, false); break;
-		case 338: cursor_vert(_halfheight, false); break;
-		case 339: cursor_vert(-_halfheight, false); break;
+		case KEY_DOWN: cursor_vert(1); break;
+		case KEY_UP: cursor_vert(-1); break;
+		case KEY_LEFT: cursor_horz(-1); break;
+		case KEY_RIGHT: cursor_horz(1); break;
+		case 338: cursor_vert(_halfheight); break;
+		case 339: cursor_vert(-_halfheight); break;
 		default: break;
 	}
 	if (_update.has_dirty()) {
 		paint(dest, true);
 	}
 	return true;
-}
-
-void Editor::arrow_left()
-{
-}
-
-void Editor::arrow_right()
-{
 }
 
 void Editor::Update::reset()
@@ -90,18 +86,53 @@ void Editor::paint_line(WINDOW *dest, unsigned i)
 	size_t index = i + _scrollpos;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)i, 0);
+	std::string text;
 	if (index < _lines.size()) {
-		waddnstr(dest, _lines[index].c_str(), _width);
+		text = _lines[index];
+	}
+	// We can't print this string unfiltered; we need to look
+	// for tab characters and align them columnwise.
+	size_t column = 0;
+	int selcol = 0;
+	for (char ch: text) {
+		if (column <= _cursx) selcol = column;
+		if (column >= _width) break;
+		if (ch != '\t') {
+			waddch(dest, ch);
+			column++;
+		} else do {
+			waddch(dest, ' ');
+			if (++column >= _width) break;
+		} while (0 != column % kTabWidth);
 	}
 	wclrtoeol(dest);
 	if (_cursy == index) {
-		mvwchgat(dest, i, (int)_cursx, 1, A_REVERSE, 0, NULL);
+		mvwchgat(dest, i, selcol, 1, A_REVERSE, 0, NULL);
 	}
 }
 
 bool Editor::line_visible(size_t index) const
 {
 	return index >= _scrollpos && (index - _scrollpos) < _height;
+}
+
+unsigned Editor::line_columns(size_t index) const
+{
+	return (unsigned)column_for_char(index, (size_t)-1);
+}
+
+int Editor::column_for_char(size_t index, size_t xoff) const
+{
+	size_t column = 0;
+	for (char ch: _lines[index]) {
+		if (0 == xoff--) return column;
+		if (column++ >= _width) break;
+		if (ch != '\t') continue;
+		while (0 != column % kTabWidth) {
+			if (column++ >= _width) break;
+		}
+	}
+	return column;
 }
 
 void Editor::reveal_cursor()
@@ -115,7 +146,7 @@ void Editor::reveal_cursor()
 	_update.all();
 }
 
-void Editor::cursor_vert(int delta, bool extend)
+void Editor::cursor_vert(int delta)
 {
 	size_t cursy = _cursy;
 	size_t cursx = _cursx;
@@ -140,10 +171,31 @@ void Editor::cursor_vert(int delta, bool extend)
 	_update.range(_cursy, cursy);
 	_cursy = cursy;
 	_cursx = cursx;
-	if (!extend) {
-		_selstarty = cursy;
-		_selstartx = cursx;
+	reveal_cursor();
+}
+
+void Editor::cursor_horz(int delta)
+{
+	size_t cursx = _cursx;
+	if (delta > 0) {
+		cursx += delta;
+		if (cursx > line_columns(_cursy)) {
+			cursx = 0;
+			cursor_vert(1);
+			return;
+		}
+	} else {
+		if (cursx >= (size_t)-delta) {
+			cursx += delta;
+		} else {
+			cursx = (size_t)-1;
+			cursor_vert(-1);
+			return;
+		}
 	}
+	if (cursx == _cursx) return;
+	_cursx = cursx;
+	_update.line(_cursy);
 	reveal_cursor();
 }
 

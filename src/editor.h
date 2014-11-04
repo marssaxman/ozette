@@ -13,9 +13,7 @@ public:
 	virtual bool poll(WINDOW *view, App &app) override { return true; }
 	virtual std::string title() const override { return _targetpath; }
 protected:
-	void arrow_left();
-	void arrow_right();
-
+	static const unsigned kTabWidth;
 	class Update
 	{
 	public:
@@ -33,8 +31,11 @@ protected:
 
 	void paint_line(WINDOW *view, unsigned y);
 	bool line_visible(size_t index) const;
+	unsigned line_columns(size_t index) const;
+	int column_for_char(size_t index, size_t xoff) const;
 	void reveal_cursor();
-	void cursor_vert(int delta, bool extend);
+	void cursor_vert(int delta);
+	void cursor_horz(int delta);
 	void update_dimensions(WINDOW *view);
 private:
 	std::string _targetpath;
@@ -52,9 +53,6 @@ private:
 	// Where is the cursor located within the document?
 	size_t _cursy = 0;
 	size_t _cursx = 0;
-	// If there is a selection range, where did it begin?
-	size_t _selstarty = 0;
-	size_t _selstartx = 0;
 };
 
 #endif // CONSOLE_H
