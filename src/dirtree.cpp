@@ -12,14 +12,15 @@ namespace {
 class NodeField : public ListForm::Field
 {
 protected:
-	void indent(WINDOW *view, unsigned tabs, size_t &width)
+	void indent(WINDOW *view, unsigned tabs, int widget, size_t &width)
 	{
-	        size_t columns = 1 + tabs * 4;
-		while (columns > 0 && width > 0) {
-			waddch(view, ' ');
-			columns--;
-			width--;
+		while (tabs-- > 0) {
+			emitrep(view, ' ', 4, width);
 		}
+		wattron(view, A_DIM);
+		emitch(view, widget, width);
+		wattroff(view, A_DIM);
+		emitch(view, ' ', width);
 	}
 };
 } // namespace
@@ -78,7 +79,8 @@ public:
 	}
 	virtual void paint(WINDOW *view, size_t width) override
 	{
-		indent(view, _branch.indent(), width);
+		int widget = _branch.is_open() ? '-' : '+';
+		indent(view, _branch.indent(), widget, width);
 		waddnstr(view, _branch.name().c_str(), width);
 	}
 private:
@@ -117,22 +119,14 @@ public:
 	}
 	virtual void paint(WINDOW *view, size_t width)
 	{
-		indent(view, _file.indent(), width);
-		std::string name = _file.name();
-		size_t namelen = name.size();
+		indent(view, _file.indent(), ' ', width);
+		emitstr(view, _file.name(), width);
 		size_t datelen = _modtime.size();
-		if (namelen + datelen < width) {
-			// We can display both name and date.
-			size_t gap = width - namelen - datelen;
-			waddnstr(view, name.c_str(), namelen);
-			while (gap-- > 0) {
-				waddch(view, ' ');
-			}
-			waddnstr(view, _modtime.c_str(), datelen);
-		} else {
-			// Too much text, so skip the date.
-			waddnstr(view, name.c_str(), width);
-		}
+		if (datelen > width) return;
+		emitrep(view, ' ', width - datelen, width);
+		wattron(view, A_DIM);
+		emitstr(view, _modtime, width);
+		wattroff(view, A_DIM);
 	}
 private:
 	DirTree::File &_file;

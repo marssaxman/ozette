@@ -1,16 +1,25 @@
 #include "listform.h"
 #include <assert.h>
 
-namespace ListForm {
-
-class Blank : public Field
+void ListForm::Field::emitch(WINDOW *view, int ch, size_t &width)
 {
-public:
-	virtual bool active() const override { return false; }
-	virtual void paint(WINDOW *view, size_t width) override {}
-};
+	if (width == 0) return;
+	waddch(view, ch);
+	width--;
+}
 
-} // namespace ListForm
+void ListForm::Field::emitstr(WINDOW *view, std::string str, size_t &width)
+{
+	waddnstr(view, str.c_str(), width);
+	width -= std::min(width, str.size());
+}
+
+void ListForm::Field::emitrep(WINDOW *view, int ch, size_t repeat, size_t &width)
+{
+	while (repeat-- > 0) {
+		emitch(view, ch, width);
+	}
+}
 
 void ListForm::Controller::paint(WINDOW *view)
 {
@@ -61,11 +70,8 @@ void ListForm::Controller::refresh()
 	// Render our commands and entries down to some text lines.
 	_lines.clear();
 	LineBuilder fields(_lines);
-	std::unique_ptr<Field> field(new Blank);
-	fields.add(std::move(field));
 	render(fields);
-	field.reset(new Blank);
-	fields.add(std::move(field));
+	fields.blank();
 	// If the cursor has gone out of range, bring it back.
 	if (_selpos >= _lines.size()) {
 		_selpos = _lines.size();
@@ -98,6 +104,10 @@ void ListForm::Controller::paint_line(WINDOW *view, int y, int height, int width
 		return;
 	}
 	auto &field = _lines[line];
+	if (!field.get()) {
+		wclrtoeol(view);
+		return;
+	}
 	field->paint(view, (size_t)width);
 	wclrtoeol(view);
 	if (line == _selpos) {
@@ -113,7 +123,8 @@ bool ListForm::Controller::is_selectable(ssize_t line)
 {
 	if (line < 0) return false;
 	if ((size_t)line >= _lines.size()) return false;
-	return _lines[line]->active();
+	auto &field = _lines[line];
+	return field.get() != nullptr && field->active();
 }
 
 void ListForm::Controller::arrow_down(WINDOW *view)
@@ -146,7 +157,8 @@ void ListForm::Controller::arrow_up(WINDOW *view)
 void ListForm::Controller::commit(WINDOW *view)
 {
 	assert(_selpos < _lines.size());
-	if (_lines[_selpos]->invoke()) {
+	auto &field = _lines[_selpos];
+	if (field.get() != nullptr && field->invoke()) {
 		_dirty = true;
 		paint(view);
 	}
@@ -155,7 +167,8 @@ void ListForm::Controller::commit(WINDOW *view)
 void ListForm::Controller::escape(WINDOW *view)
 {
 	assert(_selpos < _lines.size());
-	if (_lines[_selpos]->cancel()) {
+	auto &field = _lines[_selpos];
+	if (field.get() != nullptr && field->cancel()) {
 		_dirty = true;
 		paint(view);
 	}

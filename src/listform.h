@@ -17,6 +17,11 @@ public:
 	virtual bool cancel() { return false; }
 	virtual void paint(WINDOW *view, size_t width) = 0;
 	virtual void get_highlight(size_t &offset, size_t &len) {}
+protected:
+	// Common utilities for field implementations
+        void emitch(WINDOW *view, int ch, size_t &width);
+        void emitstr(WINDOW *view, std::string str, size_t &width);
+	void emitrep(WINDOW *view, int ch, size_t repeat, size_t &width);
 };
 
 class Builder
@@ -24,6 +29,7 @@ class Builder
 public:
 	virtual ~Builder() = default;
 	virtual void add(std::unique_ptr<Field> &&field) = 0;
+	virtual void blank() { add(nullptr); }
 };
 
 class Source

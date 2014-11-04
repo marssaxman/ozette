@@ -35,19 +35,21 @@ public:
 	}
 	virtual void paint(WINDOW *view, size_t width)
 	{
-		emit(view, boxleft(), width);
+		wattron(view, A_BOLD);
+		emitch(view, boxleft(), width);
+		wattroff(view, A_BOLD);
 		size_t gap = _maxlen - _text.size();
 		if (!_text.empty()) {
-			emit(view, ' ', width);
-			emit(view, _text, width);
-			emit(view, ' ', width);
+			emitch(view, ' ', width);
+			emitstr(view, _text, width);
+			emitch(view, ' ', width);
 		} else {
 			gap += 2;
 		}
-		while (gap-- > 0) {
-			emit(view, spacer(), width);
-		}
-		emit(view, boxright(), width);
+		emitrep(view, spacer(), gap, width);
+		wattron(view, A_BOLD);
+		emitch(view, boxright(), width);
+		wattroff(view, A_BOLD);
 	}
 	virtual void get_highlight(size_t &off, size_t &len) override
 	{
@@ -59,17 +61,6 @@ protected:
 	virtual int spacer() const = 0;
 	virtual int boxright() const = 0;
 private:
-	void emit(WINDOW *view, int ch, size_t &width)
-	{
-		if (width == 0) return;
-		waddch(view, ch);
-		width--;
-	}
-	void emit(WINDOW *view, std::string str, size_t &width)
-	{
-		waddnstr(view, str.c_str(), width);
-		width -= std::min(width, str.size());
-	}
 	std::string _text;
 	size_t _maxlen;
 };
@@ -156,9 +147,9 @@ private:
 
 void ProjectList::render(ListForm::Builder &fields)
 {
-	std::string title = "Project";
+	std::string title = "Project:";
 	if (!_last_project.empty()) {
-		title += ": " + _last_project;
+		title += " " + _last_project;
 	}
 	size_t maxlen = title.size();
 	for (auto &repo: _repos) {

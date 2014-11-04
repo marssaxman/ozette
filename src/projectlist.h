@@ -40,7 +40,7 @@ private:
 	// These are the repositories we currently know about.
 	std::vector<repo_t> _repos;
 	// Are we currently displaying the list of projects?
-	bool _open = false;
+	bool _open = true;
 	// Which project did we open last?
 	std::string _last_project;
 };

@@ -43,6 +43,7 @@ public:
 	virtual void render(ListForm::Builder &fields) override;
 	std::string name() const { return _name; }
 	void toggle() { _open = !_open; }
+	bool is_open() const { return _open; }
 private:
 	std::string _name;
 	bool _open = false;
