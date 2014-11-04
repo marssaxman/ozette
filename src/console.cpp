@@ -34,13 +34,13 @@ void Console::paint(WINDOW *view)
 {
 }
 
-bool Console::process(WINDOW *view, int ch)
+bool Console::process(WINDOW *view, int ch, App &app)
 {
 	write(_stdin, &ch, sizeof(char));
 	return true;
 }
 
-bool Console::poll(WINDOW *view)
+bool Console::poll(WINDOW *view, App &app)
 {
 	// Try to read some data from the shell process.
 	// If data came in, write it to the window.

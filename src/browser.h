@@ -12,10 +12,10 @@ public:
 	Browser();
 	virtual std::string title() const override { return "Lindi"; }
 	void show_projects();
+	virtual void open_project(std::string path) override;
 protected:
 	virtual void render(ListForm::Builder &lines) override;
 private:
-	virtual void open_project(std::string path) override;
 	ProjectList _repos;
 	std::unique_ptr<DirTree::Root> _project;
 };

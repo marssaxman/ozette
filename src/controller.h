@@ -3,6 +3,7 @@
 
 #include <string>
 #include <ncurses.h>
+#include "app.h"
 
 class Controller
 {
@@ -14,11 +15,11 @@ public:
 	// A keypress has occurred. Update model and view.
 	// Return true if the process should continue, false if
 	// the keypress represented a close action.
-	virtual bool process(WINDOW *view, int ch) = 0;
+	virtual bool process(WINDOW *view, int ch, App &app) = 0;
 	// Time has passed. Poll the inputs, if relevant.
 	// Return true if the process should continue, false if
 	// some input has occurred which signals process completion.
-	virtual bool poll(WINDOW *view) = 0;
+	virtual bool poll(WINDOW *view, App &app) = 0;
 	// Human-readable string identifying the object.
 	virtual std::string title() const = 0;
 };

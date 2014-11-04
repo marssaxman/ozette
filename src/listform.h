@@ -1,6 +1,7 @@
 #ifndef LISTFORM_H
 #define LISTFORM_H
 
+#include "app.h"
 #include "controller.h"
 #include <memory>
 #include <vector>
@@ -13,11 +14,12 @@ class Field
 public:
 	virtual ~Field() = default;
 	virtual bool active() const { return true; }
-	virtual bool invoke() { return false; }
+	virtual bool invoke(App&) { return invoke(); }
 	virtual bool cancel() { return false; }
 	virtual void paint(WINDOW *view, size_t width) = 0;
 	virtual void get_highlight(size_t &offset, size_t &len) {}
 protected:
+	virtual bool invoke() { return false; }
 	// Common utilities for field implementations
         void emitch(WINDOW *view, int ch, size_t &width);
         void emitstr(WINDOW *view, std::string str, size_t &width);
@@ -49,8 +51,8 @@ class Controller : public ::Controller
 {
 public:
 	virtual void paint(WINDOW *view) override;
-	virtual bool process(WINDOW *view, int ch) override;
-	virtual bool poll(WINDOW *view) override;
+	virtual bool process(WINDOW *view, int ch, App &app) override;
+	virtual bool poll(WINDOW *view, App &app) override;
 protected:
 	virtual void render(Builder &fields) = 0;
 	void mark_dirty() { _dirty = true; }
@@ -59,7 +61,7 @@ private:
 	bool is_selectable(ssize_t line);
 	void arrow_down(WINDOW *view);
 	void arrow_up(WINDOW *view);
-	void commit(WINDOW *view);
+	void commit(WINDOW *view, App &app);
 	void escape(WINDOW *view);
 	void scroll_to_selection(WINDOW *view);
 	std::vector<std::unique_ptr<Field>> _lines;

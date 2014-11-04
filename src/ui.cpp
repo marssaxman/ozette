@@ -3,8 +3,8 @@
 #include <assert.h>
 #include <list>
 
-UI::UI(Delegate &app):
-	_app(app)
+UI::UI(Delegate &host):
+	_host(host)
 {
 	// Set up ncurses.
 	initscr();
@@ -29,7 +29,7 @@ UI::~UI()
 	endwin();
 }
 
-bool UI::process(int ch)
+bool UI::process(int ch, App &app)
 {
 	// The UI handles control-shift-arrow-key presses by changing
 	// the focus window. All other keypresses are delegated to
@@ -39,7 +39,7 @@ bool UI::process(int ch)
 			std::list<size_t> dead;
 			for (size_t i = 0; i < _columns.size(); ++i) {
 				auto &win = _columns[i];
-				if (!win->poll()) {
+				if (!win->poll(app)) {
 					dead.push_front(i);
 				}
 			}
@@ -67,7 +67,7 @@ bool UI::process(int ch)
 			relayout();
 		} break;
 		default: {
-			send_to_focus(ch);
+			send_to_focus(ch, app);
 		} break;
 	}
 	// quit on tab press for now... temporary
@@ -99,6 +99,19 @@ void UI::set_focus(size_t index)
 	_columns[_focus]->clear_focus();
 	_focus = index;
 	_columns[_focus]->set_focus();
+	// We want to keep as much of the background
+	// visible as we can. This means we must stack
+	// windows on the left of the focus in ascending
+	// order, while windows to the right of the focus
+	// are stacked in descending order. We raise the
+	// focus window last.
+	for (size_t i = 0; i < _focus; ++i) {
+		_columns[i]->bring_forward();
+	}
+	for (size_t i = _columns.size() - 1; i > _focus; --i) {
+		_columns[i]->bring_forward();
+	}
+	_columns[_focus]->bring_forward();
 }
 
 void UI::relayout()
@@ -123,9 +136,9 @@ void UI::relayout()
 	}
 }
 
-void UI::send_to_focus(int ch)
+void UI::send_to_focus(int ch, App &app)
 {
-	bool more = _columns[_focus]->process(ch);
+	bool more = _columns[_focus]->process(ch, app);
 	if (more) return;
 	close_window(_focus);
 	relayout();
@@ -133,6 +146,6 @@ void UI::send_to_focus(int ch)
 
 void UI::close_window(size_t index)
 {
-	_app.window_closed(std::move(_columns.at(index)));
+	_host.window_closed(std::move(_columns.at(index)));
 	_columns.erase(_columns.begin() + index);
 }

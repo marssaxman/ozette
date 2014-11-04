@@ -70,9 +70,7 @@ void Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
 void Window::set_focus()
 {
 	_has_focus = true;
-	top_panel(_framepanel);
 	draw_chrome();
-	top_panel(_contentpanel);
 }
 
 void Window::clear_focus()
@@ -81,14 +79,20 @@ void Window::clear_focus()
 	draw_chrome();
 }
 
-bool Window::process(int ch)
+void Window::bring_forward()
 {
-	return _controller->process(_contentwin, ch);
+	top_panel(_framepanel);
+	top_panel(_contentpanel);
 }
 
-bool Window::poll()
+bool Window::process(int ch, App &app)
 {
-	return _controller->poll(_contentwin);
+	return _controller->process(_contentwin, ch, app);
+}
+
+bool Window::poll(App &app)
+{
+	return _controller->poll(_contentwin, app);
 }
 
 void Window::draw_chrome()

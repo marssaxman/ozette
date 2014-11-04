@@ -117,6 +117,11 @@ public:
 			_modtime = ctime_r(&st.st_mtime, buf);
 		}
 	}
+	virtual bool invoke(App &app) override
+	{
+		app.edit_file(_file.path());
+		return false;
+	}
 	virtual void paint(WINDOW *view, size_t width)
 	{
 		indent(view, _file.indent(), ' ', width);

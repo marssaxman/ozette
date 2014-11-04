@@ -71,7 +71,7 @@ class Label : public Field
 public:
 	Label(std::string title, size_t maxlen, ProjectList &list):
 		Field(title, maxlen), _list(list) {}
-	virtual bool invoke() override
+	virtual bool invoke(App &app) override
 	{
 		_list.toggle();
 		return true;

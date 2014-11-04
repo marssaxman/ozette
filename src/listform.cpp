@@ -34,19 +34,19 @@ void ListForm::Controller::paint(WINDOW *view)
 	}
 }
 
-bool ListForm::Controller::process(WINDOW *view, int ch)
+bool ListForm::Controller::process(WINDOW *view, int ch, App &app)
 {
         switch (ch) {
                 case KEY_DOWN: arrow_down(view); break;
                 case KEY_UP: arrow_up(view); break;
-		case '\r': commit(view); break;
+		case '\r': commit(view, app); break;
 		case 27: escape(view); break;
 		default: break;
 	}
 	return true;
 }
 
-bool ListForm::Controller::poll(WINDOW *view)
+bool ListForm::Controller::poll(WINDOW *view, App &app)
 {
 	return true;
 }
@@ -154,11 +154,11 @@ void ListForm::Controller::arrow_up(WINDOW *view)
 	}
 }
 
-void ListForm::Controller::commit(WINDOW *view)
+void ListForm::Controller::commit(WINDOW *view, App &app)
 {
 	assert(_selpos < _lines.size());
 	auto &field = _lines[_selpos];
-	if (field.get() != nullptr && field->invoke()) {
+	if (field.get() != nullptr && field->invoke(app)) {
 		_dirty = true;
 		paint(view);
 	}

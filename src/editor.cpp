@@ -26,7 +26,7 @@ void Editor::paint(WINDOW *dest)
 	}
 }
 
-bool Editor::process(WINDOW *dest, int ch)
+bool Editor::process(WINDOW *dest, int ch, App &app)
 {
 	switch (ch) {
 		case 258: arrow_down(dest); break;

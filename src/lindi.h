@@ -1,18 +1,20 @@
 #ifndef LINDI_H
 #define LINDI_H
 
+#include "app.h"
 #include "ui.h"
 #include "browser.h"
 #include <string>
 #include <map>
 
-class Lindi : private UI::Delegate
+class Lindi : public App, private UI::Delegate
 {
 public:
 	Lindi();
-	void edit_file(std::string path);
+	virtual void edit_file(std::string path) override;
+	virtual void select_project(std::string path) override;
+	virtual void quit() override;
 	void run();
-	void quit();
 private:
 	virtual void window_closed(std::unique_ptr<Window> &&window) override;
 	UI _ui;

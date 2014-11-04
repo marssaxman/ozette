@@ -15,8 +15,9 @@ public:
 	void layout(int xpos, int height, int width, bool lframe, bool rframe);
 	void set_focus();
 	void clear_focus();
-	bool process(int ch);
-	bool poll();
+	void bring_forward();
+	bool process(int ch, App &app);
+	bool poll(App &app);
 protected:
 	void draw_chrome();
 private:

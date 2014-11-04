@@ -9,8 +9,8 @@ public:
 	explicit Console(std::string command);
 	~Console();
 	virtual void paint(WINDOW *view) override;
-	virtual bool process(WINDOW *view, int ch) override;
-	virtual bool poll(WINDOW *view) override;
+	virtual bool process(WINDOW *view, int ch, App &app) override;
+	virtual bool poll(WINDOW *view, App &app) override;
 	virtual std::string title() const override { return "Console"; }
 protected:
 	static void set_nonblocking(int fd);

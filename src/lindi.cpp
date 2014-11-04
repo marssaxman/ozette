@@ -24,6 +24,16 @@ void Lindi::edit_file(std::string path)
 	_editors[path] = win;
 }
 
+void Lindi::select_project(std::string path)
+{
+	_browser->open_project(path);
+}
+
+void Lindi::quit()
+{
+	// not sure yet how best to do this
+}
+
 void Lindi::run()
 {
 	if (_editors.empty()) {
@@ -33,7 +43,7 @@ void Lindi::run()
 	do {
 		update_panels();
 		doupdate();
-	} while (_ui.process(getch()));
+	} while (_ui.process(getch(), *this));
 }
 
 void Lindi::window_closed(std::unique_ptr<Window> &&win)
