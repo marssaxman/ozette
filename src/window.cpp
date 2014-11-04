@@ -124,10 +124,10 @@ void Window::draw_chrome()
 	}
 	// Print the window title, erasing part of the top border.
 	if (barwidth > 0) {
-		mvwaddch(_framewin, 0, barx++, ' ');
+		mvwaddch(_framewin, 0, ++barx, ' ');
 	}
 	std::string title = _controller->title();
-	waddnstr(_framewin, title.c_str(), std::max(0, barwidth-2));
+	waddnstr(_framewin, title.c_str(), std::max(0, barwidth-3));
 	barwidth -= title.size();
 	if (barwidth > 0) {
 		waddch(_framewin, ' ');
