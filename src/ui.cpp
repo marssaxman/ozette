@@ -3,7 +3,8 @@
 #include <assert.h>
 #include <list>
 
-UI::UI()
+UI::UI(Delegate &app):
+	_app(app)
 {
 	// Set up ncurses.
 	initscr();
@@ -43,7 +44,7 @@ bool UI::process(int ch)
 				}
 			}
 			for (auto i: dead) {
-				_columns.erase(_columns.begin() + i);
+				close_window(i);
 			}
 			relayout();
 		} break;
@@ -79,14 +80,16 @@ void UI::get_screen_size()
 	_columnWidth = std::min(80, _width);
 }
 
-void UI::open_window(std::unique_ptr<Controller> &&controller)
+Window *UI::open_window(std::unique_ptr<Controller> &&controller)
 {
 	// We reserve the top row for the title bar.
 	// Aside from that, new windows fill the terminal rows.
 	// Windows are never wider than 80 columns.
-	_columns.emplace_back(new Window(std::move(controller)));
+	Window *win = new Window(std::move(controller));
+	_columns.emplace_back(win);
 	relayout();
 	set_focus(_columns.size() - 1);
+	return win;
 }
 
 void UI::set_focus(size_t index)
@@ -124,6 +127,12 @@ void UI::send_to_focus(int ch)
 {
 	bool more = _columns[_focus]->process(ch);
 	if (more) return;
-	_columns.erase(_columns.begin()+_focus);
+	close_window(_focus);
 	relayout();
+}
+
+void UI::close_window(size_t index)
+{
+	_app.window_closed(std::move(_columns.at(index)));
+	_columns.erase(_columns.begin() + index);
 }

@@ -22,11 +22,10 @@ int main(int argc, char **argv)
 {
 	(void)signal(SIGINT, handle_sigint);
 	(void)signal(SIGCHLD, handle_sigchld);
-	std::list<std::string> args;
+	s_app.reset(new Lindi);
 	for (int i = 1; i < argc; ++i) {
-		args.emplace_back(argv[i]);
+		s_app->edit_file(argv[i]);
 	}
-	s_app.reset(new Lindi(args));
 	s_app->run();
 	return 0;
 }

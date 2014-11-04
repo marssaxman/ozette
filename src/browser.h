@@ -11,6 +11,7 @@ class Browser : public ListForm::Controller, private ProjectList::Delegate
 public:
 	Browser();
 	virtual std::string title() const override { return "Lindi"; }
+	void show_projects();
 protected:
 	virtual void render(ListForm::Builder &lines) override;
 private:

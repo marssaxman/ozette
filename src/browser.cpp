@@ -5,6 +5,12 @@ Browser::Browser():
 {
 }
 
+void Browser::show_projects()
+{
+	_repos.show_projects();
+	mark_dirty();
+}
+
 void Browser::open_project(std::string path)
 {
 	_project.reset(new DirTree::Root(path));

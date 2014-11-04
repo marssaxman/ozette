@@ -7,10 +7,17 @@
 class UI
 {
 public:
-	UI();
+	class Delegate
+	{
+	public:
+		virtual ~Delegate() = default;
+		virtual void window_closed(std::unique_ptr<Window> &&win) = 0;
+	};
+	UI(Delegate &app);
 	~UI();
 	bool process(int ch);
-	void open_window(std::unique_ptr<Controller> &&wincontrol);
+	Window *open_window(std::unique_ptr<Controller> &&wincontrol);
+	void bring_forward(Window *window) {}
 protected:
 	// get the terminal width and height, then calculate column width
 	void get_screen_size();
@@ -20,7 +27,10 @@ protected:
 	void relayout();
 	// send this char to the focus window
 	void send_to_focus(int ch);
+	// close the window with this index & tell our delegate
+	void close_window(size_t index);
 private:
+	Delegate &_app;
 	int _width = 0;
 	int _height = 0;
 	std::vector<std::unique_ptr<Window>> _columns;

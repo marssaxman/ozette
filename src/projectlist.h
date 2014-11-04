@@ -16,6 +16,7 @@ public:
 	ProjectList(Delegate &host);
 	virtual void render(ListForm::Builder &fields) override;
 	void toggle() { _open = !_open; }
+	void show_projects() { _open = true; }
 	void hide_projects() { _open = false; }
 	bool are_projects_open() const { return _open; }
 	enum class VCS {
@@ -40,7 +41,7 @@ private:
 	// These are the repositories we currently know about.
 	std::vector<repo_t> _repos;
 	// Are we currently displaying the list of projects?
-	bool _open = true;
+	bool _open = false;
 	// Which project did we open last?
 	std::string _last_project;
 };

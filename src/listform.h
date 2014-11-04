@@ -53,6 +53,7 @@ public:
 	virtual bool poll(WINDOW *view) override;
 protected:
 	virtual void render(Builder &fields) = 0;
+	void mark_dirty() { _dirty = true; }
 private:
 	void paint_line(WINDOW *view, int y, int height, int width);
 	bool is_selectable(ssize_t line);
