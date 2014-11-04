@@ -18,11 +18,6 @@ public:
 	bool process(int ch, App &app);
 	Window *open_window(std::unique_ptr<Controller> &&wincontrol);
 	void make_active(Window *window);
-
-	static int color_contrast() { return COLOR_PAIR(0); }
-	static int color_highlight() { return COLOR_PAIR(s_color ? 1 : 0); }
-	static int color_lowlight() { return COLOR_PAIR(s_color ? 2 : 0); }
-	static int color_subdued() { return COLOR_PAIR(s_color ? 3 : 0); }
 protected:
 	// get the terminal width and height, then calculate column width
 	void get_screen_size();
@@ -34,9 +29,6 @@ protected:
 	void send_to_focus(int ch, App &app);
 	// close the window with this index & tell our delegate
 	void close_window(size_t index);
-	// run this once during setup: initialize the color system
-	void init_colors();
-	static bool s_color;
 private:
 	Delegate &_host;
 	int _width = 0;

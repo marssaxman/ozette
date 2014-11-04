@@ -97,7 +97,6 @@ bool Window::poll(App &app)
 
 void Window::draw_chrome()
 {
-	if (!_has_focus) wattron(_framewin, UI::color_subdued());
 	// Draw the left frame, if we have one.
 	int barx = 0;
 	int barwidth = _width;
@@ -133,6 +132,5 @@ void Window::draw_chrome()
 	if (barwidth > 0) {
 		waddch(_framewin, ' ');
 	}
-	if (!_has_focus) wattroff(_framewin, UI::color_subdued());
 }
 
