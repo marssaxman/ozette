@@ -11,7 +11,7 @@ public:
 	virtual ~Controller() = default;
 	// A view has been created or has been cleared.
 	// Fill it as necessary based on current model state.
-	virtual void paint(WINDOW *view) = 0;
+	virtual void paint(WINDOW *view, bool active) = 0;
 	// A keypress has occurred. Update model and view.
 	// Return true if the process should continue, false if
 	// the keypress represented a close action.

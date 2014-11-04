@@ -10,7 +10,7 @@ Window::Window(std::unique_ptr<Controller> &&controller):
 	_contentpanel(new_panel(_contentwin))
 {
 	draw_chrome();
-	_controller->paint(_contentwin);
+	_controller->paint(_contentwin, _has_focus);
 }
 
 Window::~Window()
@@ -64,7 +64,7 @@ void Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
 	if (needs_chrome) {
 		draw_chrome();
 	}
-	_controller->paint(_contentwin);
+	_controller->paint(_contentwin, _has_focus);
 }
 
 void Window::set_focus()
@@ -97,36 +97,13 @@ bool Window::poll(App &app)
 
 void Window::draw_chrome()
 {
-	// Draw the title bar.
-	mvwchgat(_framewin, 0, 0, _width, A_NORMAL, 0, NULL);
-	int barx = 0 + (_lframe ? 1 : 0);
-	int barwidth = std::max(0, _width + (_lframe ? -1 : 0) + (_rframe ? -1 : 0));
-	int titlex = barx + 1;
-	int titlewidth = std::max(0, barwidth - 2);
-	std::string title = _controller->title();
-	if (_has_focus) {
-		// Highlight the target with a big reverse-text title.
-		title.resize(titlewidth, ' ');
-		mvwaddch(_framewin, 0, titlex-1, ' ');
-		mvwprintw(_framewin, 0, titlex, title.c_str());
-		waddch(_framewin, ' ');
-		mvwchgat(_framewin, 0, barx, barwidth, A_REVERSE, 0, NULL);
-	} else if (title.size() >= (size_t)titlewidth) {
-		// The text will completely fill the space.
-		title.resize(titlewidth);
-		mvwprintw(_framewin, 0, titlex, title.c_str());
-	} else {
-		// The text will not completely fill the bar.
-		// Draw a continuing horizontal line following.
-		mvwprintw(_framewin, 0, titlex, title.c_str());
-		int extra = titlewidth - title.size();
-		while (extra > 0) {
-			mvwaddch(_framewin, 0, barx + barwidth - extra, ACS_HLINE);
-			extra--;
-		}
-	}
+	if (!_has_focus) wattron(_framewin, UI::color_subdued());
 	// Draw the left frame, if we have one.
+	int barx = 0;
+	int barwidth = _width;
 	if (_lframe) {
+		barx = 1;
+		barwidth--;
 		mvwaddch(_framewin, 0, 0, ACS_ULCORNER);
 		for (int i = 1; i < _height; ++i) {
 			mvwaddch(_framewin, i, 0, ACS_VLINE);
@@ -134,11 +111,28 @@ void Window::draw_chrome()
 	}
 	// Draw the right frame, if we have one.
 	if (_rframe) {
+		barwidth--;
 		int col = _width - 1;
 		mvwaddch(_framewin, 0, col, ACS_URCORNER);
 		for (int i = 1;  i < _height; ++i) {
 			mvwaddch(_framewin, i, col, ACS_VLINE);
 		}
 	}
+	// Draw the bar across the top of the window.
+	wmove(_framewin, 0, barx);
+	for (int i = 0; i < barwidth; ++i) {
+		waddch(_framewin, ACS_HLINE);
+	}
+	// Print the window title, erasing part of the top border.
+	if (barwidth > 0) {
+		mvwaddch(_framewin, 0, barx++, ' ');
+	}
+	std::string title = _controller->title();
+	waddnstr(_framewin, title.c_str(), std::max(0, barwidth-2));
+	barwidth -= title.size();
+	if (barwidth > 0) {
+		waddch(_framewin, ' ');
+	}
+	if (!_has_focus) wattroff(_framewin, UI::color_subdued());
 }
 

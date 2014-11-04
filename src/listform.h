@@ -50,14 +50,14 @@ public:
 class Controller : public ::Controller
 {
 public:
-	virtual void paint(WINDOW *view) override;
+	virtual void paint(WINDOW *view, bool active) override;
 	virtual bool process(WINDOW *view, int ch, App &app) override;
 	virtual bool poll(WINDOW *view, App &app) override;
 protected:
 	virtual void render(Builder &fields) = 0;
 	void mark_dirty() { _dirty = true; }
 private:
-	void paint_line(WINDOW *view, int y, int height, int width);
+	void paint_line(WINDOW *view, int y, int height, int width, bool active);
 	bool is_selectable(ssize_t line);
 	void arrow_down(WINDOW *view);
 	void arrow_up(WINDOW *view);

@@ -8,7 +8,7 @@ class Editor : public Controller
 {
 public:
 	Editor(std::string targetpath);
-	virtual void paint(WINDOW *view) override;
+	virtual void paint(WINDOW *view, bool active) override;
 	virtual bool process(WINDOW *view, int ch, App &app) override;
 	virtual bool poll(WINDOW *view, App &app) override { return true; }
 	virtual std::string title() const override { return _targetpath; }

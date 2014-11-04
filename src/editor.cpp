@@ -12,7 +12,7 @@ Editor::Editor(std::string targetpath):
 	}
 }
 
-void Editor::paint(WINDOW *dest)
+void Editor::paint(WINDOW *dest, bool active)
 {
 	View view(dest);
 	size_t effscroll = std::min(maxscroll(dest), _scrollpos);
@@ -42,7 +42,7 @@ void Editor::arrow_down(WINDOW *dest)
 {
 	if (_scrollpos < maxscroll(dest)) {
 		_scrollpos++;
-		paint(dest);
+		paint(dest, true);
 	}
 }
 
@@ -51,7 +51,7 @@ void Editor::arrow_up(WINDOW *dest)
 	size_t minscroll = 0;
 	if (_scrollpos > minscroll) {
 		_scrollpos--;
-		paint(dest);
+		paint(dest, true);
 	}
 }
 
@@ -60,7 +60,7 @@ void Editor::page_down(WINDOW *dest)
 	View view(dest);
 	size_t step = view.height() / 2;
 	_scrollpos = std::min(_scrollpos + step, maxscroll(dest));
-	paint(dest);
+	paint(dest, true);
 }
 
 void Editor::page_up(WINDOW *dest)
@@ -68,7 +68,7 @@ void Editor::page_up(WINDOW *dest)
 	View view(dest);
 	size_t step = view.height() / 2;
 	_scrollpos = std::max((int)_scrollpos - (int)step, 0);
-	paint(dest);
+	paint(dest, true);
 }
 
 size_t Editor::maxscroll(WINDOW *dest)

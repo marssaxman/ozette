@@ -30,7 +30,7 @@ Console::~Console()
 	pcloseRWE(_pid, pipe);
 }
 
-void Console::paint(WINDOW *view)
+void Console::paint(WINDOW *view, bool active)
 {
 }
 

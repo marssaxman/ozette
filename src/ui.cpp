@@ -8,6 +8,12 @@ UI::UI(Delegate &host):
 {
 	// Set up ncurses.
 	initscr();
+	if (has_colors()) {
+		start_color();
+		use_default_colors();
+		init_pair(1, COLOR_GREEN, COLOR_BLUE);
+		init_pair(2, COLOR_BLUE, COLOR_BLACK);
+	}
 	cbreak();
 	noecho();
 	nonl();

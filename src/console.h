@@ -8,7 +8,7 @@ class Console : public Controller
 public:
 	explicit Console(std::string command);
 	~Console();
-	virtual void paint(WINDOW *view) override;
+	virtual void paint(WINDOW *view, bool active) override;
 	virtual bool process(WINDOW *view, int ch, App &app) override;
 	virtual bool poll(WINDOW *view, App &app) override;
 	virtual std::string title() const override { return "Console"; }

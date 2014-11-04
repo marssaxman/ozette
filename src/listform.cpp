@@ -21,7 +21,7 @@ void ListForm::Field::emitrep(WINDOW *view, int ch, size_t repeat, size_t &width
 	}
 }
 
-void ListForm::Controller::paint(WINDOW *view)
+void ListForm::Controller::paint(WINDOW *view, bool active)
 {
 	if (_dirty) {
 		_dirty = false;
@@ -30,7 +30,7 @@ void ListForm::Controller::paint(WINDOW *view)
 	int height, width;
 	getmaxyx(view, height, width);
 	for (int y = 0; y < height; ++y) {
-		paint_line(view, y, height, width);
+		paint_line(view, y, height, width, active);
 	}
 }
 
@@ -95,7 +95,7 @@ void ListForm::Controller::refresh()
 
 }
 
-void ListForm::Controller::paint_line(WINDOW *view, int y, int height, int width)
+void ListForm::Controller::paint_line(WINDOW *view, int y, int height, int width, bool active)
 {
 	size_t line = (size_t)y + _scrollpos;
 	wmove(view, y, 0);
@@ -110,7 +110,7 @@ void ListForm::Controller::paint_line(WINDOW *view, int y, int height, int width
 	}
 	field->paint(view, (size_t)width);
 	wclrtoeol(view);
-	if (line == _selpos) {
+	if (active && line == _selpos) {
 		size_t high_off = 0;
 		size_t high_len = (size_t)width;
 		field->get_highlight(high_off, high_len);
@@ -160,7 +160,7 @@ void ListForm::Controller::commit(WINDOW *view, App &app)
 	auto &field = _lines[_selpos];
 	if (field.get() != nullptr && field->invoke(app)) {
 		_dirty = true;
-		paint(view);
+		paint(view, true);
 	}
 }
 
@@ -170,7 +170,7 @@ void ListForm::Controller::escape(WINDOW *view)
 	auto &field = _lines[_selpos];
 	if (field.get() != nullptr && field->cancel()) {
 		_dirty = true;
-		paint(view);
+		paint(view, true);
 	}
 }
 
@@ -197,5 +197,5 @@ void ListForm::Controller::scroll_to_selection(WINDOW *view)
 	// the cursor, because it is intended for use after operations
 	// which move the selection, and such operations require us to
 	// repaint the window anyway.
-	paint(view);
+	paint(view, true);
 }

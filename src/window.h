@@ -29,7 +29,7 @@ private:
 	PANEL *_framepanel = nullptr;
 	WINDOW *_contentwin = nullptr;
 	PANEL *_contentpanel = nullptr;
-	bool _has_focus = false;
+	bool _has_focus = true;
 	bool _lframe = false;
 	bool _rframe = false;
 };

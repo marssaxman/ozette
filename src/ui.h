@@ -18,6 +18,9 @@ public:
 	bool process(int ch, App &app);
 	Window *open_window(std::unique_ptr<Controller> &&wincontrol);
 	void make_active(Window *window);
+
+	static int color_highlight() { return COLOR_PAIR(1); }
+	static int color_subdued() { return COLOR_PAIR(2); }
 protected:
 	// get the terminal width and height, then calculate column width
 	void get_screen_size();
