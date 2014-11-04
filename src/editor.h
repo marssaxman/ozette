@@ -31,9 +31,10 @@ protected:
 		size_t _lineend = 0;
 	} _update;
 
+	void paint_line(WINDOW *view, unsigned y);
 	bool line_visible(size_t index) const;
 	void reveal_cursor();
-	void cursor_vert(int delta);
+	void cursor_vert(int delta, bool extend);
 	void update_dimensions(WINDOW *view);
 private:
 	std::string _targetpath;
@@ -45,11 +46,15 @@ private:
 	size_t _height = 0;
 	size_t _halfheight = 0;
 	size_t _maxscroll = 0;
+	size_t _maxline = 0;	// ubound, not size
 	// What is the vertical position of the viewrect?
 	size_t _scrollpos = 0;
 	// Where is the cursor located within the document?
 	size_t _cursy = 0;
 	size_t _cursx = 0;
+	// If there is a selection range, where did it begin?
+	size_t _selstarty = 0;
+	size_t _selstartx = 0;
 };
 
 #endif // CONSOLE_H

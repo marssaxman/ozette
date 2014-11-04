@@ -20,15 +20,8 @@ void Editor::paint(WINDOW *dest, bool active)
 		_last_active = active;
 		_last_dest = dest;
 	}
-	size_t effscroll = std::min(_maxscroll, _scrollpos);
 	for (unsigned i = 0; i < _height; ++i) {
-		size_t line = i + effscroll;
-		if (!_update.is_dirty(line)) continue;
-		wmove(dest, (int)i, 0);
-		if (line < _lines.size()) {
-			waddnstr(dest, _lines[line].c_str(), _width);
-		}
-		wclrtoeol(dest);
+		paint_line(dest, i);
 	}
 	_update.reset();
 }
@@ -37,12 +30,10 @@ bool Editor::process(WINDOW *dest, int ch, App &app)
 {
 	update_dimensions(dest);
 	switch (ch) {
-		case KEY_DOWN: cursor_vert(1); break;
-		case KEY_UP: cursor_vert(-1); break;
-		case KEY_LEFT: arrow_left(); break;
-		case KEY_RIGHT: arrow_right(); break;
-		case 338: cursor_vert(_halfheight); break;
-		case 339: cursor_vert(-_halfheight); break;
+		case KEY_DOWN: cursor_vert(1, false); break;
+		case KEY_UP: cursor_vert(-1, false); break;
+		case 338: cursor_vert(_halfheight, false); break;
+		case 339: cursor_vert(-_halfheight, false); break;
 		default: break;
 	}
 	if (_update.has_dirty()) {
@@ -94,6 +85,20 @@ bool Editor::Update::is_dirty(size_t line) const
 	return _dirty && (line >= _linestart) && (line <= _lineend);
 }
 
+void Editor::paint_line(WINDOW *dest, unsigned i)
+{
+	size_t index = i + _scrollpos;
+	if (!_update.is_dirty(index)) return;
+	wmove(dest, (int)i, 0);
+	if (index < _lines.size()) {
+		waddnstr(dest, _lines[index].c_str(), _width);
+	}
+	wclrtoeol(dest);
+	if (_cursy == index) {
+		mvwchgat(dest, i, (int)_cursx, 1, A_REVERSE, 0, NULL);
+	}
+}
+
 bool Editor::line_visible(size_t index) const
 {
 	return index >= _scrollpos && (index - _scrollpos) < _height;
@@ -104,26 +109,30 @@ void Editor::reveal_cursor()
 	// If the cursor is already on screen, do nothing.
 	if (line_visible(_cursy)) return;
 	// Try to center the viewport over the cursor.
-	if (_cursy < _scrollpos) {
-		_scrollpos = _cursy - std::min(_cursy, _halfheight);
-	}
+	_scrollpos = (_cursy > _halfheight) ? (_cursy - _halfheight) : 0;
 	// Don't scroll so far we reveal empty space.
 	_scrollpos = std::min(_scrollpos, _maxscroll);
 	_update.all();
 }
 
-void Editor::cursor_vert(int delta)
+void Editor::cursor_vert(int delta, bool extend)
 {
 	size_t cursy = _cursy;
 	if (delta > 0) {
-		cursy = std::min(cursy + 1, _maxscroll);
-	} else if (cursy > 0) {
-		cursy += delta;
+		cursy = std::min(cursy + delta, _maxline);
+	} else {
+		cursy -= std::min(cursy, (size_t)-delta);
 	}
-	if (cursy != _cursy) {
-		_update.range(_cursy, cursy);
-		reveal_cursor();
+	// If the cursor is bouncing off its limits, do nothing.
+	if (cursy == _cursy) return;
+	// Refresh the lines which have been changed and make sure
+	// the cursor is visible on screen.
+	_update.range(_cursy, cursy);
+	_cursy = cursy;
+	if (!extend) {
+		_selstarty = cursy;
 	}
+	reveal_cursor();
 }
 
 void Editor::update_dimensions(WINDOW *view)
@@ -140,6 +149,7 @@ void Editor::update_dimensions(WINDOW *view)
 		_update.all();
 	}
 	size_t linecount = _lines.size();
+	_maxline = (linecount > 0) ? (linecount - 1) : 0;
 	size_t newmax = linecount > _height ? linecount - _height : 0;
 	if (newmax != _maxscroll) {
 		_maxscroll = newmax;
