@@ -118,19 +118,31 @@ void Editor::reveal_cursor()
 void Editor::cursor_vert(int delta, bool extend)
 {
 	size_t cursy = _cursy;
+	size_t cursx = _cursx;
 	if (delta > 0) {
-		cursy = std::min(cursy + delta, _maxline);
+		cursy += delta;
+		if (cursy > _maxline) {
+			cursy = _maxline;
+			cursx = _lines[_maxline].size();
+		}
 	} else {
-		cursy -= std::min(cursy, (size_t)-delta);
+		if (cursy >= (size_t)-delta) {
+			cursy += delta;
+		} else {
+			cursy = 0;
+			cursx = 0;
+		}
 	}
 	// If the cursor is bouncing off its limits, do nothing.
-	if (cursy == _cursy) return;
+	if (cursy == _cursy && cursx == _cursx) return;
 	// Refresh the lines which have been changed and make sure
 	// the cursor is visible on screen.
 	_update.range(_cursy, cursy);
 	_cursy = cursy;
+	_cursx = cursx;
 	if (!extend) {
 		_selstarty = cursy;
+		_selstartx = cursx;
 	}
 	reveal_cursor();
 }
