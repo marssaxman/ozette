@@ -3,17 +3,14 @@
 #include <assert.h>
 #include <list>
 
+bool UI::s_color;
+
 UI::UI(Delegate &host):
 	_host(host)
 {
 	// Set up ncurses.
 	initscr();
-	if (has_colors()) {
-		start_color();
-		use_default_colors();
-		init_pair(1, COLOR_GREEN, COLOR_BLUE);
-		init_pair(2, COLOR_BLUE, COLOR_BLACK);
-	}
+	init_colors();
 	cbreak();
 	noecho();
 	nonl();
@@ -162,4 +159,39 @@ void UI::close_window(size_t index)
 {
 	_host.window_closed(std::move(_columns.at(index)));
 	_columns.erase(_columns.begin() + index);
+}
+
+static short muted(short channel)
+{
+	float fch = static_cast<float>(channel);
+	fch -= 500.0f;
+	fch *= 0.9f;
+	return static_cast<short>(fch += 500.0f);
+}
+
+void UI::init_colors()
+{
+	s_color = false;
+	if (!has_colors()) return;
+	if (!can_change_color()) return;
+	s_color = true;
+	start_color();
+	use_default_colors();
+	// The current foreground color will be "white".
+	// The current background color will be "black".
+	// Muted foreground will become "yellow".
+	// Muted background will become "blue".
+	short fore, fr, fg, fb;
+	short back, br, bg, bb;
+	pair_content(0, &fore, &back);
+	color_content(fore, &fr, &fg, &fb);
+	color_content(back, &br, &bg, &bb);
+	init_color(COLOR_BLACK, br, bg, bb);
+	init_color(COLOR_BLUE, muted(br), muted(bg), muted(bb));
+	init_color(COLOR_YELLOW, muted(fr), muted(fg), muted(fb));
+	init_color(COLOR_WHITE, fr, fg, fb);
+	init_pair(0, COLOR_WHITE, COLOR_BLACK);
+	init_pair(1, COLOR_WHITE, COLOR_BLUE);
+	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+	init_pair(3, COLOR_YELLOW, COLOR_BLUE);
 }

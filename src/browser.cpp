@@ -41,8 +41,8 @@ public:
 	}
 	virtual void get_highlight(size_t &off, size_t &len) override
 	{
-		off = 1;
-		len = _caption.size() + 2;
+		off = 0;
+		len = _caption.size() + 4;
 	}
 private:
 	std::string _caption;
