@@ -18,13 +18,13 @@ public:
 	virtual void paint(WINDOW *view, size_t width) override
 	{
 		wattron(view, A_BOLD);
-		emitch(view, '(', width);
+		emitch(view, '[', width);
 		wattroff(view, A_BOLD);
 		emitch(view, ' ', width);
 		emitstr(view, _caption, width);
 		emitch(view, ' ', width);
 		wattron(view, A_BOLD);
-		emitch(view, ')', width);
+		emitch(view, ']', width);
 		wattroff(view, A_BOLD);
 	}
 	virtual void get_highlight(size_t &off, size_t &len) override

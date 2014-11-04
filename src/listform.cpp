@@ -40,7 +40,7 @@ bool ListForm::Controller::process(WINDOW *view, int ch)
                 case KEY_DOWN: arrow_down(view); break;
                 case KEY_UP: arrow_up(view); break;
 		case '\r': commit(view); break;
-		case 28: escape(view); break;
+		case 27: escape(view); break;
 		default: break;
 	}
 	return true;

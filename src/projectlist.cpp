@@ -77,9 +77,9 @@ public:
 		return true;
 	}
 protected:
-	virtual int boxleft() const override { return '['; }
+	virtual int boxleft() const override { return ACS_HLINE; }
 	virtual int spacer() const override { return ' '; }
-	virtual int boxright() const override { return ']'; }
+	virtual int boxright() const override { return ACS_HLINE; }
 private:
 	ProjectList &_list;
 };
