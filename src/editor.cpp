@@ -32,12 +32,12 @@ bool Editor::process(WINDOW *dest, int ch, App &app)
 {
 	update_dimensions(dest);
 	switch (ch) {
-		case KEY_DOWN: cursor_vert(1); break;
-		case KEY_UP: cursor_vert(-1); break;
-		case KEY_LEFT: cursor_horz(-1); break;
-		case KEY_RIGHT: cursor_horz(1); break;
-		case 338: cursor_vert(_halfheight); break;
-		case 339: cursor_vert(-_halfheight); break;
+		case KEY_DOWN: move_cursor_down(1); break;
+		case KEY_UP: move_cursor_up(1); break;
+		case KEY_LEFT: move_cursor_left(); break;
+		case KEY_RIGHT: move_cursor_right(); break;
+		case 338: move_cursor_down(_halfheight); break;
+		case 339: move_cursor_up(_halfheight); break;
 		default: break;
 	}
 	if (_update.has_dirty()) {
@@ -86,59 +86,50 @@ void Editor::paint_line(WINDOW *dest, unsigned i)
 	size_t index = i + _scrollpos;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)i, 0);
-	std::string text;
-	if (index < _lines.size()) {
-		text = _lines[index];
-	}
 	// We can't print this string unfiltered; we need to look
 	// for tab characters and align them columnwise.
-	size_t column = 0;
-	int selcol = 0;
-	for (char ch: text) {
-		if (column <= _cursx) selcol = column;
+	unsigned column = 0;
+	for (char ch: get_line_text(index)) {
 		if (column >= _width) break;
 		if (ch != '\t') {
 			waddch(dest, ch);
 			column++;
-		} else do {
+		} else {
 			waddch(dest, ACS_BULLET);
-			if (++column >= _width) break;
-		} while (0 != column % kTabWidth);
+			while (++column % kTabWidth) {
+				waddch(dest, ' ');
+			}
+		}
 	}
 	wclrtoeol(dest);
 	if (_curs_line == index) {
-		mvwchgat(dest, i, selcol, 1, A_REVERSE, 0, NULL);
+		column = column_for_char(_curs_char, _curs_line);
+		mvwchgat(dest, i, column, 1, A_REVERSE, 0, NULL);
 	}
 }
 
-bool Editor::line_visible(size_t index) const
+bool Editor::line_is_visible(size_t index) const
 {
 	return index >= _scrollpos && (index - _scrollpos) < _height;
 }
 
-unsigned Editor::line_columns(size_t index) const
+std::string Editor::get_line_text(size_t index) const
 {
-	return (unsigned)column_for_char(index, (size_t)-1);
+	// get the specified line, if it is in range, or the empty string
+	// if that is what we should display instead
+	return index < _lines.size() ? _lines[index] : "";
 }
 
-int Editor::column_for_char(size_t index, size_t xoff) const
+size_t Editor::get_line_size(size_t index) const
 {
-	size_t column = 0;
-	for (char ch: _lines[index]) {
-		if (0 == xoff--) return column;
-		if (column++ >= _width) break;
-		if (ch != '\t') continue;
-		while (0 != column % kTabWidth) {
-			if (column++ >= _width) break;
-		}
-	}
-	return column;
+	// return the line's length in chars, or 0 if out of range
+	return index < _lines.size() ? _lines[index].size() : 0;
 }
 
 void Editor::reveal_cursor()
 {
 	// If the cursor is already on screen, do nothing.
-	if (line_visible(_curs_line)) return;
+	if (line_is_visible(_curs_line)) return;
 	// Try to center the viewport over the cursor.
 	_scrollpos = (_curs_line > _halfheight) ? (_curs_line - _halfheight) : 0;
 	// Don't scroll so far we reveal empty space.
@@ -146,57 +137,138 @@ void Editor::reveal_cursor()
 	_update.all();
 }
 
-void Editor::cursor_vert(int delta)
+void Editor::move_cursor_up(size_t lines)
 {
-	size_t curs_line = _curs_line;
-	size_t cursx = _cursx;
-	if (delta > 0) {
-		curs_line += delta;
-		if (curs_line > _maxline) {
-			curs_line = _maxline;
-			cursx = _lines[_maxline].size();
-		}
-	} else {
-		if (curs_line >= (size_t)-delta) {
-			curs_line += delta;
-		} else {
-			curs_line = 0;
-			cursx = 0;
-		}
-	}
-	// If the cursor is bouncing off its limits, do nothing.
-	if (curs_line == _curs_line && cursx == _cursx) return;
-	// Refresh the lines which have been changed and make sure
-	// the cursor is visible on screen.
-	_update.range(_curs_line, curs_line);
-	_curs_line = curs_line;
-	_cursx = cursx;
+	if (_curs_line > 0) {
+		// Move up by the specified number of
+		// lines, stopping at the beginning.
+		_update.line(_curs_line);
+		_curs_line -= std::min(_curs_line, lines);
+		_update.line(_curs_line);
+		_curs_char = char_for_column(_curs_col, _curs_line);
+	} else move_cursor_home();
 	reveal_cursor();
 }
 
-void Editor::cursor_horz(int delta)
+void Editor::move_cursor_down(size_t lines)
 {
-	size_t cursx = _cursx;
-	if (delta > 0) {
-		cursx += delta;
-		if (cursx > line_columns(_curs_line)) {
-			cursx = 0;
-			cursor_vert(1);
-			return;
-		}
-	} else {
-		if (cursx >= (size_t)-delta) {
-			cursx += delta;
-		} else {
-			cursx = (size_t)-1;
-			cursor_vert(-1);
-			return;
-		}
-	}
-	if (cursx == _cursx) return;
-	_cursx = cursx;
-	_update.line(_curs_line);
+	if (_curs_line < _maxline) {
+		// Move down by the specified number of
+		// lines, stopping at the end.
+		_update.line(_curs_line);
+		size_t newline = _curs_line + lines;
+		_curs_line = std::min(newline, _maxline);
+		_update.line(_curs_line);
+		_curs_char = char_for_column(_curs_col, _curs_line);
+	} else move_cursor_end();
 	reveal_cursor();
+}
+
+void Editor::move_cursor_left()
+{
+	if (_curs_char > 0) {
+		// Move one character left.
+		_curs_char--;
+		_curs_col = column_for_char(_curs_char, _curs_line);
+		_update.line(_curs_line);
+	} else if (_curs_line > 0) {
+		// Wrap around to the end of the previous line.
+		_update.line(_curs_line);
+		_curs_line--;
+		_update.line(_curs_line);
+		move_cursor_end();
+	}
+	reveal_cursor();
+}
+
+void Editor::move_cursor_right()
+{
+	size_t linesize = get_line_size(_curs_line);
+	if (_curs_char < linesize) {
+		// Move one character right.
+		_curs_char++;
+		_curs_col = column_for_char(_curs_char, _curs_line);
+		_update.line(_curs_line);
+	} else if (_curs_line < _maxline) {
+		// Wrap around to the beginning of the next line.
+		_update.line(_curs_line);
+		_curs_line++;
+		_update.line(_curs_line);
+		move_cursor_home();
+	}
+	reveal_cursor();
+}
+
+void Editor::move_cursor_home()
+{
+	size_t newchar = 0;
+	unsigned newcol = 0;
+	if (newchar != _curs_char || newcol != _curs_col) {
+		_curs_char = newchar;
+		_curs_col = newcol;
+		_update.line(_curs_line);
+	}
+	reveal_cursor();
+}
+
+void Editor::move_cursor_end()
+{
+	size_t newchar = get_line_size(_curs_line);
+	unsigned newcol = column_for_char(newchar, _curs_line);
+	if (newchar != _curs_char || newcol != _curs_col) {
+		_curs_char = newchar;
+		_curs_col = newcol;
+		_update.line(_curs_line);
+	}
+	reveal_cursor();
+}
+
+size_t Editor::char_for_column(unsigned column, size_t line) const
+{
+	// Given a screen column coordinate and a line number,
+	// compute the character offset which most closely
+	// precedes that column.
+	std::string text = get_line_text(line);
+	column = std::min(column, _width);
+	size_t charoff = 0;
+	unsigned xpos = 0;
+	for (auto ch: text) {
+		xpos += char_width(ch, xpos);
+		if (xpos >= column) break;
+		charoff++;
+	}
+	return charoff;
+}
+
+unsigned Editor::column_for_char(size_t charoff, size_t line) const
+{
+	// Given a character offset and a line number, compute
+	// the screen column coordinate where that character
+	// should appear.
+	std::string text = get_line_text(_curs_line);
+	charoff = std::min(charoff, text.size());
+	unsigned column = 0;
+	size_t charpos = 0;
+	for (auto ch: text) {
+		charpos++;
+		if (charpos >= charoff) break;
+		column += char_width(ch, column);
+	}
+	return column;
+}
+
+unsigned Editor::char_width(char ch, size_t column) const
+{
+	// How many columns wide is this character, when
+	// it appears at the specified column?
+	return (ch == '\t') ? tab_width(column) : 1;
+}
+
+unsigned Editor::tab_width(size_t column) const
+{
+	// How many columns wide is a tab character
+	// which begins at the specified column?
+	return (column + kTabWidth) % kTabWidth;
 }
 
 void Editor::update_dimensions(WINDOW *view)
@@ -220,3 +292,4 @@ void Editor::update_dimensions(WINDOW *view)
 		_update.all();
 	}
 }
+

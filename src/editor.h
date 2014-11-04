@@ -30,12 +30,20 @@ protected:
 	} _update;
 
 	void paint_line(WINDOW *view, unsigned y);
-	bool line_visible(size_t index) const;
-	unsigned line_columns(size_t index) const;
-	int column_for_char(size_t index, size_t xoff) const;
+	bool line_is_visible(size_t index) const;
+	std::string get_line_text(size_t index) const;
+	size_t get_line_size(size_t index) const;
 	void reveal_cursor();
-	void cursor_vert(int delta);
-	void cursor_horz(int delta);
+	void move_cursor_up(size_t lines);
+	void move_cursor_down(size_t lines);
+	void move_cursor_left();
+	void move_cursor_right();
+	void move_cursor_home(); // line-relative
+	void move_cursor_end();	// line-relative
+	size_t char_for_column(unsigned column, size_t line) const;
+	unsigned column_for_char(size_t charoff, size_t line) const;
+	unsigned char_width(char ch, size_t column) const;
+	unsigned tab_width(size_t column) const;
 	void update_dimensions(WINDOW *view);
 private:
 	std::string _targetpath;
@@ -56,7 +64,8 @@ private:
 	// columns don't map evenly to characters - tabs may
 	// expand to a variable number of columns.
 	size_t _curs_line = 0;
-	size_t _cursx = 0;
+	size_t _curs_char = 0; // relative to the line text
+	unsigned _curs_col = 0; // position on screen
 };
 
 #endif // CONSOLE_H
