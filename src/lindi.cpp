@@ -15,7 +15,7 @@ void Lindi::edit_file(std::string path)
 	// If we already have this file open, bring it forward.
 	auto existing = _editors.find(path);
 	if (existing != _editors.end()) {
-		_ui.bring_forward(existing->second);
+		_ui.make_active(existing->second);
 		return;
 	}
 	// We don't have an editor for this file, so we should create one.

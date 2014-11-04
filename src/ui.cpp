@@ -92,6 +92,15 @@ Window *UI::open_window(std::unique_ptr<Controller> &&controller)
 	return win;
 }
 
+void UI::make_active(Window *window)
+{
+	for (unsigned i = 0; i < _columns.size(); ++i) {
+		if (_columns[i].get() == window) {
+			set_focus(i);
+		}
+	}
+}
+
 void UI::set_focus(size_t index)
 {
 	assert(index >= 0 && index < _columns.size());
