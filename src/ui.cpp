@@ -70,8 +70,7 @@ bool UI::process(int ch, App &app)
 			send_to_focus(ch, app);
 		} break;
 	}
-	// quit on tab press for now... temporary
-	return ch != 9;
+	return !_columns.empty();
 }
 
 void UI::get_screen_size()
