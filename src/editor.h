@@ -51,7 +51,11 @@ private:
 	// What is the vertical position of the viewrect?
 	size_t _scrollpos = 0;
 	// Where is the cursor located within the document?
-	size_t _cursy = 0;
+	// We need to record *both* the screen column and the
+	// character offset that column represents, because
+	// columns don't map evenly to characters - tabs may
+	// expand to a variable number of columns.
+	size_t _curs_line = 0;
 	size_t _cursx = 0;
 };
 

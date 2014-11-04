@@ -101,12 +101,12 @@ void Editor::paint_line(WINDOW *dest, unsigned i)
 			waddch(dest, ch);
 			column++;
 		} else do {
-			waddch(dest, ' ');
+			waddch(dest, ACS_BULLET);
 			if (++column >= _width) break;
 		} while (0 != column % kTabWidth);
 	}
 	wclrtoeol(dest);
-	if (_cursy == index) {
+	if (_curs_line == index) {
 		mvwchgat(dest, i, selcol, 1, A_REVERSE, 0, NULL);
 	}
 }
@@ -138,9 +138,9 @@ int Editor::column_for_char(size_t index, size_t xoff) const
 void Editor::reveal_cursor()
 {
 	// If the cursor is already on screen, do nothing.
-	if (line_visible(_cursy)) return;
+	if (line_visible(_curs_line)) return;
 	// Try to center the viewport over the cursor.
-	_scrollpos = (_cursy > _halfheight) ? (_cursy - _halfheight) : 0;
+	_scrollpos = (_curs_line > _halfheight) ? (_curs_line - _halfheight) : 0;
 	// Don't scroll so far we reveal empty space.
 	_scrollpos = std::min(_scrollpos, _maxscroll);
 	_update.all();
@@ -148,28 +148,28 @@ void Editor::reveal_cursor()
 
 void Editor::cursor_vert(int delta)
 {
-	size_t cursy = _cursy;
+	size_t curs_line = _curs_line;
 	size_t cursx = _cursx;
 	if (delta > 0) {
-		cursy += delta;
-		if (cursy > _maxline) {
-			cursy = _maxline;
+		curs_line += delta;
+		if (curs_line > _maxline) {
+			curs_line = _maxline;
 			cursx = _lines[_maxline].size();
 		}
 	} else {
-		if (cursy >= (size_t)-delta) {
-			cursy += delta;
+		if (curs_line >= (size_t)-delta) {
+			curs_line += delta;
 		} else {
-			cursy = 0;
+			curs_line = 0;
 			cursx = 0;
 		}
 	}
 	// If the cursor is bouncing off its limits, do nothing.
-	if (cursy == _cursy && cursx == _cursx) return;
+	if (curs_line == _curs_line && cursx == _cursx) return;
 	// Refresh the lines which have been changed and make sure
 	// the cursor is visible on screen.
-	_update.range(_cursy, cursy);
-	_cursy = cursy;
+	_update.range(_curs_line, curs_line);
+	_curs_line = curs_line;
 	_cursx = cursx;
 	reveal_cursor();
 }
@@ -179,7 +179,7 @@ void Editor::cursor_horz(int delta)
 	size_t cursx = _cursx;
 	if (delta > 0) {
 		cursx += delta;
-		if (cursx > line_columns(_cursy)) {
+		if (cursx > line_columns(_curs_line)) {
 			cursx = 0;
 			cursor_vert(1);
 			return;
@@ -195,7 +195,7 @@ void Editor::cursor_horz(int delta)
 	}
 	if (cursx == _cursx) return;
 	_cursx = cursx;
-	_update.line(_cursy);
+	_update.line(_curs_line);
 	reveal_cursor();
 }
 
