@@ -17,6 +17,8 @@ public:
 	void down(size_t count);
 	void left();
 	void right();
+	void home();
+	void end();
 	void move_to(location_t loc);
 private:
 	void begin_move();

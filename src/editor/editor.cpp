@@ -35,8 +35,8 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case KEY_RIGHT: key_right(false); break;
 		case KEY_NPAGE: key_page_down(); break;
 		case KEY_PPAGE: key_page_up(); break;
-		case KEY_HOME: break; // move to beginning of line
-		case KEY_END: break; // move to end of line
+		case KEY_HOME: key_home(); break; // move to beginning of line
+		case KEY_END: key_end(); break; // move to end of line
 		case KEY_SF: key_down(true); break; // shifted down-arrow
 		case KEY_SR: key_up(true); break; // shifted up-arrow
 		case KEY_SLEFT: key_left(true); break;
@@ -155,6 +155,18 @@ void Editor::Controller::key_page_up()
 void Editor::Controller::key_page_down()
 {
 	_cursor.down(_halfheight);
+	drop_selection();
+}
+
+void Editor::Controller::key_home()
+{
+	_cursor.home();
+	drop_selection();
+}
+
+void Editor::Controller::key_end()
+{
+	_cursor.end();
 	drop_selection();
 }
 

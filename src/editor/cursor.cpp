@@ -81,8 +81,25 @@ void Editor::Cursor::right()
 	commit_location();
 }
 
+void Editor::Cursor::home()
+{
+	// Put the cursor at the beginning of its line.
+	begin_move();
+	_location.offset = 0;
+	commit_location();
+}
+
+void Editor::Cursor::end()
+{
+	// Put the cursor at the end of its line.
+	begin_move();
+	_location.offset = _doc.line(_location.line).size();
+	commit_location();
+}
+
 void Editor::Cursor::move_to(location_t loc)
 {
+	// Place the cursor at an absolute document location.
 	begin_move();
 	_location = loc;
 	commit_location();

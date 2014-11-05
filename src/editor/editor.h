@@ -26,6 +26,8 @@ protected:
 	void key_right(bool extend);
 	void key_page_up();
 	void key_page_down();
+	void key_home();
+	void key_end();
 	// Data-entry keystrokes generally begin by deleting whatever was
 	// previously selected and possibly replacing it with something else.
 	void delete_selection();
