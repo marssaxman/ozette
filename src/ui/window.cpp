@@ -22,7 +22,7 @@ UI::Window::~Window()
 	delwin(_contentwin);
 }
 
-void UI::Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
+void UI::Window::layout(int xpos, int width)
 {
 	// Windows are vertical slices of screen space.
 	// Given this column number and a width, compute the
@@ -51,7 +51,7 @@ void UI::Window::layout(int xpos, int height, int width, bool lframe, bool rfram
 	int old_vert, old_horz;
 	getbegyx(_framewin, old_vert, old_horz);
 	if (old_height != screen_height || old_width != width) {
-		WINDOW *replacement = newwin(height, width, 0, xpos);
+		WINDOW *replacement = newwin(screen_height, width, 0, xpos);
 		replace_panel(_framepanel, replacement);
 		delwin(_framewin);
 		_framewin = replacement;

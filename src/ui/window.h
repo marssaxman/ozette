@@ -14,7 +14,7 @@ class Window : public Controller::Context
 public:
 	Window(App &app, std::unique_ptr<Controller> &&controller);
 	~Window();
-	void layout(int xpos, int height, int width, bool lframe, bool rframe);
+	void layout(int xpos, int width);
 	void set_focus();
 	void clear_focus();
 	void bring_forward();

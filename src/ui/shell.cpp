@@ -133,14 +133,10 @@ void UI::Shell::relayout()
 	size_t ubound = _columns.size() - 1;
 	int right_edge = _width - _columnWidth;
 	_spacing = (ubound > 0) ? right_edge / ubound : 0;
-	bool is_cramped = 0 == right_edge || 0 == _spacing;
 	for (unsigned i = 0; i <= ubound; ++i) {
-		bool lframe = i > 0 && !is_cramped;
 		int offset = (ubound - i) * _spacing;
 		int xpos = (i > 0) ? right_edge - offset : 0;
-		int rcoord = xpos + _columnWidth;
-		bool rframe = rcoord < _width;
-		_columns[i]->layout(xpos, _height, _columnWidth, lframe, rframe);
+		_columns[i]->layout(xpos, _columnWidth);
 	}
 }
 
