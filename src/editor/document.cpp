@@ -114,7 +114,6 @@ Editor::location_t Editor::Document::insert(location_t loc, char ch)
 	sanitize(loc);
 	if (loc.line < _lines.size()) {
 		std::string text = _lines[loc.line]->text();
-		if (loc.offset >= text.size()) loc.offset = text.size();
 		text.insert(loc.offset, 1, ch);
 		update_line(loc.line, text);
 		loc.offset++;

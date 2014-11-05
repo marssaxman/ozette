@@ -38,7 +38,7 @@ Editor::offset_t Editor::Line::offset(column_t h)
 void Editor::Line::advance(char ch, column_t &h)
 {
 	do {
-	h++;
+		h++;
 	} while (ch == '\t' && h % kTabWidth);
 }
 
@@ -46,14 +46,17 @@ void Editor::Line::paint(WINDOW *dest, unsigned width)
 {
 	column_t h = 0;
 	for (char ch: text()) {
-		if (h >= width) break;
+		if (h == width) break;
 		if (ch != '\t') {
 			waddch(dest, ch);
 			h++;
-		} else while (++h % kTabWidth && h < width) {
+		} else do {
 			waddch(dest, ' ');
-		}
+			h++;
+		} while (h < width && 0 != h % kTabWidth);
 	}
-	wclrtoeol(dest);
+	if (h < width) {
+		wclrtoeol(dest);
+	}
 }
 

@@ -45,6 +45,7 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case KEY_DC: key_delete(); break;
 		case '\r': key_return(); break;
 		case '\n': key_enter(); break;
+		case '\t': key_insert('\t'); break;
 		default:
 		if (ch >= 32 && ch < 127) key_insert(ch);
 		else {
