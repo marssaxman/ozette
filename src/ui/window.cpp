@@ -1,8 +1,8 @@
-#include "ui.h"
+#include "shell.h"
 #include <algorithm>
 #include <assert.h>
 
-Window::Window(std::unique_ptr<Controller> &&controller):
+UI::Window::Window(std::unique_ptr<Controller> &&controller):
 	_controller(std::move(controller)),
 	_framewin(newwin(0, 0, 0, 0)),
 	_framepanel(new_panel(_framewin)),
@@ -13,7 +13,7 @@ Window::Window(std::unique_ptr<Controller> &&controller):
 	_controller->paint(_contentwin, _has_focus);
 }
 
-Window::~Window()
+UI::Window::~Window()
 {
 	del_panel(_framepanel);
 	delwin(_framewin);
@@ -21,7 +21,7 @@ Window::~Window()
 	delwin(_contentwin);
 }
 
-void Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
+void UI::Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
 {
 	bool needs_chrome = false;
 	int frameheight = height--;
@@ -67,35 +67,35 @@ void Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
 	_controller->paint(_contentwin, _has_focus);
 }
 
-void Window::set_focus()
+void UI::Window::set_focus()
 {
 	_has_focus = true;
 	draw_chrome();
 }
 
-void Window::clear_focus()
+void UI::Window::clear_focus()
 {
 	_has_focus = false;
 	draw_chrome();
 }
 
-void Window::bring_forward()
+void UI::Window::bring_forward()
 {
 	top_panel(_framepanel);
 	top_panel(_contentpanel);
 }
 
-bool Window::process(int ch, App &app)
+bool UI::Window::process(int ch, App &app)
 {
 	return _controller->process(_contentwin, ch, app);
 }
 
-bool Window::poll(App &app)
+bool UI::Window::poll(App &app)
 {
 	return _controller->poll(_contentwin, app);
 }
 
-void Window::draw_chrome()
+void UI::Window::draw_chrome()
 {
 	// Draw the left frame, if we have one.
 	int barx = 0;

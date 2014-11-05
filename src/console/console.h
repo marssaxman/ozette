@@ -3,7 +3,7 @@
 
 #include "controller.h"
 
-class Console : public Controller
+class Console : public UI::Controller
 {
 public:
 	explicit Console(std::string command);

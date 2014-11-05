@@ -5,6 +5,7 @@
 #include <ncurses.h>
 #include "app.h"
 
+namespace UI {
 class Controller
 {
 public:
@@ -23,5 +24,6 @@ public:
 	// Human-readable string identifying the object.
 	virtual std::string title() const = 0;
 };
+} // namespace UI
 
 #endif // UI_CONTROLLER_H

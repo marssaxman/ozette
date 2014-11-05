@@ -7,7 +7,7 @@
 #include "cursor.h"
 
 namespace Editor {
-class Controller : public ::Controller
+class Controller : public UI::Controller
 {
 public:
 	Controller(std::string targetpath);

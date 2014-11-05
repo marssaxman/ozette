@@ -7,6 +7,7 @@
 #include <vector>
 #include "controller.h"
 
+namespace UI {
 class Window
 {
 public:
@@ -33,5 +34,6 @@ private:
 	bool _lframe = false;
 	bool _rframe = false;
 };
+} // namespace UI
 
 #endif // UI_WINDOW_H

@@ -2,12 +2,12 @@
 #define LINDI_H
 
 #include "app.h"
-#include "ui.h"
+#include "shell.h"
 #include "browser.h"
 #include <string>
 #include <map>
 
-class Lindi : public App, private UI::Delegate
+class Lindi : public App, private UI::Shell::Delegate
 {
 public:
 	Lindi();
@@ -16,10 +16,10 @@ public:
 	virtual void quit() override { _done = true; }
 	void run();
 private:
-	virtual void window_closed(std::unique_ptr<Window> &&window) override;
-	UI _ui;
+	virtual void window_closed(std::unique_ptr<UI::Window> &&window) override;
+	UI::Shell _shell;
 	Browser *_browser;
-	std::map<std::string, Window*> _editors;
+	std::map<std::string, UI::Window*> _editors;
 	bool _done = false;
 };
 

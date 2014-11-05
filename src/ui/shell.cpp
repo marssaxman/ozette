@@ -1,9 +1,9 @@
-#include "ui.h"
+#include "shell.h"
 #include <algorithm>
 #include <assert.h>
 #include <list>
 
-UI::UI(Delegate &host):
+UI::Shell::Shell(Delegate &host):
 	_host(host)
 {
 	// Set up ncurses.
@@ -21,7 +21,7 @@ UI::UI(Delegate &host):
 	curs_set(0);
 }
 
-UI::~UI()
+UI::Shell::~Shell()
 {
 	// Delete all of the windows.
 	_columns.clear();
@@ -29,7 +29,7 @@ UI::~UI()
 	endwin();
 }
 
-bool UI::process(int ch, App &app)
+bool UI::Shell::process(int ch, App &app)
 {
 	// The UI handles control-shift-arrow-key presses by changing
 	// the focus window. All other keypresses are delegated to
@@ -73,13 +73,13 @@ bool UI::process(int ch, App &app)
 	return !_columns.empty();
 }
 
-void UI::get_screen_size()
+void UI::Shell::get_screen_size()
 {
 	getmaxyx(stdscr, _height, _width);
 	_columnWidth = std::min(80, _width);
 }
 
-Window *UI::open_window(std::unique_ptr<Controller> &&controller)
+UI::Window *UI::Shell::open_window(std::unique_ptr<Controller> &&controller)
 {
 	// We reserve the top row for the title bar.
 	// Aside from that, new windows fill the terminal rows.
@@ -91,7 +91,7 @@ Window *UI::open_window(std::unique_ptr<Controller> &&controller)
 	return win;
 }
 
-void UI::make_active(Window *window)
+void UI::Shell::make_active(Window *window)
 {
 	for (unsigned i = 0; i < _columns.size(); ++i) {
 		if (_columns[i].get() == window) {
@@ -100,7 +100,7 @@ void UI::make_active(Window *window)
 	}
 }
 
-void UI::set_focus(size_t index)
+void UI::Shell::set_focus(size_t index)
 {
 	assert(index >= 0 && index < _columns.size());
 	if (_focus == index) return;
@@ -122,7 +122,7 @@ void UI::set_focus(size_t index)
 	_columns[_focus]->bring_forward();
 }
 
-void UI::relayout()
+void UI::Shell::relayout()
 {
 	// The leftmost window owns column zero and covers no more than 80
 	// characters' width.
@@ -144,7 +144,7 @@ void UI::relayout()
 	}
 }
 
-void UI::send_to_focus(int ch, App &app)
+void UI::Shell::send_to_focus(int ch, App &app)
 {
 	bool more = _columns[_focus]->process(ch, app);
 	if (more) return;
@@ -152,7 +152,7 @@ void UI::send_to_focus(int ch, App &app)
 	relayout();
 }
 
-void UI::close_window(size_t index)
+void UI::Shell::close_window(size_t index)
 {
 	_host.window_closed(std::move(_columns.at(index)));
 	_columns.erase(_columns.begin() + index);

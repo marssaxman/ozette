@@ -1,10 +1,11 @@
-#ifndef UI_UI_H
-#define UI_UI_H
+#ifndef UI_SHELL_H
+#define UI_SHELL_H
 
 #include "window.h"
 #include <vector>
 
-class UI
+namespace UI {
+class Shell
 {
 public:
 	class Delegate
@@ -13,8 +14,8 @@ public:
 		virtual ~Delegate() = default;
 		virtual void window_closed(std::unique_ptr<Window> &&win) = 0;
 	};
-	UI(Delegate &host);
-	~UI();
+	Shell(Delegate &host);
+	~Shell();
 	bool process(int ch, App &app);
 	Window *open_window(std::unique_ptr<Controller> &&wincontrol);
 	void make_active(Window *window);
@@ -38,5 +39,6 @@ private:
 	int _columnWidth = 0;
 	size_t _focus = 0;
 };
+} // namespace UI
 
-#endif // UI_UI_H
+#endif // UI_SHELL_H

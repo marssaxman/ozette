@@ -47,7 +47,7 @@ public:
 // Pressing enter invokes the selected field. Invoking a
 // field may cause the list of fields to change.
 
-class Controller : public ::Controller
+class Controller : public UI::Controller
 {
 public:
 	virtual void paint(WINDOW *view, bool active) override;
