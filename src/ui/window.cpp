@@ -98,8 +98,7 @@ bool UI::Window::process(int ch)
 
 bool UI::Window::poll()
 {
-	// someday
-	return true;
+	return process(ERR);
 }
 
 void UI::Window::draw_chrome()
