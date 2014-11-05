@@ -4,19 +4,30 @@
 #include <string>
 #include <vector>
 
-// A document maps a text buffer into an infinite plane
-// of equally-sized character cells. It is responsible for
-// interpreting the formatting control characters.
+// A document breaks a text buffer into lines, then
+// maps those lines onto an infinite plane of equally
+// sized character cells.
 namespace Editor {
 class Document
 {
 public:
+	Document(std::string targetpath);
+
+	// Location within the document
 	typedef size_t line_t;
 	typedef size_t offset_t;
+	struct location_t {
+		line_t line;
+		offset_t offset;
+	};
+	// Position on the character plane
 	typedef unsigned row_t;
 	typedef unsigned column_t;
+	struct position_t {
+		row_t v;
+		column_t h;
+	};
 
-	Document(std::string targetpath);
 	static const unsigned kTabWidth;
 	line_t maxline() const { return _maxline; }
 	std::string get_line_text(line_t index) const;
