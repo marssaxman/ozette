@@ -28,8 +28,8 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case KEY_UP: _cursor.up(1); break;
 		case KEY_LEFT: _cursor.left(); break;
 		case KEY_RIGHT: _cursor.right(); break;
-		case 338: _cursor.down(_halfheight); break;
-		case 339: _cursor.up(_halfheight); break;
+		case KEY_NPAGE: _cursor.down(_halfheight); break;
+		case KEY_PPAGE: _cursor.up(_halfheight); break;
 		default: break;
 	}
 	reveal_cursor();
