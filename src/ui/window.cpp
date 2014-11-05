@@ -24,50 +24,42 @@ UI::Window::~Window()
 
 void UI::Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
 {
-	int frameheight = height;
-	int framewidth = width;
-	int framepos = xpos;
-	if (lframe != _lframe || rframe != _rframe) {
-		_lframe = lframe;
-		_rframe = rframe;
-		_dirty_chrome = true;
-	}
+	// Windows are vertical slices of screen space.
+	// Given this column number and a width, compute the
+	// window's nominal dimensions, then see if we need to adjust
+	// the actual window to match.
+	int screen_height, screen_width;
+	getmaxyx(stdscr, screen_height, screen_width);
+	// We will expand our edges by one pixel in each direction if
+	// we have space for it so that we can draw a window frame.
+	_lframe = xpos > 0;
 	if (_lframe) {
-		framepos -= 1;
-		framewidth += 1;
+		xpos--;
+		width++;
 	}
+	_rframe = (xpos + width) < screen_width;
 	if (_rframe) {
-		framewidth += 1;
+		width++;
 	}
-	// Subtract one from the content height to account for the title bar.
-	height--;
-	// Subtract any additional lines needed for the task bar at the bottom.
-	height -= _task_bar_height;
-	// If the newly calculated dimensions differ from the old, we need to
-	// resize our panels, which means rebuilding our windows.
-	if (frameheight != _height || framewidth != _width) {
-		_height = frameheight;
-		_width = framewidth;
-		_xpos = framepos;
-		// Resize the frame panel and create a new window with
-		// the new dimensions, since you can't resize a window.
-		WINDOW *replacement = newwin(_height, _width, 0, _xpos);
+
+	// What are the dimensions and location of our existing frame?
+	// If the window has the wrong size, we must rebuild it, and
+	// then we should layout our content window too. Otherwise, if
+	// the window is in the wrong place, simply relocate it.
+	int old_height, old_width;
+	getmaxyx(_framewin, old_height, old_width);
+	int old_vert, old_horz;
+	getbegyx(_framewin, old_vert, old_horz);
+	if (old_height != screen_height || old_width != width) {
+		WINDOW *replacement = newwin(height, width, 0, xpos);
 		replace_panel(_framepanel, replacement);
 		delwin(_framewin);
 		_framewin = replacement;
 		_dirty_chrome = true;
-		// Resize the content panel and give it a new window
-		// as well.
-		replacement = newwin(height, width, 1, xpos);
-		replace_panel(_contentpanel, replacement);
-		delwin(_contentwin);
-		_contentwin = replacement;
-		_dirty_content = true;
-	} else if (framepos != _xpos) {
-		_xpos = framepos;
-		move_panel(_framepanel, 0, _xpos);
-		move_panel(_contentpanel, 1, xpos);
+	} else if (old_vert != 0 || old_horz != xpos) {
+		move_panel(_framepanel, 0, xpos);
 	}
+	layout_contentwin();
 	paint();
 }
 
@@ -117,64 +109,128 @@ void UI::Window::set_status(std::string text)
 	_dirty_chrome = true;
 }
 
+void UI::Window::set_help(const help_panel_t *help)
+{
+	_help = help;
+	_dirty_chrome = true;
+}
+
+void UI::Window::layout_contentwin()
+{
+	// Compute the location and dimension of the content window,
+	// relative to the location and dimension of the frame window.
+	int new_height, new_width;
+	getmaxyx(_framewin, new_height, new_width);
+	int new_vpos, new_hpos;
+	getbegyx(_framewin, new_vpos, new_hpos);
+
+	// Adjust these dimensions inward to account for the space
+	// used by the frame. Every window has a title bar.
+	new_vpos++;
+	new_height--;
+	// The window may have a one-column left frame.
+	if (_lframe) {
+		new_hpos++;
+		new_width--;
+	}
+	// The window may have a one-column right frame.
+	if (_rframe) {
+		new_width--;
+	}
+	// There may be a task bar, whose height may vary.
+	new_height -= _taskbar_height;
+
+	// Find out how where and how large the content window is.
+	// If our existing content window is the wrong size, recreate it.
+	// Otherwise, if it needs to be relocated, move its panel.
+	int old_height, old_width;
+	getmaxyx(_contentwin, old_height, old_width);
+	int old_vpos, old_hpos;
+	getbegyx(_contentwin, old_vpos, old_hpos);
+	if (old_height != new_height || old_width != new_width) {
+		WINDOW *win = newwin(new_height, new_width, new_vpos, new_hpos);
+		replace_panel(_contentpanel, win);
+		delwin(_contentwin);
+		_contentwin = win;
+		_dirty_content = true;
+	} else if (old_vpos != new_vpos || old_hpos != new_vpos) {
+		move_panel(_contentpanel, new_vpos, new_hpos);
+	}
+}
+
 void UI::Window::paint()
 {
-	if (_dirty_content) {
-		_controller->paint(_contentwin, _has_focus);
-		_dirty_content = false;
-	}
-	if (!_dirty_chrome) return;
-	// Draw the left frame, if we have one.
-	int barx = 0;
-	int barwidth = _width;
-	int loweredge = _height - _task_bar_height;
-	if (_lframe) {
-		barx = 1;
-		barwidth--;
-		mvwaddch(_framewin, 0, 0, ACS_ULCORNER);
-		for (int i = 1; i < loweredge; ++i) {
-			mvwaddch(_framewin, i, 0, ACS_VLINE);
-		}
-		mvwaddch(_framewin, loweredge, 0, ACS_LLCORNER);
-	}
-	// Draw the right frame, if we have one.
-	if (_rframe) {
-		barwidth--;
-		int col = _width - 1;
-		mvwaddch(_framewin, 0, col, ACS_URCORNER);
-		for (int i = 1;  i < loweredge; ++i) {
-			mvwaddch(_framewin, i, col, ACS_VLINE);
-		}
-		mvwaddch(_framewin, loweredge, col, ACS_LRCORNER);
-	}
-	// Draw the bars across the top and bottom of the window.
-	wmove(_framewin, 0, barx);
-	for (int i = 0; i < barwidth; ++i) {
-		waddch(_framewin, ACS_HLINE);
-	}
-	if (_task_bar_height > 0) {
-		wmove(_framewin, loweredge, barx);
-		for (int i = 0; i < barwidth; ++i) {
-			waddch(_framewin, ACS_HLINE);
-		}
-	}
-	// Print the window title, erasing part of the top border.
-	if (barwidth > 0) {
-		mvwaddch(_framewin, 0, ++barx, ' ');
-	}
-	waddnstr(_framewin, _title.c_str(), std::max(0, barwidth-3));
-	barwidth -= _title.size();
-	if (barwidth > 0) {
-		waddch(_framewin, ' ');
-	}
-	// Draw the status text on the right side of the top line.
-	if (!_status.empty()) {
-		size_t statchars = std::min(_status.size(), (size_t)barwidth/2);
-		int hpos = _width - statchars - 3;
-		mvwaddch(_framewin, 0, hpos, ' ');
-		waddnstr(_framewin, _status.c_str(), statchars);
-		waddch(_framewin, ' ');
-	}
+	if (_dirty_content) paint_content();
+	if (_dirty_chrome) paint_chrome();
+}
+
+void UI::Window::paint_content()
+{
+	_controller->paint(_contentwin, _has_focus);
+	_dirty_content = false;
+}
+
+void UI::Window::paint_chrome()
+{
+	int height, width;
+	getmaxyx(_framewin, height, width);
+	paint_title_bar(height, width);
+	if (_lframe) paint_left_frame(height, width);
+	if (_rframe) paint_right_frame(height, width);
+	if (_taskbar_height) paint_task_bar(height, width);
 	_dirty_chrome = false;
 }
 
+void UI::Window::paint_title_bar(int height, int width)
+{
+	// Draw corners and a horizontal line across the top.
+	wmove(_framewin, 0, 0);
+	if (_lframe) waddch(_framewin, ACS_ULCORNER);
+	for (int i = 0; i+1 < width; ++i) {
+		waddch(_framewin, ACS_HLINE);
+	}
+	if (_rframe) waddch(_framewin, ACS_URCORNER);
+
+	// Overwrite the bar line with the window title.
+	int left = _lframe ? 3 : 2;
+	int right = width - (_rframe ? 3 : 2);
+	width = right - left;
+	int titlechars = width - 2;
+	mvwaddch(_framewin, 0, left, ' ');
+	waddnstr(_framewin, _title.c_str(), titlechars);
+	waddch(_framewin, ' ');
+
+	// If there is a status string, print it on the right side.
+	if (_status.empty()) return;
+	int statchars = std::min((int)_status.size(), titlechars/2);
+	mvwaddch(_framewin, 0, right - statchars - 2, ' ');
+	waddnstr(_framewin, _status.c_str(), statchars);
+	waddch(_framewin, ' ');
+}
+
+void UI::Window::paint_left_frame(int height, int width)
+{
+	int maxv = height - _taskbar_height;
+	for (int i = 1; i < maxv; ++i) {
+		mvwaddch(_framewin, i, 0, ACS_VLINE);
+	}
+}
+
+void UI::Window::paint_right_frame(int height, int width)
+{
+	int maxv = height - _taskbar_height;
+	int maxh = width - 1;
+	for (int i = 1;  i < maxv; ++i) {
+		mvwaddch(_framewin, i, maxh, ACS_VLINE);
+	}
+}
+
+void UI::Window::paint_task_bar(int height, int width)
+{
+	int loweredge = height - _taskbar_height;
+	mvwaddch(_framewin, loweredge, 0, ACS_LLCORNER);
+	for (int i = 0; i < width-1; ++i) {
+		waddch(_framewin, ACS_HLINE);
+	}
+	waddch(_framewin, ACS_LRCORNER);
+}

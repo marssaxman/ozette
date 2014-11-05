@@ -25,15 +25,18 @@ protected:
 	virtual App &app() override { return _app; }
 	virtual void set_title(std::string text) override;
 	virtual void set_status(std::string text) override;
+	virtual void set_help(const help_panel_t *help) override;
+	void layout_contentwin();
 	void paint();
-	void paint_chrome();
 	void paint_content();
+	void paint_chrome();
+	void paint_title_bar(int height, int width);
+	void paint_left_frame(int height, int width);
+	void paint_right_frame(int height, int width);
+	void paint_task_bar(int height, int width);
 private:
 	App &_app;
 	std::unique_ptr<Controller> _controller;
-	int _xpos = 0;
-	int _height = 0;
-	int _width = 0;
 	WINDOW *_framewin = nullptr;
 	PANEL *_framepanel = nullptr;
 	WINDOW *_contentwin = nullptr;
@@ -41,11 +44,12 @@ private:
 	bool _has_focus = true;
 	bool _lframe = false;
 	bool _rframe = false;
-	unsigned _task_bar_height = 0;
+	unsigned _taskbar_height = 0;
 	bool _dirty_content = true;
 	bool _dirty_chrome = true;
 	std::string _title;
 	std::string _status;
+	const help_panel_t *_help = nullptr;
 };
 } // namespace UI
 

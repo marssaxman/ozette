@@ -16,6 +16,7 @@ public:
 		virtual App &app() = 0;
 		virtual void set_title(std::string text) = 0;
 		virtual void set_status(std::string text) = 0;
+		virtual void set_help(const help_panel_t *help) = 0;
 	};
 	virtual ~Controller() = default;
 	// The window has just been opened. Initialize it.
