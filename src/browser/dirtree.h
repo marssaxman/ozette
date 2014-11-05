@@ -1,5 +1,5 @@
-#ifndef DIRTREE_H
-#define DIRTREE_H
+#ifndef BROWSER_DIRTREE_H
+#define BROWSER_DIRTREE_H
 
 #include "listform.h"
 
@@ -62,4 +62,4 @@ private:
 
 } // namespace DirTree
 
-#endif	//DIRTREE_H
+#endif	//BROWSER_DIRTREE_H

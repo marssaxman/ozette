@@ -1,5 +1,5 @@
-#ifndef CONTROLLER_H
-#define CONTROLLER_H
+#ifndef UI_CONTROLLER_H
+#define UI_CONTROLLER_H
 
 #include <string>
 #include <ncurses.h>
@@ -24,4 +24,4 @@ public:
 	virtual std::string title() const = 0;
 };
 
-#endif // CONTROLLER_H
+#endif // UI_CONTROLLER_H

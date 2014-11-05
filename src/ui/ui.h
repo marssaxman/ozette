@@ -1,5 +1,5 @@
-#ifndef UI_H
-#define UI_H
+#ifndef UI_UI_H
+#define UI_UI_H
 
 #include "window.h"
 #include <vector>
@@ -39,4 +39,4 @@ private:
 	size_t _focus = 0;
 };
 
-#endif // UI_H
+#endif // UI_UI_H

@@ -1,5 +1,5 @@
-#ifndef PROJECTLIST_H
-#define PROJECTLIST_H
+#ifndef BROWSER_PROJECTLIST_H
+#define BROWSER_PROJECTLIST_H
 
 #include "listform.h"
 #include <vector>
@@ -46,4 +46,4 @@ private:
 	std::string _last_project;
 };
 
-#endif // PROJECTLIST_H
+#endif // BROWSER_PROJECTLIST_H

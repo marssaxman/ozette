@@ -1,5 +1,5 @@
-#ifndef WINDOW_H
-#define WINDOW_H
+#ifndef UI_WINDOW_H
+#define UI_WINDOW_H
 
 #include <ncurses.h>
 #include <panel.h>
@@ -34,4 +34,4 @@ private:
 	bool _rframe = false;
 };
 
-#endif // WINDOW_H
+#endif // UI_WINDOW_H

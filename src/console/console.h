@@ -1,5 +1,5 @@
-#ifndef CONSOLE_H
-#define CONSOLE_H
+#ifndef CONSOLE_CONSOLE_H
+#define CONSOLE_CONSOLE_H
 
 #include "controller.h"
 
@@ -27,4 +27,4 @@ private:
 	int _cursy = 0;
 };
 
-#endif // CONSOLE_H
+#endif // CONSOLE_CONSOLE_H

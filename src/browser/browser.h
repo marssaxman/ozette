@@ -1,5 +1,5 @@
-#ifndef BROWSER_H
-#define BROWSER_H
+#ifndef BROWSER_BROWSER_H
+#define BROWSER_BROWSER_H
 
 #include "listform.h"
 #include "dirtree.h"
@@ -20,4 +20,4 @@ private:
 	std::unique_ptr<DirTree::Root> _project;
 };
 
-#endif // BROWSER_H
+#endif // BROWSER_BROWSER_H

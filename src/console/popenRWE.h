@@ -14,6 +14,9 @@
  * element 1 (stdout) and 2 (stderr).
  */
 
+#ifndef CONSOLE_POPENRWE_H
+#define CONSOLE_POPENRWE_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -22,3 +25,6 @@
 
 int popenRWE(int *rwepipe, const char *command);
 int pcloseRWE(int pid, int *rwepipe);
+
+#endif // CONSOLE_POPENRWE_H
+
