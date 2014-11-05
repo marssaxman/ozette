@@ -70,6 +70,7 @@ void UI::Window::set_focus()
 	_has_focus = true;
 	_dirty_chrome = true;
 	_dirty_content = true;
+	paint();
 }
 
 void UI::Window::clear_focus()
@@ -77,6 +78,7 @@ void UI::Window::clear_focus()
 	_has_focus = false;
 	_dirty_chrome = true;
 	_dirty_content = true;
+	paint();
 }
 
 void UI::Window::bring_forward()

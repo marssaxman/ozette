@@ -40,7 +40,7 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case KEY_SR: _cursor.up(1); extend_sel(); break; // shifted up-arrow
 		case KEY_SLEFT: _cursor.left(); extend_sel(); break;
 		case KEY_SRIGHT: _cursor.right(); extend_sel(); break;
-		default: if (ch > 0) ctx.set_status(std::to_string(ch)); break;
+		default: break;
 	}
 	reveal_cursor();
 	if (_update.has_dirty()) {
