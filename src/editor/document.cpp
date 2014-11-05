@@ -87,7 +87,7 @@ Editor::location_t Editor::Document::prev(location_t loc)
 	if (loc.offset > 0) {
 		loc.offset--;
 	} else if (loc.line > 0) {
-		loc.line = 0;
+		loc.line--;
 		loc.offset = line(loc.line).size();
 	}
 	return loc;
@@ -98,12 +98,13 @@ Editor::location_t Editor::Document::erase(const Range &chars)
 	if (_lines.empty()) return home();
 	location_t begin = sanitize(chars.begin());
 	std::string prefix = _lines[begin.line]->text().substr(0, begin.offset);
-	location_t end = chars.end();
+	location_t end = sanitize(chars.end());
 	std::string suffix = _lines[end.line]->text().substr(end.offset, std::string::npos);
-	auto newline = new StrLine(prefix + suffix);
 	size_t index = begin.line;
+	auto newline = new StrLine(prefix + suffix);
 	if (chars.multiline()) {
-		_lines.erase(_lines.begin() + begin.line, _lines.begin() + end.line);
+		auto iter = _lines.begin();
+		_lines.erase(iter + begin.line, iter + end.line + 1);
 		_lines.emplace(_lines.begin() + index, newline);
 	} else {
 		_lines[index].reset(newline);
