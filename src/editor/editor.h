@@ -1,9 +1,9 @@
-#ifndef EDITOR_H
-#define EDITOR_H
+#ifndef EDITOR_EDITOR_H
+#define EDITOR_EDITOR_H
 
 #include "controller.h"
+#include "document.h"
 #include "update.h"
-#include <vector>
 
 namespace Editor {
 class Controller : public ::Controller
@@ -15,13 +15,9 @@ public:
 	virtual bool poll(WINDOW *view, App &app) override { return true; }
 	virtual std::string title() const override { return _targetpath; }
 protected:
-	static const unsigned kTabWidth;
-	Update _update;
 
 	void paint_line(WINDOW *view, unsigned y);
 	bool line_is_visible(size_t index) const;
-	std::string get_line_text(size_t index) const;
-	size_t get_line_size(size_t index) const;
 	void reveal_cursor();
 	void move_cursor_up(size_t lines);
 	void move_cursor_down(size_t lines);
@@ -29,14 +25,11 @@ protected:
 	void move_cursor_right();
 	void move_cursor_home(); // line-relative
 	void move_cursor_end();	// line-relative
-	size_t char_for_column(unsigned column, size_t line) const;
-	unsigned column_for_char(size_t charoff, size_t line) const;
-	unsigned char_width(char ch, size_t column) const;
-	unsigned tab_width(size_t column) const;
 	void update_dimensions(WINDOW *view);
 private:
 	std::string _targetpath;
-	std::vector<std::string> _lines;
+	Document _doc;
+	Update _update;
 	bool _last_active = false;
 	WINDOW *_last_dest = nullptr;
 	// What are the width and height of the viewrect?
@@ -44,7 +37,6 @@ private:
 	size_t _height = 0;
 	size_t _halfheight = 0;
 	size_t _maxscroll = 0;
-	size_t _maxline = 0;	// ubound, not size
 	// What is the vertical position of the viewrect?
 	size_t _scrollpos = 0;
 	// Where is the cursor located within the document?
@@ -58,4 +50,4 @@ private:
 };
 } // namespace Editor
 
-#endif // EDITOR_H
+#endif // EDITOR_EDITOR_H
