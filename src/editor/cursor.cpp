@@ -19,14 +19,14 @@ void Editor::Cursor::move_up(size_t count)
 	// stopping when we reach zero. Do not move the column.
 	// If the cursor was already positioned on the top row,
 	// move the cursor left to the beginning of the line.
-	_update.at(_location);
-	row_t newrow = _position.v - std::min(_position.v, count);
-	if (newrow != _position.v) {
-		_position.v = newrow;
+	begin_move();
+	if (count <= _position.v) {
+		_position.v -= count;
+		commit_position();
 	} else {
-		_position.h = 0;
+		_location = _doc.home();
+		commit_location();
 	}
-	commit_position();
 }
 
 void Editor::Cursor::move_down(size_t count)
@@ -36,14 +36,15 @@ void Editor::Cursor::move_down(size_t count)
 	// the column. If the cursor was already positioned on
 	// the maximum row, move the cursor right to the end of
 	// the line.
-	_update.at(_location);
-	row_t row = std::min(_position.v + count, _doc.maxline());
-	if (row != _position.v) {
-		_position.v = row;
+	begin_move();
+	auto maxv = _doc.maxline();
+	if (_position.v + count <= maxv) {
+		_position.v += count;
+		commit_position();
 	} else {
-		_position.h = UINT_MAX;
+		_location = _doc.end();
+		commit_location();
 	}
-	commit_position();
 }
 
 void Editor::Cursor::move_left()
@@ -53,7 +54,7 @@ void Editor::Cursor::move_left()
 	// was already at the beginning of the line, and the
 	// line is not the beginning of the document, move the
 	// cursor to the end of the previous line.
-	_update.at(_location);
+	begin_move();
 	if (_location.offset > 0) {
 		_location.offset--;
 	} else if (_location.line > 0) {
@@ -70,7 +71,7 @@ void Editor::Cursor::move_right()
 	// at the end of the line, and the line is not the last line
 	// in the document, move the cursor to the beginning of the
 	// next line.
-	_update.at(_location);
+	begin_move();
 	if (_location.offset < _doc.line(_location.line).size()) {
 		_location.offset++;
 	} else if (_location.line < _doc.maxline()) {
@@ -78,6 +79,13 @@ void Editor::Cursor::move_right()
 		_location.offset = 0;
 	}
 	commit_location();
+}
+
+void Editor::Cursor::begin_move()
+{
+	// Mark the old location of the cursor as dirty so the
+	// viewer will redraw that cell.
+	_update.at(_location);
 }
 
 void Editor::Cursor::commit_location()

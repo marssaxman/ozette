@@ -53,11 +53,8 @@ void Editor::Controller::paint_line(WINDOW *dest, row_t v)
 		if (ch != '\t') {
 			waddch(dest, ch);
 			h++;
-		} else {
+		} else while (++h % kTabWidth && h < _width) {
 			waddch(dest, ACS_BULLET);
-			while (++h % kTabWidth) {
-				waddch(dest, ' ');
-			}
 		}
 	}
 	wclrtoeol(dest);

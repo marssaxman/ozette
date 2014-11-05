@@ -18,6 +18,7 @@ public:
 	void move_left();
 	void move_right();
 private:
+	void begin_move();
 	void commit_location();
 	void commit_position();
 	Document &_doc;

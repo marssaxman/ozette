@@ -16,6 +16,8 @@ class Document
 public:
 	Document(std::string targetpath);
 	Line &line(line_t index);
+	location_t home();
+	location_t end();
 	line_t maxline() const { return _maxline; }
 	position_t position(const location_t &in_document);
 	location_t location(const position_t &on_display);

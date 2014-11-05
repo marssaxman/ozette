@@ -39,6 +39,18 @@ Editor::Line &Editor::Document::line(line_t index)
 	return index < _lines.size() ? *_lines[index].get() : *_blank.get();
 }
 
+Editor::location_t Editor::Document::home()
+{
+	location_t loc = {0,0};
+	return loc;
+}
+
+Editor::location_t Editor::Document::end()
+{
+	location_t loc = {_maxline, line(_maxline).size()};
+	return loc;
+}
+
 Editor::position_t Editor::Document::position(const location_t &loc)
 {
 	// Compute the screen position for this document location.
