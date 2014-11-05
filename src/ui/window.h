@@ -24,6 +24,7 @@ protected:
 	virtual void repaint() override { _dirty_content = true; }
 	virtual App &app() override { return _app; }
 	virtual void set_title(std::string text) override;
+	virtual void set_status(std::string text) override;
 	void paint();
 	void paint_chrome();
 	void paint_content();
@@ -43,6 +44,7 @@ private:
 	bool _dirty_content = true;
 	bool _dirty_chrome = true;
 	std::string _title;
+	std::string _status;
 };
 } // namespace UI
 

@@ -103,6 +103,12 @@ void UI::Window::set_title(std::string text)
 	_dirty_chrome = true;
 }
 
+void UI::Window::set_status(std::string text)
+{
+	_status = text;
+	_dirty_chrome = true;
+}
+
 void UI::Window::paint()
 {
 	if (_dirty_content) {
@@ -143,6 +149,11 @@ void UI::Window::paint()
 	barwidth -= _title.size();
 	if (barwidth > 0) {
 		waddch(_framewin, ' ');
+	}
+	// Draw the status text on the right side of the top line.
+	if (!_status.empty()) {
+		int hpos = _width - _status.size();
+		mvwaddnstr(_framewin, 0, hpos, _status.c_str(), _status.size());
 	}
 	_dirty_chrome = false;
 }

@@ -15,6 +15,7 @@ public:
 		virtual void repaint() = 0;
 		virtual App &app() = 0;
 		virtual void set_title(std::string text) = 0;
+		virtual void set_status(std::string text) = 0;
 	};
 	virtual ~Controller() = default;
 	// The window has just been opened. Initialize it.
