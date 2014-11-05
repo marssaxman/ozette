@@ -13,7 +13,7 @@ public:
 	Controller(std::string targetpath);
 	virtual void paint(WINDOW *view, bool active) override;
 	virtual bool process(Context &ctx, int ch) override;
-	virtual std::string title() const override { return _targetpath; }
+	virtual void open(Context &ctx) override { ctx.set_title(_targetpath); }
 protected:
 	void paint_line(WINDOW *view, row_t v, bool active);
 	bool line_is_visible(line_t index) const;

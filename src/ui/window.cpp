@@ -10,9 +10,8 @@ UI::Window::Window(App &app, std::unique_ptr<Controller> &&controller):
 	_contentwin(newwin(0, 0, 0, 0)),
 	_contentpanel(new_panel(_contentwin))
 {
-	_title = _controller->title();
-	paint_chrome();
-	paint_content();
+	_controller->open(*this);
+	paint();
 }
 
 UI::Window::~Window()
@@ -25,14 +24,13 @@ UI::Window::~Window()
 
 void UI::Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
 {
-	bool needs_chrome = false;
 	int frameheight = height--;
 	int framewidth = width;
 	int framepos = xpos;
 	if (lframe != _lframe || rframe != _rframe) {
 		_lframe = lframe;
 		_rframe = rframe;
-		needs_chrome = true;
+		_dirty_chrome = true;
 	}
 	if (_lframe) {
 		framepos -= 1;
@@ -51,34 +49,34 @@ void UI::Window::layout(int xpos, int height, int width, bool lframe, bool rfram
 		replace_panel(_framepanel, replacement);
 		delwin(_framewin);
 		_framewin = replacement;
-		needs_chrome = true;
+		_dirty_chrome = true;
 		// Resize the content panel and give it a new window
 		// as well.
 		replacement = newwin(height, width, 1, xpos);
 		replace_panel(_contentpanel, replacement);
 		delwin(_contentwin);
 		_contentwin = replacement;
+		_dirty_content = true;
 	} else if (framepos != _xpos) {
 		_xpos = framepos;
 		move_panel(_framepanel, 0, _xpos);
 		move_panel(_contentpanel, 1, xpos);
 	}
-	if (needs_chrome) {
-		paint_chrome();
-	}
-	paint_content();
+	paint();
 }
 
 void UI::Window::set_focus()
 {
 	_has_focus = true;
-	paint_chrome();
+	_dirty_chrome = true;
+	_dirty_content = true;
 }
 
 void UI::Window::clear_focus()
 {
 	_has_focus = false;
-	paint_chrome();
+	_dirty_chrome = true;
+	_dirty_content = true;
 }
 
 void UI::Window::bring_forward()
@@ -90,10 +88,7 @@ void UI::Window::bring_forward()
 bool UI::Window::process(int ch)
 {
 	bool out = _controller->process(*this, ch);
-	if (_must_repaint) {
-		paint_content();
-		_title = _controller->title();
-	}
+	paint();
 	return out;
 }
 
@@ -102,8 +97,19 @@ bool UI::Window::poll()
 	return process(ERR);
 }
 
-void UI::Window::paint_chrome()
+void UI::Window::set_title(std::string text)
 {
+	_title = text;
+	_dirty_chrome = true;
+}
+
+void UI::Window::paint()
+{
+	if (_dirty_content) {
+		_controller->paint(_contentwin, _has_focus);
+		_dirty_content = false;
+	}
+	if (!_dirty_chrome) return;
 	// Draw the left frame, if we have one.
 	int barx = 0;
 	int barwidth = _width;
@@ -138,10 +144,6 @@ void UI::Window::paint_chrome()
 	if (barwidth > 0) {
 		waddch(_framewin, ' ');
 	}
+	_dirty_chrome = false;
 }
 
-void UI::Window::paint_content()
-{
-	_controller->paint(_contentwin, _has_focus);
-	_must_repaint = false;
-}

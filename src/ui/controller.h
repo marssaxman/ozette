@@ -14,17 +14,18 @@ public:
 		virtual ~Context() = default;
 		virtual void repaint() = 0;
 		virtual App &app() = 0;
+		virtual void set_title(std::string text) = 0;
 	};
 	virtual ~Controller() = default;
-	// A view has been created or has been cleared.
-	// Fill it as necessary based on current model state.
+	// The window has just been opened. Initialize it.
+	virtual void open(Context &ctx) = 0;
+	// Paint the window with the current state for the
+	// object this controller manages.
 	virtual void paint(WINDOW *view, bool active) = 0;
 	// A keypress has occurred. Update model and view.
 	// Return true if the process should continue, false if
 	// the keypress represented a close action.
 	virtual bool process(Context &ctx, int ch) = 0;
-	// Human-readable string identifying the object.
-	virtual std::string title() const = 0;
 };
 } // namespace UI
 

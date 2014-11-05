@@ -21,8 +21,10 @@ public:
 	bool process(int ch);
 	bool poll();
 protected:
-	virtual void repaint() override { _must_repaint = true; }
+	virtual void repaint() override { _dirty_content = true; }
 	virtual App &app() override { return _app; }
+	virtual void set_title(std::string text) override;
+	void paint();
 	void paint_chrome();
 	void paint_content();
 private:
@@ -38,7 +40,8 @@ private:
 	bool _has_focus = true;
 	bool _lframe = false;
 	bool _rframe = false;
-	bool _must_repaint = false;
+	bool _dirty_content = true;
+	bool _dirty_chrome = true;
 	std::string _title;
 };
 } // namespace UI
