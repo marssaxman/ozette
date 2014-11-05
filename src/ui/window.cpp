@@ -152,8 +152,11 @@ void UI::Window::paint()
 	}
 	// Draw the status text on the right side of the top line.
 	if (!_status.empty()) {
-		int hpos = _width - _status.size();
-		mvwaddnstr(_framewin, 0, hpos, _status.c_str(), _status.size());
+		size_t statchars = std::min(_status.size(), (size_t)barwidth/2);
+		int hpos = _width - statchars - 3;
+		mvwaddch(_framewin, 0, hpos, ' ');
+		waddnstr(_framewin, _status.c_str(), statchars);
+		waddch(_framewin, ' ');
 	}
 	_dirty_chrome = false;
 }
