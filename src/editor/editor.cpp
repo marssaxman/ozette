@@ -54,9 +54,26 @@ void Editor::Controller::paint_line(WINDOW *dest, row_t v, bool active)
 	size_t index = v + _scrollpos;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)v, 0);
-	_doc.line(index).paint(dest, _width);
+	auto &line = _doc.line(index);
+	line.paint(dest, _width);
 	if (!active) return;
-	// draw some highlighty stuff
+	if (_selection.empty()) return;
+	column_t selbegin = 0;
+	unsigned selcount = 0;
+	if (_selection.begin.line < index && _selection.end.line > index) {
+		selcount = _width;
+	} else if (_selection.begin.line < index && _selection.end.line == index) {
+		selcount = line.column(_selection.end.offset);
+	} else if (_selection.begin.line == index && _selection.end.line > index) {
+		selbegin = line.column(_selection.begin.offset);
+		selcount = _width - selbegin;
+	} else if (_selection.begin.line == index && _selection.end.line == index) {
+		selbegin = line.column(_selection.begin.offset);
+		selcount = line.column(_selection.end.offset) - selbegin;
+	}
+	if (selcount > 0) {
+		mvwchgat(dest, v, selbegin, selcount, A_REVERSE, 0, NULL);
+	}
 }
 
 bool Editor::Controller::line_is_visible(size_t index) const
@@ -113,5 +130,5 @@ void Editor::Controller::extend_sel()
 	// The cursor has moved in range-selection mode.
 	// Leave the anchor where it is, then extend the
 	// selection to include the new cursor point.
-	_selection.extend(_sel_anchor);
+	_selection.extend(_cursor.location());
 }
