@@ -1,10 +1,23 @@
 #include "editor.h"
 
+static help_panel_t s_editor_help =
+{{
+{{'X', "Cut"}, {'C', "Copy"}, {'V', "Paste"}, {'K', "Delete"}, {'F', "Find"}, {'J', "Jump To"}},
+{{'W', "Close"}, {'S', "Save"}, {'R', "Revert"}, {'Z', "Undo"}, {'R', "Redo"}, {'H', "Help"}}
+}};
+
+
 Editor::Controller::Controller(std::string targetpath):
 	_targetpath(targetpath),
 	_doc(targetpath),
 	_cursor(_doc, _update)
 {
+}
+
+void Editor::Controller::open(Context &ctx)
+{
+	ctx.set_title(_targetpath);
+	ctx.set_help(&s_editor_help);
 }
 
 void Editor::Controller::paint(WINDOW *dest, bool active)

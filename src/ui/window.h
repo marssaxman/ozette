@@ -27,13 +27,14 @@ protected:
 	virtual void set_status(std::string text) override;
 	virtual void set_help(const help_panel_t *help) override;
 	void layout_contentwin();
+	void layout_taskbar();
 	void paint();
 	void paint_content();
 	void paint_chrome();
 	void paint_title_bar(int height, int width);
 	void paint_left_frame(int height, int width);
 	void paint_right_frame(int height, int width);
-	void paint_task_bar(int height, int width);
+	void paint_taskbar(int height, int width);
 private:
 	App &_app;
 	std::unique_ptr<Controller> _controller;

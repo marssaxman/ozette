@@ -1,8 +1,20 @@
 #include "browser.h"
 
+static help_panel_t s_browser_help =
+{{
+{{'O', "Open"}, {'N', "New"}, {'M', "Move"}, {'K', "Delete"}, {'J', "Jump"}, {'F', "Find"}},
+{{'X', "Exit"}, {'S', "Save All"}, {'W', "Close All"}, {'P', "Projects"}, {'U', "Settings"}, {'H', "Help"}}
+}};
+
 Browser::Browser():
 	_repos(*this)
 {
+}
+
+void Browser::open(Context &ctx)
+{
+	ctx.set_title("Lindi");
+	ctx.set_help(&s_browser_help);
 }
 
 void Browser::show_projects()

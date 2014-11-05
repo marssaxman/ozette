@@ -9,12 +9,28 @@ class App
 public:
 	enum class Command {
 		None = 0,
-		Save, Revert, Close,
-		Find, FindNext, JumpTo,
-		Cut, Copy, Paste, Delete,
-		Undo, Redo,
-		Open, Create, Move, Project,
-		Help, Config
+		Save, // ^S
+		Revert, // ^R
+		Close, // ^W
+		Find, // ^F
+		FindNext, // ^G
+		Jump, // ^J
+		Cut, // ^X
+		Copy, // ^C
+		Paste, // ^V
+		Delete, // ^K
+		Undo, // ^Z
+		Redo, // ^D
+		Open, // ^O
+		Project, // ^P
+		Help, // ^H   (or ?)
+		Config, // ^U
+		// consider:
+		// Save As
+		// Diff, Log, Blame
+		// Open Console
+		// Switch to Header/Source
+		// Create, Move, Rename, Delete File
 	};
 	virtual ~App() = default;
 	virtual void edit_file(std::string path) = 0;
@@ -24,9 +40,8 @@ public:
 };
 
 struct help_label_t {
-	App::Command command;
 	char key;
-	char label[10];
+	char text[10];
 };
 
 struct help_panel_t {

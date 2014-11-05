@@ -112,7 +112,7 @@ void UI::Window::set_status(std::string text)
 void UI::Window::set_help(const help_panel_t *help)
 {
 	_help = help;
-	_dirty_chrome = true;
+	layout_taskbar();
 }
 
 void UI::Window::layout_contentwin()
@@ -158,6 +158,20 @@ void UI::Window::layout_contentwin()
 	}
 }
 
+void UI::Window::layout_taskbar()
+{
+	unsigned new_height = 0;
+	// At present the only thing which lives on the taskbar is the help panel
+	if (_help) {
+		new_height += help_panel_t::kRows;
+	}
+	if (new_height != _taskbar_height) {
+		_taskbar_height = new_height;
+		_dirty_chrome = true;
+		layout_contentwin();
+	}
+}
+
 void UI::Window::paint()
 {
 	if (_dirty_content) paint_content();
@@ -177,7 +191,7 @@ void UI::Window::paint_chrome()
 	paint_title_bar(height, width);
 	if (_lframe) paint_left_frame(height, width);
 	if (_rframe) paint_right_frame(height, width);
-	if (_taskbar_height) paint_task_bar(height, width);
+	if (_taskbar_height) paint_taskbar(height, width);
 	_dirty_chrome = false;
 }
 
@@ -210,27 +224,47 @@ void UI::Window::paint_title_bar(int height, int width)
 
 void UI::Window::paint_left_frame(int height, int width)
 {
-	int maxv = height - _taskbar_height;
-	for (int i = 1; i < maxv; ++i) {
-		mvwaddch(_framewin, i, 0, ACS_VLINE);
-	}
+	mvwvline(_framewin, 1, 0, ACS_VLINE, height - 1);
 }
 
 void UI::Window::paint_right_frame(int height, int width)
 {
-	int maxv = height - _taskbar_height;
-	int maxh = width - 1;
-	for (int i = 1;  i < maxv; ++i) {
-		mvwaddch(_framewin, i, maxh, ACS_VLINE);
-	}
+	mvwvline(_framewin, 1, width-1, ACS_VLINE, height-1);
 }
 
-void UI::Window::paint_task_bar(int height, int width)
+void UI::Window::paint_taskbar(int height, int width)
 {
-	int loweredge = height - _taskbar_height;
-	mvwaddch(_framewin, loweredge, 0, ACS_LLCORNER);
-	for (int i = 0; i < width-1; ++i) {
-		waddch(_framewin, ACS_HLINE);
+	int xpos = _lframe ? 1 : 0;
+	width -= xpos;
+	if (_rframe) width--;
+	int ypos = height - _taskbar_height;
+	// Clear out the space we're going to work in.
+	for (int v = ypos; v < height; ++v) {
+		mvwhline(_framewin, v, xpos, ' ', width);
 	}
-	waddch(_framewin, ACS_LRCORNER);
+
+	// If there is a help panel, render it here.
+	if (!_help) return;
+
+	int labelwidth = width / help_panel_t::kColumns;
+	int textwidth = labelwidth - 4;
+	unsigned v = 0;
+	unsigned h = 0;
+
+	while (v < help_panel_t::kRows) {
+		auto &label = _help->label[v][h];
+		int labelpos = h * labelwidth;
+		wmove(_framewin, v+ypos, labelpos+xpos);
+		wattron(_framewin, A_REVERSE);
+		waddch(_framewin, '^');
+		waddch(_framewin, label.key);
+		wattroff(_framewin, A_REVERSE);
+		waddch(_framewin, ' ');
+		waddnstr(_framewin, label.text, textwidth);
+		waddch(_framewin, ' ');
+		if (++h == help_panel_t::kColumns) {
+			h = 0;
+			v++;
+		}
+	}
 }
