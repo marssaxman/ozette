@@ -12,6 +12,7 @@ public:
 	void at(location_t loc);
 	void at(line_t line);
 	void range(line_t from, line_t to);
+	void forward(location_t loc);
 	void all();
 	bool has_dirty() const { return _dirty; }
 	bool is_dirty(line_t index) const;

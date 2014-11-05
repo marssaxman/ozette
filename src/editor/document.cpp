@@ -82,9 +82,19 @@ void Editor::Document::erase(range_t chars)
 	assert(false);
 }
 
-Editor::location_t Editor::Document::insert(location_t loc, std::string text)
+Editor::location_t Editor::Document::insert(location_t loc, char ch)
 {
-	assert(false);
+	if (loc.line < _lines.size()) {
+		std::string text = _lines[loc.line]->text();
+		if (loc.offset >= text.size()) loc.offset = text.size();
+		text.insert(loc.offset, 1, ch);
+		_lines[loc.line].reset(new StrLine(text));
+		loc.offset++;
+	} else {
+		loc.line = _lines.size();
+		_lines.emplace_back(new StrLine(std::string(1, ch)));
+		loc.offset = 1;
+	}
 	return loc;
 }
 

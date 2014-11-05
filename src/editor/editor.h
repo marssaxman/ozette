@@ -21,6 +21,7 @@ protected:
 	void update_dimensions(WINDOW *view);
 	void clear_sel();
 	void extend_sel();
+	void insert(char ch);
 private:
 	std::string _targetpath;
 	Document _doc;

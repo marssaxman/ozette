@@ -81,6 +81,13 @@ void Editor::Cursor::right()
 	commit_location();
 }
 
+void Editor::Cursor::move_to(location_t loc)
+{
+	begin_move();
+	_location = loc;
+	commit_location();
+}
+
 void Editor::Cursor::begin_move()
 {
 	// Mark the old location of the cursor as dirty so the

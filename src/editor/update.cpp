@@ -29,6 +29,13 @@ void Editor::Update::range(line_t a, line_t b)
 	_dirty = true;
 }
 
+void Editor::Update::forward(location_t loc)
+{
+	_start = _dirty? std::min(_start, loc.line): loc.line;
+	_end = SIZE_MAX;
+	_dirty = true;
+}
+
 void Editor::Update::all()
 {
 	_dirty = true;

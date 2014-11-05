@@ -17,6 +17,7 @@ public:
 	void down(size_t count);
 	void left();
 	void right();
+	void move_to(location_t loc);
 private:
 	void begin_move();
 	void commit_location();

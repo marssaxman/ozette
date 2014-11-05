@@ -40,7 +40,7 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case KEY_SR: _cursor.up(1); extend_sel(); break; // shifted up-arrow
 		case KEY_SLEFT: _cursor.left(); extend_sel(); break;
 		case KEY_SRIGHT: _cursor.right(); extend_sel(); break;
-		default: break;
+		default: if (ch >= 32 && ch < 127) insert(ch); break;
 	}
 	reveal_cursor();
 	if (_update.has_dirty()) {
@@ -131,4 +131,15 @@ void Editor::Controller::extend_sel()
 	// Leave the anchor where it is, then extend the
 	// selection to include the new cursor point.
 	_selection.extend(_sel_anchor, _cursor.location());
+}
+
+void Editor::Controller::insert(char ch)
+{
+	location_t loc = _selection.begin;
+	if (!_selection.empty()) {
+		_doc.erase(_selection);
+		_update.forward(loc);
+	}
+	_cursor.move_to(_doc.insert(loc, ch));
+	clear_sel();
 }

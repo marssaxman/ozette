@@ -30,11 +30,12 @@ public:
 	location_t location(const position_t &on_display);
 	// Retrieve the raw character data for this range.
 	std::string text(range_t chars);
+
 	// Remove the text within the range.
 	void erase(range_t chars);
-	// Insert these characters at a specific place,
+	// Insert this characters at a specific place,
 	// returning the end of the inserted text.
-	location_t insert(location_t loc, std::string text);
+	location_t insert(location_t loc, char ch);
 private:
 	std::unique_ptr<Line> _blank;
 	std::vector<std::unique_ptr<Line>> _lines;
