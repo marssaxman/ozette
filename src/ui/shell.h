@@ -8,13 +8,7 @@ namespace UI {
 class Shell
 {
 public:
-	class Delegate
-	{
-	public:
-		virtual ~Delegate() = default;
-		virtual void window_closed(std::unique_ptr<Window> &&win) = 0;
-	};
-	Shell(App &app, Delegate &host);
+	Shell(App &app);
 	~Shell();
 	bool process(int ch);
 	Window *open_window(std::unique_ptr<Controller> &&wincontrol);
@@ -32,7 +26,6 @@ protected:
 	void close_window(size_t index);
 private:
 	App &_app;
-	Delegate &_host;
 	int _width = 0;
 	int _height = 0;
 	std::vector<std::unique_ptr<Window>> _columns;

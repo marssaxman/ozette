@@ -3,7 +3,7 @@
 #include "editor.h"
 
 Lindi::Lindi():
-	_shell(*this, *this),
+	_shell(*this),
 	_browser(new Browser)
 {
         std::unique_ptr<UI::Controller> browser(_browser);
@@ -24,6 +24,12 @@ void Lindi::edit_file(std::string path)
 	_editors[path] = win;
 }
 
+void Lindi::file_closed(std::string path)
+{
+	auto iter = _editors.find(path);
+	if (iter != _editors.end()) _editors.erase(iter);
+}
+
 void Lindi::select_project(std::string path)
 {
 	_browser->open_project(path);
@@ -41,13 +47,3 @@ void Lindi::run()
 	} while (!_done && _shell.process(getch()));
 }
 
-void Lindi::window_closed(std::unique_ptr<UI::Window> &&win)
-{
-	UI::Window *wptr = win.get();
-	for (auto iter = _editors.begin(); iter != _editors.end(); ++iter) {
-		if (iter->second == wptr) {
-			_editors.erase(iter);
-			break;
-		}
-	}
-}

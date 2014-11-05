@@ -3,9 +3,8 @@
 #include <assert.h>
 #include <list>
 
-UI::Shell::Shell(App &app, Delegate &host):
-	_app(app),
-	_host(host)
+UI::Shell::Shell(App &app):
+	_app(app)
 {
 	// Set up ncurses.
 	initscr();
@@ -155,6 +154,5 @@ void UI::Shell::send_to_focus(int ch)
 
 void UI::Shell::close_window(size_t index)
 {
-	_host.window_closed(std::move(_columns.at(index)));
 	_columns.erase(_columns.begin() + index);
 }
