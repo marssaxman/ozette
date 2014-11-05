@@ -24,7 +24,7 @@ private:
 	void commit_position();
 	Document &_doc;
 	Update &_update;
-	location_t _location = {0,0};
+	location_t _location;
 	// We use this internal position record to keep the cursor
 	// located on the same column when moving up and down, as
 	// closely as we can approximate. The display position of

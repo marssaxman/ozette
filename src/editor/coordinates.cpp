@@ -1,19 +1,24 @@
 #include "coordinates.h"
 
-bool Editor::range_t::empty() const
+Editor::Range::Range(const location_t &a, const location_t &b)
 {
-	return begin == end;
+	_begin = (a < b) ? a : b;
+	_end = (a > b) ? a : b;
 }
 
-void Editor::range_t::reset(location_t loc)
+bool Editor::Range::empty() const
 {
-	begin = loc;
-	end = loc;
+	return _begin == _end;
 }
 
-void Editor::range_t::extend(location_t a, location_t b)
+void Editor::Range::reset(const location_t &loc)
 {
-	begin = (a < b) ? a : b;
-	end = (a > b) ? a : b;
+	_begin = loc;
+	_end = loc;
 }
 
+void Editor::Range::extend(const location_t &a, const location_t &b)
+{
+	_begin = (a < b) ? a : b;
+	_end = (a > b) ? a : b;
+}

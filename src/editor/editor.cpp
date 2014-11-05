@@ -60,16 +60,16 @@ void Editor::Controller::paint_line(WINDOW *dest, row_t v, bool active)
 	if (_selection.empty()) return;
 	column_t selbegin = 0;
 	unsigned selcount = 0;
-	if (_selection.begin.line < index && _selection.end.line > index) {
+	if (_selection.begin().line < index && _selection.end().line > index) {
 		selcount = _width;
-	} else if (_selection.begin.line < index && _selection.end.line == index) {
-		selcount = line.column(_selection.end.offset);
-	} else if (_selection.begin.line == index && _selection.end.line > index) {
-		selbegin = line.column(_selection.begin.offset);
+	} else if (_selection.begin().line < index && _selection.end().line == index) {
+		selcount = line.column(_selection.end().offset);
+	} else if (_selection.begin().line == index && _selection.end().line > index) {
+		selbegin = line.column(_selection.begin().offset);
 		selcount = _width - selbegin;
-	} else if (_selection.begin.line == index && _selection.end.line == index) {
-		selbegin = line.column(_selection.begin.offset);
-		selcount = line.column(_selection.end.offset) - selbegin;
+	} else if (_selection.begin().line == index && _selection.end().line == index) {
+		selbegin = line.column(_selection.begin().offset);
+		selcount = line.column(_selection.end().offset) - selbegin;
 	}
 	if (selcount > 0) {
 		mvwchgat(dest, v, selbegin, selcount, A_REVERSE, 0, NULL);
@@ -135,7 +135,7 @@ void Editor::Controller::extend_sel()
 
 void Editor::Controller::insert(char ch)
 {
-	location_t loc = _selection.begin;
+	location_t loc = _selection.begin();
 	if (!_selection.empty()) {
 		_doc.erase(_selection);
 		_update.forward(loc);

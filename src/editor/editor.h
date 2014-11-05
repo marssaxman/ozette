@@ -27,8 +27,8 @@ private:
 	Document _doc;
 	Update _update;
 	Cursor _cursor;
-	location_t _sel_anchor = {0,0};
-	range_t _selection = {{0,0}, {0,0}};
+	location_t _sel_anchor;
+	Range _selection;
 	// Update status: must we perform a full repaint?
 	bool _last_active = false;
 	WINDOW *_last_dest = nullptr;

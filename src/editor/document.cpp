@@ -71,13 +71,13 @@ Editor::location_t Editor::Document::location(const position_t &loc)
 	return out;
 }
 
-std::string Editor::Document::text(range_t chars)
+std::string Editor::Document::text(Range chars)
 {
 	assert(false);
 	return std::string();
 }
 
-void Editor::Document::erase(range_t chars)
+void Editor::Document::erase(Range chars)
 {
 	assert(false);
 }

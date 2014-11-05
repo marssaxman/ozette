@@ -11,17 +11,25 @@ namespace Editor {
 typedef size_t line_t;
 typedef size_t offset_t;
 struct location_t {
-	line_t line;
-	offset_t offset;
+	location_t() {}
+	location_t(line_t l, offset_t o): line(l), offset(o) {}
+	line_t line = 0;
+	offset_t offset = 0;
 };
 
 // A location range identifies some sequence of characters.
-struct range_t {
-	location_t begin;
-	location_t end;
+class Range {
+public:
+	Range() {}
+	Range(const location_t &a, const location_t &b);
+	const location_t &begin() const { return _begin; }
+	const location_t &end() const { return _end; }
 	bool empty() const;
-	void reset(location_t loc);
-	void extend(location_t a, location_t b);
+	void reset(const location_t &loc);
+	void extend(const location_t &a, const location_t &b);
+private:
+	location_t _begin;
+	location_t _end;
 };
 
 // A display space is a two-dimensional plane made up of
