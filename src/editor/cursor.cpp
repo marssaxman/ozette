@@ -49,36 +49,12 @@ void Editor::Cursor::down(size_t count)
 
 void Editor::Cursor::left()
 {
-	// If the cursor is not located at the beginning of the
-	// line, move it left by one character. If the cursor
-	// was already at the beginning of the line, and the
-	// line is not the beginning of the document, move the
-	// cursor to the end of the previous line.
-	begin_move();
-	if (_location.offset > 0) {
-		_location.offset--;
-	} else if (_location.line > 0) {
-		_location.line--;
-		_location.offset = _doc.line(_location.line).size();
-	}
-	commit_location();
+	move_to(_doc.prev(_location));
 }
 
 void Editor::Cursor::right()
 {
-	// If the cursor is not located at the end of the line,
-	// move it right by one character. If the cursor was already
-	// at the end of the line, and the line is not the last line
-	// in the document, move the cursor to the beginning of the
-	// next line.
-	begin_move();
-	if (_location.offset < _doc.line(_location.line).size()) {
-		_location.offset++;
-	} else if (_location.line < _doc.maxline()) {
-		_location.line++;
-		_location.offset = 0;
-	}
-	commit_location();
+	move_to(_doc.next(_location));
 }
 
 void Editor::Cursor::home()
