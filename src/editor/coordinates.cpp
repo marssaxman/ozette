@@ -1,9 +1,19 @@
 #include "coordinates.h"
 
+std::string Editor::location_t::to_string() const
+{
+	return std::to_string(line) + ":" + std::to_string(offset);
+}
+
 Editor::Range::Range(const location_t &a, const location_t &b)
 {
 	_begin = (a < b) ? a : b;
 	_end = (a > b) ? a : b;
+}
+
+std::string Editor::Range::to_string() const
+{
+	return _begin.to_string() + "-" + _end.to_string();
 }
 
 bool Editor::Range::empty() const

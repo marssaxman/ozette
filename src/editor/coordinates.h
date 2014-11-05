@@ -2,6 +2,7 @@
 #define EDITOR_COORDINATES_H
 
 #include <cstddef>
+#include <string>
 
 namespace Editor {
 
@@ -13,6 +14,7 @@ typedef size_t offset_t;
 struct location_t {
 	location_t() {}
 	location_t(line_t l, offset_t o): line(l), offset(o) {}
+	std::string to_string() const;
 	line_t line = 0;
 	offset_t offset = 0;
 };
@@ -22,6 +24,7 @@ class Range {
 public:
 	Range() {}
 	Range(const location_t &a, const location_t &b);
+	std::string to_string() const;
 	const location_t &begin() const { return _begin; }
 	const location_t &end() const { return _end; }
 	bool empty() const;
