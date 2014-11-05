@@ -2,9 +2,9 @@
 #include <fstream>
 #include "view.h"
 
-const unsigned Editor::kTabWidth = 4;
+const unsigned Editor::Controller::kTabWidth = 4;
 
-Editor::Editor(std::string targetpath):
+Editor::Controller::Controller(std::string targetpath):
 	_targetpath(targetpath)
 {
 	std::string str;
@@ -14,7 +14,7 @@ Editor::Editor(std::string targetpath):
 	}
 }
 
-void Editor::paint(WINDOW *dest, bool active)
+void Editor::Controller::paint(WINDOW *dest, bool active)
 {
 	update_dimensions(dest);
 	if (active != _last_active || dest != _last_dest) {
@@ -28,7 +28,7 @@ void Editor::paint(WINDOW *dest, bool active)
 	_update.reset();
 }
 
-bool Editor::process(WINDOW *dest, int ch, App &app)
+bool Editor::Controller::process(WINDOW *dest, int ch, App &app)
 {
 	update_dimensions(dest);
 	switch (ch) {
@@ -46,42 +46,7 @@ bool Editor::process(WINDOW *dest, int ch, App &app)
 	return true;
 }
 
-void Editor::Update::reset()
-{
-	_dirty = false;
-	_linestart = 0;
-	_lineend = 0;
-}
-
-void Editor::Update::all()
-{
-	_dirty = true;
-	_linestart = 0;
-	_lineend = (size_t)-1;
-}
-
-void Editor::Update::line(size_t line)
-{
-	_linestart = _dirty ? std::min(_linestart, line) : line;
-	_lineend = _dirty ? std::max(_lineend, line) : line;
-	_dirty = true;
-}
-
-void Editor::Update::range(size_t a, size_t b)
-{
-	size_t from = std::min(a, b);
-	size_t to = std::max(a, b);
-	_linestart = _dirty ? std::min(_linestart, from) : from;
-	_lineend = _dirty ? std::max(_linestart, to) : to;
-	_dirty = true;
-}
-
-bool Editor::Update::is_dirty(size_t line) const
-{
-	return _dirty && (line >= _linestart) && (line <= _lineend);
-}
-
-void Editor::paint_line(WINDOW *dest, unsigned i)
+void Editor::Controller::paint_line(WINDOW *dest, unsigned i)
 {
 	size_t index = i + _scrollpos;
 	if (!_update.is_dirty(index)) return;
@@ -108,25 +73,25 @@ void Editor::paint_line(WINDOW *dest, unsigned i)
 	}
 }
 
-bool Editor::line_is_visible(size_t index) const
+bool Editor::Controller::line_is_visible(size_t index) const
 {
 	return index >= _scrollpos && (index - _scrollpos) < _height;
 }
 
-std::string Editor::get_line_text(size_t index) const
+std::string Editor::Controller::get_line_text(size_t index) const
 {
 	// get the specified line, if it is in range, or the empty string
 	// if that is what we should display instead
 	return index < _lines.size() ? _lines[index] : "";
 }
 
-size_t Editor::get_line_size(size_t index) const
+size_t Editor::Controller::get_line_size(size_t index) const
 {
 	// return the line's length in chars, or 0 if out of range
 	return index < _lines.size() ? _lines[index].size() : 0;
 }
 
-void Editor::reveal_cursor()
+void Editor::Controller::reveal_cursor()
 {
 	// If the cursor is already on screen, do nothing.
 	if (line_is_visible(_curs_line)) return;
@@ -137,7 +102,7 @@ void Editor::reveal_cursor()
 	_update.all();
 }
 
-void Editor::move_cursor_up(size_t lines)
+void Editor::Controller::move_cursor_up(size_t lines)
 {
 	if (_curs_line > 0) {
 		// Move up by the specified number of
@@ -150,7 +115,7 @@ void Editor::move_cursor_up(size_t lines)
 	reveal_cursor();
 }
 
-void Editor::move_cursor_down(size_t lines)
+void Editor::Controller::move_cursor_down(size_t lines)
 {
 	if (_curs_line < _maxline) {
 		// Move down by the specified number of
@@ -164,7 +129,7 @@ void Editor::move_cursor_down(size_t lines)
 	reveal_cursor();
 }
 
-void Editor::move_cursor_left()
+void Editor::Controller::move_cursor_left()
 {
 	if (_curs_char > 0) {
 		// Move one character left.
@@ -181,7 +146,7 @@ void Editor::move_cursor_left()
 	reveal_cursor();
 }
 
-void Editor::move_cursor_right()
+void Editor::Controller::move_cursor_right()
 {
 	size_t linesize = get_line_size(_curs_line);
 	if (_curs_char < linesize) {
@@ -199,7 +164,7 @@ void Editor::move_cursor_right()
 	reveal_cursor();
 }
 
-void Editor::move_cursor_home()
+void Editor::Controller::move_cursor_home()
 {
 	size_t newchar = 0;
 	unsigned newcol = 0;
@@ -211,7 +176,7 @@ void Editor::move_cursor_home()
 	reveal_cursor();
 }
 
-void Editor::move_cursor_end()
+void Editor::Controller::move_cursor_end()
 {
 	size_t newchar = get_line_size(_curs_line);
 	unsigned newcol = column_for_char(newchar, _curs_line);
@@ -223,7 +188,7 @@ void Editor::move_cursor_end()
 	reveal_cursor();
 }
 
-size_t Editor::char_for_column(unsigned column, size_t line) const
+size_t Editor::Controller::char_for_column(unsigned column, size_t line) const
 {
 	// Given a screen column coordinate and a line number,
 	// compute the character offset which most closely
@@ -240,7 +205,7 @@ size_t Editor::char_for_column(unsigned column, size_t line) const
 	return charoff;
 }
 
-unsigned Editor::column_for_char(size_t charoff, size_t line) const
+unsigned Editor::Controller::column_for_char(size_t charoff, size_t line) const
 {
 	// Given a character offset and a line number, compute
 	// the screen column coordinate where that character
@@ -257,21 +222,21 @@ unsigned Editor::column_for_char(size_t charoff, size_t line) const
 	return column;
 }
 
-unsigned Editor::char_width(char ch, size_t column) const
+unsigned Editor::Controller::char_width(char ch, size_t column) const
 {
 	// How many columns wide is this character, when
 	// it appears at the specified column?
 	return (ch == '\t') ? tab_width(column) : 1;
 }
 
-unsigned Editor::tab_width(size_t column) const
+unsigned Editor::Controller::tab_width(size_t column) const
 {
 	// How many columns wide is a tab character
 	// which begins at the specified column?
 	return (column + kTabWidth) % kTabWidth;
 }
 
-void Editor::update_dimensions(WINDOW *view)
+void Editor::Controller::update_dimensions(WINDOW *view)
 {
 	int height, width;
 	getmaxyx(view, height, width);

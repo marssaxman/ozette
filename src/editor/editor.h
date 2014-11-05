@@ -2,32 +2,21 @@
 #define EDITOR_H
 
 #include "controller.h"
+#include "update.h"
 #include <vector>
 
-class Editor : public Controller
+namespace Editor {
+class Controller : public ::Controller
 {
 public:
-	Editor(std::string targetpath);
+	Controller(std::string targetpath);
 	virtual void paint(WINDOW *view, bool active) override;
 	virtual bool process(WINDOW *view, int ch, App &app) override;
 	virtual bool poll(WINDOW *view, App &app) override { return true; }
 	virtual std::string title() const override { return _targetpath; }
 protected:
 	static const unsigned kTabWidth;
-	class Update
-	{
-	public:
-		void reset();
-		void all();
-		void line(size_t line);
-		void range(size_t from, size_t to);
-		bool has_dirty() const { return _dirty; }
-		bool is_dirty(size_t line) const;
-	private:
-		bool _dirty = true;
-		size_t _linestart = 0;
-		size_t _lineend = 0;
-	} _update;
+	Update _update;
 
 	void paint_line(WINDOW *view, unsigned y);
 	bool line_is_visible(size_t index) const;
@@ -67,5 +56,6 @@ private:
 	size_t _curs_char = 0; // relative to the line text
 	unsigned _curs_col = 0; // position on screen
 };
+} // namespace Editor
 
-#endif // CONSOLE_H
+#endif // EDITOR_H
