@@ -13,6 +13,7 @@ public:
 	public:
 		virtual ~Context() = default;
 		virtual void repaint() = 0;
+		virtual App &app() = 0;
 	};
 	virtual ~Controller() = default;
 	// A view has been created or has been cleared.
@@ -21,7 +22,7 @@ public:
 	// A keypress has occurred. Update model and view.
 	// Return true if the process should continue, false if
 	// the keypress represented a close action.
-	virtual bool process(Context &ctx, int ch, App &app) = 0;
+	virtual bool process(Context &ctx, int ch) = 0;
 	// Human-readable string identifying the object.
 	virtual std::string title() const = 0;
 };

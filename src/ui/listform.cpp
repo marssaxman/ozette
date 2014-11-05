@@ -35,12 +35,12 @@ void ListForm::Controller::paint(WINDOW *view, bool active)
 	}
 }
 
-bool ListForm::Controller::process(Context &ctx, int ch, App &app)
+bool ListForm::Controller::process(Context &ctx, int ch)
 {
         switch (ch) {
 		case KEY_DOWN: arrow_down(ctx); break;
 		case KEY_UP: arrow_up(ctx); break;
-		case '\r': commit(ctx, app); break;
+		case '\r': commit(ctx); break;
 		case 27: escape(ctx); break;
 		default: break;
 	}
@@ -150,11 +150,11 @@ void ListForm::Controller::arrow_up(Context &ctx)
 	}
 }
 
-void ListForm::Controller::commit(Context &ctx, App &app)
+void ListForm::Controller::commit(Context &ctx)
 {
 	assert(_selpos < _lines.size());
 	auto &field = _lines[_selpos];
-	if (field.get() != nullptr && field->invoke(app)) {
+	if (field.get() != nullptr && field->invoke(ctx.app())) {
 		_dirty = true;
 		ctx.repaint();
 	}

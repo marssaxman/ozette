@@ -21,7 +21,7 @@ void Editor::Controller::paint(WINDOW *dest, bool active)
 	_update.reset();
 }
 
-bool Editor::Controller::process(Context &ctx, int ch, App &app)
+bool Editor::Controller::process(Context &ctx, int ch)
 {
 	switch (ch) {
 		case KEY_DOWN: _cursor.move_down(1); break;

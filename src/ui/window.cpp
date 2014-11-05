@@ -88,7 +88,7 @@ void UI::Window::bring_forward()
 
 bool UI::Window::process(int ch)
 {
-	bool out = _controller->process(*this, ch, _app);
+	bool out = _controller->process(*this, ch);
 	if (_must_repaint) {
 		_controller->paint(_contentwin, _has_focus);
 		_must_repaint = false;

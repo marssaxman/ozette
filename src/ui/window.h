@@ -22,6 +22,7 @@ public:
 	bool poll();
 protected:
 	virtual void repaint() override { _must_repaint = true; }
+	virtual App &app() override { return _app; }
 	void draw_chrome();
 private:
 	App &_app;

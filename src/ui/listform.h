@@ -51,7 +51,7 @@ class Controller : public UI::Controller
 {
 public:
 	virtual void paint(WINDOW *view, bool active) override;
-	virtual bool process(Context &ctx, int ch, App &app) override;
+	virtual bool process(Context &ctx, int ch) override;
 protected:
 	virtual void render(Builder &fields) = 0;
 	void mark_dirty() { _dirty = true; }
@@ -60,7 +60,7 @@ private:
 	bool is_selectable(ssize_t line);
 	void arrow_down(Context &ctx);
 	void arrow_up(Context &ctx);
-	void commit(Context &ctx, App &app);
+	void commit(Context &ctx);
 	void escape(Context &ctx);
 	void scroll_to_selection(WINDOW *view);
 	std::vector<std::unique_ptr<Field>> _lines;
