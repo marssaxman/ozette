@@ -19,6 +19,7 @@ struct location_t {
 struct range_t {
 	location_t begin;
 	location_t end;
+	bool empty() const;
 	void reset(location_t loc);
 	void extend(location_t loc);
 };

@@ -1,5 +1,10 @@
 #include "coordinates.h"
 
+bool Editor::range_t::empty() const
+{
+	return begin == end;
+}
+
 void Editor::range_t::reset(location_t loc)
 {
 	begin = loc;

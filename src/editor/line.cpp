@@ -41,3 +41,19 @@ void Editor::Line::advance(char ch, column_t &h)
 	h++;
 	} while (ch == '\t' && h % kTabWidth);
 }
+
+void Editor::Line::paint(WINDOW *dest, unsigned width)
+{
+	column_t h = 0;
+	for (char ch: text()) {
+		if (h >= width) break;
+		if (ch != '\t') {
+			waddch(dest, ch);
+			h++;
+		} else while (++h % kTabWidth && h < width) {
+			waddch(dest, ' ');
+		}
+	}
+	wclrtoeol(dest);
+}
+

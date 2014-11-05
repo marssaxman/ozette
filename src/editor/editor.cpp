@@ -18,19 +18,29 @@ void Editor::Controller::paint(WINDOW *dest, bool active)
 	for (unsigned i = 0; i < _height; ++i) {
 		paint_line(dest, i, active);
 	}
+	position_t curs = _cursor.position();
+	curs.v -= std::min(curs.v, _scrollpos);
+	wmove(dest, curs.v, curs.h);
+	curs_set(active ? 1 : 0);
 	_update.reset();
 }
 
 bool Editor::Controller::process(Context &ctx, int ch)
 {
 	switch (ch) {
-		case KEY_DOWN: _cursor.down(1); break;
-		case KEY_UP: _cursor.up(1); break;
-		case KEY_LEFT: _cursor.left(); break;
-		case KEY_RIGHT: _cursor.right(); break;
-		case KEY_NPAGE: _cursor.down(_halfheight); break;
-		case KEY_PPAGE: _cursor.up(_halfheight); break;
-		default: break;
+		case KEY_DOWN: _cursor.down(1); clear_sel(); break;
+		case KEY_UP: _cursor.up(1); clear_sel(); break;
+		case KEY_LEFT: _cursor.left(); clear_sel(); break;
+		case KEY_RIGHT: _cursor.right(); clear_sel(); break;
+		case KEY_NPAGE: _cursor.down(_halfheight); clear_sel(); break;
+		case KEY_PPAGE: _cursor.up(_halfheight); clear_sel(); break;
+		case KEY_HOME: break; // move to beginning of line
+		case KEY_END: break; // move to end of line
+		case KEY_SF: _cursor.down(1); extend_sel(); break; // shifted down-arrow
+		case KEY_SR: _cursor.up(1); extend_sel(); break; // shifted up-arrow
+		case KEY_SLEFT: _cursor.left(); extend_sel(); break;
+		case KEY_SRIGHT: _cursor.right(); extend_sel(); break;
+		default: if (ch > 0) ctx.set_status(std::to_string(ch)); break;
 	}
 	reveal_cursor();
 	if (_update.has_dirty()) {
@@ -44,23 +54,9 @@ void Editor::Controller::paint_line(WINDOW *dest, row_t v, bool active)
 	size_t index = v + _scrollpos;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)v, 0);
-	// We can't print this string unfiltered; we need to look
-	// for tab characters and align them columnwise.
-	column_t h = 0;
-	for (char ch: _doc.line(index).text()) {
-		if (h >= _width) break;
-		if (ch != '\t') {
-			waddch(dest, ch);
-			h++;
-		} else while (++h % kTabWidth && h < _width) {
-			waddch(dest, ' ');
-		}
-	}
-	wclrtoeol(dest);
-	if (active && _cursor.position().v == index) {
-		h = _cursor.position().h;
-		mvwchgat(dest, v, h, 1, A_REVERSE, 0, NULL);
-	}
+	_doc.line(index).paint(dest, _width);
+	if (!active) return;
+	// draw some highlighty stuff
 }
 
 bool Editor::Controller::line_is_visible(size_t index) const
@@ -101,3 +97,21 @@ void Editor::Controller::update_dimensions(WINDOW *view)
 	}
 }
 
+void Editor::Controller::clear_sel()
+{
+	// The cursor has moved as an insertion point.
+	// If the selection was not empty, update
+	// the affected lines.
+	// Clear the selection and move the anchor
+	// to the current cursor location.
+	_sel_anchor = _cursor.location();
+	_selection.reset(_sel_anchor);
+}
+
+void Editor::Controller::extend_sel()
+{
+	// The cursor has moved in range-selection mode.
+	// Leave the anchor where it is, then extend the
+	// selection to include the new cursor point.
+	_selection.extend(_sel_anchor);
+}

@@ -15,12 +15,26 @@ class Document
 {
 public:
 	Document(std::string targetpath);
+	// Get a representation of the line at this index.
+	// Will not throw; returns blank if out of bounds.
 	Line &line(line_t index);
+	// Where is the beginning of the document?
 	location_t home();
+	// Where is the end of the document?
 	location_t end();
+	// Which is the last line in the document?
 	line_t maxline() const { return _maxline; }
+	// Locate the position on screen for this character.
 	position_t position(const location_t &in_document);
+	// Locate the character corresponding to this position.
 	location_t location(const position_t &on_display);
+	// Retrieve the raw character data for this range.
+	std::string text(range_t chars);
+	// Remove the text within the range.
+	void erase(range_t chars);
+	// Insert these characters at a specific place,
+	// returning the end of the inserted text.
+	location_t insert(location_t loc, std::string text);
 private:
 	std::unique_ptr<Line> _blank;
 	std::vector<std::unique_ptr<Line>> _lines;

@@ -19,11 +19,16 @@ protected:
 	bool line_is_visible(line_t index) const;
 	void reveal_cursor();
 	void update_dimensions(WINDOW *view);
+	void clear_sel();
+	void extend_sel();
 private:
 	std::string _targetpath;
 	Document _doc;
 	Update _update;
 	Cursor _cursor;
+	location_t _sel_anchor;
+	range_t _selection;
+	// Update status: must we perform a full repaint?
 	bool _last_active = false;
 	WINDOW *_last_dest = nullptr;
 	// What are the width and height of the viewrect?

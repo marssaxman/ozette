@@ -2,6 +2,7 @@
 #define EDITOR_LINE_H
 
 #include <string>
+#include <ncurses.h>
 #include "coordinates.h"
 
 namespace Editor {
@@ -20,6 +21,8 @@ public:
 	virtual column_t column(offset_t loc);
 	// Get char offset for some display column
 	virtual offset_t offset(column_t h);
+	// Render characters from location in buffer
+	virtual void paint(WINDOW *view, unsigned width);
 private:
 	void advance(char ch, column_t &h);
 };

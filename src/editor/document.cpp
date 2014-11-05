@@ -1,5 +1,6 @@
 #include "document.h"
 #include <fstream>
+#include <assert.h>
 
 namespace {
 class BlankLine : public Editor::Line
@@ -69,3 +70,22 @@ Editor::location_t Editor::Document::location(const position_t &loc)
 	out.offset = line(out.line).offset(loc.h);
 	return out;
 }
+
+std::string Editor::Document::text(range_t chars)
+{
+	assert(false);
+	return std::string();
+}
+
+void Editor::Document::erase(range_t chars)
+{
+	assert(false);
+}
+
+Editor::location_t Editor::Document::insert(location_t loc, std::string text)
+{
+	assert(false);
+	return loc;
+}
+
+
