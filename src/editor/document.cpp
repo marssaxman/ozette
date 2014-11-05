@@ -1,7 +1,24 @@
 #include "document.h"
 #include <fstream>
 
-const unsigned Editor::Document::kTabWidth = 4;
+namespace Editor {
+class Blank : public Editor::Line
+{
+public:
+	virtual std::string text() const override { return std::string(); }
+	virtual size_t size() const override { return 0; }
+};
+
+class String : public Editor::Line
+{
+public:
+	String(std::string text): _text(text) {}
+	virtual std::string text() const override { return _text; }
+	virtual size_t size() const override { return _text.size(); }
+private:
+	std::string _text;
+};
+} // namespace Editor
 
 Editor::Document::Document(std::string targetpath)
 {
@@ -25,7 +42,7 @@ size_t Editor::Document::get_line_size(line_t index) const
 	return index < _lines.size() ? _lines[index].size() : 0;
 }
 
-Editor::Document::offset_t Editor::Document::char_for_column(column_t h, line_t index) const
+Editor::offset_t Editor::Document::char_for_column(column_t h, line_t index) const
 {
 	// Given a screen column coordinate and a line number,
 	// compute the character offset which most closely
@@ -41,7 +58,7 @@ Editor::Document::offset_t Editor::Document::char_for_column(column_t h, line_t 
 	return charoff;
 }
 
-Editor::Document::column_t Editor::Document::column_for_char(offset_t charoff, line_t index) const
+Editor::column_t Editor::Document::column_for_char(offset_t charoff, line_t index) const
 {
 	// Given a character offset and a line number, compute
 	// the screen column coordinate where that character

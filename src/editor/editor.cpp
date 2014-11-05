@@ -72,7 +72,7 @@ void Editor::Controller::paint_line(WINDOW *dest, unsigned i)
 			column++;
 		} else {
 			waddch(dest, ACS_BULLET);
-			while (++column % Document::kTabWidth) {
+			while (++column % kTabWidth) {
 				waddch(dest, ' ');
 			}
 		}

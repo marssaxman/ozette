@@ -3,6 +3,8 @@
 
 #include <string>
 #include <vector>
+#include "coordinates.h"
+#include "line.h"
 
 // A document breaks a text buffer into lines, then
 // maps those lines onto an infinite plane of equally
@@ -12,23 +14,7 @@ class Document
 {
 public:
 	Document(std::string targetpath);
-
-	// Location within the document
-	typedef size_t line_t;
-	typedef size_t offset_t;
-	struct location_t {
-		line_t line;
-		offset_t offset;
-	};
-	// Position on the character plane
-	typedef unsigned row_t;
-	typedef unsigned column_t;
-	struct position_t {
-		row_t v;
-		column_t h;
-	};
-
-	static const unsigned kTabWidth;
+	Line &line(line_t index);
 	line_t maxline() const { return _maxline; }
 	std::string get_line_text(line_t index) const;
 	size_t get_line_size(line_t index) const;
