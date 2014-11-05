@@ -27,10 +27,8 @@ Editor::Document::Document(std::string targetpath):
 	std::string str;
 	std::ifstream file(targetpath);
 	while (std::getline(file, str)) {
-		std::unique_ptr<Line> line(new StrLine(str));
-		_lines.push_back(std::move(line));
+		_maxline = append_line(str);
 	}
-	_maxline = _lines.empty()? 0: _lines.size() - 1;
 }
 
 Editor::Line &Editor::Document::line(line_t index)
@@ -101,13 +99,12 @@ Editor::location_t Editor::Document::erase(const Range &chars)
 	location_t end = sanitize(chars.end());
 	std::string suffix = _lines[end.line]->text().substr(end.offset, std::string::npos);
 	size_t index = begin.line;
-	auto newline = new StrLine(prefix + suffix);
 	if (chars.multiline()) {
 		auto iter = _lines.begin();
 		_lines.erase(iter + begin.line, iter + end.line + 1);
-		_lines.emplace(_lines.begin() + index, newline);
+		insert_line(index, prefix + suffix);
 	} else {
-		_lines[index].reset(newline);
+		update_line(index, prefix + suffix);
 	}
 	return location_t(index, prefix.size());
 }
@@ -119,14 +116,41 @@ Editor::location_t Editor::Document::insert(location_t loc, char ch)
 		std::string text = _lines[loc.line]->text();
 		if (loc.offset >= text.size()) loc.offset = text.size();
 		text.insert(loc.offset, 1, ch);
-		_lines[loc.line].reset(new StrLine(text));
+		update_line(loc.line, text);
 		loc.offset++;
 	} else {
-		loc.line = _lines.size();
-		_lines.emplace_back(new StrLine(std::string(1, ch)));
+		loc.line = append_line(std::string(1, ch));
 		loc.offset = 1;
 	}
 	return loc;
+}
+
+Editor::location_t Editor::Document::split(location_t loc)
+{
+	sanitize(loc);
+	std::string text = line(loc.line).text();
+	update_line(loc.line, text.substr(0, loc.offset));
+	loc.line++;
+	insert_line(loc.line, text.substr(loc.offset, std::string::npos));
+	loc.offset = 0;
+	return loc;
+}
+
+void Editor::Document::update_line(line_t index, std::string text)
+{
+	_lines[index].reset(new StrLine(text));
+}
+
+void Editor::Document::insert_line(line_t index, std::string text)
+{
+	_lines.emplace(_lines.begin() + index, new StrLine(text));
+}
+
+Editor::line_t Editor::Document::append_line(std::string text)
+{
+	line_t index = _lines.size();
+	_lines.emplace_back(new StrLine(text));
+	return index;
 }
 
 Editor::location_t Editor::Document::sanitize(const location_t &loc)

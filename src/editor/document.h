@@ -24,13 +24,13 @@ public:
 	location_t end();
 	// Which is the last line in the document?
 	line_t maxline() const { return _maxline; }
-	// Locate the position on screen for this character.
+
+	// Convert back and forth between document and screen coordinates.
 	position_t position(const location_t &in_document);
-	// Locate the character corresponding to this position.
 	location_t location(const position_t &on_display);
-	// Where is the character which follows this one?
+
+	// Where is the character which follows or precedes this one?
 	location_t next(location_t loc);
-	// Where is the character which precedes this one?
 	location_t prev(location_t loc);
 
 	// Remove the text within the range.
@@ -38,7 +38,13 @@ public:
 	// Insert this characters at a specific place,
 	// returning the end of the inserted text.
 	location_t insert(location_t loc, char ch);
+	// Split this character's line in half, returning its position at
+	// the beginning of the newly-created following line.
+	location_t split(location_t loc);
 private:
+	void update_line(line_t index, std::string text);
+	void insert_line(line_t index, std::string text);
+	line_t append_line(std::string text);
 	void sanitize(location_t *loc);
 	location_t sanitize(const location_t &loc);
 	std::unique_ptr<Line> _blank;

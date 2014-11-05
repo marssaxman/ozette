@@ -43,6 +43,7 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case KEY_SRIGHT: key_right(true); break;
 		case 127: key_backspace(); break;
 		case KEY_DC: key_delete(); break;
+		case '\r': key_return(); break;
 		default:
 		if (ch >= 32 && ch < 127) key_insert(ch);
 		else {
@@ -194,6 +195,13 @@ void Editor::Controller::key_delete()
 {
 	if (_selection.empty()) key_right(true);
 	delete_selection();
+}
+
+void Editor::Controller::key_return()
+{
+	delete_selection();
+	_cursor.move_to(_doc.split(_cursor.location()));
+	_update.forward(_cursor.location());
 }
 
 void Editor::Controller::drop_selection()
