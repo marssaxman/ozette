@@ -40,7 +40,8 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case KEY_SR: _cursor.up(1); extend_sel(); break; // shifted up-arrow
 		case KEY_SLEFT: _cursor.left(); extend_sel(); break;
 		case KEY_SRIGHT: _cursor.right(); extend_sel(); break;
-		default: if (ch >= 32 && ch < 127) insert(ch); break;
+		case 127: backspace(); clear_sel(); break;
+		default: if (ch >= 32 && ch < 127) insert(ch); clear_sel(); break;
 	}
 	reveal_cursor();
 	if (_update.has_dirty()) {
@@ -121,8 +122,8 @@ void Editor::Controller::clear_sel()
 	// the affected lines.
 	// Clear the selection and move the anchor
 	// to the current cursor location.
-	_sel_anchor = _cursor.location();
-	_selection.reset(_sel_anchor);
+	_anchor = _cursor.location();
+	_selection.reset(_anchor);
 }
 
 void Editor::Controller::extend_sel()
@@ -130,7 +131,7 @@ void Editor::Controller::extend_sel()
 	// The cursor has moved in range-selection mode.
 	// Leave the anchor where it is, then extend the
 	// selection to include the new cursor point.
-	_selection.extend(_sel_anchor, _cursor.location());
+	_selection.extend(_anchor, _cursor.location());
 }
 
 void Editor::Controller::insert(char ch)
@@ -141,5 +142,16 @@ void Editor::Controller::insert(char ch)
 		_update.forward(loc);
 	}
 	_cursor.move_to(_doc.insert(loc, ch));
-	clear_sel();
+}
+
+void Editor::Controller::backspace()
+{
+	if (_selection.empty()) {
+		location_t curs = _cursor.location();
+		_selection.extend(curs, _doc.prev(curs));
+	}
+	if (!_selection.empty()) {
+		_cursor.move_to(_doc.erase(_selection));
+		_update.forward(_selection.begin());
+	}
 }

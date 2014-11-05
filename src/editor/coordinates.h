@@ -25,6 +25,7 @@ public:
 	const location_t &begin() const { return _begin; }
 	const location_t &end() const { return _end; }
 	bool empty() const;
+	bool multiline() const;
 	void reset(const location_t &loc);
 	void extend(const location_t &a, const location_t &b);
 private:

@@ -22,12 +22,13 @@ protected:
 	void clear_sel();
 	void extend_sel();
 	void insert(char ch);
+	void backspace();
 private:
 	std::string _targetpath;
 	Document _doc;
 	Update _update;
 	Cursor _cursor;
-	location_t _sel_anchor;
+	location_t _anchor;
 	Range _selection;
 	// Update status: must we perform a full repaint?
 	bool _last_active = false;

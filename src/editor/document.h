@@ -28,15 +28,19 @@ public:
 	position_t position(const location_t &in_document);
 	// Locate the character corresponding to this position.
 	location_t location(const position_t &on_display);
-	// Retrieve the raw character data for this range.
-	std::string text(Range chars);
+	// Where is the character which follows this one?
+	location_t next(location_t loc);
+	// Where is the character which precedes this one?
+	location_t prev(location_t loc);
 
 	// Remove the text within the range.
-	void erase(Range chars);
+	location_t erase(const Range &chars);
 	// Insert this characters at a specific place,
 	// returning the end of the inserted text.
 	location_t insert(location_t loc, char ch);
 private:
+	void sanitize(location_t *loc);
+	location_t sanitize(const location_t &loc);
 	std::unique_ptr<Line> _blank;
 	std::vector<std::unique_ptr<Line>> _lines;
 	line_t _maxline = 0;	// ubound, not size

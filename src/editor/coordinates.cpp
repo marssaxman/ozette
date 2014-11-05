@@ -11,6 +11,11 @@ bool Editor::Range::empty() const
 	return _begin == _end;
 }
 
+bool Editor::Range::multiline() const
+{
+	return _begin.line != _end.line;
+}
+
 void Editor::Range::reset(const location_t &loc)
 {
 	_begin = loc;

@@ -71,19 +71,49 @@ Editor::location_t Editor::Document::location(const position_t &loc)
 	return out;
 }
 
-std::string Editor::Document::text(Range chars)
+Editor::location_t Editor::Document::next(location_t loc)
 {
-	assert(false);
-	return std::string();
+	if (loc.offset < line(loc.line).size()) {
+		loc.offset++;
+	} else if (loc.line < _maxline) {
+		loc.offset = 0;
+		loc.line++;
+	}
+	return loc;
 }
 
-void Editor::Document::erase(Range chars)
+Editor::location_t Editor::Document::prev(location_t loc)
 {
-	assert(false);
+	if (loc.offset > 0) {
+		loc.offset--;
+	} else if (loc.line > 0) {
+		loc.line = 0;
+		loc.offset = line(loc.line).size();
+	}
+	return loc;
+}
+
+Editor::location_t Editor::Document::erase(const Range &chars)
+{
+	if (_lines.empty()) return home();
+	location_t begin = sanitize(chars.begin());
+	std::string prefix = _lines[begin.line]->text().substr(0, begin.offset);
+	location_t end = chars.end();
+	std::string suffix = _lines[end.line]->text().substr(end.offset, std::string::npos);
+	auto newline = new StrLine(prefix + suffix);
+	size_t index = begin.line;
+	if (chars.multiline()) {
+		_lines.erase(_lines.begin() + begin.line, _lines.begin() + end.line);
+		_lines.emplace(_lines.begin() + index, newline);
+	} else {
+		_lines[index].reset(newline);
+	}
+	return location_t(index, prefix.size());
 }
 
 Editor::location_t Editor::Document::insert(location_t loc, char ch)
 {
+	sanitize(loc);
 	if (loc.line < _lines.size()) {
 		std::string text = _lines[loc.line]->text();
 		if (loc.offset >= text.size()) loc.offset = text.size();
@@ -98,4 +128,16 @@ Editor::location_t Editor::Document::insert(location_t loc, char ch)
 	return loc;
 }
 
+Editor::location_t Editor::Document::sanitize(const location_t &loc)
+{
+	// Verify that this location refers to a real place.
+	// Fix it if either of its dimensions would be out-of-bounds.
+	line_t index = std::min(loc.line, _lines.size());
+	offset_t offset = _lines.empty() ? 0 : std::min(loc.offset, _lines[loc.line]->size());
+	return location_t(index, offset);
+}
 
+void Editor::Document::sanitize(location_t *loc)
+{
+	*loc = sanitize(*loc);
+}
