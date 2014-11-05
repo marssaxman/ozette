@@ -11,21 +11,18 @@ class Cursor
 {
 public:
 	Cursor(Document &doc, Update &update);
-	size_t line() const { return _line; }
-	size_t character() const { return _char; }
-	unsigned column() const { return _col; }
-	void move_up(size_t lines);
-	void move_down(size_t lines);
+	line_t line() const { return _location.line; }
+	offset_t character() const { return _location.offset; }
+	column_t column() const { return _position.h; }
+	void move_up(size_t count);
+	void move_down(size_t count);
 	void move_left();
 	void move_right();
-	void move_home();
-	void move_end();
 private:
 	Document &_doc;
 	Update &_update;
-	size_t _line = 0;
-	size_t _char = 0;
-	unsigned _col = 0;
+	location_t _location = {0,0};
+	position_t _position= {0,0};
 };
 } // namespace Editor
 

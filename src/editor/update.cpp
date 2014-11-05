@@ -1,36 +1,42 @@
 #include "update.h"
+#include <climits>
 
 void Editor::Update::reset()
 {
 	_dirty = false;
-	_linestart = 0;
-	_lineend = 0;
+	_start = 0;
+	_end = 0;
+}
+
+void Editor::Update::at(location_t loc)
+{
+	at(loc.line);
+}
+
+void Editor::Update::at(line_t index)
+{
+	_start = _dirty? std::min(_start, index): index;
+	_end = _dirty? std::max(_end, index): index;
+	_dirty = true;
+}
+
+void Editor::Update::range(line_t a, line_t b)
+{
+	line_t from = std::min(a, b);
+	line_t to = std::max(a, b);
+	_start = _dirty? std::min(_start, from): from;
+	_end = _dirty? std::max(_start, to): to;
+	_dirty = true;
 }
 
 void Editor::Update::all()
 {
 	_dirty = true;
-	_linestart = 0;
-	_lineend = (size_t)-1;
+	_start = 0;
+	_end = SIZE_MAX;
 }
 
-void Editor::Update::line(size_t line)
+bool Editor::Update::is_dirty(line_t index) const
 {
-	_linestart = _dirty ? std::min(_linestart, line) : line;
-	_lineend = _dirty ? std::max(_lineend, line) : line;
-	_dirty = true;
-}
-
-void Editor::Update::range(size_t a, size_t b)
-{
-	size_t from = std::min(a, b);
-	size_t to = std::max(a, b);
-	_linestart = _dirty ? std::min(_linestart, from) : from;
-	_lineend = _dirty ? std::max(_linestart, to) : to;
-	_dirty = true;
-}
-
-bool Editor::Update::is_dirty(size_t line) const
-{
-	return _dirty && (line >= _linestart) && (line <= _lineend);
+	return _dirty && (index >= _start) && (index <= _end);
 }

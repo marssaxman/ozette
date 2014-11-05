@@ -17,6 +17,8 @@ public:
 	Document(std::string targetpath);
 	Line &line(line_t index);
 	line_t maxline() const { return _maxline; }
+	position_t position(const location_t &in_document);
+	location_t location(const position_t &on_display);
 private:
 	std::unique_ptr<Line> _blank;
 	std::vector<std::unique_ptr<Line>> _lines;

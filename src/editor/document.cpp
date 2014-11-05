@@ -37,3 +37,22 @@ Editor::Line &Editor::Document::line(line_t index)
 	// If no such line exists, return a blank.
 	return index < _lines.size() ? *_lines[index].get() : *_blank.get();
 }
+
+Editor::position_t Editor::Document::position(const location_t &loc)
+{
+	// Compute the screen position for this document location.
+	position_t out;
+	out.v = std::min(_maxline, loc.line);
+	out.h = line(loc.line).column(loc.offset);
+	return out;
+}
+
+Editor::location_t Editor::Document::location(const position_t &loc)
+{
+	// Locate the character in the document corresponding to the
+	// given screen position.
+	location_t out;
+	out.line = loc.v;
+	out.offset = line(out.line).offset(loc.h);
+	return out;
+}
