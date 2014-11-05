@@ -25,62 +25,45 @@ bool Editor::Controller::process(WINDOW *dest, int ch, App &app)
 {
 	update_dimensions(dest);
 	switch (ch) {
-		case KEY_DOWN: {
-			_cursor.move_down(1);
-			reveal_cursor();
-		} break;
-		case KEY_UP: {
-			_cursor.move_up(1);
-			reveal_cursor();
-		} break;
-		case KEY_LEFT: {
-			_cursor.move_left();
-			reveal_cursor();
-		} break;
-		case KEY_RIGHT: {
-			_cursor.move_right();
-			reveal_cursor();
-		} break;
-		case 338: {
-			_cursor.move_down(_halfheight);
-			reveal_cursor();
-		} break;
-		case 339: {
-			_cursor.move_up(_halfheight);
-			reveal_cursor();
-		} break;
+		case KEY_DOWN: _cursor.move_down(1); break;
+		case KEY_UP: _cursor.move_up(1); break;
+		case KEY_LEFT: _cursor.move_left(); break;
+		case KEY_RIGHT: _cursor.move_right(); break;
+		case 338: _cursor.move_down(_halfheight); break;
+		case 339: _cursor.move_up(_halfheight); break;
 		default: break;
 	}
+	reveal_cursor();
 	if (_update.has_dirty()) {
 		paint(dest, true);
 	}
 	return true;
 }
 
-void Editor::Controller::paint_line(WINDOW *dest, unsigned i)
+void Editor::Controller::paint_line(WINDOW *dest, row_t v)
 {
-	size_t index = i + _scrollpos;
+	size_t index = v + _scrollpos;
 	if (!_update.is_dirty(index)) return;
-	wmove(dest, (int)i, 0);
+	wmove(dest, (int)v, 0);
 	// We can't print this string unfiltered; we need to look
 	// for tab characters and align them columnwise.
-	unsigned column = 0;
+	column_t h = 0;
 	for (char ch: _doc.line(index).text()) {
-		if (column >= _width) break;
+		if (h >= _width) break;
 		if (ch != '\t') {
 			waddch(dest, ch);
-			column++;
+			h++;
 		} else {
 			waddch(dest, ACS_BULLET);
-			while (++column % kTabWidth) {
+			while (++h % kTabWidth) {
 				waddch(dest, ' ');
 			}
 		}
 	}
 	wclrtoeol(dest);
-	if (_cursor.line() == index) {
-		column = _doc.line(index).column(_cursor.character());
-		mvwchgat(dest, i, column, 1, A_REVERSE, 0, NULL);
+	if (_cursor.position().v == index) {
+		h = _cursor.position().h;
+		mvwchgat(dest, v, h, 1, A_REVERSE, 0, NULL);
 	}
 }
 
@@ -91,7 +74,7 @@ bool Editor::Controller::line_is_visible(size_t index) const
 
 void Editor::Controller::reveal_cursor()
 {
-	size_t line = _cursor.line();
+	line_t line = _cursor.location().line;
 	// If the cursor is already on screen, do nothing.
 	if (line_is_visible(line)) return;
 	// Try to center the viewport over the cursor.

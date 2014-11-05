@@ -11,18 +11,27 @@ class Cursor
 {
 public:
 	Cursor(Document &doc, Update &update);
-	line_t line() const { return _location.line; }
-	offset_t character() const { return _location.offset; }
-	column_t column() const { return _position.h; }
+	const location_t location() const { return _location; }
+	const position_t position() const { return _display; }
 	void move_up(size_t count);
 	void move_down(size_t count);
 	void move_left();
 	void move_right();
 private:
+	void commit_location();
+	void commit_position();
 	Document &_doc;
 	Update &_update;
 	location_t _location = {0,0};
-	position_t _position= {0,0};
+	// We use this internal position record to keep the cursor
+	// located on the same column when moving up and down, as
+	// closely as we can approximate. The display position of
+	// the cursor is a separate value, calculated back from
+	// the location, so that it always corresponds to an actual
+	// character (whereas the abstract position may point at a
+	// cell which is not occupied by any actual character).
+	position_t _position = {0,0};
+	position_t _display = {0,0};
 };
 } // namespace Editor
 

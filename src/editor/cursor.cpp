@@ -26,8 +26,7 @@ void Editor::Cursor::move_up(size_t count)
 	} else {
 		_position.h = 0;
 	}
-	_location = _doc.location(_position);
-	_update.at(_location);
+	commit_position();
 }
 
 void Editor::Cursor::move_down(size_t count)
@@ -44,8 +43,7 @@ void Editor::Cursor::move_down(size_t count)
 	} else {
 		_position.h = UINT_MAX;
 	}
-	_location = _doc.location(_position);
-	_update.at(_location);
+	commit_position();
 }
 
 void Editor::Cursor::move_left()
@@ -62,8 +60,7 @@ void Editor::Cursor::move_left()
 		_location.line--;
 		_location.offset = _doc.line(_location.line).size();
 	}
-	_update.at(_location);
-	_position = _doc.position(_location);
+	commit_location();
 }
 
 void Editor::Cursor::move_right()
@@ -80,7 +77,28 @@ void Editor::Cursor::move_right()
 		_location.line++;
 		_location.offset = 0;
 	}
-	_update.at(_location);
-	_position = _doc.position(_location);
+	commit_location();
 }
 
+void Editor::Cursor::commit_location()
+{
+	// We have updated the cursor's location in the document.
+	// Tell the viewer what to redraw, then update the display
+	// position according to the new location.
+	_update.at(_location);
+	_display = _position = _doc.position(_location);
+}
+
+void Editor::Cursor::commit_position()
+{
+	// We have moved the cursor to a different screen position.
+	// Update the location based on that position, tell the
+	// viewer what it needs to redraw, then copy the position for
+	// display. The display position is not the same as our
+	// internal bookkeeping position, because we want to remember
+	// what column the user began moving from even if the current
+	// line does not actually have a character at that column.
+	_location = _doc.location(_position);
+	_update.at(_location);
+	_display = _doc.position(_location);
+}

@@ -16,8 +16,8 @@ public:
 	virtual bool poll(WINDOW *view, App &app) override { return true; }
 	virtual std::string title() const override { return _targetpath; }
 protected:
-	void paint_line(WINDOW *view, unsigned y);
-	bool line_is_visible(size_t index) const;
+	void paint_line(WINDOW *view, row_t v);
+	bool line_is_visible(line_t index) const;
 	void reveal_cursor();
 	void update_dimensions(WINDOW *view);
 private:

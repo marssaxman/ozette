@@ -29,6 +29,7 @@ Editor::Document::Document(std::string targetpath):
 		std::unique_ptr<Line> line(new StrLine(str));
 		_lines.push_back(std::move(line));
 	}
+	_maxline = _lines.empty()? 0: _lines.size() - 1;
 }
 
 Editor::Line &Editor::Document::line(line_t index)
