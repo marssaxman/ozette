@@ -6,26 +6,28 @@
 #include <memory>
 #include <vector>
 #include "controller.h"
+#include "app.h"
 
 namespace UI {
 class Window
 {
 public:
-	Window(std::unique_ptr<Controller> &&controller);
+	Window(App &app, std::unique_ptr<Controller> &&controller);
 	~Window();
 	void layout(int xpos, int height, int width, bool lframe, bool rframe);
 	void set_focus();
 	void clear_focus();
 	void bring_forward();
-	bool process(int ch, App &app);
-	bool poll(App &app);
+	bool process(int ch);
+	bool poll();
 protected:
 	void draw_chrome();
 private:
+	App &_app;
+	std::unique_ptr<Controller> _controller;
 	int _xpos = 0;
 	int _height = 0;
 	int _width = 0;
-	std::unique_ptr<Controller> _controller;
 	WINDOW *_framewin = nullptr;
 	PANEL *_framepanel = nullptr;
 	WINDOW *_contentwin = nullptr;

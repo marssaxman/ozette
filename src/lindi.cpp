@@ -3,7 +3,7 @@
 #include "editor.h"
 
 Lindi::Lindi():
-	_shell(*this),
+	_shell(*this, *this),
 	_browser(new Browser)
 {
         std::unique_ptr<UI::Controller> browser(_browser);
@@ -38,7 +38,7 @@ void Lindi::run()
 	do {
 		update_panels();
 		doupdate();
-	} while (!_done && _shell.process(getch(), *this));
+	} while (!_done && _shell.process(getch()));
 }
 
 void Lindi::window_closed(std::unique_ptr<UI::Window> &&win)

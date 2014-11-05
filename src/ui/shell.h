@@ -14,9 +14,9 @@ public:
 		virtual ~Delegate() = default;
 		virtual void window_closed(std::unique_ptr<Window> &&win) = 0;
 	};
-	Shell(Delegate &host);
+	Shell(App &app, Delegate &host);
 	~Shell();
-	bool process(int ch, App &app);
+	bool process(int ch);
 	Window *open_window(std::unique_ptr<Controller> &&wincontrol);
 	void make_active(Window *window);
 protected:
@@ -27,10 +27,11 @@ protected:
 	// reposition all the windows after create/remove/resize
 	void relayout();
 	// send this char to the focus window
-	void send_to_focus(int ch, App &app);
+	void send_to_focus(int ch);
 	// close the window with this index & tell our delegate
 	void close_window(size_t index);
 private:
+	App &_app;
 	Delegate &_host;
 	int _width = 0;
 	int _height = 0;

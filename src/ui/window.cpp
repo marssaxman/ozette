@@ -2,7 +2,8 @@
 #include <algorithm>
 #include <assert.h>
 
-UI::Window::Window(std::unique_ptr<Controller> &&controller):
+UI::Window::Window(App &app, std::unique_ptr<Controller> &&controller):
+	_app(app),
 	_controller(std::move(controller)),
 	_framewin(newwin(0, 0, 0, 0)),
 	_framepanel(new_panel(_framewin)),
@@ -85,14 +86,14 @@ void UI::Window::bring_forward()
 	top_panel(_contentpanel);
 }
 
-bool UI::Window::process(int ch, App &app)
+bool UI::Window::process(int ch)
 {
-	return _controller->process(_contentwin, ch, app);
+	return _controller->process(_contentwin, ch, _app);
 }
 
-bool UI::Window::poll(App &app)
+bool UI::Window::poll()
 {
-	return _controller->poll(_contentwin, app);
+	return _controller->poll(_contentwin, _app);
 }
 
 void UI::Window::draw_chrome()

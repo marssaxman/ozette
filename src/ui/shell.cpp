@@ -3,7 +3,8 @@
 #include <assert.h>
 #include <list>
 
-UI::Shell::Shell(Delegate &host):
+UI::Shell::Shell(App &app, Delegate &host):
+	_app(app),
 	_host(host)
 {
 	// Set up ncurses.
@@ -29,7 +30,7 @@ UI::Shell::~Shell()
 	endwin();
 }
 
-bool UI::Shell::process(int ch, App &app)
+bool UI::Shell::process(int ch)
 {
 	// The UI handles control-shift-arrow-key presses by changing
 	// the focus window. All other keypresses are delegated to
@@ -39,7 +40,7 @@ bool UI::Shell::process(int ch, App &app)
 			std::list<size_t> dead;
 			for (size_t i = 0; i < _columns.size(); ++i) {
 				auto &win = _columns[i];
-				if (!win->poll(app)) {
+				if (!win->poll()) {
 					dead.push_front(i);
 				}
 			}
@@ -67,7 +68,7 @@ bool UI::Shell::process(int ch, App &app)
 			relayout();
 		} break;
 		default: {
-			send_to_focus(ch, app);
+			send_to_focus(ch);
 		} break;
 	}
 	return !_columns.empty();
@@ -84,7 +85,7 @@ UI::Window *UI::Shell::open_window(std::unique_ptr<Controller> &&controller)
 	// We reserve the top row for the title bar.
 	// Aside from that, new windows fill the terminal rows.
 	// Windows are never wider than 80 columns.
-	Window *win = new Window(std::move(controller));
+	Window *win = new Window(_app, std::move(controller));
 	_columns.emplace_back(win);
 	relayout();
 	set_focus(_columns.size() - 1);
@@ -144,9 +145,9 @@ void UI::Shell::relayout()
 	}
 }
 
-void UI::Shell::send_to_focus(int ch, App &app)
+void UI::Shell::send_to_focus(int ch)
 {
-	bool more = _columns[_focus]->process(ch, app);
+	bool more = _columns[_focus]->process(ch);
 	if (more) return;
 	close_window(_focus);
 	relayout();
