@@ -41,6 +41,7 @@ private:
 	bool _has_focus = true;
 	bool _lframe = false;
 	bool _rframe = false;
+	unsigned _task_bar_height = 0;
 	bool _dirty_content = true;
 	bool _dirty_chrome = true;
 	std::string _title;

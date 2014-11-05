@@ -24,7 +24,7 @@ UI::Window::~Window()
 
 void UI::Window::layout(int xpos, int height, int width, bool lframe, bool rframe)
 {
-	int frameheight = height--;
+	int frameheight = height;
 	int framewidth = width;
 	int framepos = xpos;
 	if (lframe != _lframe || rframe != _rframe) {
@@ -39,6 +39,12 @@ void UI::Window::layout(int xpos, int height, int width, bool lframe, bool rfram
 	if (_rframe) {
 		framewidth += 1;
 	}
+	// Subtract one from the content height to account for the title bar.
+	height--;
+	// Subtract any additional lines needed for the task bar at the bottom.
+	height -= _task_bar_height;
+	// If the newly calculated dimensions differ from the old, we need to
+	// resize our panels, which means rebuilding our windows.
 	if (frameheight != _height || framewidth != _width) {
 		_height = frameheight;
 		_width = framewidth;
@@ -121,27 +127,36 @@ void UI::Window::paint()
 	// Draw the left frame, if we have one.
 	int barx = 0;
 	int barwidth = _width;
+	int loweredge = _height - _task_bar_height;
 	if (_lframe) {
 		barx = 1;
 		barwidth--;
 		mvwaddch(_framewin, 0, 0, ACS_ULCORNER);
-		for (int i = 1; i < _height; ++i) {
+		for (int i = 1; i < loweredge; ++i) {
 			mvwaddch(_framewin, i, 0, ACS_VLINE);
 		}
+		mvwaddch(_framewin, loweredge, 0, ACS_LLCORNER);
 	}
 	// Draw the right frame, if we have one.
 	if (_rframe) {
 		barwidth--;
 		int col = _width - 1;
 		mvwaddch(_framewin, 0, col, ACS_URCORNER);
-		for (int i = 1;  i < _height; ++i) {
+		for (int i = 1;  i < loweredge; ++i) {
 			mvwaddch(_framewin, i, col, ACS_VLINE);
 		}
+		mvwaddch(_framewin, loweredge, col, ACS_LRCORNER);
 	}
-	// Draw the bar across the top of the window.
+	// Draw the bars across the top and bottom of the window.
 	wmove(_framewin, 0, barx);
 	for (int i = 0; i < barwidth; ++i) {
 		waddch(_framewin, ACS_HLINE);
+	}
+	if (_task_bar_height > 0) {
+		wmove(_framewin, loweredge, barx);
+		for (int i = 0; i < barwidth; ++i) {
+			waddch(_framewin, ACS_HLINE);
+		}
 	}
 	// Print the window title, erasing part of the top border.
 	if (barwidth > 0) {
