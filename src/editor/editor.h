@@ -22,7 +22,9 @@ protected:
 	void clear_sel();
 	void extend_sel();
 	void insert(char ch);
-	void backspace();
+	void delete_selection();
+	void key_backspace();
+	void key_delete();
 private:
 	std::string _targetpath;
 	Document _doc;
