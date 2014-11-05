@@ -16,7 +16,7 @@ void Editor::Controller::paint(WINDOW *dest, bool active)
 		_last_dest = dest;
 	}
 	for (unsigned i = 0; i < _height; ++i) {
-		paint_line(dest, i);
+		paint_line(dest, i, active);
 	}
 	_update.reset();
 }
@@ -39,7 +39,7 @@ bool Editor::Controller::process(Context &ctx, int ch)
 	return true;
 }
 
-void Editor::Controller::paint_line(WINDOW *dest, row_t v)
+void Editor::Controller::paint_line(WINDOW *dest, row_t v, bool active)
 {
 	size_t index = v + _scrollpos;
 	if (!_update.is_dirty(index)) return;
@@ -57,7 +57,7 @@ void Editor::Controller::paint_line(WINDOW *dest, row_t v)
 		}
 	}
 	wclrtoeol(dest);
-	if (_cursor.position().v == index) {
+	if (active && _cursor.position().v == index) {
 		h = _cursor.position().h;
 		mvwchgat(dest, v, h, 1, A_REVERSE, 0, NULL);
 	}

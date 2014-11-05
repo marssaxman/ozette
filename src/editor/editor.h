@@ -15,7 +15,7 @@ public:
 	virtual bool process(Context &ctx, int ch) override;
 	virtual std::string title() const override { return _targetpath; }
 protected:
-	void paint_line(WINDOW *view, row_t v);
+	void paint_line(WINDOW *view, row_t v, bool active);
 	bool line_is_visible(line_t index) const;
 	void reveal_cursor();
 	void update_dimensions(WINDOW *view);
