@@ -14,7 +14,7 @@ void Editor::Cursor::move_up(size_t lines)
 		_update.line(_line);
 		_line -= std::min(_line, lines);
 		_update.line(_line);
-		_char = _doc.char_for_column(_col, _line);
+		_char = _doc.line(_line).offset(_col);
 	} else move_home();
 }
 
@@ -27,7 +27,7 @@ void Editor::Cursor::move_down(size_t lines)
 		size_t newline = _line + lines;
 		_line = std::min(newline, _doc.maxline());
 		_update.line(_line);
-		_char = _doc.char_for_column(_col, _line);
+		_char = _doc.line(_line).offset(_col);
 	} else move_end();
 }
 
@@ -36,7 +36,7 @@ void Editor::Cursor::move_left()
 	if (_char > 0) {
 		// Move one character left.
 		_char--;
-		_col = _doc.column_for_char(_char, _line);
+		_col = _doc.line(_line).column(_char);
 		_update.line(_line);
 	} else if (_line > 0) {
 		// Wrap around to the end of the previous line.
@@ -49,11 +49,11 @@ void Editor::Cursor::move_left()
 
 void Editor::Cursor::move_right()
 {
-	size_t linesize = _doc.get_line_size(_line);
+	size_t linesize = _doc.line(_line).size();
 	if (_char < linesize) {
 		// Move one character right.
 		_char++;
-		_col = _doc.column_for_char(_char, _line);
+		_col = _doc.line(_line).column(_char);
 		_update.line(_line);
 	} else if (_line < _doc.maxline()) {
 		// Wrap around to the beginning of the next line.
@@ -77,8 +77,8 @@ void Editor::Cursor::move_home()
 
 void Editor::Cursor::move_end()
 {
-	size_t newchar = _doc.get_line_size(_line);
-	unsigned newcol = _doc.column_for_char(newchar, _line);
+	size_t newchar = _doc.line(_line).size();
+	unsigned newcol = _doc.line(_line).column(newchar);
 	if (newchar != _char || newcol != _col) {
 		_char = newchar;
 		_col = newcol;

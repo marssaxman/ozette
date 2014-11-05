@@ -65,7 +65,7 @@ void Editor::Controller::paint_line(WINDOW *dest, unsigned i)
 	// We can't print this string unfiltered; we need to look
 	// for tab characters and align them columnwise.
 	unsigned column = 0;
-	for (char ch: _doc.get_line_text(index)) {
+	for (char ch: _doc.line(index).text()) {
 		if (column >= _width) break;
 		if (ch != '\t') {
 			waddch(dest, ch);
@@ -79,7 +79,7 @@ void Editor::Controller::paint_line(WINDOW *dest, unsigned i)
 	}
 	wclrtoeol(dest);
 	if (_cursor.line() == index) {
-		column = _doc.column_for_char(_cursor.character(), index);
+		column = _doc.line(index).column(_cursor.character());
 		mvwchgat(dest, i, column, 1, A_REVERSE, 0, NULL);
 	}
 }
