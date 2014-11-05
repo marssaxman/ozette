@@ -198,21 +198,25 @@ void UI::Window::paint_chrome()
 void UI::Window::paint_title_bar(int height, int width)
 {
 	// Draw corners and a horizontal line across the top.
-	wmove(_framewin, 0, 0);
-	if (_lframe) waddch(_framewin, ACS_ULCORNER);
-	for (int i = 0; i+1 < width; ++i) {
-		waddch(_framewin, ACS_HLINE);
+	mvwhline(_framewin, 0, 0, ACS_HLINE, width);
+	if (_lframe) {
+		mvwaddch(_framewin, 0, 0, ACS_ULCORNER);
 	}
-	if (_rframe) waddch(_framewin, ACS_URCORNER);
+	if (_rframe) {
+		mvwaddch(_framewin, 0, width-1, ACS_URCORNER);
+	}
 
 	// Overwrite the bar line with the window title.
 	int left = _lframe ? 3 : 2;
 	int right = width - (_rframe ? 3 : 2);
 	width = right - left;
 	int titlechars = width - 2;
-	mvwaddch(_framewin, 0, left, ' ');
+	wmove(_framewin, 0, left);
+	if (_has_focus) wattron(_framewin, A_REVERSE);
+	waddch(_framewin, ' ');
 	waddnstr(_framewin, _title.c_str(), titlechars);
 	waddch(_framewin, ' ');
+	if (_has_focus) wattroff(_framewin, A_REVERSE);
 
 	// If there is a status string, print it on the right side.
 	if (_status.empty()) return;
@@ -255,10 +259,10 @@ void UI::Window::paint_taskbar(int height, int width)
 		auto &label = _help->label[v][h];
 		int labelpos = h * labelwidth;
 		wmove(_framewin, v+ypos, labelpos+xpos);
-		wattron(_framewin, A_REVERSE);
+		if (_has_focus) wattron(_framewin, A_REVERSE);
 		waddch(_framewin, '^');
 		waddch(_framewin, label.key);
-		wattroff(_framewin, A_REVERSE);
+		if (_has_focus) wattroff(_framewin, A_REVERSE);
 		waddch(_framewin, ' ');
 		waddnstr(_framewin, label.text, textwidth);
 		waddch(_framewin, ' ');
