@@ -27,31 +27,29 @@ void Editor::Controller::paint(WINDOW *dest, bool active)
 
 bool Editor::Controller::process(Context &ctx, int ch)
 {
-	bool extend = false;
 	switch (ch) {
 		case ERR: return true; // polling; we don't care
-		case KEY_DOWN: _cursor.down(1); break;
-		case KEY_UP: _cursor.up(1); break;
-		case KEY_LEFT: _cursor.left(); break;
-		case KEY_RIGHT: _cursor.right(); break;
-		case KEY_NPAGE: _cursor.down(_halfheight); break;
-		case KEY_PPAGE: _cursor.up(_halfheight); break;
+		case KEY_DOWN: key_down(false); break;
+		case KEY_UP: key_up(false); break;
+		case KEY_LEFT: key_left(false); break;
+		case KEY_RIGHT: key_right(false); break;
+		case KEY_NPAGE: key_page_down(); break;
+		case KEY_PPAGE: key_page_up(); break;
 		case KEY_HOME: break; // move to beginning of line
 		case KEY_END: break; // move to end of line
-		case KEY_SF: _cursor.down(1); extend = true; break; // shifted down-arrow
-		case KEY_SR: _cursor.up(1); extend = true; break; // shifted up-arrow
-		case KEY_SLEFT: _cursor.left(); extend = true; break;
-		case KEY_SRIGHT: _cursor.right(); extend = true; break;
+		case KEY_SF: key_down(true); break; // shifted down-arrow
+		case KEY_SR: key_up(true); break; // shifted up-arrow
+		case KEY_SLEFT: key_left(true); break;
+		case KEY_SRIGHT: key_right(true); break;
 		case 127: key_backspace(); break;
 		case KEY_DC: key_delete(); break;
 		default:
-		if (ch >= 32 && ch < 127) insert(ch);
+		if (ch >= 32 && ch < 127) key_insert(ch);
 		else {
 			ctx.set_status(std::to_string(ch));
 			return true;
 		}
 	}
-	extend ? extend_sel() : clear_sel();
 	reveal_cursor();
 	if (_update.has_dirty()) {
 		ctx.repaint();
@@ -124,29 +122,40 @@ void Editor::Controller::update_dimensions(WINDOW *view)
 	}
 }
 
-void Editor::Controller::clear_sel()
+void Editor::Controller::key_up(bool extend)
 {
-	// The cursor has moved as an insertion point.
-	// If the selection was not empty, update
-	// the affected lines.
-	// Clear the selection and move the anchor
-	// to the current cursor location.
-	_anchor = _cursor.location();
-	_selection.reset(_anchor);
+	_cursor.up(1);
+	adjust_selection(extend);
 }
 
-void Editor::Controller::extend_sel()
+void Editor::Controller::key_down(bool extend)
 {
-	// The cursor has moved in range-selection mode.
-	// Leave the anchor where it is, then extend the
-	// selection to include the new cursor point.
-	_selection.extend(_anchor, _cursor.location());
+	_cursor.down(1);
+	adjust_selection(extend);
 }
 
-void Editor::Controller::insert(char ch)
+void Editor::Controller::key_left(bool extend)
 {
-	delete_selection();
-	_cursor.move_to(_doc.insert(_cursor.location(), ch));
+	_cursor.left();
+	adjust_selection(extend);
+}
+
+void Editor::Controller::key_right(bool extend)
+{
+	_cursor.right();
+	adjust_selection(extend);
+}
+
+void Editor::Controller::key_page_up()
+{
+	_cursor.up(_halfheight);
+	drop_selection();
+}
+
+void Editor::Controller::key_page_down()
+{
+	_cursor.down(_halfheight);
+	drop_selection();
 }
 
 void Editor::Controller::delete_selection()
@@ -154,22 +163,44 @@ void Editor::Controller::delete_selection()
 	if (_selection.empty()) return;
 	_cursor.move_to(_doc.erase(_selection));
 	_update.forward(_cursor.location());
+	drop_selection();
+}
+
+void Editor::Controller::key_insert(char ch)
+{
+	delete_selection();
+	_cursor.move_to(_doc.insert(_cursor.location(), ch));
 }
 
 void Editor::Controller::key_backspace()
 {
-	if (_selection.empty()) {
-		location_t curs = _cursor.location();
-		_selection.extend(curs, _doc.prev(curs));
-	}
+	if (_selection.empty()) key_left(true);
 	delete_selection();
 }
 
 void Editor::Controller::key_delete()
 {
-	if (_selection.empty()) {
-		location_t curs = _cursor.location();
-		_selection.extend(curs, _doc.next(curs));
-	}
+	if (_selection.empty()) key_right(true);
 	delete_selection();
+}
+
+void Editor::Controller::drop_selection()
+{
+	// The selection is no longer interesting. Move the anchor to the
+	// current cursor location and reset the selection around it.
+	_anchor = _cursor.location();
+	_selection.reset(_anchor);
+}
+
+void Editor::Controller::adjust_selection(bool extend)
+{
+	if (extend) {
+		// The cursor has moved in range-selection mode.
+		// Leave the anchor where it is, then extend the
+		// selection to include the new cursor point.
+		_selection.extend(_anchor, _cursor.location());
+	} else {
+		// The cursor moved but did not extend the selection.
+		drop_selection();
+	}
 }

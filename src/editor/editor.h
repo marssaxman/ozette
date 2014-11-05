@@ -19,12 +19,25 @@ protected:
 	bool line_is_visible(line_t index) const;
 	void reveal_cursor();
 	void update_dimensions(WINDOW *view);
-	void clear_sel();
-	void extend_sel();
-	void insert(char ch);
+	// Navigation keystrokes move the cursor around the document.
+	void key_up(bool extend);
+	void key_down(bool extend);
+	void key_left(bool extend);
+	void key_right(bool extend);
+	void key_page_up();
+	void key_page_down();
+	// Data-entry keystrokes generally begin by deleting whatever was
+	// previously selected and possibly replacing it with something else.
 	void delete_selection();
+	void key_insert(char ch);
 	void key_backspace();
 	void key_delete();
+	// If there was a selection, pressing a key usually does something
+	// to it, so we need to release the selection and start over with a
+	// simple cursor. The only exception is when we've extended the
+	// selection using shift-arrow-key movement.
+	void drop_selection();
+	void adjust_selection(bool extend);
 private:
 	std::string _targetpath;
 	Document _doc;
