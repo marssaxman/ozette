@@ -44,6 +44,7 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case 127: key_backspace(); break;
 		case KEY_DC: key_delete(); break;
 		case '\r': key_return(); break;
+		case '\n': key_enter(); break;
 		default:
 		if (ch >= 32 && ch < 127) key_insert(ch);
 		else {
@@ -199,8 +200,17 @@ void Editor::Controller::key_delete()
 
 void Editor::Controller::key_return()
 {
+	// Split the line at the cursor position and move the cursor to the new line.
 	delete_selection();
 	_cursor.move_to(_doc.split(_cursor.location()));
+	_update.forward(_cursor.location());
+}
+
+void Editor::Controller::key_enter()
+{
+	// Split the line at the cursor position, but don't move the cursor.
+	delete_selection();
+	_doc.split(_cursor.location());
 	_update.forward(_cursor.location());
 }
 

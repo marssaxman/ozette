@@ -35,6 +35,7 @@ protected:
 	void key_backspace();
 	void key_delete();
 	void key_return();
+	void key_enter();
 	// If there was a selection, pressing a key usually does something
 	// to it, so we need to release the selection and start over with a
 	// simple cursor. The only exception is when we've extended the
