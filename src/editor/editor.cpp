@@ -24,12 +24,12 @@ void Editor::Controller::paint(WINDOW *dest, bool active)
 bool Editor::Controller::process(Context &ctx, int ch)
 {
 	switch (ch) {
-		case KEY_DOWN: _cursor.move_down(1); break;
-		case KEY_UP: _cursor.move_up(1); break;
-		case KEY_LEFT: _cursor.move_left(); break;
-		case KEY_RIGHT: _cursor.move_right(); break;
-		case 338: _cursor.move_down(_halfheight); break;
-		case 339: _cursor.move_up(_halfheight); break;
+		case KEY_DOWN: _cursor.down(1); break;
+		case KEY_UP: _cursor.up(1); break;
+		case KEY_LEFT: _cursor.left(); break;
+		case KEY_RIGHT: _cursor.right(); break;
+		case 338: _cursor.down(_halfheight); break;
+		case 339: _cursor.up(_halfheight); break;
 		default: break;
 	}
 	reveal_cursor();

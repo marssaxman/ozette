@@ -13,7 +13,7 @@ Editor::Cursor::Cursor(Document &doc, Update &update):
 {
 }
 
-void Editor::Cursor::move_up(size_t count)
+void Editor::Cursor::up(size_t count)
 {
 	// Move up the screen by the specified number of rows,
 	// stopping when we reach zero. Do not move the column.
@@ -29,7 +29,7 @@ void Editor::Cursor::move_up(size_t count)
 	}
 }
 
-void Editor::Cursor::move_down(size_t count)
+void Editor::Cursor::down(size_t count)
 {
 	// Move down the screen by the specified number of rows,
 	// stopping when we are on the maximum row. Do not move
@@ -47,7 +47,7 @@ void Editor::Cursor::move_down(size_t count)
 	}
 }
 
-void Editor::Cursor::move_left()
+void Editor::Cursor::left()
 {
 	// If the cursor is not located at the beginning of the
 	// line, move it left by one character. If the cursor
@@ -64,7 +64,7 @@ void Editor::Cursor::move_left()
 	commit_location();
 }
 
-void Editor::Cursor::move_right()
+void Editor::Cursor::right()
 {
 	// If the cursor is not located at the end of the line,
 	// move it right by one character. If the cursor was already

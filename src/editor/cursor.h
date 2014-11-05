@@ -13,10 +13,10 @@ public:
 	Cursor(Document &doc, Update &update);
 	const location_t location() const { return _location; }
 	const position_t position() const { return _display; }
-	void move_up(size_t count);
-	void move_down(size_t count);
-	void move_left();
-	void move_right();
+	void up(size_t count);
+	void down(size_t count);
+	void left();
+	void right();
 private:
 	void begin_move();
 	void commit_location();
