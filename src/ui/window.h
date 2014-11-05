@@ -23,7 +23,8 @@ public:
 protected:
 	virtual void repaint() override { _must_repaint = true; }
 	virtual App &app() override { return _app; }
-	void draw_chrome();
+	void paint_chrome();
+	void paint_content();
 private:
 	App &_app;
 	std::unique_ptr<Controller> _controller;
@@ -38,6 +39,7 @@ private:
 	bool _lframe = false;
 	bool _rframe = false;
 	bool _must_repaint = false;
+	std::string _title;
 };
 } // namespace UI
 

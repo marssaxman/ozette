@@ -10,8 +10,9 @@ UI::Window::Window(App &app, std::unique_ptr<Controller> &&controller):
 	_contentwin(newwin(0, 0, 0, 0)),
 	_contentpanel(new_panel(_contentwin))
 {
-	draw_chrome();
-	_controller->paint(_contentwin, _has_focus);
+	_title = _controller->title();
+	paint_chrome();
+	paint_content();
 }
 
 UI::Window::~Window()
@@ -63,21 +64,21 @@ void UI::Window::layout(int xpos, int height, int width, bool lframe, bool rfram
 		move_panel(_contentpanel, 1, xpos);
 	}
 	if (needs_chrome) {
-		draw_chrome();
+		paint_chrome();
 	}
-	_controller->paint(_contentwin, _has_focus);
+	paint_content();
 }
 
 void UI::Window::set_focus()
 {
 	_has_focus = true;
-	draw_chrome();
+	paint_chrome();
 }
 
 void UI::Window::clear_focus()
 {
 	_has_focus = false;
-	draw_chrome();
+	paint_chrome();
 }
 
 void UI::Window::bring_forward()
@@ -90,8 +91,8 @@ bool UI::Window::process(int ch)
 {
 	bool out = _controller->process(*this, ch);
 	if (_must_repaint) {
-		_controller->paint(_contentwin, _has_focus);
-		_must_repaint = false;
+		paint_content();
+		_title = _controller->title();
 	}
 	return out;
 }
@@ -101,7 +102,7 @@ bool UI::Window::poll()
 	return process(ERR);
 }
 
-void UI::Window::draw_chrome()
+void UI::Window::paint_chrome()
 {
 	// Draw the left frame, if we have one.
 	int barx = 0;
@@ -132,11 +133,15 @@ void UI::Window::draw_chrome()
 	if (barwidth > 0) {
 		mvwaddch(_framewin, 0, ++barx, ' ');
 	}
-	std::string title = _controller->title();
-	waddnstr(_framewin, title.c_str(), std::max(0, barwidth-3));
-	barwidth -= title.size();
+	waddnstr(_framewin, _title.c_str(), std::max(0, barwidth-3));
+	barwidth -= _title.size();
 	if (barwidth > 0) {
 		waddch(_framewin, ' ');
 	}
 }
 
+void UI::Window::paint_content()
+{
+	_controller->paint(_contentwin, _has_focus);
+	_must_repaint = false;
+}
