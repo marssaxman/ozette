@@ -27,6 +27,7 @@ void ListForm::Controller::paint(WINDOW *view, bool active)
 		_dirty = false;
 		refresh();
 	}
+	scroll_to_selection(view);
 	int height, width;
 	getmaxyx(view, height, width);
 	for (int y = 0; y < height; ++y) {
@@ -34,20 +35,15 @@ void ListForm::Controller::paint(WINDOW *view, bool active)
 	}
 }
 
-bool ListForm::Controller::process(WINDOW *view, int ch, App &app)
+bool ListForm::Controller::process(Context &ctx, int ch, App &app)
 {
         switch (ch) {
-                case KEY_DOWN: arrow_down(view); break;
-                case KEY_UP: arrow_up(view); break;
-		case '\r': commit(view, app); break;
-		case 27: escape(view); break;
+		case KEY_DOWN: arrow_down(ctx); break;
+		case KEY_UP: arrow_up(ctx); break;
+		case '\r': commit(ctx, app); break;
+		case 27: escape(ctx); break;
 		default: break;
 	}
-	return true;
-}
-
-bool ListForm::Controller::poll(WINDOW *view, App &app)
-{
 	return true;
 }
 
@@ -127,7 +123,7 @@ bool ListForm::Controller::is_selectable(ssize_t line)
 	return field.get() != nullptr && field->active();
 }
 
-void ListForm::Controller::arrow_down(WINDOW *view)
+void ListForm::Controller::arrow_down(Context &ctx)
 {
 	// Look for a selectable line past the current one.
 	// If we find one, select it, then repaint.
@@ -135,12 +131,12 @@ void ListForm::Controller::arrow_down(WINDOW *view)
 	for (size_t i = _selpos + 1; i < _lines.size(); ++i) {
 		if (!is_selectable(i)) continue;
 		_selpos = i;
-		scroll_to_selection(view);
+		ctx.repaint();
 		break;
 	}
 }
 
-void ListForm::Controller::arrow_up(WINDOW *view)
+void ListForm::Controller::arrow_up(Context &ctx)
 {
 	// Look for a selectable line before the current one.
 	// If we find one, select it, then repaint.
@@ -149,28 +145,28 @@ void ListForm::Controller::arrow_up(WINDOW *view)
 		size_t next = i - 1;
 		if (!is_selectable(next)) continue;
 		_selpos = next;
-		scroll_to_selection(view);
+		ctx.repaint();
 		break;
 	}
 }
 
-void ListForm::Controller::commit(WINDOW *view, App &app)
+void ListForm::Controller::commit(Context &ctx, App &app)
 {
 	assert(_selpos < _lines.size());
 	auto &field = _lines[_selpos];
 	if (field.get() != nullptr && field->invoke(app)) {
 		_dirty = true;
-		paint(view, true);
+		ctx.repaint();
 	}
 }
 
-void ListForm::Controller::escape(WINDOW *view)
+void ListForm::Controller::escape(Context &ctx)
 {
 	assert(_selpos < _lines.size());
 	auto &field = _lines[_selpos];
 	if (field.get() != nullptr && field->cancel()) {
 		_dirty = true;
-		paint(view, true);
+		ctx.repaint();
 	}
 }
 
@@ -192,10 +188,4 @@ void ListForm::Controller::scroll_to_selection(WINDOW *view)
 		size_t max_scroll = (_lines.size() > heightz) ? _lines.size() - heightz : 0;
 		_scrollpos = std::min(max_scroll, _selpos - half_page);
 	}
-
-	// This function will ALWAYS repaint, whether or not it moved
-	// the cursor, because it is intended for use after operations
-	// which move the selection, and such operations require us to
-	// repaint the window anyway.
-	paint(view, true);
 }

@@ -12,8 +12,7 @@ class Controller : public UI::Controller
 public:
 	Controller(std::string targetpath);
 	virtual void paint(WINDOW *view, bool active) override;
-	virtual bool process(WINDOW *view, int ch, App &app) override;
-	virtual bool poll(WINDOW *view, App &app) override { return true; }
+	virtual bool process(Context &ctx, int ch, App &app) override;
 	virtual std::string title() const override { return _targetpath; }
 protected:
 	void paint_line(WINDOW *view, row_t v);

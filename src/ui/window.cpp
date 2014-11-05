@@ -88,12 +88,18 @@ void UI::Window::bring_forward()
 
 bool UI::Window::process(int ch)
 {
-	return _controller->process(_contentwin, ch, _app);
+	bool out = _controller->process(*this, ch, _app);
+	if (_must_repaint) {
+		_controller->paint(_contentwin, _has_focus);
+		_must_repaint = false;
+	}
+	return out;
 }
 
 bool UI::Window::poll()
 {
-	return _controller->poll(_contentwin, _app);
+	// someday
+	return true;
 }
 
 void UI::Window::draw_chrome()

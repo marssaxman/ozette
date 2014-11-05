@@ -9,7 +9,7 @@
 #include "app.h"
 
 namespace UI {
-class Window
+class Window : public Controller::Context
 {
 public:
 	Window(App &app, std::unique_ptr<Controller> &&controller);
@@ -21,6 +21,7 @@ public:
 	bool process(int ch);
 	bool poll();
 protected:
+	virtual void repaint() override { _must_repaint = true; }
 	void draw_chrome();
 private:
 	App &_app;
@@ -35,6 +36,7 @@ private:
 	bool _has_focus = true;
 	bool _lframe = false;
 	bool _rframe = false;
+	bool _must_repaint = false;
 };
 } // namespace UI
 

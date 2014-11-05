@@ -21,9 +21,8 @@ void Editor::Controller::paint(WINDOW *dest, bool active)
 	_update.reset();
 }
 
-bool Editor::Controller::process(WINDOW *dest, int ch, App &app)
+bool Editor::Controller::process(Context &ctx, int ch, App &app)
 {
-	update_dimensions(dest);
 	switch (ch) {
 		case KEY_DOWN: _cursor.move_down(1); break;
 		case KEY_UP: _cursor.move_up(1); break;
@@ -35,7 +34,7 @@ bool Editor::Controller::process(WINDOW *dest, int ch, App &app)
 	}
 	reveal_cursor();
 	if (_update.has_dirty()) {
-		paint(dest, true);
+		ctx.repaint();
 	}
 	return true;
 }
