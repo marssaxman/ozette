@@ -11,9 +11,9 @@ void Editor::range_t::reset(location_t loc)
 	end = loc;
 }
 
-void Editor::range_t::extend(location_t loc)
+void Editor::range_t::extend(location_t a, location_t b)
 {
-	if (loc < begin) begin = loc;
-	if (loc > end) end = loc;
+	begin = (a < b) ? a : b;
+	end = (a > b) ? a : b;
 }
 

@@ -130,5 +130,5 @@ void Editor::Controller::extend_sel()
 	// The cursor has moved in range-selection mode.
 	// Leave the anchor where it is, then extend the
 	// selection to include the new cursor point.
-	_selection.extend(_cursor.location());
+	_selection.extend(_sel_anchor, _cursor.location());
 }

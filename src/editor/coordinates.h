@@ -21,7 +21,7 @@ struct range_t {
 	location_t end;
 	bool empty() const;
 	void reset(location_t loc);
-	void extend(location_t loc);
+	void extend(location_t a, location_t b);
 };
 
 // A display space is a two-dimensional plane made up of
