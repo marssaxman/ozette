@@ -1,6 +1,7 @@
 #include "lindi.h"
 #include "browser.h"
 #include "editor.h"
+#include "control.h"
 
 Lindi::Lindi():
 	_shell(*this),
@@ -44,6 +45,11 @@ void Lindi::run()
 	do {
 		update_panels();
 		doupdate();
-	} while (!_done && _shell.process(getch()));
+		int ch = getch();
+		switch (ch) {
+			case Control::Quit: quit(); break;
+			default: _done |= !_shell.process(ch);
+		}
+	} while (!_done);
 }
 

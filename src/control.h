@@ -6,7 +6,7 @@
 namespace Control {
 static const unsigned Count = 32;
 struct Info {
-	char key;
+	char mnemonic;
 	char label[10];
 };
 extern Info keys[Count];
