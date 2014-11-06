@@ -38,16 +38,26 @@ protected:
 private:
 	App &_app;
 	std::unique_ptr<Controller> _controller;
+	// The frame represents the outer dimensions of the window and
+	// contains all the UI chrome.
 	WINDOW *_framewin = nullptr;
 	PANEL *_framepanel = nullptr;
+	// The content window belongs to the controller and represents the
+	// data that this window exists to display and manipulate.
 	WINDOW *_contentwin = nullptr;
 	PANEL *_contentpanel = nullptr;
+	// Are we the active window? This changes the way we draw our chrome.
 	bool _has_focus = true;
+	// What are the dimensional attributes we worked out during layout?
 	bool _lframe = false;
 	bool _rframe = false;
 	unsigned _taskbar_height = 0;
+	// Have we experienced changes which require repainting but which we
+	// have not yet had a chance to implement?
 	bool _dirty_content = true;
 	bool _dirty_chrome = true;
+	// Data to display in our window chrome: this is for the use of our
+	// controller object, which can update these fields as it pleases.
 	std::string _title;
 	std::string _status;
 	Control::Panel _help;
