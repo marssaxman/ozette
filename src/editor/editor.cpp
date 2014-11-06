@@ -13,10 +13,8 @@ void Editor::Controller::open(Context &ctx)
 	ctx.set_title(_targetpath);
 	using namespace Control;
 	Panel help = {{
-		{Cut, Copy, Paste, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0}
-//		{Cut, Copy, Paste, Delete, Find, Go},
-//		{Close, Save, Revert, Undo, Redo, Help}
+		{Cut, Copy, Paste, Delete, Find, GoTo},
+		{Close, Save, Revert, Undo, 0, 0} //Redo, Help
 	}};
 	ctx.set_help(help);
 }

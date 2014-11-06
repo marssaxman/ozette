@@ -258,7 +258,7 @@ void UI::Window::paint_taskbar(int height, int width)
 		unsigned labelpos = h * labelwidth;
 		wmove(_framewin, v+ypos, labelpos+xpos);
 		if (_has_focus) wattron(_framewin, A_REVERSE);
-		waddch(_framewin, '^');
+		waddch(_framewin, ctl? '^': ' ');
 		waddch(_framewin, Control::keys[ctl].key);
 		if (_has_focus) wattroff(_framewin, A_REVERSE);
 		waddch(_framewin, ' ');
