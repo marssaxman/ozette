@@ -12,6 +12,13 @@ struct Info {
 extern Info keys[Count];
 
 enum {
+	// Dedicated keys for editor manipulation
+	Backspace = 0x08, // BS ^H
+	Tab = 0x09, // HT ^I
+	Enter = 0x0A, //LF ^J
+	Return = 0x0D, //CR ^M
+	Escape = 0x1B, // ESC ^[
+
 	Cut = 0x18, //CAN ^X
 	Copy = 0x03, //ETX ^C
 	Paste = 0x16, //SYN ^V
@@ -28,6 +35,12 @@ enum {
 	GoTo = 0x07, //BEL ^G
 
 	Quit = 0x11, //DC1 ^Q
+
+	// Ideas for the future
+	// redo = ?
+	// R = run, B = build, K = clean?
+	// edit, diff, log, blame?
+	// P = projects?
 };
 
 struct Panel {

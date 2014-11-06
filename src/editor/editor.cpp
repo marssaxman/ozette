@@ -17,13 +17,13 @@ Editor::Controller::Controller(std::string targetpath):
 void Editor::Controller::open(Context &ctx)
 {
 	if (_targetpath.empty()) {
-		ctx.set_title("[New File]");
+		ctx.set_title("(New File)");
 	} else {
 		ctx.set_title(_targetpath);
 	}
 	using namespace Control;
 	Panel help = {{
-		{Cut, Copy, Paste, Delete, Find, GoTo},
+		{Cut, Copy, Paste, 0, Find, GoTo},
 		{Close, Save, Revert, Undo, 0, 0} //Redo, Help
 	}};
 	ctx.set_help(help);
@@ -49,8 +49,9 @@ void Editor::Controller::paint(WINDOW *dest, bool active)
 
 bool Editor::Controller::process(Context &ctx, int ch)
 {
+	if (ERR == ch) return true;
+	ctx.set_status("");
 	switch (ch) {
-		case ERR: return true; // polling; we don't care
 		case Control::Close: return false;
 		case Control::Cut: ctl_cut(ctx); break;
 		case Control::Copy: ctl_copy(ctx); break;
@@ -72,6 +73,7 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case '\r': key_return(); break;
 		case '\n': key_enter(); break;
 		case '\t': key_insert('\t'); break;
+		case KEY_BTAB: break;	// shift-tab
 		default:
 		if (ch >= 32 && ch < 127) key_insert(ch);
 		else {
