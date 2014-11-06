@@ -1,5 +1,6 @@
 #include "document.h"
 #include <fstream>
+#include <sstream>
 #include <assert.h>
 
 namespace {
@@ -20,6 +21,11 @@ private:
 	std::string _text;
 };
 } // namespace
+
+Editor::Document::Document():
+	_blank(new BlankLine)
+{
+}
 
 Editor::Document::Document(std::string targetpath):
 	_blank(new BlankLine)
@@ -91,21 +97,32 @@ Editor::location_t Editor::Document::prev(location_t loc)
 	return loc;
 }
 
+std::string Editor::Document::text(const Range &span)
+{
+	std::stringstream out;
+	location_t loc = span.begin();
+	location_t end = span.end();
+	std::string chunk = substr_to_end(loc);
+	while (loc.line < end.line) {
+		out << chunk << '\n';
+		chunk = line(++loc.line).text();
+		loc.offset = 0;
+	}
+	out << chunk.substr(0, end.offset - loc.offset);
+	return out.str();
+}
+
 Editor::location_t Editor::Document::erase(const Range &chars)
 {
 	if (_lines.empty()) return home();
 	location_t begin = sanitize(chars.begin());
-	std::string prefix = _lines[begin.line]->text().substr(0, begin.offset);
+	std::string prefix = substr_from_home(begin);
 	location_t end = sanitize(chars.end());
-	std::string suffix = _lines[end.line]->text().substr(end.offset, std::string::npos);
+	std::string suffix = substr_to_end(end);
 	size_t index = begin.line;
-	if (chars.multiline()) {
-		auto iter = _lines.begin();
-		_lines.erase(iter + begin.line, iter + end.line + 1);
-		insert_line(index, prefix + suffix);
-	} else {
-		update_line(index, prefix + suffix);
-	}
+	auto iter = _lines.begin();
+	_lines.erase(iter + begin.line + 1, iter + end.line + 1);
+	update_line(index, prefix + suffix);
 	return location_t(index, prefix.size());
 }
 
@@ -124,6 +141,37 @@ Editor::location_t Editor::Document::insert(location_t loc, char ch)
 	return loc;
 }
 
+Editor::location_t Editor::Document::insert(location_t loc, std::string text)
+{
+	// Split this line apart around the insertion point. We will insert
+	// the new text in between these halves. We will temporarily delete
+	// the suffix from its line, since we're likely to be appending more
+	// text for a while, but we'll append the suffix back on at the end.
+	std::string suffix = substr_to_end(loc);
+	update_line(loc.line, substr_from_home(loc));
+
+	// Search the text for linebreaks. Every time we find one, we'll
+	// cut all the chars from our search position to the linebreak and
+	// append them to the current line. Then we'll insert a new, blank
+	// line, which will become the new current line. When we're
+	// finally out of linebreaks, we'll concatenate whatever is left
+	// of the text with our original suffix and append that to the
+	// current line. If there were no linebreaks at all, this will
+	// simply be the original line we started on.
+	size_t startoff = 0, endoff = 0;
+	while ((endoff = text.find('\n', startoff)) != std::string::npos) {
+		append_to_line(loc.line++, text.substr(startoff, endoff-startoff));
+		insert_line(loc.line, "");
+		loc.offset = 0;
+		startoff = endoff + 1;
+	}
+
+	append_to_line(loc.line, text.substr(startoff, endoff));
+	loc.offset = line(loc.line).size();
+	append_to_line(loc.line, suffix);
+	return loc;
+}
+
 Editor::location_t Editor::Document::split(location_t loc)
 {
 	sanitize(loc);
@@ -135,21 +183,49 @@ Editor::location_t Editor::Document::split(location_t loc)
 	return loc;
 }
 
+std::string Editor::Document::substr_from_home(const location_t &loc)
+{
+	std::string text = line(loc.line).text();
+	return text.substr(0, loc.offset);
+}
+
+std::string Editor::Document::substr_to_end(const location_t &loc)
+{
+	std::string text = line(loc.line).text();
+	return text.substr(std::min(text.size(), loc.offset), std::string::npos);
+}
+
 void Editor::Document::update_line(line_t index, std::string text)
 {
-	_lines[index].reset(new StrLine(text));
+	if (index < _lines.size()) {
+		_lines[index].reset(new StrLine(text));
+	} else {
+		_lines.emplace_back(new StrLine(text));
+	}
 }
 
 void Editor::Document::insert_line(line_t index, std::string text)
 {
 	_lines.emplace(_lines.begin() + index, new StrLine(text));
+	_maxline = _lines.size() - 1;
 }
 
 Editor::line_t Editor::Document::append_line(std::string text)
 {
 	line_t index = _lines.size();
 	_lines.emplace_back(new StrLine(text));
+	_maxline = _lines.size()-1;
 	return index;
+}
+
+void Editor::Document::append_to_line(line_t index, std::string suffix)
+{
+	update_line(index, line(index).text() + suffix);
+}
+
+void Editor::Document::push_to_line(line_t index, std::string prefix)
+{
+	update_line(index, prefix + line(index).text());
 }
 
 Editor::location_t Editor::Document::sanitize(const location_t &loc)

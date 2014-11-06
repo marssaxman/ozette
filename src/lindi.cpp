@@ -25,6 +25,12 @@ void Lindi::edit_file(std::string path)
 	_editors[path] = win;
 }
 
+void Lindi::new_file()
+{
+	std::unique_ptr<UI::Controller> ed(new Editor::Controller());
+	_shell.open_window(std::move(ed));
+}
+
 void Lindi::file_closed(std::string path)
 {
 	auto iter = _editors.find(path);
@@ -34,6 +40,16 @@ void Lindi::file_closed(std::string path)
 void Lindi::select_project(std::string path)
 {
 	_browser->open_project(path);
+}
+
+void Lindi::set_clipboard(std::string text)
+{
+	_clipboard = text;
+}
+
+std::string Lindi::get_clipboard()
+{
+	return _clipboard;
 }
 
 void Lindi::run()
@@ -48,6 +64,7 @@ void Lindi::run()
 		int ch = getch();
 		switch (ch) {
 			case Control::Quit: quit(); break;
+			case Control::NewFile: new_file(); break;
 			default: _done |= !_shell.process(ch);
 		}
 	} while (!_done);

@@ -10,6 +10,7 @@ namespace Editor {
 class Controller : public UI::Controller
 {
 public:
+	Controller();
 	Controller(std::string targetpath);
 	virtual void open(Context &ctx) override;
 	virtual void paint(WINDOW *view, bool active) override;
@@ -19,6 +20,10 @@ protected:
 	bool line_is_visible(line_t index) const;
 	void reveal_cursor();
 	void update_dimensions(WINDOW *view);
+	// Control keys which drive higher-level functions.
+	void ctl_cut(Context &ctx);
+	void ctl_copy(Context &ctx);
+	void ctl_paste(Context &ctx);
 	// Navigation keystrokes move the cursor around the document.
 	void key_up(bool extend);
 	void key_down(bool extend);

@@ -1,6 +1,12 @@
 #include "editor.h"
 #include "control.h"
 
+Editor::Controller::Controller():
+	_cursor(_doc, _update)
+{
+	// new blank buffer
+}
+
 Editor::Controller::Controller(std::string targetpath):
 	_targetpath(targetpath),
 	_doc(targetpath),
@@ -10,7 +16,11 @@ Editor::Controller::Controller(std::string targetpath):
 
 void Editor::Controller::open(Context &ctx)
 {
-	ctx.set_title(_targetpath);
+	if (_targetpath.empty()) {
+		ctx.set_title("[New File]");
+	} else {
+		ctx.set_title(_targetpath);
+	}
 	using namespace Control;
 	Panel help = {{
 		{Cut, Copy, Paste, Delete, Find, GoTo},
@@ -40,8 +50,11 @@ void Editor::Controller::paint(WINDOW *dest, bool active)
 bool Editor::Controller::process(Context &ctx, int ch)
 {
 	switch (ch) {
-		case Control::Close: return false;
 		case ERR: return true; // polling; we don't care
+		case Control::Close: return false;
+		case Control::Cut: ctl_cut(ctx); break;
+		case Control::Copy: ctl_copy(ctx); break;
+		case Control::Paste: ctl_paste(ctx); break;
 		case KEY_DOWN: key_down(false); break;
 		case KEY_UP: key_up(false); break;
 		case KEY_LEFT: key_left(false); break;
@@ -136,6 +149,31 @@ void Editor::Controller::update_dimensions(WINDOW *view)
 		_scrollpos = std::min(_scrollpos, _maxscroll);
 		_update.all();
 	}
+}
+
+void Editor::Controller::ctl_cut(Context &ctx)
+{
+	ctl_copy(ctx);
+	delete_selection();
+}
+
+void Editor::Controller::ctl_copy(Context &ctx)
+{
+	if (_selection.empty()) return;
+	std::string clip = _doc.text(_selection);
+	ctx.app().set_clipboard(clip);
+}
+
+void Editor::Controller::ctl_paste(Context &ctx)
+{
+	delete_selection();
+	std::string clip = ctx.app().get_clipboard();
+	location_t oldloc = _cursor.location();
+	location_t newloc = _doc.insert(oldloc, clip);
+	if (oldloc.line != newloc.line) {
+		_update.forward(oldloc);
+	}
+	_cursor.move_to(newloc);
 }
 
 void Editor::Controller::key_up(bool extend)
