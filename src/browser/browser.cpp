@@ -11,7 +11,7 @@ void Browser::open(Context &ctx)
 	ctx.set_title("Lindi");
 	using namespace Control;
 	Panel help = {{
-		{Open, 0, 0, 0, Find, GoTo},
+		{Open, NewFile, 0, 0, Find, GoTo},
 		{Quit, Save, Close, 0, 0, 0} // Projects, Config, Help
 	}};
 	ctx.set_help(help);

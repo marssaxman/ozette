@@ -15,7 +15,7 @@ Control::Info Control::keys[Count] = {
 	{'K', "Delete"}, //0B VT
 	{'L', "FF"},  //0C
 	{'M', "CR"},  //0D
-	{'N', "SO"},  //0E
+	{'N', "New File"}, //0E
 	{'O', "Open"}, //0F SI
 	{'P', "DLE"}, //10
 	{'Q', "Quit"}, //11 DC1

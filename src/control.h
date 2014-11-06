@@ -20,6 +20,7 @@ enum {
 
 	Open = 0x0F, //SI ^O
 	Close = 0x17, //ETB ^W
+	NewFile = 0x0E, // SO ^N
 	Save = 0x13, //DC3 ^S
 	Revert = 0x12, //DC2 ^R
 
