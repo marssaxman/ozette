@@ -27,6 +27,7 @@ protected:
 	void key_cut(Context &ctx);
 	void key_copy(Context &ctx);
 	void key_paste(Context &ctx);
+	void key_save(Context &ctx);
 	// Navigation keystrokes move the cursor around the document.
 	void key_up(bool extend);
 	void key_down(bool extend);

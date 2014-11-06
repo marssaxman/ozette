@@ -7,6 +7,7 @@
 #include <vector>
 #include "controller.h"
 #include "app.h"
+#include "dialog.h"
 
 namespace UI {
 class Window : public Controller::Context
@@ -26,8 +27,10 @@ protected:
 	virtual void set_title(std::string text) override;
 	virtual void set_status(std::string text) override;
 	virtual void set_help(const Control::Panel &help) override;
+	virtual void show_dialog(std::unique_ptr<Dialog::Controller> &&host);
 	void layout_contentwin();
 	void layout_taskbar();
+	void layout_dialog();
 	void paint();
 	void paint_content();
 	void paint_chrome();
@@ -46,6 +49,9 @@ private:
 	// data that this window exists to display and manipulate.
 	WINDOW *_contentwin = nullptr;
 	PANEL *_contentpanel = nullptr;
+	// There may be a dialog box overlaid on the content window, if the
+	// user is currently engaged in some process which requires input.
+	std::unique_ptr<UI::Dialog> _dialog;
 	// Are we the active window? This changes the way we draw our chrome.
 	bool _has_focus = true;
 	// What are the dimensional attributes we worked out during layout?

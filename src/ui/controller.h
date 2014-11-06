@@ -5,6 +5,7 @@
 #include <ncurses.h>
 #include "app.h"
 #include "control.h"
+#include "dialog.h"
 
 namespace UI {
 class Controller
@@ -18,6 +19,7 @@ public:
 		virtual void set_title(std::string text) = 0;
 		virtual void set_status(std::string text) = 0;
 		virtual void set_help(const Control::Panel &help) = 0;
+		virtual void show_dialog(std::unique_ptr<Dialog::Controller> &&host) = 0;
 	};
 	virtual ~Controller() = default;
 	// The window has just been opened. Initialize it.

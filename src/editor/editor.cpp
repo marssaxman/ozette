@@ -1,5 +1,6 @@
 #include "editor.h"
 #include "control.h"
+#include "dialog.h"
 
 Editor::Controller::Controller():
 	_cursor(_doc, _update)
@@ -61,6 +62,7 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case Control::Paste: key_paste(ctx); break;
 
 		case Control::Close: return false;
+		case Control::Save: key_save(ctx); break;
 
 		case KEY_DOWN: key_down(false); break;
 		case KEY_UP: key_up(false); break;
@@ -200,6 +202,28 @@ void Editor::Controller::key_return(Context &ctx)
 	delete_selection();
 	_cursor.move_to(_doc.split(_cursor.location()));
 	_update.forward(_cursor.location());
+}
+
+namespace {
+class SaveDialog : public UI::Dialog::Controller
+{
+public:
+	SaveDialog(std::string path, Editor::Document &doc):
+		_path(path), _doc(doc) {}
+	virtual std::string open(Control::Panel &help)
+		{ return "Save File"; }
+	virtual bool process(int ch) { return true; }
+private:
+	std::string _path;
+	Editor::Document &_doc;
+};
+} // namespace
+
+void Editor::Controller::key_save(Context &ctx)
+{
+	auto ctrl = new SaveDialog(_targetpath, _doc);
+	std::unique_ptr<UI::Dialog::Controller> host(ctrl);
+	ctx.show_dialog(std::move(host));
 }
 
 void Editor::Controller::key_up(bool extend)

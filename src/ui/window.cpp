@@ -69,6 +69,7 @@ void UI::Window::set_focus()
 	_has_focus = true;
 	_dirty_chrome = true;
 	_dirty_content = true;
+	if (_dialog) _dialog->set_focus();
 	paint();
 }
 
@@ -77,6 +78,7 @@ void UI::Window::clear_focus()
 	_has_focus = false;
 	_dirty_chrome = true;
 	_dirty_content = true;
+	if (_dialog) _dialog->clear_focus();
 	paint();
 }
 
@@ -84,10 +86,16 @@ void UI::Window::bring_forward()
 {
 	top_panel(_framepanel);
 	top_panel(_contentpanel);
+	if (_dialog) _dialog->bring_forward();
 }
 
 bool UI::Window::process(int ch)
 {
+	if (_dialog) {
+		if (_dialog->process(ch)) return true;
+		_dialog.reset();
+		return true;
+	}
 	bool out = _controller->process(*this, ch);
 	paint();
 	return out;
@@ -114,6 +122,13 @@ void UI::Window::set_help(const Control::Panel &help)
 {
 	_help = help;
 	layout_taskbar();
+}
+
+void UI::Window::show_dialog(std::unique_ptr<Dialog::Controller> &&host)
+{
+	assert(!_dialog.get());
+	_dialog.reset(new Dialog(std::move(host)));
+	layout_dialog();
 }
 
 void UI::Window::layout_contentwin()
@@ -157,6 +172,11 @@ void UI::Window::layout_contentwin()
 	} else if (old_vpos != new_vpos || old_hpos != new_vpos) {
 		move_panel(_contentpanel, new_vpos, new_hpos);
 	}
+
+	// If we have a dialog box open, tell it how to lay itself out.
+	if (_dialog) {
+		_dialog->layout(new_vpos, new_hpos, new_height, new_width);
+	}
 }
 
 void UI::Window::layout_taskbar()
@@ -170,6 +190,15 @@ void UI::Window::layout_taskbar()
 		_dirty_chrome = true;
 		layout_contentwin();
 	}
+}
+
+void UI::Window::layout_dialog()
+{
+	int height, width;
+	getmaxyx(_contentwin, height, width);
+	int vpos, hpos;
+	getyx(_contentwin, vpos, hpos);
+	_dialog->layout(vpos, hpos, height, width);
 }
 
 void UI::Window::paint()
