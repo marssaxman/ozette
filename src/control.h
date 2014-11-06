@@ -24,6 +24,7 @@ enum {
 	Paste = 0x16, //SYN ^V
 	Delete = 0x0B, //VT ^K
 	Undo = 0x1A, //SUB ^Z
+	Redo = 0x19, //EM ^Y
 
 	Open = 0x0F, //SI ^O
 	Close = 0x17, //ETB ^W

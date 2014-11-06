@@ -24,7 +24,7 @@ void Editor::Controller::open(Context &ctx)
 	using namespace Control;
 	Panel help = {{
 		{Cut, Copy, Paste, 0, Find, GoTo},
-		{Close, Save, Revert, Undo, 0, 0} //Redo, Help
+		{Close, Save, Revert, Undo, Redo, 0} //Redo, Help
 	}};
 	ctx.set_help(help);
 }

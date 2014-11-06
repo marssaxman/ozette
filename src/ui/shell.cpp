@@ -110,7 +110,9 @@ void UI::Shell::set_focus(size_t index)
 {
 	assert(index >= 0 && index < _columns.size());
 	if (_focus == index) return;
-	_columns[_focus]->clear_focus();
+	if (_focus < _columns.size()) {
+		_columns[_focus]->clear_focus();
+	}
 	_focus = index;
 	_columns[_focus]->set_focus();
 	// We want to keep as much of the background
@@ -151,11 +153,15 @@ void UI::Shell::send_to_focus(int ch)
 	bool more = _columns[_focus]->process(ch);
 	if (more) return;
 	close_window(_focus);
-	if (_focus >= _columns.size()) _focus = 0;
 	relayout();
 }
 
 void UI::Shell::close_window(size_t index)
 {
 	_columns.erase(_columns.begin() + index);
+	if (index < _focus) {
+		_focus--;
+	} else if (index == _focus) {
+		set_focus(_focus - 1);
+	}
 }

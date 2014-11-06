@@ -26,7 +26,7 @@ Control::Info Control::keys[Count] = {
 	{'V', "Paste"}, //16 SYN
 	{'W', "Close"}, //17 ETB
 	{'X', "Cut"}, //18 CAN
-		{'Y', "EM"},  //19
+	{'Y', "Redo"}, //19 EM
 	{'Z', "Undo"}, //1A SUB
 	{'[', "Escape"}, //1B ESC
 		{'\\', "FS"}, //1C
