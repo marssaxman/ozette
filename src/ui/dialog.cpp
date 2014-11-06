@@ -61,7 +61,7 @@ void UI::Dialog::bring_forward()
 bool UI::Dialog::process(int ch)
 {
 	// Every dialog can be dismissed via escape.
-	if (ch == Control::Escape) return true;
+	if (ch == Control::Escape) return false;
 	// Otherwise, we pass the keystroke along to the delegate.
 	bool done = _host->process(ch);
 	if (!done) paint();
