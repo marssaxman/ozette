@@ -56,6 +56,8 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case Control::Cut: ctl_cut(ctx); break;
 		case Control::Copy: ctl_copy(ctx); break;
 		case Control::Paste: ctl_paste(ctx); break;
+		case Control::Return: ctl_return(ctx); break;
+		case Control::Enter: ctl_enter(ctx); break;
 		case KEY_DOWN: key_down(false); break;
 		case KEY_UP: key_up(false); break;
 		case KEY_LEFT: key_left(false); break;
@@ -70,8 +72,6 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case KEY_SRIGHT: key_right(true); break;
 		case 127: key_backspace(); break;
 		case KEY_DC: key_delete(); break;
-		case '\r': key_return(); break;
-		case '\n': key_enter(); break;
 		case '\t': key_insert('\t'); break;
 		case KEY_BTAB: break;	// shift-tab
 		default:
@@ -178,6 +178,22 @@ void Editor::Controller::ctl_paste(Context &ctx)
 	_cursor.move_to(newloc);
 }
 
+void Editor::Controller::ctl_return(Context &ctx)
+{
+	// Split the line at the cursor position and move the cursor to the new line.
+	delete_selection();
+	_cursor.move_to(_doc.split(_cursor.location()));
+	_update.forward(_cursor.location());
+}
+
+void Editor::Controller::ctl_enter(Context &ctx)
+{
+	// Split the line at the cursor position, but don't move the cursor.
+	delete_selection();
+	_doc.split(_cursor.location());
+	_update.forward(_cursor.location());
+}
+
 void Editor::Controller::key_up(bool extend)
 {
 	_cursor.up(1);
@@ -250,22 +266,6 @@ void Editor::Controller::key_delete()
 {
 	if (_selection.empty()) key_right(true);
 	delete_selection();
-}
-
-void Editor::Controller::key_return()
-{
-	// Split the line at the cursor position and move the cursor to the new line.
-	delete_selection();
-	_cursor.move_to(_doc.split(_cursor.location()));
-	_update.forward(_cursor.location());
-}
-
-void Editor::Controller::key_enter()
-{
-	// Split the line at the cursor position, but don't move the cursor.
-	delete_selection();
-	_doc.split(_cursor.location());
-	_update.forward(_cursor.location());
 }
 
 void Editor::Controller::drop_selection()

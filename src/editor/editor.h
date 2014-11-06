@@ -24,6 +24,8 @@ protected:
 	void ctl_cut(Context &ctx);
 	void ctl_copy(Context &ctx);
 	void ctl_paste(Context &ctx);
+	void ctl_return(Context &ctx);
+	void ctl_enter(Context &ctx);
 	// Navigation keystrokes move the cursor around the document.
 	void key_up(bool extend);
 	void key_down(bool extend);
@@ -39,8 +41,6 @@ protected:
 	void key_insert(char ch);
 	void key_backspace();
 	void key_delete();
-	void key_return();
-	void key_enter();
 	// If there was a selection, pressing a key usually does something
 	// to it, so we need to release the selection and start over with a
 	// simple cursor. The only exception is when we've extended the
