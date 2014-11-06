@@ -21,6 +21,7 @@ public:
 	void run();
 private:
 	void new_file();
+	int fix_control_quirks(int ch);
 	UI::Shell _shell;
 	Browser *_browser;
 	std::map<std::string, UI::Window*> _editors;

@@ -9,7 +9,7 @@ Control::Info Control::keys[Count] = {
 		{'E', "ENQ"}, //05
 	{'F', "Find"}, //06 ACK
 	{'G', "Go To"}, //07 BEL
-	{'H', "Backspace"},//08 BS
+		{'H', "BS"}, //08
 	{'I', "Tab"},  //09 HT - tab
 	{'J', "Enter"},  //0A LF - enter
 	{'K', "Delete"}, //0B VT

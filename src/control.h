@@ -13,7 +13,6 @@ extern Info keys[Count];
 
 enum {
 	// Dedicated keys for editor manipulation
-	Backspace = 0x08, // BS ^H
 	Tab = 0x09, // HT ^I
 	Enter = 0x0A, //LF ^J
 	Return = 0x0D, //CR ^M
