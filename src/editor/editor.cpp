@@ -40,6 +40,7 @@ void Editor::Controller::paint(WINDOW *dest, bool active)
 bool Editor::Controller::process(Context &ctx, int ch)
 {
 	switch (ch) {
+		case Control::Close: return false;
 		case ERR: return true; // polling; we don't care
 		case KEY_DOWN: key_down(false); break;
 		case KEY_UP: key_up(false); break;

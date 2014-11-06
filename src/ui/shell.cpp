@@ -35,7 +35,7 @@ bool UI::Shell::process(int ch)
 	// the focus window. All other keypresses are delegated to
 	// the focus window.
 	switch (ch) {
-		case ERR: {	// timeout
+/*		case ERR: {	// timeout
 			std::list<size_t> dead;
 			for (size_t i = 0; i < _columns.size(); ++i) {
 				auto &win = _columns[i];
@@ -48,7 +48,7 @@ bool UI::Shell::process(int ch)
 			}
 			relayout();
 		} break;
-		case 0x21D: {	// Control-shift-left arrow
+*/		case 0x21D: {	// Control-shift-left arrow
 			if (_focus > 0) {
 				set_focus(_focus - 1);
 			} else {
@@ -145,6 +145,7 @@ void UI::Shell::send_to_focus(int ch)
 	bool more = _columns[_focus]->process(ch);
 	if (more) return;
 	close_window(_focus);
+	if (_focus >= _columns.size()) _focus = 0;
 	relayout();
 }
 
