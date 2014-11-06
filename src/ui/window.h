@@ -25,7 +25,7 @@ protected:
 	virtual App &app() override { return _app; }
 	virtual void set_title(std::string text) override;
 	virtual void set_status(std::string text) override;
-	virtual void set_help(const help_panel_t *help) override;
+	virtual void set_help(const Control::Panel &help) override;
 	void layout_contentwin();
 	void layout_taskbar();
 	void paint();
@@ -50,7 +50,7 @@ private:
 	bool _dirty_chrome = true;
 	std::string _title;
 	std::string _status;
-	const help_panel_t *_help = nullptr;
+	Control::Panel _help;
 };
 } // namespace UI
 

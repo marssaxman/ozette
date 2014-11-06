@@ -1,4 +1,5 @@
 #include "shell.h"
+#include "control.h"
 #include <algorithm>
 #include <assert.h>
 
@@ -109,7 +110,7 @@ void UI::Window::set_status(std::string text)
 	_dirty_chrome = true;
 }
 
-void UI::Window::set_help(const help_panel_t *help)
+void UI::Window::set_help(const Control::Panel &help)
 {
 	_help = help;
 	layout_taskbar();
@@ -161,10 +162,9 @@ void UI::Window::layout_contentwin()
 void UI::Window::layout_taskbar()
 {
 	unsigned new_height = 0;
-	// At present the only thing which lives on the taskbar is the help panel
-	if (_help) {
-		new_height += help_panel_t::kRows;
-	}
+	// The help panel occupies two lines
+	new_height += Control::Panel::height;
+	// Is that the height we planned for?
 	if (new_height != _taskbar_height) {
 		_taskbar_height = new_height;
 		_dirty_chrome = true;
@@ -247,26 +247,24 @@ void UI::Window::paint_taskbar(int height, int width)
 		mvwhline(_framewin, v, xpos, ' ', width);
 	}
 
-	// If there is a help panel, render it here.
-	if (!_help) return;
-
-	int labelwidth = width / help_panel_t::kColumns;
+	// Render the help panel for this window.
+	int labelwidth = width / Control::Panel::width;
 	int textwidth = labelwidth - 4;
 	unsigned v = 0;
 	unsigned h = 0;
 
-	while (v < help_panel_t::kRows) {
-		auto &label = _help->label[v][h];
-		int labelpos = h * labelwidth;
+	while (v < Control::Panel::height) {
+		unsigned ctl = _help.label[v][h];
+		unsigned labelpos = h * labelwidth;
 		wmove(_framewin, v+ypos, labelpos+xpos);
 		if (_has_focus) wattron(_framewin, A_REVERSE);
 		waddch(_framewin, '^');
-		waddch(_framewin, label.key);
+		waddch(_framewin, Control::keys[ctl].key);
 		if (_has_focus) wattroff(_framewin, A_REVERSE);
 		waddch(_framewin, ' ');
-		waddnstr(_framewin, label.text, textwidth);
+		waddnstr(_framewin, Control::keys[ctl].label, textwidth);
 		waddch(_framewin, ' ');
-		if (++h == help_panel_t::kColumns) {
+		if (++h == 6) {
 			h = 0;
 			v++;
 		}

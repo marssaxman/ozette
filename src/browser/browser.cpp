@@ -1,10 +1,5 @@
 #include "browser.h"
-
-static help_panel_t s_browser_help =
-{{
-{{'O', "Open"}, {'N', "New"}, {'M', "Move"}, {'K', "Delete"}, {'J', "Jump"}, {'F', "Find"}},
-{{'X', "Exit"}, {'S', "Save All"}, {'W', "Close All"}, {'P', "Projects"}, {'U', "Settings"}, {'H', "Help"}}
-}};
+#include "control.h"
 
 Browser::Browser():
 	_repos(*this)
@@ -14,7 +9,14 @@ Browser::Browser():
 void Browser::open(Context &ctx)
 {
 	ctx.set_title("Lindi");
-	ctx.set_help(&s_browser_help);
+	using namespace Control;
+	Panel help = {{
+		{0, 0, 0, 0, 0, 0},
+		{Quit, 0, 0, 0, 0, 0}
+//		{Open, New, 0, Delete, Go, Find},
+//		{Exit, Save, Close, Projects, Config, Help}
+	}};
+	ctx.set_help(help);
 }
 
 void Browser::show_projects()
