@@ -52,12 +52,16 @@ bool Editor::Controller::process(Context &ctx, int ch)
 	if (ERR == ch) return true;
 	ctx.set_status("");
 	switch (ch) {
+		case Control::Tab: key_tab(ctx); break;
+		case Control::Enter: key_enter(ctx); break;
+		case Control::Return: key_return(ctx); break;
+
+		case Control::Cut: key_cut(ctx); break;
+		case Control::Copy: key_copy(ctx); break;
+		case Control::Paste: key_paste(ctx); break;
+
 		case Control::Close: return false;
-		case Control::Cut: ctl_cut(ctx); break;
-		case Control::Copy: ctl_copy(ctx); break;
-		case Control::Paste: ctl_paste(ctx); break;
-		case Control::Return: ctl_return(ctx); break;
-		case Control::Enter: ctl_enter(ctx); break;
+
 		case KEY_DOWN: key_down(false); break;
 		case KEY_UP: key_up(false); break;
 		case KEY_LEFT: key_left(false); break;
@@ -72,7 +76,6 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case KEY_SRIGHT: key_right(true); break;
 		case 127: key_backspace(); break;
 		case KEY_DC: key_delete(); break;
-		case '\t': key_insert('\t'); break;
 		case KEY_BTAB: break;	// shift-tab
 		default:
 		if (ch >= 32 && ch < 127) key_insert(ch);
@@ -153,20 +156,20 @@ void Editor::Controller::update_dimensions(WINDOW *view)
 	}
 }
 
-void Editor::Controller::ctl_cut(Context &ctx)
+void Editor::Controller::key_cut(Context &ctx)
 {
-	ctl_copy(ctx);
+	key_copy(ctx);
 	delete_selection();
 }
 
-void Editor::Controller::ctl_copy(Context &ctx)
+void Editor::Controller::key_copy(Context &ctx)
 {
 	if (_selection.empty()) return;
 	std::string clip = _doc.text(_selection);
 	ctx.app().set_clipboard(clip);
 }
 
-void Editor::Controller::ctl_paste(Context &ctx)
+void Editor::Controller::key_paste(Context &ctx)
 {
 	delete_selection();
 	std::string clip = ctx.app().get_clipboard();
@@ -178,19 +181,24 @@ void Editor::Controller::ctl_paste(Context &ctx)
 	_cursor.move_to(newloc);
 }
 
-void Editor::Controller::ctl_return(Context &ctx)
+void Editor::Controller::key_tab(Context &ctx)
 {
-	// Split the line at the cursor position and move the cursor to the new line.
-	delete_selection();
-	_cursor.move_to(_doc.split(_cursor.location()));
-	_update.forward(_cursor.location());
+	key_insert('\t');
 }
 
-void Editor::Controller::ctl_enter(Context &ctx)
+void Editor::Controller::key_enter(Context &ctx)
 {
 	// Split the line at the cursor position, but don't move the cursor.
 	delete_selection();
 	_doc.split(_cursor.location());
+	_update.forward(_cursor.location());
+}
+
+void Editor::Controller::key_return(Context &ctx)
+{
+	// Split the line at the cursor position and move the cursor to the new line.
+	delete_selection();
+	_cursor.move_to(_doc.split(_cursor.location()));
 	_update.forward(_cursor.location());
 }
 

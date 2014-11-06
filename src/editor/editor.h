@@ -21,11 +21,12 @@ protected:
 	void reveal_cursor();
 	void update_dimensions(WINDOW *view);
 	// Control keys which drive higher-level functions.
-	void ctl_cut(Context &ctx);
-	void ctl_copy(Context &ctx);
-	void ctl_paste(Context &ctx);
-	void ctl_return(Context &ctx);
-	void ctl_enter(Context &ctx);
+	void key_tab(Context &ctx);
+	void key_enter(Context &ctx);
+	void key_return(Context &ctx);
+	void key_cut(Context &ctx);
+	void key_copy(Context &ctx);
+	void key_paste(Context &ctx);
 	// Navigation keystrokes move the cursor around the document.
 	void key_up(bool extend);
 	void key_down(bool extend);
