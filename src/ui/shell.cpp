@@ -14,11 +14,9 @@ UI::Shell::Shell(App &app):
 	raw();
 	intrflush(stdscr, FALSE);
 	keypad(stdscr, true);
+	curs_set(0);
 	// Find out how big the terminal is.
 	get_screen_size();
-	// temporary: there will have to be some logic
-	// for showing the cursor in editor windows
-	curs_set(0);
 }
 
 UI::Shell::~Shell()
