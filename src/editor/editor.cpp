@@ -74,8 +74,8 @@ bool Editor::Controller::process(Context &ctx, int ch)
 		case KEY_SR: key_up(true); break; // shifted up-arrow
 		case KEY_SLEFT: key_left(true); break;
 		case KEY_SRIGHT: key_right(true); break;
-		case 127: key_backspace(); break;
-		case KEY_DC: key_delete(); break;
+		case 127: key_backspace(ctx); break;
+		case KEY_DC: key_delete(ctx); break;
 		case KEY_BTAB: break;	// shift-tab
 		default:
 		if (ch >= 32 && ch < 127) key_insert(ch);
@@ -262,16 +262,19 @@ void Editor::Controller::key_insert(char ch)
 {
 	delete_selection();
 	_cursor.move_to(_doc.insert(_cursor.location(), ch));
+	_anchor = _cursor.location();
+	_selection.reset(_anchor);
 }
 
-void Editor::Controller::key_backspace()
+void Editor::Controller::key_backspace(Context &ctx)
 {
 	if (_selection.empty()) key_left(true);
 	delete_selection();
 }
 
-void Editor::Controller::key_delete()
+void Editor::Controller::key_delete(Context &ctx)
 {
+	ctx.set_status("DEL");
 	if (_selection.empty()) key_right(true);
 	delete_selection();
 }

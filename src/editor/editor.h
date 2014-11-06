@@ -40,8 +40,8 @@ protected:
 	// previously selected and possibly replacing it with something else.
 	void delete_selection();
 	void key_insert(char ch);
-	void key_backspace();
-	void key_delete();
+	void key_backspace(Context &ctx);
+	void key_delete(Context &ctx);
 	// If there was a selection, pressing a key usually does something
 	// to it, so we need to release the selection and start over with a
 	// simple cursor. The only exception is when we've extended the
