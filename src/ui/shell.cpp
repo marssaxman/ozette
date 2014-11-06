@@ -8,13 +8,38 @@ UI::Shell::Shell(App &app):
 {
 	// Set up ncurses.
 	initscr();
-	cbreak();
+	// Don't automatically echo characters back to the
+	// screen; we will draw things ourselves when we want
+	// them to appear.
 	noecho();
+	// We definitely want to be able to detect the return
+	// key, so disable linefeed detection.
 	nonl();
+	// Don't let the terminal eat control keys; we want
+	// to process them ourselves, in part because we will
+	// be passing them along to subprocesses, and in part
+	// because I have unconventional plans for some of the
+	// traditional terminal control key combinations.
 	raw();
+	// If we print a character at the end of the bottom
+	// line, don't scroll the screen up - leave everything
+	// alone. We will implement our own scrolling.
+	scrollok(stdscr, FALSE);
+	// don't flush the output buffer when the user presses
+	// one of the traditional interrupt keys, since we have
+	// different purposes for them.
 	intrflush(stdscr, FALSE);
+	// Enable the function keys, so the user can navigate
+	// using the arrow keys.
 	keypad(stdscr, true);
+	// By default, don't show the cursor; editors will
+	// reveal it when active if they choose.
 	curs_set(0);
+	// Reduce the escape delay, since nobody is going to
+	// use this on an old serial line, and it's much more
+	// useful to be able to cancel things with the escape
+	// key than to use it to type control characters.
+	set_escdelay(25);
 	// Find out how big the terminal is.
 	get_screen_size();
 }
