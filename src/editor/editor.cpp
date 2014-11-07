@@ -316,6 +316,7 @@ void Editor::Controller::save(UI::Frame &ctx, std::string path)
 	{
 		// Clearing out the path name is the same as cancelling.
 		if (path.empty()) {
+			ctx.show_result("Cancelled");
 			return;
 		}
 		// If they confirmed the existing name, we can write it out.

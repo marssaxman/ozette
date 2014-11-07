@@ -16,11 +16,19 @@ class Frame {
 public:
 	virtual ~Frame() = default;
 	virtual App &app() = 0;
+	// The window content should be redrawn.
 	virtual void repaint() = 0;
+	// Change the title text, status text, or help text for the
+	// window this controller is managing.
 	virtual void set_title(std::string text) = 0;
 	virtual void set_status(std::string text) = 0;
 	virtual void set_help(const Control::Panel &help) = 0;
+	// Open a dialog box and request input from the user.
+	// The controller will be suspended while the dialog is open.
 	virtual void show_dialog(std::unique_ptr<Dialog> &&dialog) = 0;
+	// Some process has completed. Show the result to the user as
+	// a temporary floating result bar.
+	virtual void show_result(std::string) = 0;
 };
 } // namespace UI
 

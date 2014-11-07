@@ -28,6 +28,8 @@ protected:
 	virtual void set_status(std::string text) override;
 	virtual void set_help(const Control::Panel &help) override;
 	virtual void show_dialog(std::unique_ptr<Dialog> &&dialog) override;
+	virtual void show_result(std::string message) override;
+	void clear_result();
 	void layout_contentwin();
 	void layout_taskbar();
 	void paint();
@@ -53,6 +55,9 @@ private:
 	// There may be a dialog box overlaid on the content window, if the
 	// user is currently engaged in some process which requires input.
 	std::unique_ptr<UI::Dialog> _dialog;
+	// There may be an ephemeral result box overlaid on the content window.
+	WINDOW *_resultwin = nullptr;
+	PANEL *_resultpanel = nullptr;
 	// Are we the active window? This changes the way we draw our chrome.
 	bool _has_focus = true;
 	// What are the dimensional attributes we worked out during layout?

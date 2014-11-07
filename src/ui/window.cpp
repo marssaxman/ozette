@@ -97,6 +97,7 @@ void UI::Window::bring_forward(int focus_relative)
 
 bool UI::Window::process(int ch)
 {
+	if (ch != ERR) clear_result();
 	if (_dialog) {
 		// A dialog may invoke actions which may result in its
 		// own replacement. We will temporarily move it into a
@@ -108,11 +109,8 @@ bool UI::Window::process(int ch)
 			// would result in its own replacement.
 			assert(_dialog.get() == nullptr);
 			_dialog = std::move(temp);
-		} else {
-			// The dialog has gone away. We probably need
-			// to redraw something.
-			paint();
 		}
+		paint();
 		return true;
 	}
 	bool out = _controller->process(*this, ch);
@@ -145,8 +143,42 @@ void UI::Window::set_help(const Control::Panel &help)
 
 void UI::Window::show_dialog(std::unique_ptr<Dialog> &&host)
 {
+	clear_result();
 	_dialog = std::move(host);
 	_dialog->layout(_contentwin);
+}
+
+void UI::Window::show_result(std::string message)
+{
+	clear_result();
+	int numchars = message.size();
+	int labelwidth = 2 + numchars + 2;
+	int voff, hoff;
+	getbegyx(_contentwin, voff, hoff);
+	int height, width;
+	getmaxyx(_contentwin, height, width);
+	if (labelwidth > width) {
+		labelwidth = width;
+		numchars = labelwidth - 4;
+	}
+	voff += height - 1;
+	hoff += (width - labelwidth) / 2;
+	_resultwin = newwin(height, labelwidth, voff, hoff);
+	_resultpanel = new_panel(_resultwin);
+	wattron(_resultwin, A_REVERSE);
+	mvwaddstr(_resultwin, 0, 0, "[ ");
+	waddnstr(_resultwin, message.c_str(), numchars);
+	waddstr(_resultwin, " ]");
+	curs_set(0);
+}
+
+void UI::Window::clear_result()
+{
+	if (!_resultwin) return;
+	del_panel(_resultpanel);
+	delwin(_resultwin);
+	_resultpanel = nullptr;
+	_resultwin = nullptr;
 }
 
 void UI::Window::layout_contentwin()

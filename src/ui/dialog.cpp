@@ -105,6 +105,7 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 		case Control::Close:	// control-W
 			// the user no longer wants this action
 			// this dialog has no further purpose
+			ctx.show_result("Cancelled");
 			return false;
 		case Control::Return:
 		case Control::Enter:
@@ -173,7 +174,7 @@ void UI::Dialog::paint()
 	wmove(_win, 0, 0);
 	if (!_prompt.empty()) {
 		waddnstr(_win, _prompt.c_str(), width);
-		waddstr(_win, _show_value ? ": " : " [Y/n]");
+		waddstr(_win, _show_value ? ": " : " [Y/n/Esc]");
 	}
 	int value_vpos, value_hpos;
 	getyx(_win, value_vpos, value_hpos);
