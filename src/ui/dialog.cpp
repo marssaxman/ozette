@@ -5,8 +5,13 @@ UI::Dialog::Dialog(std::unique_ptr<Controller> &&action):
 	_panel(new_panel(_win)),
 	_action(std::move(action))
 {
-	_value = _action->open(_state);
-	_cursor_pos = _value.size();
+	_action->open(_state);
+	if (_state.value.empty() && !_state.suggestions.empty()) {
+		_suggestion_selected = true;
+		_sugg_item = 0;
+		_state.value = _state.suggestions[0];
+	}
+	_cursor_pos = _state.value.size();
 }
 
 UI::Dialog::~Dialog()
@@ -25,6 +30,143 @@ void UI::Dialog::layout(WINDOW *view)
 	// Go lay the window out for these host dimensions and our current
 	// content dimensions, which may change as the suggestion list changes.
 	update_window_dimensions();
+	paint();
+}
+
+void UI::Dialog::set_focus()
+{
+	if (!_has_focus) {
+		_has_focus = true;
+		paint();
+	}
+}
+
+void UI::Dialog::clear_focus()
+{
+	if (_has_focus) {
+		_has_focus = false;
+		paint();
+	}
+}
+
+void UI::Dialog::bring_forward()
+{
+	top_panel(_panel);
+}
+
+bool UI::Dialog::process(int ch)
+{
+	switch (ch) {
+		case Control::Escape:	// escape key
+		case Control::Close:	// control-W
+			// the user no longer wants this action
+			// this dialog has no further purpose
+			return false;
+		case Control::Return:
+		case Control::Enter:
+			// the user is happy with their choice
+			// tell the action to proceed and then
+			// inform our host that we are finished
+			_action->commit(_state.value);
+			return false;
+		case Control::Tab: tab_autofill(); break;
+		case KEY_LEFT: arrow_left(); break;
+		case KEY_RIGHT: arrow_right(); break;
+		case KEY_UP: arrow_up(); break;
+		case KEY_DOWN: arrow_down(); break;
+		case Control::Backspace: delete_prev(); break;
+		case Control::Delete: delete_next(); break;
+		default:
+			// we only care about non-control chars now
+			if (ch < 32 || ch > 127) break;
+			// if this is a digit character and the selection
+			// is on the suggestion list, insta-commit the
+			// item corresponding to that digit
+			if (ch >= '0' && ch <= '9' && _suggestion_selected) {
+				select_suggestion(ch - '0');
+				_action->commit(_state.value);
+				return false;
+			}
+			// in all other situations, the keypress should be
+			// inserted into the field at the cursor point.
+			key_insert(ch);
+			break;
+	}
+	if (_update) {
+		update_window_dimensions();
+	}
+	if (_repaint) {
+		paint();
+	}
+	return true;
+}
+
+void UI::Dialog::paint()
+{
+	// Everything drawn in a dialog is reversed by default.
+	wattron(_win, A_REVERSE);
+
+	int height, width;
+	getmaxyx(_win, height, width);
+	(void)height; // unused
+
+	// Draw the prompt and the current value string.
+	wmove(_win, 0, 0);
+	if (!_state.prompt.empty()) {
+		waddnstr(_win, _state.prompt.c_str(), width);
+		waddch(_win, ':');
+		waddch(_win, ' ');
+	}
+	int value_vpos, value_hpos;
+	getyx(_win, value_vpos, value_hpos);
+	(void)value_vpos; // unused
+	if (!_suggestion_selected) wattron(_win, A_UNDERLINE);
+	waddnstr(_win, _state.value.c_str(), width - value_hpos);
+	if (!_suggestion_selected) wattroff(_win, A_UNDERLINE);
+	int end_vpos, end_hpos;
+	getyx(_win, end_vpos, end_hpos);
+	(void)end_vpos; // unused
+	whline(_win, ' ', width - end_hpos);
+
+	if (!_state.suggestions.empty()) {
+		// Draw each suggested value on its own line.
+		int sugg_vpos = value_vpos + 1;
+		int sugg_width = width - 4;
+		for (unsigned i = 0; i < _state.suggestions.size(); ++i) {
+			wmove(_win, sugg_vpos + i, 0);
+			if (i < 10 && _suggestion_selected) {
+				waddch(_win, '0' + i);
+				waddch(_win, ':');
+			} else {
+				waddstr(_win, "  ");
+			}
+			waddnstr(_win, _state.suggestions[i].c_str(), sugg_width);
+			int curv, curh;
+			getyx(_win, curv, curh);
+			(void)curv; //ignored
+			whline(_win, ' ', width - curh);
+		}
+		// Draw a blank line underneath.
+		wmove(_win, sugg_vpos + _state.suggestions.size(), 0);
+		whline(_win, ' ', width);
+		// If one of these items was selected, highlight it by using
+		// normal (non-reversed) mode.
+		if (_suggestion_selected) {
+			int selrow = sugg_vpos + _sugg_item;
+			wmove(_win, selrow, 2);
+			wchgat(_win, sugg_width, A_NORMAL, 0, NULL);
+		}
+	}
+	// We're done being all reversed and stuff.
+	wattroff(_win, A_REVERSE);
+
+	// Put the cursor where it ought to be. Make it visible, if that
+	// would be appropriate for our activation state.
+	wmove(_win, 0, value_hpos + _cursor_pos);
+	curs_set(_has_focus && !_suggestion_selected ? 1 : 0);
+
+	// We no longer need to repaint.
+	_repaint = false;
 }
 
 void UI::Dialog::update_window_dimensions()
@@ -59,175 +201,119 @@ void UI::Dialog::update_window_dimensions()
 	} else if (new_v != old_v || new_h != old_h) {
 		move_panel(_panel, new_v, new_h);
 	}
-	paint();
+	_update = false;
+	_repaint = true;
 }
 
-void UI::Dialog::set_focus()
+void UI::Dialog::tab_autofill()
 {
-	_has_focus = true;
-	paint();
+	// user wants some help filling this form out
+	// ask the controller for its advice
+	_action->autofill(_state);
+	select_field();
+	// we have no idea what the controller might have
+	// changed, so we need to check everything for updates
+	_update = true;
 }
 
-void UI::Dialog::clear_focus()
+void UI::Dialog::arrow_left()
 {
-	_has_focus = false;
-	paint();
-}
-
-void UI::Dialog::bring_forward()
-{
-	top_panel(_panel);
-}
-
-bool UI::Dialog::process(int ch)
-{
-	bool needs_update = false;
-	bool needs_paint = false;
-	switch (ch) {
-		case Control::Escape:	// escape key
-		case Control::Close:	// control-W
-			// the user no longer wants this action
-			// this dialog has no further purpose
-			return false;
-		case Control::Return:
-		case Control::Enter:
-			// the user is happy with their choice
-			// tell the action to proceed and then
-			// inform our host that we are finished
-			_action->commit(_value);
-			return false;
-		case Control::Tab: {
-			// user wants some help filling this out;
-			// state potentially changed so we must
-			// perform a full update
-			_value = _action->autofill(_value, _state);
-			_cursor_pos = _value.size();
-			needs_update = true;
-		} break;
-		case KEY_LEFT: {
-			_cursor_pos -= std::min(_cursor_pos, 1U);
-			needs_paint = true;
-		} break;
-		case KEY_RIGHT: {
-			size_t curlimit = _value.size();
-			_cursor_pos = std::min(_cursor_pos+1, curlimit);
-			needs_paint = true;
-		} break;
-		case KEY_UP: {
-			if (!_suggestion_selected) break;
-			if (_sugg_item > 0) {
-				_sugg_item--;
-				_value = _state.suggestions[_sugg_item];
-			} else {
-				_suggestion_selected = false;
-			}
-			_cursor_pos = _value.size();
-			needs_paint = true;
-		} break;
-		case KEY_DOWN: {
-			if (!_suggestion_selected) {
-				_suggestion_selected = true;
-				_sugg_item = 0;
-			} else if (_sugg_item < _state.suggestions.size()){
-				_sugg_item++;
-			}
-			_value = _state.suggestions[_sugg_item];
-			_cursor_pos = _value.size();
-			needs_paint = true;
-		} break;
-		case Control::Backspace: {
-			if (_value.empty()) break;
-			if (_cursor_pos == 0) break;
-			_cursor_pos--;
-			auto deliter = _value.begin() + _cursor_pos;
-			_value.erase(deliter);
-			_action->update(_value, _state);
-			needs_update = true;
-		} break;
-		case Control::Delete: {
-			if (_value.empty()) break;
-			if (_cursor_pos >= _value.size()) break;
-			auto deliter = _value.begin() + _cursor_pos;
-			_value.erase(deliter);
-			_action->update(_value, _state);
-			needs_update = true;
-		} break;
-		default:
-			// if this is a non-control character,
-			// add it to the string at the current
-			// cursor position
-			if (ch >= 32 && ch < 127) {
-				_value.insert(_cursor_pos++, 1, ch);
-				_action->update(_value, _state);
-				needs_update = true;
-			}
+	if (_suggestion_selected) {
+		select_field();
+		_cursor_pos = _state.value.size();
+	} else {
+		_cursor_pos -= std::min(_cursor_pos, 1U);
+		_repaint = true;
 	}
-	if (needs_update) {
-		update_window_dimensions();
-		needs_paint = true;
-	}
-	if (needs_paint) {
-		paint();
-	}
-	return true;
 }
 
-void UI::Dialog::paint()
+void UI::Dialog::arrow_right()
 {
-	// Everything drawn in a dialog is reversed by default.
-	wattron(_win, A_REVERSE);
-
-	int height, width;
-	getmaxyx(_win, height, width);
-	(void)height; // unused
-
-	// Draw the prompt and the current value string.
-	wmove(_win, 0, 0);
-	waddnstr(_win, _state.prompt.c_str(), width);
-	waddch(_win, ':');
-	waddch(_win, ' ');
-	int value_vpos, value_hpos;
-	getyx(_win, value_vpos, value_hpos);
-	(void)value_vpos; // unused
-	if (!_suggestion_selected) wattron(_win, A_UNDERLINE);
-	waddnstr(_win, _value.c_str(), width - value_hpos);
-	if (!_suggestion_selected) wattroff(_win, A_UNDERLINE);
-	int end_vpos, end_hpos;
-	getyx(_win, end_vpos, end_hpos);
-	(void)end_vpos; // unused
-	whline(_win, ' ', width - end_hpos);
-
-	if (!_state.suggestions.empty()) {
-		// Draw each suggested value on its own line.
-		int sugg_vpos = value_vpos + 1;
-		int sugg_width = width - 4;
-		for (unsigned i = 0; i < _state.suggestions.size(); ++i) {
-			wmove(_win, sugg_vpos + i, 0);
-			waddch(_win, ' ');
-			waddch(_win, ' ');
-			waddnstr(_win, _state.suggestions[i].c_str(), sugg_width);
-			int curv, curh;
-			getyx(_win, curv, curh);
-			(void)curv; //ignored
-			whline(_win, ' ', width - curh);
-		}
-		// Draw a blank line underneath.
-		wmove(_win, sugg_vpos + _state.suggestions.size(), 0);
-		whline(_win, ' ', width);
-		// If one of these items was selected, highlight it by using
-		// normal (non-reversed) mode.
-		if (_suggestion_selected) {
-			int selrow = sugg_vpos + _sugg_item;
-			wmove(_win, selrow, 2);
-			wchgat(_win, sugg_width, A_NORMAL, 0, NULL);
-		}
+	if (_suggestion_selected) {
+		select_field();
+		_cursor_pos = 0;
+	} else if (_cursor_pos < _state.value.size()) {
+		_cursor_pos++;
+		_repaint = true;
 	}
-	// We're done being all reversed and stuff.
-	wattroff(_win, A_REVERSE);
-
-	// Put the cursor where it ought to be. Make it visible, if that
-	// would be appropriate for our activation state.
-	wmove(_win, 0, value_hpos + _cursor_pos);
-	curs_set(_has_focus && !_suggestion_selected ? 1 : 0);
 }
 
+void UI::Dialog::arrow_up()
+{
+	if (!_suggestion_selected) return;
+	if (_sugg_item > 0) {
+		select_suggestion(_sugg_item - 1);
+	} else {
+		select_field();
+	}
+}
+
+void UI::Dialog::arrow_down()
+{
+	if (_suggestion_selected) {
+		select_suggestion(_sugg_item + 1);
+	} else {
+		select_suggestion(0);
+	}
+}
+
+void UI::Dialog::delete_prev()
+{
+	select_field();
+	if (_state.value.empty()) return;
+	if (_cursor_pos == 0) return;
+	_cursor_pos--;
+	auto deliter = _state.value.begin() + _cursor_pos;
+	_state.value.erase(deliter);
+	update_action();
+}
+
+void UI::Dialog::delete_next()
+{
+	select_field();
+	if (_state.value.empty()) return;
+	if (_cursor_pos >= _state.value.size()) return;
+	auto deliter = _state.value.begin() + _cursor_pos;
+	_state.value.erase(deliter);
+	update_action();
+}
+
+void UI::Dialog::key_insert(int ch)
+{
+	select_field();
+	_state.value.insert(_cursor_pos++, 1, ch);
+	update_action();
+}
+
+void UI::Dialog::select_suggestion(size_t i)
+{
+	if (i >= _state.suggestions.size()) return;
+	if (_suggestion_selected && _sugg_item == i) return;
+	_suggestion_selected = true;
+	_sugg_item = i;
+	_repaint = true;
+	set_value(_state.suggestions[i]);
+}
+
+void UI::Dialog::select_field()
+{
+	if (!_suggestion_selected) return;
+	_suggestion_selected = false;
+	_cursor_pos = _state.value.size();
+	_repaint = true;
+}
+
+void UI::Dialog::set_value(std::string val)
+{
+	if (val == _state.value) return;
+	_state.value = val;
+	update_action();
+}
+
+void UI::Dialog::update_action()
+{
+	_action->update(_state);
+	// we don't know what the action might have done,
+	// so we'll assume it did everything.
+	_update = true;
+}

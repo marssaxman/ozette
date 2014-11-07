@@ -13,7 +13,7 @@ public:
 	Browser();
 	virtual void open(Context &ctx) override;
 	virtual bool process(Context &ctx, int ch) override;
-	void show_projects();
+	void show_projects(Context &ctx);
 	virtual void open_project(std::string path) override;
 protected:
 	virtual void render(ListForm::Builder &lines) override;

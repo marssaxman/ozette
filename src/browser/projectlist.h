@@ -29,6 +29,7 @@ public:
 		std::string path;
 		VCS type;
 	};
+	std::vector<repo_t> _repos;
 	void open_project(const repo_t &repo);
 private:
 	static VCS dir_repo_type(std::string path);
@@ -39,7 +40,6 @@ private:
 	// User's home directory, where we expect to find repositories.
 	std::string _homedir;
 	// These are the repositories we currently know about.
-	std::vector<repo_t> _repos;
 	// Are we currently displaying the list of projects?
 	bool _open = false;
 	// Which project did we open last?

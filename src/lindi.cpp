@@ -48,9 +48,6 @@ std::string Lindi::get_clipboard()
 
 void Lindi::run()
 {
-	if (_editors.empty()) {
-		_browser->show_projects();
-	}
 	timeout(20);
 	do {
 		update_panels();
