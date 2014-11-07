@@ -18,7 +18,7 @@ public:
 	void layout(int xpos, int width);
 	void set_focus();
 	void clear_focus();
-	void bring_forward();
+	void bring_forward(int focus_relative);
 	bool process(int ch);
 	bool poll();
 protected:
@@ -67,6 +67,7 @@ private:
 	// controller object, which can update these fields as it pleases.
 	std::string _title;
 	std::string _status;
+	bool _swap_titlebar = false;
 	Control::Panel _help;
 };
 } // namespace UI

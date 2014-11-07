@@ -147,12 +147,12 @@ void UI::Shell::set_focus(size_t index)
 	// are stacked in descending order. We raise the
 	// focus window last.
 	for (size_t i = 0; i < _focus; ++i) {
-		_columns[i]->bring_forward();
+		_columns[i]->bring_forward(-1);
 	}
 	for (size_t i = _columns.size() - 1; i > _focus; --i) {
-		_columns[i]->bring_forward();
+		_columns[i]->bring_forward(1);
 	}
-	_columns[_focus]->bring_forward();
+	_columns[_focus]->bring_forward(0);
 }
 
 void UI::Shell::relayout()

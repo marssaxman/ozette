@@ -82,11 +82,17 @@ void UI::Window::clear_focus()
 	paint();
 }
 
-void UI::Window::bring_forward()
+void UI::Window::bring_forward(int focus_relative)
 {
 	top_panel(_framepanel);
 	top_panel(_contentpanel);
 	if (_dialog) _dialog->bring_forward();
+	bool swap_titlebar = focus_relative > 0;
+	if (swap_titlebar != _swap_titlebar) {
+		_swap_titlebar = swap_titlebar;
+		_dirty_chrome = true;
+		paint();
+	}
 }
 
 bool UI::Window::process(int ch)
@@ -225,8 +231,8 @@ void UI::Window::paint_titlebar(int width)
 	if (_rframe) {
 		mvwaddch(_framewin, 0, width-1, ACS_URCORNER);
 	}
-	paint_titlebar_left(width, _title);
-	paint_titlebar_right(width, _status);
+	paint_titlebar_left(width, _swap_titlebar? _status: _title);
+	paint_titlebar_right(width, _swap_titlebar? _title: _status);
 }
 
 void UI::Window::paint_titlebar_left(int width, std::string text)
@@ -235,6 +241,7 @@ void UI::Window::paint_titlebar_left(int width, std::string text)
 	int right = width - (_rframe ? 3 : 2);
 	width = right - left;
 	int titlechars = width - 2;
+	if (_swap_titlebar) titlechars /= 2;
 	wmove(_framewin, 0, left);
 	if (_has_focus) wattron(_framewin, A_REVERSE);
 	waddch(_framewin, ' ');
@@ -250,7 +257,8 @@ void UI::Window::paint_titlebar_right(int width, std::string text)
 	int right = width - (_rframe ? 3 : 2);
 	width = right - left;
 	int titlechars = width - 2;
-	int chars = std::min((int)text.size(), titlechars/2);
+	if (!_swap_titlebar) titlechars /= 2;
+	int chars = std::min((int)text.size(), titlechars);
 	mvwaddch(_framewin, 0, right - chars - 2, ' ');
 	waddnstr(_framewin, text.c_str(), chars);
 	waddch(_framewin, ' ');
