@@ -30,7 +30,6 @@ protected:
 	virtual void show_dialog(std::unique_ptr<Dialog::Controller> &&host);
 	void layout_contentwin();
 	void layout_taskbar();
-	void layout_dialog();
 	void paint();
 	void paint_content();
 	void paint_chrome();

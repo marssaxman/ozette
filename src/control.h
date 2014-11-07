@@ -17,6 +17,7 @@ enum {
 	Enter = 0x0A, //LF ^J
 	Return = 0x0D, //CR ^M
 	Escape = 0x1B, // ESC ^[
+	Backspace = 0x7F, // DEL
 
 	Cut = 0x18, //CAN ^X
 	Copy = 0x03, //ETX ^C

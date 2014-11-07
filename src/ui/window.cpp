@@ -126,9 +126,8 @@ void UI::Window::set_help(const Control::Panel &help)
 
 void UI::Window::show_dialog(std::unique_ptr<Dialog::Controller> &&host)
 {
-	assert(!_dialog.get());
 	_dialog.reset(new Dialog(std::move(host)));
-	layout_dialog();
+	_dialog->layout(_contentwin);
 }
 
 void UI::Window::layout_contentwin()
@@ -175,7 +174,7 @@ void UI::Window::layout_contentwin()
 
 	// If we have a dialog box open, tell it how to lay itself out.
 	if (_dialog) {
-		_dialog->layout(new_vpos, new_hpos, new_height, new_width);
+		_dialog->layout(_contentwin);
 	}
 }
 
@@ -190,15 +189,6 @@ void UI::Window::layout_taskbar()
 		_dirty_chrome = true;
 		layout_contentwin();
 	}
-}
-
-void UI::Window::layout_dialog()
-{
-	int height, width;
-	getmaxyx(_contentwin, height, width);
-	int vpos, hpos;
-	getyx(_contentwin, vpos, hpos);
-	_dialog->layout(vpos, hpos, height, width);
 }
 
 void UI::Window::paint()

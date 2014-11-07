@@ -210,9 +210,15 @@ class SaveDialog : public UI::Dialog::Controller
 public:
 	SaveDialog(std::string path, Editor::Document &doc):
 		_path(path), _doc(doc) {}
-	virtual std::string open(Control::Panel &help)
-		{ return "Save File"; }
-	virtual bool process(int ch) { return true; }
+	virtual std::string open(UI::Dialog::State &state) override
+	{
+		state.prompt = "Save File";
+		return _path;
+	}
+	virtual void commit(std::string path) override
+	{
+		// go write the document to disk at the specified path
+	}
 private:
 	std::string _path;
 	Editor::Document &_doc;
