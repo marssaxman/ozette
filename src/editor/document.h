@@ -18,12 +18,13 @@ public:
 	Document(std::string path);
 	void Read(std::string path);
 	void Write(std::string path);
+	std::string status() const { return _status; }
+	bool modified() const { return _modified; }
 
-	// Where is the beginning of the document?
+	// Where are the beginning and end of the document?
 	location_t home();
-	// Where is the end of the document?
 	location_t end();
-	// Which is the last line in the document?
+	// Which is the last valid line index in the document?
 	line_t maxline() const { return _maxline; }
 
 	// Convert back and forth between document and screen coordinates.
@@ -60,9 +61,20 @@ private:
 	line_t append_line(std::string text);
 	void sanitize(location_t *loc);
 	location_t sanitize(const location_t &loc);
+	bool attempt_modify();
+
 	std::unique_ptr<Line> _blank;
 	std::vector<std::unique_ptr<Line>> _lines;
 	line_t _maxline = 0;	// ubound, not size
+
+	// is the user allowed to make changes in this document?
+	bool _read_only = false;
+	// has the document been edited since it was last read?
+	bool _modified = false;
+	// what was the mtime when we last read the file in?
+	time_t _last_mtime;
+	// what is our user-friendly summary of the file state?
+	std::string _status;
 };
 } // namespace Editor
 

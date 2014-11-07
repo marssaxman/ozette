@@ -11,7 +11,7 @@ UI::Window::Window(App &app, std::unique_ptr<Controller> &&controller):
 	_contentwin(newwin(0, 0, 0, 0)),
 	_contentpanel(new_panel(_contentwin))
 {
-	_controller->open(*this);
+	_controller->activate(*this);
 	paint();
 }
 
@@ -66,6 +66,7 @@ void UI::Window::layout(int xpos, int width)
 
 void UI::Window::set_focus()
 {
+	_controller->activate(*this);
 	_has_focus = true;
 	_dirty_chrome = true;
 	_dirty_content = true;

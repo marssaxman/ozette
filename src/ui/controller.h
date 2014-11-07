@@ -9,8 +9,8 @@ class Controller
 {
 public:
 	virtual ~Controller() = default;
-	// The window has just been opened. Initialize it.
-	virtual void open(Frame &ctx) = 0;
+	// The window has been opened or brought to the front.
+	virtual void activate(Frame &ctx) = 0;
 	// Paint the window with the current state for the object this
 	// controller manages.
 	virtual void paint(WINDOW *view, bool active) = 0;

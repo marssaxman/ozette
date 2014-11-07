@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <assert.h>
+#include <sys/stat.h>
 
 namespace {
 class BlankLine : public Editor::Line
@@ -36,6 +37,22 @@ Editor::Document::Document(std::string path):
 void Editor::Document::Read(std::string path)
 {
 	_lines.clear();
+	_modified = false;
+	_read_only = false;
+	struct stat sb;
+	if (stat(path.c_str(), &sb)) {
+		_status = "New";
+	} else if (S_ISDIR(sb.st_mode)) {
+		_status = "Directory!";
+		_read_only = true;
+	} else if (!S_ISREG(sb.st_mode)) {
+		_status = "Not a file!";
+		_read_only = true;
+	} else {
+		_status.clear();
+		_last_mtime = sb.st_mtime;
+	}
+
 	std::string str;
 	std::ifstream file(path);
 	while (std::getline(file, str)) {
@@ -130,6 +147,7 @@ std::string Editor::Document::text(const Range &span)
 Editor::location_t Editor::Document::erase(const Range &chars)
 {
 	if (_lines.empty()) return home();
+	if (!attempt_modify()) return chars.begin();
 	location_t begin = sanitize(chars.begin());
 	std::string prefix = substr_from_home(begin);
 	location_t end = sanitize(chars.end());
@@ -144,6 +162,7 @@ Editor::location_t Editor::Document::erase(const Range &chars)
 Editor::location_t Editor::Document::insert(location_t loc, char ch)
 {
 	sanitize(loc);
+	if (!attempt_modify()) return loc;
 	if (loc.line < _lines.size()) {
 		std::string text = _lines[loc.line]->text();
 		text.insert(loc.offset, 1, ch);
@@ -158,6 +177,7 @@ Editor::location_t Editor::Document::insert(location_t loc, char ch)
 
 Editor::location_t Editor::Document::insert(location_t loc, std::string text)
 {
+	if (!attempt_modify()) return loc;
 	// Split this line apart around the insertion point. We will insert
 	// the new text in between these halves. We will temporarily delete
 	// the suffix from its line, since we're likely to be appending more
@@ -189,6 +209,7 @@ Editor::location_t Editor::Document::insert(location_t loc, std::string text)
 
 Editor::location_t Editor::Document::split(location_t loc)
 {
+	if (!attempt_modify()) return loc;
 	sanitize(loc);
 	std::string text = line(loc.line).text();
 	update_line(loc.line, text.substr(0, loc.offset));
@@ -255,4 +276,13 @@ Editor::location_t Editor::Document::sanitize(const location_t &loc)
 void Editor::Document::sanitize(location_t *loc)
 {
 	*loc = sanitize(*loc);
+}
+
+bool Editor::Document::attempt_modify()
+{
+	if (!_modified && !_read_only) {
+		_modified = true;
+		_status = "Modified";
+	}
+	return _modified;
 }

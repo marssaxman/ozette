@@ -11,9 +11,9 @@ Browser::Browser():
 	find_projects();
 }
 
-void Browser::open(UI::Frame &ctx)
+void Browser::activate(UI::Frame &ctx)
 {
-	ctx.set_title("Lindi");
+	set_title(ctx);
 	using namespace Control;
 	Panel help = {{
 		{Open, NewFile, 0, 0, Find, GoTo},
@@ -44,6 +44,15 @@ void Browser::show_projects(UI::Frame &ctx)
 	UI::Dialog::Show(dialog, ctx);
 }
 
+void Browser::set_title(UI::Frame &ctx)
+{
+	std::string title = "Lindi";
+	if (_project.get()) {
+		title += ": " + _project->path();
+	}
+	ctx.set_title(title);
+}
+
 void Browser::render(ListForm::Builder &lines)
 {
 	if (_project) {
@@ -54,7 +63,7 @@ void Browser::render(ListForm::Builder &lines)
 void Browser::select_project(UI::Frame &ctx, std::string path)
 {
 	_project.reset(new DirTree::Root(path));
-	ctx.set_title("Lindi: " + path);
+	set_title(ctx);
 	mark_dirty();
 	ctx.repaint();
 }

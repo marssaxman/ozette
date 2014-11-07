@@ -2,6 +2,7 @@
 #include "control.h"
 #include "dialog.h"
 #include <assert.h>
+#include <sys/stat.h>
 
 Editor::Controller::Controller():
 	_cursor(_doc, _update)
@@ -16,13 +17,15 @@ Editor::Controller::Controller(std::string targetpath):
 {
 }
 
-void Editor::Controller::open(UI::Frame &ctx)
+void Editor::Controller::activate(UI::Frame &ctx)
 {
+	// Set the title according to the target path
 	if (_targetpath.empty()) {
-		ctx.set_title("(New File)");
+		ctx.set_title("Untitled");
 	} else {
 		ctx.set_title(_targetpath);
 	}
+	ctx.set_status(_doc.status());
 	using namespace Control;
 	Panel help = {{
 		{Cut, Copy, Paste, 0, Find, GoTo},
@@ -52,18 +55,18 @@ void Editor::Controller::paint(WINDOW *dest, bool active)
 bool Editor::Controller::process(UI::Frame &ctx, int ch)
 {
 	if (ERR == ch) return true;
-	ctx.set_status("");
 	switch (ch) {
-		case Control::Tab: key_tab(ctx); break;
-		case Control::Enter: key_enter(ctx); break;
-		case Control::Return: key_return(ctx); break;
+		case Control::Tab: ctl_tab(ctx); break;
+		case Control::Enter: ctl_enter(ctx); break;
+		case Control::Return: ctl_return(ctx); break;
 
-		case Control::Cut: key_cut(ctx); break;
-		case Control::Copy: key_copy(ctx); break;
-		case Control::Paste: key_paste(ctx); break;
+		case Control::Cut: ctl_cut(ctx); break;
+		case Control::Copy: ctl_copy(ctx); break;
+		case Control::Paste: ctl_paste(ctx); break;
 
 		case Control::Close: return false;
-		case Control::Save: key_save(ctx); break;
+		case Control::Save: ctl_save(ctx); break;
+		case Control::Revert: ctl_revert(ctx); break;
 
 		case KEY_DOWN: key_down(false); break;
 		case KEY_UP: key_up(false); break;
@@ -80,16 +83,12 @@ bool Editor::Controller::process(UI::Frame &ctx, int ch)
 		case 127: key_backspace(ctx); break;
 		case KEY_DC: key_delete(ctx); break;
 		case KEY_BTAB: break;	// shift-tab
-		default:
-		if (ch >= 32 && ch < 127) key_insert(ch);
-		else {
-			ctx.set_status(std::to_string(ch));
-			return true;
-		}
+		default: if (ch >= 32 && ch < 127) key_insert(ch);
 	}
 	reveal_cursor();
 	if (_update.has_dirty()) {
 		ctx.repaint();
+		ctx.set_status(_doc.status());
 	}
 	return true;
 }
@@ -159,20 +158,20 @@ void Editor::Controller::update_dimensions(WINDOW *view)
 	}
 }
 
-void Editor::Controller::key_cut(UI::Frame &ctx)
+void Editor::Controller::ctl_cut(UI::Frame &ctx)
 {
-	key_copy(ctx);
+	ctl_copy(ctx);
 	delete_selection();
 }
 
-void Editor::Controller::key_copy(UI::Frame &ctx)
+void Editor::Controller::ctl_copy(UI::Frame &ctx)
 {
 	if (_selection.empty()) return;
 	std::string clip = _doc.text(_selection);
 	ctx.app().set_clipboard(clip);
 }
 
-void Editor::Controller::key_paste(UI::Frame &ctx)
+void Editor::Controller::ctl_paste(UI::Frame &ctx)
 {
 	delete_selection();
 	std::string clip = ctx.app().get_clipboard();
@@ -184,12 +183,12 @@ void Editor::Controller::key_paste(UI::Frame &ctx)
 	_cursor.move_to(newloc);
 }
 
-void Editor::Controller::key_tab(UI::Frame &ctx)
+void Editor::Controller::ctl_tab(UI::Frame &ctx)
 {
 	key_insert('\t');
 }
 
-void Editor::Controller::key_enter(UI::Frame &ctx)
+void Editor::Controller::ctl_enter(UI::Frame &ctx)
 {
 	// Split the line at the cursor position, but don't move the cursor.
 	delete_selection();
@@ -197,7 +196,7 @@ void Editor::Controller::key_enter(UI::Frame &ctx)
 	_update.forward(_cursor.location());
 }
 
-void Editor::Controller::key_return(UI::Frame &ctx)
+void Editor::Controller::ctl_return(UI::Frame &ctx)
 {
 	// Split the line at the cursor position and move the cursor to the new line.
 	delete_selection();
@@ -205,9 +204,13 @@ void Editor::Controller::key_return(UI::Frame &ctx)
 	_update.forward(_cursor.location());
 }
 
-void Editor::Controller::key_save(UI::Frame &ctx)
+void Editor::Controller::ctl_save(UI::Frame &ctx)
 {
 	save(ctx, _targetpath);
+}
+
+void Editor::Controller::ctl_revert(UI::Frame &ctx)
+{
 }
 
 void Editor::Controller::key_up(bool extend)
@@ -322,6 +325,7 @@ void Editor::Controller::save(UI::Frame &ctx, std::string path)
 		// If they confirmed the existing name, we can write it out.
 		if (path == _targetpath) {
 			_doc.Write(path);
+			ctx.set_status(_doc.status());
 			return;
 		}
 		// This is a different path than the file used to have.

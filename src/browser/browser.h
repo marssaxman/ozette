@@ -10,10 +10,11 @@ class Browser : public ListForm::Controller
 	typedef ListForm::Controller inherited;
 public:
 	Browser();
-	virtual void open(UI::Frame &ctx) override;
+	virtual void activate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	void show_projects(UI::Frame &ctx);
 private:
+	void set_title(UI::Frame &ctx);
 	virtual void render(ListForm::Builder &lines) override;
 	void select_project(UI::Frame &ctx, std::string path);
 	void find_projects();
