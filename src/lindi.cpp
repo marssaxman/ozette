@@ -51,7 +51,7 @@ void Lindi::run()
 		switch (ch) {
 			case Control::Quit: quit(); break;
 			case Control::NewFile: new_file(); break;
-			case Control::Projects:
+			case Control::Directory:
 				// These commands are available anywhere,
 				// but the browser is what handles them.
 				activate_browser();

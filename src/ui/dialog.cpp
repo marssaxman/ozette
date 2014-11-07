@@ -29,8 +29,8 @@ void UI::Dialog::Show(const Confirm &options, Frame &ctx)
 	std::unique_ptr<Dialog> it(new Dialog);
 	it->_prompt = options.prompt;
 	it->_value = options.value;
-	it->_commit = options.commit;
-	it->_retry = options.retry;
+	it->_commit = options.yes;
+	it->_retry = options.no;
 	it->_show_value = false;
 	ctx.show_dialog(std::move(it));
 }

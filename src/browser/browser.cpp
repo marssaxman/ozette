@@ -8,7 +8,7 @@
 Browser::Browser():
 	_homedir(getenv("HOME"))
 {
-	find_projects();
+	find_dirs();
 }
 
 void Browser::activate(UI::Frame &ctx)
@@ -16,8 +16,8 @@ void Browser::activate(UI::Frame &ctx)
 	set_title(ctx);
 	using namespace Control;
 	Panel help = {{
-		{Open, NewFile, 0, 0, Find, GoTo},
-		{Quit, Save, Close, Projects, 0, Help} // Config/Settings
+		{Open, NewFile, 0, 0, 0, Find},
+		{Quit, Save, Close, Directory, 0, Help} // Config/Settings
 	}};
 	ctx.set_help(help);
 }
@@ -26,20 +26,20 @@ bool Browser::process(UI::Frame &ctx, int ch)
 {
 	bool more = true;
 	switch (ch) {
-		case Control::Projects: show_projects(ctx); break;
+		case Control::Directory: show_dirs(ctx); break;
 		default: more = inherited::process(ctx, ch);
 	}
 	return more;
 }
 
-void Browser::show_projects(UI::Frame &ctx)
+void Browser::show_dirs(UI::Frame &ctx)
 {
 	UI::Dialog::Picker dialog;
-	dialog.prompt = "Select Project";
-	dialog.values = _projects;
+	dialog.prompt = "Change Directory";
+	dialog.values = _dirs;
 	dialog.commit = [this](UI::Frame &ctx, std::string path)
 	{
-		select_project(ctx, path);
+		select_dir(ctx, path);
 	};
 	UI::Dialog::Show(dialog, ctx);
 }
@@ -60,7 +60,7 @@ void Browser::render(ListForm::Builder &lines)
 	}
 }
 
-void Browser::select_project(UI::Frame &ctx, std::string path)
+void Browser::select_dir(UI::Frame &ctx, std::string path)
 {
 	_project.reset(new DirTree::Root(path));
 	set_title(ctx);
@@ -68,9 +68,9 @@ void Browser::select_project(UI::Frame &ctx, std::string path)
 	ctx.repaint();
 }
 
-void Browser::find_projects()
+void Browser::find_dirs()
 {
-	_projects.clear();
+	_dirs.clear();
 	// Iterate through the directories in the homedir looking for things
 	// which might be program directories. Clues are things like version
 	// control directories or a Makefile.
@@ -87,7 +87,7 @@ void Browser::find_projects()
 		include |= dir_exists(path + "/.svn");
 		include |= file_exists(path + "/Makefile");
 		if (include) {
-			_projects.push_back(path);
+			_dirs.push_back(path);
 		}
 	}
 	closedir(pdir);

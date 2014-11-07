@@ -24,12 +24,10 @@ private:
 	void set_status(UI::Frame &ctx);
 
 	// Control keys which drive higher-level functions.
-	void ctl_tab(UI::Frame &ctx);
-	void ctl_enter(UI::Frame &ctx);
-	void ctl_return(UI::Frame &ctx);
 	void ctl_cut(UI::Frame &ctx);
 	void ctl_copy(UI::Frame &ctx);
 	void ctl_paste(UI::Frame &ctx);
+	void ctl_close(UI::Frame &ctx);
 	void ctl_save(UI::Frame &ctx);
 	void ctl_revert(UI::Frame &ctx);
 
@@ -47,6 +45,9 @@ private:
 	// previously selected and possibly replacing it with something else.
 	void delete_selection();
 	void key_insert(char ch);
+	void key_tab(UI::Frame &ctx);
+	void key_enter(UI::Frame &ctx);
+	void key_return(UI::Frame &ctx);
 	void key_backspace(UI::Frame &ctx);
 	void key_delete(UI::Frame &ctx);
 

@@ -56,15 +56,11 @@ bool Editor::Controller::process(UI::Frame &ctx, int ch)
 {
 	if (ERR == ch) return true;
 	switch (ch) {
-		case Control::Tab: ctl_tab(ctx); break;
-		case Control::Enter: ctl_enter(ctx); break;
-		case Control::Return: ctl_return(ctx); break;
-
 		case Control::Cut: ctl_cut(ctx); break;
 		case Control::Copy: ctl_copy(ctx); break;
 		case Control::Paste: ctl_paste(ctx); break;
 
-		case Control::Close: return false;
+		case Control::Close: ctl_close(ctx); break;
 		case Control::Save: ctl_save(ctx); break;
 		case Control::Revert: ctl_revert(ctx); break;
 
@@ -80,7 +76,11 @@ bool Editor::Controller::process(UI::Frame &ctx, int ch)
 		case KEY_SR: key_up(true); break; // shifted up-arrow
 		case KEY_SLEFT: key_left(true); break;
 		case KEY_SRIGHT: key_right(true); break;
-		case 127: key_backspace(ctx); break;
+
+		case Control::Tab: key_tab(ctx); break;
+		case Control::Enter: key_enter(ctx); break;
+		case Control::Return: key_return(ctx); break;
+		case Control::Backspace: key_backspace(ctx); break;
 		case KEY_DC: key_delete(ctx); break;
 		case KEY_BTAB: break;	// shift-tab
 		default: if (ch >= 32 && ch < 127) key_insert(ch);
@@ -183,25 +183,27 @@ void Editor::Controller::ctl_paste(UI::Frame &ctx)
 	_cursor.move_to(newloc);
 }
 
-void Editor::Controller::ctl_tab(UI::Frame &ctx)
+void Editor::Controller::ctl_close(UI::Frame &ctx)
 {
-	key_insert('\t');
-}
-
-void Editor::Controller::ctl_enter(UI::Frame &ctx)
-{
-	// Split the line at the cursor position, but don't move the cursor.
-	delete_selection();
-	_doc.split(_cursor.location());
-	_update.forward(_cursor.location());
-}
-
-void Editor::Controller::ctl_return(UI::Frame &ctx)
-{
-	// Split the line at the cursor position and move the cursor to the new line.
-	delete_selection();
-	_cursor.move_to(_doc.split(_cursor.location()));
-	_update.forward(_cursor.location());
+	if (!_doc.modified()) {
+		// no formality needed, we're done
+		ctx.app().file_closed(_targetpath);
+	}
+	// ask the user if they want to save first
+	UI::Dialog::Confirm dialog;
+	dialog.prompt = "You have modified this file. Save changes before closing?";
+	dialog.yes = [this](UI::Frame &ctx, std::string)
+	{
+		// save the file
+		_doc.Write(_targetpath);
+		ctx.app().file_closed(_targetpath);
+	};
+	dialog.no = [this](UI::Frame &ctx, std::string path)
+	{
+		// just close it
+		ctx.app().file_closed(_targetpath);
+	};
+	UI::Dialog::Show(dialog, ctx);
 }
 
 void Editor::Controller::ctl_save(UI::Frame &ctx)
@@ -277,6 +279,27 @@ void Editor::Controller::key_insert(char ch)
 	_selection.reset(_anchor);
 }
 
+void Editor::Controller::key_tab(UI::Frame &ctx)
+{
+	key_insert('\t');
+}
+
+void Editor::Controller::key_enter(UI::Frame &ctx)
+{
+	// Split the line at the cursor position, but don't move the cursor.
+	delete_selection();
+	_doc.split(_cursor.location());
+	_update.forward(_cursor.location());
+}
+
+void Editor::Controller::key_return(UI::Frame &ctx)
+{
+	// Split the line at the cursor position and move the cursor to the new line.
+	delete_selection();
+	_cursor.move_to(_doc.split(_cursor.location()));
+	_update.forward(_cursor.location());
+}
+
 void Editor::Controller::key_backspace(UI::Frame &ctx)
 {
 	if (_selection.empty()) key_left(true);
@@ -333,14 +356,14 @@ void Editor::Controller::save(UI::Frame &ctx, std::string path)
 		UI::Dialog::Confirm dialog;
 		dialog.prompt = "Save file under a different name?";
 		dialog.value = path;
-		dialog.commit = [this](UI::Frame &ctx, std::string path)
+		dialog.yes = [this](UI::Frame &ctx, std::string path)
 		{
 			if (path.empty()) return;
 			_doc.Write(path);
 			_targetpath = path;
 			ctx.set_title(path);
 		};
-		dialog.retry = [this](UI::Frame &ctx, std::string path)
+		dialog.no = [this](UI::Frame &ctx, std::string path)
 		{
 			save(ctx, path);
 		};

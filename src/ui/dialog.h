@@ -48,8 +48,8 @@ public:
 	struct Confirm {
 		std::string prompt;
 		std::string value;
-		action_t commit = nullptr;
-		action_t retry = nullptr;
+		action_t yes = nullptr;
+		action_t no = nullptr;
 	};
 	static void Show(const Confirm &options, Frame &ctx);
 

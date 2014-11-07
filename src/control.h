@@ -34,7 +34,7 @@ enum {
 	Find = 0x06, //ACK ^F
 	GoTo = 0x07, //BEL ^G
 
-	Projects = 0x10, //DLE ^P
+	Directory = 0x04, //EOT ^D
 	Quit = 0x11, //DC1 ^Q
 	Help = 0x1F, //US ^?
 

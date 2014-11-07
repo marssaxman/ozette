@@ -5,7 +5,7 @@ Control::Info Control::keys[Count] = {
 		{'A', "SOH"}, //01 SOH ! A a
 		{'B', "STX"}, //02 STX " B b
 	{'C', "Copy"}, //03 ETX # C c
-		{'D', "EOT"}, //04 EOT $ D d
+	{'D', "Directory"}, //04 EOT $ D d
 		{'E', "ENQ"}, //05 ENQ % E e
 	{'F', "Find"}, //06 ACK & F f
 	{'G', "Go To"}, //07 BEL ' G g
@@ -17,7 +17,7 @@ Control::Info Control::keys[Count] = {
 	{'M', "Return"},  //0D CR - M m - Return key
 	{'N', "New File"}, //0E SO . N n
 	{'O', "Open"}, //0F SI / O o
-	{'P', "Projects"},//10 DLE 0 P p
+		{'P', "DLE"},//10 DLE 0 P p
 	{'Q', "Quit"}, //11 DC1 1 Q q
 	{'R', "Revert"}, //12 DC2 2 R r
 	{'S', "Save"}, //13 DC3 3 S s
