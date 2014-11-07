@@ -27,21 +27,29 @@ Editor::Document::Document():
 {
 }
 
-Editor::Document::Document(std::string targetpath):
+Editor::Document::Document(std::string path):
 	_blank(new BlankLine)
 {
+	Read(path);
+}
+
+void Editor::Document::Read(std::string path)
+{
+	_lines.clear();
 	std::string str;
-	std::ifstream file(targetpath);
+	std::ifstream file(path);
 	while (std::getline(file, str)) {
 		_maxline = append_line(str);
 	}
 }
 
-Editor::Line &Editor::Document::line(line_t index)
+void Editor::Document::Write(std::string path)
 {
-	// Get the line at the specified index.
-	// If no such line exists, return a blank.
-	return index < _lines.size() ? *_lines[index].get() : *_blank.get();
+	std::ofstream file(path, std::ios::trunc);
+	for (auto &line: _lines) {
+		file << line->text() << std::endl;
+	}
+	file.close();
 }
 
 Editor::location_t Editor::Document::home()
@@ -95,6 +103,13 @@ Editor::location_t Editor::Document::prev(location_t loc)
 		loc.offset = line(loc.line).size();
 	}
 	return loc;
+}
+
+Editor::Line &Editor::Document::line(line_t index)
+{
+	// Get the line at the specified index.
+	// If no such line exists, return a blank.
+	return index < _lines.size() ? *_lines[index].get() : *_blank.get();
 }
 
 std::string Editor::Document::text(const Range &span)

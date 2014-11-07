@@ -212,7 +212,7 @@ void Editor::Controller::key_save(UI::Frame &ctx)
 	dialog.value = _targetpath;
 	dialog.action = [this](UI::Frame &ctx, std::string path)
 	{
-		// go save the document somehow
+		_doc.Write(path);
 	};
 	UI::Dialog::Show(dialog, ctx);
 }

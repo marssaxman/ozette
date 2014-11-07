@@ -15,10 +15,10 @@ class Document
 {
 public:
 	Document();
-	Document(std::string targetpath);
-	// Get a representation of the line at this index.
-	// Will not throw; returns blank if out of bounds.
-	Line &line(line_t index);
+	Document(std::string path);
+	void Read(std::string path);
+	void Write(std::string path);
+
 	// Where is the beginning of the document?
 	location_t home();
 	// Where is the end of the document?
@@ -34,8 +34,12 @@ public:
 	location_t next(location_t loc);
 	location_t prev(location_t loc);
 
+	// Get a reference to a specific line, which may be a blank
+	// if no such line exists.
+	Line &line(line_t index);
 	// Retrieve the text within the range as a contiguous string.
 	std::string text(const Range &span);
+
 	// Remove the text within the range.
 	location_t erase(const Range &span);
 	// Insert one or more characters at a specific place,
@@ -45,6 +49,7 @@ public:
 	// Split this character's line in half, returning its position at
 	// the beginning of the newly-created following line.
 	location_t split(location_t loc);
+
 private:
 	std::string substr_to_end(const location_t &loc);
 	std::string substr_from_home(const location_t &loc);
