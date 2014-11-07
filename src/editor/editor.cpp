@@ -187,7 +187,7 @@ void Editor::Controller::ctl_close(UI::Frame &ctx)
 {
 	if (!_doc.modified()) {
 		// no formality needed, we're done
-		ctx.app().file_closed(_targetpath);
+		ctx.app().close_file(_targetpath);
 	}
 	// ask the user if they want to save first
 	UI::Dialog::Confirm dialog;
@@ -196,12 +196,12 @@ void Editor::Controller::ctl_close(UI::Frame &ctx)
 	{
 		// save the file
 		_doc.Write(_targetpath);
-		ctx.app().file_closed(_targetpath);
+		ctx.app().close_file(_targetpath);
 	};
 	dialog.no = [this](UI::Frame &ctx, std::string path)
 	{
 		// just close it
-		ctx.app().file_closed(_targetpath);
+		ctx.app().close_file(_targetpath);
 	};
 	UI::Dialog::Show(dialog, ctx);
 }

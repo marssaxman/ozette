@@ -110,6 +110,12 @@ bool UI::Window::process(int ch)
 			// would result in its own replacement.
 			assert(_dialog.get() == nullptr);
 			_dialog = std::move(temp);
+		} else {
+			// If the dialog closed, that is sort of like
+			// activating the window again, so tell the
+			// controller to check up on whatever it was
+			// doing.
+			_controller->activate(*this);
 		}
 		paint();
 		return true;

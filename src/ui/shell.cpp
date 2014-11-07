@@ -58,19 +58,7 @@ bool UI::Shell::process(int ch)
 	// the focus window. All other keypresses are delegated to
 	// the focus window.
 	switch (ch) {
-		case ERR: {	// timeout
-			std::list<size_t> dead;
-			for (size_t i = 0; i < _columns.size(); ++i) {
-				auto &win = _columns[i];
-				if (!win->poll()) {
-					dead.push_front(i);
-				}
-			}
-			for (auto i: dead) {
-				close_window(i);
-			}
-			relayout();
-		} break;
+		case ERR: poll(); break;
 		// case 0x21D	// control-shift left arrow
 		case 0x21C: {	// Control--left arrow
 			if (_focus > 0) {
@@ -101,7 +89,28 @@ bool UI::Shell::process(int ch)
 			send_to_focus(ch);
 		} break;
 	}
+	reap();
 	return !_columns.empty();
+}
+
+void UI::Shell::poll()
+{
+	for (size_t i = _columns.size(); i-- > 0;) {
+		if (!_columns[i]->poll()) {
+			close_window(i);
+		}
+	}
+}
+
+void UI::Shell::reap()
+{
+	// Closed windows go on the doomed list so they
+	// don't actually get destroyed until the stack has
+	// unwound. Otherwise, a window could request its
+	// immediate destruction.
+	while (!_doomed.empty()) {
+		_doomed.pop();
+	}
 }
 
 void UI::Shell::get_screen_size()
@@ -127,6 +136,15 @@ void UI::Shell::make_active(Window *window)
 	for (unsigned i = 0; i < _columns.size(); ++i) {
 		if (_columns[i].get() == window) {
 			set_focus(i);
+		}
+	}
+}
+
+void UI::Shell::close_window(Window *window)
+{
+	for (unsigned i = 0; i < _columns.size(); ++i) {
+		if (_columns[i].get() == window) {
+			close_window(i);
 		}
 	}
 }
@@ -183,10 +201,25 @@ void UI::Shell::send_to_focus(int ch)
 
 void UI::Shell::close_window(size_t index)
 {
+	// If this window has focus, move focus first.
+	// It will make everything simpler afterward.
+	if (_focus == index) {
+		if (index + 1 < _columns.size()) {
+			set_focus(index + 1);
+		} else if (index > 0) {
+			set_focus(index - 1);
+		}
+	}
+	// Remove the window from the active list, but
+	// don't delete it yet, because one of its
+	// methods might be on our call stack.
+	_doomed.emplace(std::move(_columns[index]));
 	_columns.erase(_columns.begin() + index);
+	// If the current focus window's index is greater
+	// than the index we just deleted, change the
+	// index to its new, correct value.
 	if (index < _focus) {
 		_focus--;
-	} else if (index == _focus) {
-		set_focus(_focus - 1);
 	}
+	relayout();
 }

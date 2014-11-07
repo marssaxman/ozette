@@ -1,5 +1,6 @@
 #include "dialog.h"
 #include "frame.h"
+#include <assert.h>
 
 void UI::Dialog::Show(const Input &options, Frame &ctx)
 {
@@ -13,6 +14,7 @@ void UI::Dialog::Show(const Input &options, Frame &ctx)
 
 void UI::Dialog::Show(const Picker &options, Frame &ctx)
 {
+	assert(&ctx);
 	std::unique_ptr<Dialog> it(new Dialog);
 	it->_prompt = options.prompt;
 	it->_suggestions = options.values;

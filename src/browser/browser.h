@@ -11,18 +11,11 @@ class Browser : public ListForm::Controller
 public:
 	Browser();
 	virtual void activate(UI::Frame &ctx) override;
-	virtual bool process(UI::Frame &ctx, int ch) override;
-	void show_dirs(UI::Frame &ctx);
+	void view(std::string path);
 private:
 	void set_title(UI::Frame &ctx);
 	virtual void render(ListForm::Builder &lines) override;
-	void select_dir(UI::Frame &ctx, std::string path);
-	void find_dirs();
-	static bool dir_exists(std::string path);
-	static bool file_exists(std::string path);
-	std::string _homedir;
-	std::vector<std::string> _dirs;
-	std::unique_ptr<DirTree::Root> _project;
+	std::unique_ptr<DirTree::Root> _tree;
 };
 
 #endif // BROWSER_BROWSER_H

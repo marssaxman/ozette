@@ -3,6 +3,7 @@
 
 #include "window.h"
 #include <vector>
+#include <queue>
 
 namespace UI {
 class Shell
@@ -12,8 +13,12 @@ public:
 	~Shell();
 	bool process(int ch);
 	Window *open_window(std::unique_ptr<Controller> &&wincontrol);
+	void close_window(Window *window);
 	void make_active(Window *window);
+	Window *active() const { return _columns[_focus].get(); }
 protected:
+	void poll();
+	void reap();
 	// get the terminal width and height, then calculate column width
 	void get_screen_size();
 	// change the focus to a specific window
@@ -22,7 +27,7 @@ protected:
 	void relayout();
 	// send this char to the focus window
 	void send_to_focus(int ch);
-	// close the window with this index & tell our delegate
+	// close the window with this index
 	void close_window(size_t index);
 private:
 	App &_app;
@@ -32,6 +37,7 @@ private:
 	int _spacing = 0;
 	int _columnWidth = 0;
 	size_t _focus = 0;
+	std::queue<std::unique_ptr<Window>> _doomed;
 };
 } // namespace UI
 

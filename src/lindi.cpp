@@ -2,13 +2,28 @@
 #include "browser.h"
 #include "editor.h"
 #include "control.h"
+#include <unistd.h>
 
 Lindi::Lindi():
 	_shell(*this),
-	_browser(new Browser)
+	_browser(new Browser),
+	_home_dir(getenv("HOME"))
 {
+	char *cwd = get_current_dir_name();
+	if (cwd) {
+		_current_dir = cwd;
+		free(cwd);
+	} else {
+		_current_dir = _home_dir;
+	}
+	_browser->view(_current_dir);
         std::unique_ptr<UI::Controller> browser(_browser);
         _browserwindow = _shell.open_window(std::move(browser));
+}
+
+std::string Lindi::current_dir() const
+{
+	return _current_dir;
 }
 
 void Lindi::edit_file(std::string path)
@@ -25,10 +40,13 @@ void Lindi::edit_file(std::string path)
 	_editors[path] = win;
 }
 
-void Lindi::file_closed(std::string path)
+void Lindi::close_file(std::string path)
 {
 	auto iter = _editors.find(path);
-	if (iter != _editors.end()) _editors.erase(iter);
+	if (iter != _editors.end()) {
+		_shell.close_window(iter->second);
+		_editors.erase(iter);
+	}
 }
 
 void Lindi::set_clipboard(std::string text)
@@ -51,15 +69,23 @@ void Lindi::run()
 		switch (ch) {
 			case Control::Quit: quit(); break;
 			case Control::NewFile: new_file(); break;
-			case Control::Directory:
-				// These commands are available anywhere,
-				// but the browser is what handles them.
-				activate_browser();
-				// Now that the browser is active, let the
-				// shell pass our message along normally.
+			case Control::Directory: change_directory(); break;
 			default: _done |= !_shell.process(ch);
 		}
 	} while (!_done);
+}
+
+void Lindi::change_directory()
+{
+	UI::Dialog::Picker dialog;
+	dialog.prompt = "Change Directory";
+	dialog.values.push_back(_current_dir);
+	dialog.commit = [this](UI::Frame &ctx, std::string path)
+	{
+		_browser->view(path);
+		activate_browser();
+	};
+	UI::Dialog::Show(dialog, *_shell.active());
 }
 
 void Lindi::new_file()
