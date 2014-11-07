@@ -237,8 +237,9 @@ void UI::Window::paint_titlebar(int width)
 
 void UI::Window::paint_titlebar_left(int width, std::string text)
 {
-	int left = _lframe ? 3 : 2;
-	int right = width - (_rframe ? 3 : 2);
+	if (text.empty()) return;
+	int left = _lframe ? 2 : 1;
+	int right = width - (_rframe ? 2 : 1);
 	width = right - left;
 	int titlechars = width - 2;
 	if (_swap_titlebar) titlechars /= 2;
@@ -253,8 +254,8 @@ void UI::Window::paint_titlebar_left(int width, std::string text)
 void UI::Window::paint_titlebar_right(int width, std::string text)
 {
 	if (text.empty()) return;
-	int left = _lframe ? 3 : 2;
-	int right = width - (_rframe ? 3 : 2);
+	int left = _lframe ? 2 : 1;
+	int right = width - (_rframe ? 2 : 1);
 	width = right - left;
 	int titlechars = width - 2;
 	if (!_swap_titlebar) titlechars /= 2;
