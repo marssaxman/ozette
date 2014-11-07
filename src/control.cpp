@@ -17,7 +17,7 @@ Control::Info Control::keys[Count] = {
 	{'M', "Return"},  //0D CR - return
 	{'N', "New File"}, //0E
 	{'O', "Open"}, //0F SI
-		{'P', "DLE"}, //10
+	{'P', "Projects"},//10 DLE
 	{'Q', "Quit"}, //11 DC1
 	{'R', "Revert"}, //12 DC2
 	{'S', "Save"}, //13 DC3

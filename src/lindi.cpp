@@ -8,7 +8,7 @@ Lindi::Lindi():
 	_browser(new Browser)
 {
         std::unique_ptr<UI::Controller> browser(_browser);
-        _shell.open_window(std::move(browser));
+        _browserwindow = _shell.open_window(std::move(browser));
 }
 
 void Lindi::edit_file(std::string path)
@@ -56,9 +56,18 @@ void Lindi::run()
 		update_panels();
 		doupdate();
 		int ch = fix_control_quirks(getch());
+		// The app handles commands which apply regardless of the
+		// window they are activated in.
 		switch (ch) {
+			// Some commands apply to the whole application.
 			case Control::Quit: quit(); break;
 			case Control::NewFile: new_file(); break;
+			case Control::Projects:
+				// These commands are available anywhere,
+				// but the browser is what handles them.
+				activate_browser();
+				// Now that the browser is active, let the
+				// shell pass our message along normally.
 			default: _done |= !_shell.process(ch);
 		}
 	} while (!_done);
@@ -68,6 +77,11 @@ void Lindi::new_file()
 {
 	std::unique_ptr<UI::Controller> ed(new Editor::Controller());
 	_shell.open_window(std::move(ed));
+}
+
+void Lindi::activate_browser()
+{
+	_shell.make_active(_browserwindow);
 }
 
 int Lindi::fix_control_quirks(int ch)

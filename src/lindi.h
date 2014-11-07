@@ -21,9 +21,11 @@ public:
 	void run();
 private:
 	void new_file();
+	void activate_browser();
 	int fix_control_quirks(int ch);
 	UI::Shell _shell;
-	Browser *_browser;
+	Browser *_browser = nullptr;;
+	UI::Window *_browserwindow = nullptr;
 	std::map<std::string, UI::Window*> _editors;
 	std::string _clipboard;
 	bool _done = false;

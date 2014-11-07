@@ -35,13 +35,13 @@ enum {
 	Find = 0x06, //ACK ^F
 	GoTo = 0x07, //BEL ^G
 
+	Projects = 0x10, //DLE ^P
 	Quit = 0x11, //DC1 ^Q
 
 	// Ideas for the future
-	// redo = ?
+	// Y = redo?
 	// R = run, B = build, K = clean?
 	// edit, diff, log, blame?
-	// P = projects?
 };
 
 struct Panel {

@@ -12,9 +12,19 @@ void Browser::open(Context &ctx)
 	using namespace Control;
 	Panel help = {{
 		{Open, NewFile, 0, 0, Find, GoTo},
-		{Quit, Save, Close, 0, 0, 0} // Projects, Config, Help
+		{Quit, Save, Close, Projects, 0, 0} // Projects, Config, Help
 	}};
 	ctx.set_help(help);
+}
+
+bool Browser::process(Context &ctx, int ch)
+{
+	bool more = true;
+	switch (ch) {
+		case Control::Projects: show_projects(); break;
+		default: more = inherited::process(ctx, ch);
+	}
+	return more;
 }
 
 void Browser::show_projects()

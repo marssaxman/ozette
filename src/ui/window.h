@@ -33,7 +33,9 @@ protected:
 	void paint();
 	void paint_content();
 	void paint_chrome();
-	void paint_title_bar(int height, int width);
+	void paint_titlebar(int width);
+	void paint_titlebar_left(int width, std::string text);
+	void paint_titlebar_right(int width, std::string text);
 	void paint_left_frame(int height, int width);
 	void paint_right_frame(int height, int width);
 	void paint_taskbar(int height, int width);

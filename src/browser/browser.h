@@ -8,9 +8,11 @@
 
 class Browser : public ListForm::Controller, private ProjectList::Delegate
 {
+	typedef ListForm::Controller inherited;
 public:
 	Browser();
 	virtual void open(Context &ctx) override;
+	virtual bool process(Context &ctx, int ch) override;
 	void show_projects();
 	virtual void open_project(std::string path) override;
 protected:

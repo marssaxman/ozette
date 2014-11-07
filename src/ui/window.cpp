@@ -207,14 +207,14 @@ void UI::Window::paint_chrome()
 {
 	int height, width;
 	getmaxyx(_framewin, height, width);
-	paint_title_bar(height, width);
+	paint_titlebar(width);
 	if (_lframe) paint_left_frame(height, width);
 	if (_rframe) paint_right_frame(height, width);
 	if (_taskbar_height) paint_taskbar(height, width);
 	_dirty_chrome = false;
 }
 
-void UI::Window::paint_title_bar(int height, int width)
+void UI::Window::paint_titlebar(int width)
 {
 	// Draw corners and a horizontal line across the top.
 	mvwhline(_framewin, 0, 0, ACS_HLINE, width);
@@ -224,8 +224,12 @@ void UI::Window::paint_title_bar(int height, int width)
 	if (_rframe) {
 		mvwaddch(_framewin, 0, width-1, ACS_URCORNER);
 	}
+	paint_titlebar_left(width, _title);
+	paint_titlebar_right(width, _status);
+}
 
-	// Overwrite the bar line with the window title.
+void UI::Window::paint_titlebar_left(int width, std::string text)
+{
 	int left = _lframe ? 3 : 2;
 	int right = width - (_rframe ? 3 : 2);
 	width = right - left;
@@ -233,15 +237,21 @@ void UI::Window::paint_title_bar(int height, int width)
 	wmove(_framewin, 0, left);
 	if (_has_focus) wattron(_framewin, A_REVERSE);
 	waddch(_framewin, ' ');
-	waddnstr(_framewin, _title.c_str(), titlechars);
+	waddnstr(_framewin, text.c_str(), titlechars);
 	waddch(_framewin, ' ');
 	if (_has_focus) wattroff(_framewin, A_REVERSE);
+}
 
-	// If there is a status string, print it on the right side.
-	if (_status.empty()) return;
-	int statchars = std::min((int)_status.size(), titlechars/2);
-	mvwaddch(_framewin, 0, right - statchars - 2, ' ');
-	waddnstr(_framewin, _status.c_str(), statchars);
+void UI::Window::paint_titlebar_right(int width, std::string text)
+{
+	if (text.empty()) return;
+	int left = _lframe ? 3 : 2;
+	int right = width - (_rframe ? 3 : 2);
+	width = right - left;
+	int titlechars = width - 2;
+	int chars = std::min((int)text.size(), titlechars/2);
+	mvwaddch(_framewin, 0, right - chars - 2, ' ');
+	waddnstr(_framewin, text.c_str(), chars);
 	waddch(_framewin, ' ');
 }
 
@@ -272,20 +282,24 @@ void UI::Window::paint_taskbar(int height, int width)
 	unsigned v = 0;
 	unsigned h = 0;
 
-	while (v < Control::Panel::height) {
+	int key_highlight = _has_focus ? A_REVERSE : 0;
+	int cells = Control::Panel::width * Control::Panel::height;
+	for (int i = 0; i < cells; ++i) {
+		v = i / Control::Panel::width;
+		h = i % Control::Panel::width;
 		unsigned ctl = _help.label[v][h];
 		unsigned labelpos = h * labelwidth;
 		wmove(_framewin, v+ypos, labelpos+xpos);
-		if (_has_focus) wattron(_framewin, A_REVERSE);
-		waddch(_framewin, ctl? '^': ' ');
+		if (!ctl) {
+			waddnstr(_framewin, " -", textwidth);
+			continue;
+		}
+		wattron(_framewin, key_highlight);
+		waddch(_framewin, '^');
 		waddch(_framewin, Control::keys[ctl].mnemonic);
-		if (_has_focus) wattroff(_framewin, A_REVERSE);
+		wattroff(_framewin, key_highlight);
 		waddch(_framewin, ' ');
 		waddnstr(_framewin, Control::keys[ctl].label, textwidth);
 		waddch(_framewin, ' ');
-		if (++h == 6) {
-			h = 0;
-			v++;
-		}
 	}
 }
