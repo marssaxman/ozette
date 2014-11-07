@@ -44,12 +44,6 @@ public:
 		// cursor will be positioned on the first suggestion and
 		// that will be the initial value instead.
 		virtual void open(State &state) = 0;
-		// The user has changed the value in the field.
-		// Update dialog attributes if necessary.
-		virtual void update(State &state) {}
-		// The user has pressed tab and wants to fill in the
-		// rest of whatever value they have begun to enter.
-		virtual void autofill(State &state) {}
 		// The user is happy with their choice and wants
 		// the action to proceed. The dialog will close.
 		virtual void commit(UI::Frame &ctx, std::string value) = 0;
@@ -81,8 +75,6 @@ public:
 
 private:
 	void paint();
-	void update_window_dimensions();
-	void tab_autofill();
 	void arrow_left();
 	void arrow_right();
 	void arrow_up();
@@ -93,7 +85,6 @@ private:
 	void select_suggestion(size_t i);
 	void select_field();
 	void set_value(std::string val);
-	void update_action();
 
 	// We will get these dimensions whenever we are told to update
 	// our layout, since we may need to perform internal layouts
@@ -107,8 +98,6 @@ private:
 	PANEL *_panel = nullptr;
 	bool _has_focus = true;
 	std::unique_ptr<Action> _action;
-	// Do we need to check the window dimensions?
-	bool _update = true;
 	// Do we need to repaint the window?
 	bool _repaint = true;
 

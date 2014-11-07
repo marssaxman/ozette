@@ -28,9 +28,32 @@ void UI::Dialog::layout(WINDOW *view)
 	// we can compute appropriate dimensions for the dialog.
 	getmaxyx(view, _host_height, _host_width);
 	getbegyx(view, _host_v, _host_h);
+
 	// Go lay the window out for these host dimensions and our current
 	// content dimensions, which may change as the suggestion list changes.
-	update_window_dimensions();
+	// We will put the dialog at the bottom of its window, as wide as the
+	// host and as many rows tall as its content, up to half the height of
+	// the host window.
+	int content_height = 1 + _state.suggestions.size();
+	int new_height = std::min(content_height, _host_height / 2);
+	int new_width = _host_width;
+	int new_v = _host_v + _host_height - new_height;
+	int new_h = _host_h;
+
+	// Find out where our window is located and how large it happens to be.
+	// We may need to move and/or resize it.
+	int old_height, old_width;
+	getmaxyx(_win, old_height, old_width);
+	int old_v, old_h;
+	getbegyx(_win, old_v, old_h);
+	if (new_height != old_height || new_width != old_width) {
+		WINDOW *win = newwin(new_height, new_width, new_v, new_h);
+		replace_panel(_panel, win);
+		delwin(_win);
+		_win = win;
+	} else if (new_v != old_v || new_h != old_h) {
+		move_panel(_panel, new_v, new_h);
+	}
 	paint();
 }
 
@@ -70,7 +93,6 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 			// inform our host that we are finished
 			_action->commit(ctx, _state.value);
 			return false;
-		case Control::Tab: tab_autofill(); break;
 		case KEY_LEFT: arrow_left(); break;
 		case KEY_RIGHT: arrow_right(); break;
 		case KEY_UP: arrow_up(); break;
@@ -92,9 +114,6 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 			// inserted into the field at the cursor point.
 			key_insert(ch);
 			break;
-	}
-	if (_update) {
-		update_window_dimensions();
 	}
 	if (_repaint) {
 		paint();
@@ -178,46 +197,6 @@ void UI::Dialog::paint()
 	_repaint = false;
 }
 
-void UI::Dialog::update_window_dimensions()
-{
-	// We will put the dialog at the bottom of its window, as wide as the
-	// host and as many rows tall as its content, up to half the height of
-	// the host window.
-	int content_height = 1 + _state.suggestions.size();
-	int new_height = std::min(content_height, _host_height / 2);
-	int new_width = _host_width;
-	int new_v = _host_v + _host_height - new_height;
-	int new_h = _host_h;
-
-	// Find out where our window is located and how large it happens to be.
-	// We may need to move and/or resize it.
-	int old_height, old_width;
-	getmaxyx(_win, old_height, old_width);
-	int old_v, old_h;
-	getbegyx(_win, old_v, old_h);
-	if (new_height != old_height || new_width != old_width) {
-		WINDOW *win = newwin(new_height, new_width, new_v, new_h);
-		replace_panel(_panel, win);
-		delwin(_win);
-		_win = win;
-	} else if (new_v != old_v || new_h != old_h) {
-		move_panel(_panel, new_v, new_h);
-	}
-	_update = false;
-	_repaint = true;
-}
-
-void UI::Dialog::tab_autofill()
-{
-	// user wants some help filling this form out
-	// ask the action object for its advice
-	_action->autofill(_state);
-	select_field();
-	// we have no idea what the action object might have
-	// changed, so we need to check everything for updates
-	_update = true;
-}
-
 void UI::Dialog::arrow_left()
 {
 	if (_suggestion_selected) {
@@ -267,7 +246,7 @@ void UI::Dialog::delete_prev()
 	_cursor_pos--;
 	auto deliter = _state.value.begin() + _cursor_pos;
 	_state.value.erase(deliter);
-	update_action();
+	_repaint = true;
 }
 
 void UI::Dialog::delete_next()
@@ -277,14 +256,14 @@ void UI::Dialog::delete_next()
 	if (_cursor_pos >= _state.value.size()) return;
 	auto deliter = _state.value.begin() + _cursor_pos;
 	_state.value.erase(deliter);
-	update_action();
+	_repaint = true;
 }
 
 void UI::Dialog::key_insert(int ch)
 {
 	select_field();
 	_state.value.insert(_cursor_pos++, 1, ch);
-	update_action();
+	_repaint = true;
 }
 
 void UI::Dialog::select_suggestion(size_t i)
@@ -309,13 +288,5 @@ void UI::Dialog::set_value(std::string val)
 {
 	if (val == _state.value) return;
 	_state.value = val;
-	update_action();
-}
-
-void UI::Dialog::update_action()
-{
-	_action->update(_state);
-	// we don't know what the action might have done,
-	// so we'll assume it did everything.
-	_update = true;
+	_repaint = true;
 }
