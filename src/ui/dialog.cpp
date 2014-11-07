@@ -130,16 +130,25 @@ void UI::Dialog::paint()
 
 	// Draw each suggested value on its own line.
 	int sugg_vpos = value_vpos + 1;
-	int sugg_width = width - 4;
+	int sugg_width = width;
+	int sugg_hpos = 0;
+	// Reserve two columns on each side as a margin.
+	sugg_width -= 4;
+	sugg_hpos += 2;
+	// Reduce the field width by three more chars to give
+	// space for the quick-select number captions.
+	sugg_width -= 3;
+
 	for (unsigned i = 0; i < _state.suggestions.size(); ++i) {
 		int vpos = sugg_vpos + i;
 		if (vpos >= height) break;
 		wmove(_win, vpos, 0);
 		if (i < 10 && _suggestion_selected) {
-			waddch(_win, '0' + i);
-			waddch(_win, ':');
-		} else {
 			waddstr(_win, "  ");
+			waddch(_win, '0' + i);
+			waddstr(_win, ": ");
+		} else {
+			waddstr(_win, "     ");
 		}
 		bool selrow = (_suggestion_selected && i == _sugg_item);
 		if (selrow) {
