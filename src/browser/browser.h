@@ -3,22 +3,24 @@
 
 #include "listform.h"
 #include "dirtree.h"
-#include "projectlist.h"
 #include <memory>
 
-class Browser : public ListForm::Controller, private ProjectList::Delegate
+class Browser : public ListForm::Controller
 {
 	typedef ListForm::Controller inherited;
 public:
 	Browser();
-	virtual void open(Context &ctx) override;
-	virtual bool process(Context &ctx, int ch) override;
-	void show_projects(Context &ctx);
-	virtual void open_project(std::string path) override;
-protected:
-	virtual void render(ListForm::Builder &lines) override;
+	virtual void open(UI::Frame &ctx) override;
+	virtual bool process(UI::Frame &ctx, int ch) override;
+	void show_projects(UI::Frame &ctx);
+	void set_project(UI::Frame &ctx, std::string path);
 private:
-	ProjectList _repos;
+	virtual void render(ListForm::Builder &lines) override;
+	void find_projects();
+	static bool dir_exists(std::string path);
+	static bool file_exists(std::string path);
+	std::string _homedir;
+	std::vector<std::string> _projects;
 	std::unique_ptr<DirTree::Root> _project;
 };
 

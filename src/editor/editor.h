@@ -12,22 +12,22 @@ class Controller : public UI::Controller
 public:
 	Controller();
 	Controller(std::string targetpath);
-	virtual void open(Context &ctx) override;
+	virtual void open(UI::Frame &ctx) override;
 	virtual void paint(WINDOW *view, bool active) override;
-	virtual bool process(Context &ctx, int ch) override;
+	virtual bool process(UI::Frame &ctx, int ch) override;
 protected:
 	void paint_line(WINDOW *view, row_t v, bool active);
 	bool line_is_visible(line_t index) const;
 	void reveal_cursor();
 	void update_dimensions(WINDOW *view);
 	// Control keys which drive higher-level functions.
-	void key_tab(Context &ctx);
-	void key_enter(Context &ctx);
-	void key_return(Context &ctx);
-	void key_cut(Context &ctx);
-	void key_copy(Context &ctx);
-	void key_paste(Context &ctx);
-	void key_save(Context &ctx);
+	void key_tab(UI::Frame &ctx);
+	void key_enter(UI::Frame &ctx);
+	void key_return(UI::Frame &ctx);
+	void key_cut(UI::Frame &ctx);
+	void key_copy(UI::Frame &ctx);
+	void key_paste(UI::Frame &ctx);
+	void key_save(UI::Frame &ctx);
 	// Navigation keystrokes move the cursor around the document.
 	void key_up(bool extend);
 	void key_down(bool extend);
@@ -41,8 +41,8 @@ protected:
 	// previously selected and possibly replacing it with something else.
 	void delete_selection();
 	void key_insert(char ch);
-	void key_backspace(Context &ctx);
-	void key_delete(Context &ctx);
+	void key_backspace(UI::Frame &ctx);
+	void key_delete(UI::Frame &ctx);
 	// If there was a selection, pressing a key usually does something
 	// to it, so we need to release the selection and start over with a
 	// simple cursor. The only exception is when we've extended the

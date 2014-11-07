@@ -10,7 +10,7 @@
 #include "dialog.h"
 
 namespace UI {
-class Window : public Controller::Context
+class Window : public Frame
 {
 public:
 	Window(App &app, std::unique_ptr<Controller> &&controller);
@@ -27,7 +27,7 @@ protected:
 	virtual void set_title(std::string text) override;
 	virtual void set_status(std::string text) override;
 	virtual void set_help(const Control::Panel &help) override;
-	virtual void show_dialog(std::unique_ptr<Dialog::Controller> &&host);
+	virtual void show_dialog(std::unique_ptr<Dialog::Action> &&action);
 	void layout_contentwin();
 	void layout_taskbar();
 	void paint();

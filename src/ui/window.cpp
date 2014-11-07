@@ -92,8 +92,9 @@ void UI::Window::bring_forward()
 bool UI::Window::process(int ch)
 {
 	if (_dialog) {
-		if (_dialog->process(ch)) return true;
+		if (_dialog->process(*this, ch)) return true;
 		_dialog.reset();
+		paint();
 		return true;
 	}
 	bool out = _controller->process(*this, ch);
@@ -124,7 +125,7 @@ void UI::Window::set_help(const Control::Panel &help)
 	layout_taskbar();
 }
 
-void UI::Window::show_dialog(std::unique_ptr<Dialog::Controller> &&host)
+void UI::Window::show_dialog(std::unique_ptr<Dialog::Action> &&host)
 {
 	_dialog.reset(new Dialog(std::move(host)));
 	_dialog->layout(_contentwin);

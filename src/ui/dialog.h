@@ -11,6 +11,7 @@
 
 
 namespace UI {
+class Frame;
 // A dialog is a modal input control.
 // Use it when you need to get information from the user before
 // performing an action. This may be data input or simply a
@@ -32,11 +33,11 @@ public:
 	};
 
 	// The dialog class manages an interface for interacting with
-	// some action, which is implemented by the controller.
-	class Controller
+	// some action which will be performed when the user commits.
+	class Action
 	{
 	public:
-		virtual ~Controller() = default;
+		virtual ~Action() = default;
 		// Set up the starting dialog state and return the
 		// starting value for the field. If the starting value is
 		// empty, but the list of suggestions is not empty, the
@@ -51,13 +52,13 @@ public:
 		virtual void autofill(State &state) {}
 		// The user is happy with their choice and wants
 		// the action to proceed. The dialog will close.
-		virtual void commit(std::string value) = 0;
+		virtual void commit(UI::Frame &ctx, std::string value) = 0;
 	};
 
 	// Every dialog instance gets a unique controller object, which
 	// carries whatever state is necessary should the user commit
 	// the requested action.
-	Dialog(std::unique_ptr<Controller> &&host);
+	Dialog(std::unique_ptr<Action> &&action);
 	~Dialog();
 
 	// Dialogs belong to some UI element, which will manage the
@@ -76,7 +77,7 @@ public:
 	// The dialog will return true if it wants to stay open, false
 	// if it is ready to be dismissed. The dialog will stay visible
 	// until the dialog object is deleted.
-	bool process(int ch);
+	bool process(UI::Frame &ctx, int ch);
 
 private:
 	void paint();
@@ -105,7 +106,7 @@ private:
 	WINDOW *_win = nullptr;
 	PANEL *_panel = nullptr;
 	bool _has_focus = true;
-	std::unique_ptr<Controller> _action;
+	std::unique_ptr<Action> _action;
 	// Do we need to check the window dimensions?
 	bool _update = true;
 	// Do we need to repaint the window?

@@ -1,12 +1,13 @@
 #include "dialog.h"
 
-UI::Dialog::Dialog(std::unique_ptr<Controller> &&action):
+UI::Dialog::Dialog(std::unique_ptr<Action> &&action):
 	_win(newwin(0, 0, 0, 0)),
 	_panel(new_panel(_win)),
 	_action(std::move(action))
 {
 	_action->open(_state);
-	if (_state.value.empty() && !_state.suggestions.empty()) {
+	if (_state.suggestions.empty()) {
+	} else {
 		_suggestion_selected = true;
 		_sugg_item = 0;
 		_state.value = _state.suggestions[0];
@@ -54,7 +55,7 @@ void UI::Dialog::bring_forward()
 	top_panel(_panel);
 }
 
-bool UI::Dialog::process(int ch)
+bool UI::Dialog::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
 		case Control::Escape:	// escape key
@@ -67,7 +68,7 @@ bool UI::Dialog::process(int ch)
 			// the user is happy with their choice
 			// tell the action to proceed and then
 			// inform our host that we are finished
-			_action->commit(_state.value);
+			_action->commit(ctx, _state.value);
 			return false;
 		case Control::Tab: tab_autofill(); break;
 		case KEY_LEFT: arrow_left(); break;
@@ -84,7 +85,7 @@ bool UI::Dialog::process(int ch)
 			// item corresponding to that digit
 			if (ch >= '0' && ch <= '9' && _suggestion_selected) {
 				select_suggestion(ch - '0');
-				_action->commit(_state.value);
+				_action->commit(ctx, _state.value);
 				return false;
 			}
 			// in all other situations, the keypress should be
@@ -163,7 +164,7 @@ void UI::Dialog::paint()
 	// Put the cursor where it ought to be. Make it visible, if that
 	// would be appropriate for our activation state.
 	wmove(_win, 0, value_hpos + _cursor_pos);
-	curs_set(_has_focus && !_suggestion_selected ? 1 : 0);
+	curs_set(_has_focus && !_suggestion_selected? 1: 0);
 
 	// We no longer need to repaint.
 	_repaint = false;
@@ -208,10 +209,10 @@ void UI::Dialog::update_window_dimensions()
 void UI::Dialog::tab_autofill()
 {
 	// user wants some help filling this form out
-	// ask the controller for its advice
+	// ask the action object for its advice
 	_action->autofill(_state);
 	select_field();
-	// we have no idea what the controller might have
+	// we have no idea what the action object might have
 	// changed, so we need to check everything for updates
 	_update = true;
 }

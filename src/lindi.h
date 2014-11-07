@@ -13,7 +13,6 @@ public:
 	Lindi();
 	virtual void edit_file(std::string path) override;
 	virtual void file_closed(std::string path) override;
-	virtual void select_project(std::string path) override;
 	virtual void quit() override { _done = true; }
 	virtual void set_clipboard(std::string text) override;
 	virtual std::string get_clipboard() override;

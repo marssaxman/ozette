@@ -31,11 +31,6 @@ void Lindi::file_closed(std::string path)
 	if (iter != _editors.end()) _editors.erase(iter);
 }
 
-void Lindi::select_project(std::string path)
-{
-	_browser->open_project(path);
-}
-
 void Lindi::set_clipboard(std::string text)
 {
 	_clipboard = text;
@@ -53,10 +48,7 @@ void Lindi::run()
 		update_panels();
 		doupdate();
 		int ch = fix_control_quirks(getch());
-		// The app handles commands which apply regardless of the
-		// window they are activated in.
 		switch (ch) {
-			// Some commands apply to the whole application.
 			case Control::Quit: quit(); break;
 			case Control::NewFile: new_file(); break;
 			case Control::Projects:

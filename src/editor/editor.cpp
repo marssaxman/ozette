@@ -15,7 +15,7 @@ Editor::Controller::Controller(std::string targetpath):
 {
 }
 
-void Editor::Controller::open(Context &ctx)
+void Editor::Controller::open(UI::Frame &ctx)
 {
 	if (_targetpath.empty()) {
 		ctx.set_title("(New File)");
@@ -48,7 +48,7 @@ void Editor::Controller::paint(WINDOW *dest, bool active)
 	_update.reset();
 }
 
-bool Editor::Controller::process(Context &ctx, int ch)
+bool Editor::Controller::process(UI::Frame &ctx, int ch)
 {
 	if (ERR == ch) return true;
 	ctx.set_status("");
@@ -158,20 +158,20 @@ void Editor::Controller::update_dimensions(WINDOW *view)
 	}
 }
 
-void Editor::Controller::key_cut(Context &ctx)
+void Editor::Controller::key_cut(UI::Frame &ctx)
 {
 	key_copy(ctx);
 	delete_selection();
 }
 
-void Editor::Controller::key_copy(Context &ctx)
+void Editor::Controller::key_copy(UI::Frame &ctx)
 {
 	if (_selection.empty()) return;
 	std::string clip = _doc.text(_selection);
 	ctx.app().set_clipboard(clip);
 }
 
-void Editor::Controller::key_paste(Context &ctx)
+void Editor::Controller::key_paste(UI::Frame &ctx)
 {
 	delete_selection();
 	std::string clip = ctx.app().get_clipboard();
@@ -183,12 +183,12 @@ void Editor::Controller::key_paste(Context &ctx)
 	_cursor.move_to(newloc);
 }
 
-void Editor::Controller::key_tab(Context &ctx)
+void Editor::Controller::key_tab(UI::Frame &ctx)
 {
 	key_insert('\t');
 }
 
-void Editor::Controller::key_enter(Context &ctx)
+void Editor::Controller::key_enter(UI::Frame &ctx)
 {
 	// Split the line at the cursor position, but don't move the cursor.
 	delete_selection();
@@ -196,7 +196,7 @@ void Editor::Controller::key_enter(Context &ctx)
 	_update.forward(_cursor.location());
 }
 
-void Editor::Controller::key_return(Context &ctx)
+void Editor::Controller::key_return(UI::Frame &ctx)
 {
 	// Split the line at the cursor position and move the cursor to the new line.
 	delete_selection();
@@ -205,17 +205,17 @@ void Editor::Controller::key_return(Context &ctx)
 }
 
 namespace {
-class SaveDialog : public UI::Dialog::Controller
+class SaveDocument : public UI::Dialog::Action
 {
 public:
-	SaveDialog(std::string path, Editor::Document &doc):
+	SaveDocument(std::string path, Editor::Document &doc):
 		_path(path), _doc(doc) {}
 	virtual void open(UI::Dialog::State &state) override
 	{
 		state.prompt = "Save File";
 		state.value = _path;
 	}
-	virtual void commit(std::string path) override
+	virtual void commit(UI::Frame &ctx, std::string path) override
 	{
 		// go write the document to disk at the specified path
 	}
@@ -225,10 +225,10 @@ private:
 };
 } // namespace
 
-void Editor::Controller::key_save(Context &ctx)
+void Editor::Controller::key_save(UI::Frame &ctx)
 {
-	auto ctrl = new SaveDialog(_targetpath, _doc);
-	std::unique_ptr<UI::Dialog::Controller> host(ctrl);
+	auto ctrl = new SaveDocument(_targetpath, _doc);
+	std::unique_ptr<UI::Dialog::Action> host(ctrl);
 	ctx.show_dialog(std::move(host));
 }
 
@@ -296,15 +296,14 @@ void Editor::Controller::key_insert(char ch)
 	_selection.reset(_anchor);
 }
 
-void Editor::Controller::key_backspace(Context &ctx)
+void Editor::Controller::key_backspace(UI::Frame &ctx)
 {
 	if (_selection.empty()) key_left(true);
 	delete_selection();
 }
 
-void Editor::Controller::key_delete(Context &ctx)
+void Editor::Controller::key_delete(UI::Frame &ctx)
 {
-	ctx.set_status("DEL");
 	if (_selection.empty()) key_right(true);
 	delete_selection();
 }

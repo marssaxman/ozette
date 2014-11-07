@@ -1,12 +1,15 @@
 #include "browser.h"
 #include "control.h"
+#include <dirent.h>
+#include <sys/stat.h>
 
 Browser::Browser():
-	_repos(*this)
+	_homedir(getenv("HOME"))
 {
+	find_projects();
 }
 
-void Browser::open(Context &ctx)
+void Browser::open(UI::Frame &ctx)
 {
 	ctx.set_title("Lindi");
 	using namespace Control;
@@ -17,7 +20,7 @@ void Browser::open(Context &ctx)
 	ctx.set_help(help);
 }
 
-bool Browser::process(Context &ctx, int ch)
+bool Browser::process(UI::Frame &ctx, int ch)
 {
 	bool more = true;
 	switch (ch) {
@@ -27,49 +30,88 @@ bool Browser::process(Context &ctx, int ch)
 	return more;
 }
 
-void Browser::show_projects(Context &ctx)
+namespace {
+class SetProject : public UI::Dialog::Action
 {
-	class Action : public UI::Dialog::Controller
+public:
+	virtual void open(UI::Dialog::State &state) override
 	{
-	public:
-		Action(std::string path, Browser &browser, ProjectList &list):
-			_path(path), _browser(browser), _list(list) {}
-		virtual void open(UI::Dialog::State &state)
-		{
-			state.prompt = "Project";
-			state.suggestions.clear();
-			for (auto &repo: _list._repos) {
-				state.suggestions.push_back(repo.path);
-			}
-			state.value = _path;
-		}
-		virtual void commit(std::string path)
-		{
-			_browser.open_project(path);
-		}
-	private:
-		std::string _path;
-		Browser &_browser;
-		ProjectList &_list;
-	};
-	std::string current;
-	if (_project.get()) current = _project->path();
-	auto action = new Action(current, *this, _repos);
-	std::unique_ptr<UI::Dialog::Controller> actionptr(action);
-	ctx.show_dialog(std::move(actionptr));
-}
+		state.prompt = "Select Project";
+		state.suggestions = _list;
+		state.value = _path;
+	}
+	virtual void commit(UI::Frame &ctx, std::string path) override
+	{
+		_browser->set_project(ctx, path);
+	}
+	std::string _path;
+	std::vector<std::string> _list;
+	Browser *_browser;
+};
+} // namespace
 
-void Browser::open_project(std::string path)
+void Browser::show_projects(UI::Frame &ctx)
 {
-	_project.reset(new DirTree::Root(path));
+	auto action = new SetProject;
+	if (_project.get()) {
+		action->_path = _project->path();
+	}
+	action->_list = _projects;
+	action->_browser = this;
+	std::unique_ptr<UI::Dialog::Action> actionptr(action);
+	ctx.show_dialog(std::move(actionptr));
 }
 
 void Browser::render(ListForm::Builder &lines)
 {
-	_repos.render(lines);
-	lines.blank();
 	if (_project) {
 		_project->render(lines);
-		lines.blank();
 	}
 }
+
+void Browser::set_project(UI::Frame &ctx, std::string path)
+{
+	_project.reset(new DirTree::Root(path));
+	ctx.set_title("Lindi: " + path);
+	mark_dirty();
+	ctx.repaint();
+}
+
+void Browser::find_projects()
+{
+	_projects.clear();
+	// Iterate through the directories in the homedir looking for things
+	// which might be program directories. Clues are things like version
+	// control directories or a Makefile.
+	DIR *pdir = opendir(_homedir.c_str());
+	if (!pdir) return;
+	while (dirent *entry = readdir(pdir)) {
+		// We are looking only for directories.
+		if (entry->d_type != DT_DIR) continue;
+		// Look for specific items in the directory that might be
+		// there if this were a program root.
+		std::string path = _homedir + "/" + entry->d_name;
+		bool include = false;
+		include |= dir_exists(path + "/.git");
+		include |= dir_exists(path + "/.svn");
+		include |= file_exists(path + "/Makefile");
+		if (include) {
+			_projects.push_back(path);
+		}
+	}
+	closedir(pdir);
+}
+
+bool Browser::dir_exists(std::string path)
+{
+        struct stat sb;
+        return (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode));
+}
+
+bool Browser::file_exists(std::string path)
+{
+        struct stat sb;
+        return (stat(path.c_str(), &sb) == 0 && S_ISREG(sb.st_mode));
+}
+
+

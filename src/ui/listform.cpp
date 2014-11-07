@@ -35,7 +35,7 @@ void ListForm::Controller::paint(WINDOW *view, bool active)
 	}
 }
 
-bool ListForm::Controller::process(Context &ctx, int ch)
+bool ListForm::Controller::process(UI::Frame &ctx, int ch)
 {
         switch (ch) {
 		case KEY_DOWN: arrow_down(ctx); break;
@@ -123,7 +123,7 @@ bool ListForm::Controller::is_selectable(ssize_t line)
 	return field.get() != nullptr && field->active();
 }
 
-void ListForm::Controller::arrow_down(Context &ctx)
+void ListForm::Controller::arrow_down(UI::Frame &ctx)
 {
 	// Look for a selectable line past the current one.
 	// If we find one, select it, then repaint.
@@ -136,7 +136,7 @@ void ListForm::Controller::arrow_down(Context &ctx)
 	}
 }
 
-void ListForm::Controller::arrow_up(Context &ctx)
+void ListForm::Controller::arrow_up(UI::Frame &ctx)
 {
 	// Look for a selectable line before the current one.
 	// If we find one, select it, then repaint.
@@ -150,7 +150,7 @@ void ListForm::Controller::arrow_up(Context &ctx)
 	}
 }
 
-void ListForm::Controller::commit(Context &ctx)
+void ListForm::Controller::commit(UI::Frame &ctx)
 {
 	assert(_selpos < _lines.size());
 	auto &field = _lines[_selpos];
@@ -160,7 +160,7 @@ void ListForm::Controller::commit(Context &ctx)
 	}
 }
 
-void ListForm::Controller::escape(Context &ctx)
+void ListForm::Controller::escape(UI::Frame &ctx)
 {
 	assert(_selpos < _lines.size());
 	auto &field = _lines[_selpos];
