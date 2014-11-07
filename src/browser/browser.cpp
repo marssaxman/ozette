@@ -35,33 +35,22 @@ namespace {
 class SetProject : public UI::Dialog::Action
 {
 public:
-	virtual void open(UI::Dialog::State &state) override
-	{
-		state.prompt = "Select Project";
-		state.suggestions = _list;
-		state.value = _path;
-	}
+	SetProject(Browser *browser): _browser(browser) {}
 	virtual void commit(UI::Frame &ctx, std::string path) override
 	{
 		_browser->set_project(ctx, path);
 	}
-	std::string _path;
-	std::vector<std::string> _list;
 	Browser *_browser;
 };
 } // namespace
 
 void Browser::show_projects(UI::Frame &ctx)
 {
-	auto action = new SetProject;
-	if (_project.get()) {
-		action->_path = _project->path();
-	}
-	action->_list = _projects;
-	action->_browser = this;
+	auto action = new SetProject(this);
 	std::unique_ptr<UI::Dialog::Action> actionptr(action);
-	std::unique_ptr<UI::Dialog> dialog(new UI::Dialog(std::move(actionptr)));
-	ctx.show_dialog(std::move(dialog));
+	auto dialog = new UI::Dialog("Select Project", _projects, std::move(actionptr));
+	std::unique_ptr<UI::Dialog> dialogptr(dialog);
+	ctx.show_dialog(std::move(dialogptr));
 }
 
 void Browser::render(ListForm::Builder &lines)

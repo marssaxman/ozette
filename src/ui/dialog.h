@@ -22,28 +22,12 @@ class Frame;
 class Dialog
 {
 public:
-	// The dialog controls its appearance and lifetime on screen,
-	// but the context allows the dialog controller to manage
-	// user input in whatever way is appropriate for the action.
-	struct State
-	{
-		std::string prompt;
-		std::string value;
-		std::vector<std::string> suggestions;
-	};
-
 	// The dialog class manages an interface for interacting with
 	// some action which will be performed when the user commits.
 	class Action
 	{
 	public:
 		virtual ~Action() = default;
-		// Set up the starting dialog state and return the
-		// starting value for the field. If the starting value is
-		// empty, but the list of suggestions is not empty, the
-		// cursor will be positioned on the first suggestion and
-		// that will be the initial value instead.
-		virtual void open(State &state) = 0;
 		// The user is happy with their choice and wants
 		// the action to proceed. The dialog will close.
 		virtual void commit(UI::Frame &ctx, std::string value) = 0;
@@ -52,7 +36,8 @@ public:
 	// Every dialog instance gets a unique controller object, which
 	// carries whatever state is necessary should the user commit
 	// the requested action.
-	Dialog(std::unique_ptr<Action> &&action);
+	Dialog(std::string prompt, std::string value, std::unique_ptr<Action> &&action);
+	Dialog(std::string prompt, std::vector<std::string> values, std::unique_ptr<Action> &&action);
 	~Dialog();
 
 	// Dialogs belong to some UI element, which will manage the
@@ -101,10 +86,9 @@ private:
 	// Do we need to repaint the window?
 	bool _repaint = true;
 
-	// The state object contains the information our controller can
-	// change: the prompt, the value, and the list of suggested values
-	// that can be used for recent values or a filter list.
-	State _state;
+	std::string _prompt;
+	std::string _value;
+	std::vector<std::string> _suggestions;
 
 	// The cursor may be in the edit field or the suggestion list.
 	size_t _cursor_pos = 0;

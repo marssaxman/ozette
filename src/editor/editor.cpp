@@ -208,29 +208,23 @@ namespace {
 class SaveDocument : public UI::Dialog::Action
 {
 public:
-	SaveDocument(std::string path, Editor::Document &doc):
-		_path(path), _doc(doc) {}
-	virtual void open(UI::Dialog::State &state) override
-	{
-		state.prompt = "Save File";
-		state.value = _path;
-	}
+	SaveDocument(Editor::Document &doc): _doc(doc) {}
 	virtual void commit(UI::Frame &ctx, std::string path) override
 	{
 		// go write the document to disk at the specified path
 	}
 private:
-	std::string _path;
 	Editor::Document &_doc;
 };
 } // namespace
 
 void Editor::Controller::key_save(UI::Frame &ctx)
 {
-	auto ctrl = new SaveDocument(_targetpath, _doc);
+	auto ctrl = new SaveDocument(_doc);
 	std::unique_ptr<UI::Dialog::Action> host(ctrl);
-	std::unique_ptr<UI::Dialog> dialog(new UI::Dialog(std::move(host)));
-	ctx.show_dialog(std::move(dialog));
+	auto dialog = new UI::Dialog("Save File", _targetpath, std::move(host));
+	std::unique_ptr<UI::Dialog> dialogptr(dialog);
+	ctx.show_dialog(std::move(dialogptr));
 }
 
 void Editor::Controller::key_up(bool extend)
