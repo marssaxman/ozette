@@ -38,7 +38,10 @@ public:
 	public:
 		virtual ~Controller() = default;
 		// Set up the starting dialog state and return the
-		// starting value for the field.
+		// starting value for the field. If the starting value is
+		// empty, but the list of suggestions is not empty, the
+		// cursor will be positioned on the first suggestion and
+		// that will be the initial value instead.
 		virtual std::string open(State &state) = 0;
 		// The user has changed the value in the field.
 		// Update dialog attributes if necessary.
@@ -97,13 +100,9 @@ private:
 	// host can manipulate it.
 	State _state;
 	std::string _value;
-	// Which field is the cursor located in?
-	enum class Field {
-		Value,	// the horizontal edit field
-		List, // the vertical suggestion list
-	} _cursor_field;
-	// Where is the cursor located, within its field?
 	size_t _cursor_pos = 0;
+	bool _suggestion_selected = false;
+	size_t _sugg_item = 0;
 };
 } // namespace UI
 

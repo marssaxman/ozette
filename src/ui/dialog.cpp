@@ -32,7 +32,14 @@ void UI::Dialog::update_window_dimensions()
 	// We will put the dialog at the bottom of its window, as wide as the
 	// host and as many rows tall as its content, up to half the height of
 	// the host window.
-	int content_height = 1 + _state.suggestions.size();
+	int content_height = 1;
+	if (!_state.suggestions.empty()) {
+		// Draw each suggested value on its own row
+		content_height += _state.suggestions.size();
+		// Put a blank line on the bottom to separate the dialog
+		// from whatever might be hanging out below it
+		content_height++;
+	}
 	int new_height = std::min(content_height, _host_height / 2);
 	int new_width = _host_width;
 	int new_v = _host_v + _host_height - new_height;
@@ -106,6 +113,28 @@ bool UI::Dialog::process(int ch)
 			_cursor_pos = std::min(_cursor_pos+1, curlimit);
 			needs_paint = true;
 		} break;
+		case KEY_UP: {
+			if (!_suggestion_selected) break;
+			if (_sugg_item > 0) {
+				_sugg_item--;
+				_value = _state.suggestions[_sugg_item];
+			} else {
+				_suggestion_selected = false;
+			}
+			_cursor_pos = _value.size();
+			needs_paint = true;
+		} break;
+		case KEY_DOWN: {
+			if (!_suggestion_selected) {
+				_suggestion_selected = true;
+				_sugg_item = 0;
+			} else if (_sugg_item < _state.suggestions.size()){
+				_sugg_item++;
+			}
+			_value = _state.suggestions[_sugg_item];
+			_cursor_pos = _value.size();
+			needs_paint = true;
+		} break;
 		case Control::Backspace: {
 			if (_value.empty()) break;
 			if (_cursor_pos == 0) break;
@@ -145,24 +174,60 @@ bool UI::Dialog::process(int ch)
 
 void UI::Dialog::paint()
 {
+	// Everything drawn in a dialog is reversed by default.
+	wattron(_win, A_REVERSE);
+
 	int height, width;
 	getmaxyx(_win, height, width);
 	(void)height; // unused
+
+	// Draw the prompt and the current value string.
 	wmove(_win, 0, 0);
-	wattron(_win, A_REVERSE);
 	waddnstr(_win, _state.prompt.c_str(), width);
 	waddch(_win, ':');
 	waddch(_win, ' ');
 	int value_vpos, value_hpos;
 	getyx(_win, value_vpos, value_hpos);
 	(void)value_vpos; // unused
+	if (!_suggestion_selected) wattron(_win, A_UNDERLINE);
 	waddnstr(_win, _value.c_str(), width - value_hpos);
+	if (!_suggestion_selected) wattroff(_win, A_UNDERLINE);
 	int end_vpos, end_hpos;
 	getyx(_win, end_vpos, end_hpos);
 	(void)end_vpos; // unused
 	whline(_win, ' ', width - end_hpos);
+
+	if (!_state.suggestions.empty()) {
+		// Draw each suggested value on its own line.
+		int sugg_vpos = value_vpos + 1;
+		int sugg_width = width - 4;
+		for (unsigned i = 0; i < _state.suggestions.size(); ++i) {
+			wmove(_win, sugg_vpos + i, 0);
+			waddch(_win, ' ');
+			waddch(_win, ' ');
+			waddnstr(_win, _state.suggestions[i].c_str(), sugg_width);
+			int curv, curh;
+			getyx(_win, curv, curh);
+			(void)curv; //ignored
+			whline(_win, ' ', width - curh);
+		}
+		// Draw a blank line underneath.
+		wmove(_win, sugg_vpos + _state.suggestions.size(), 0);
+		whline(_win, ' ', width);
+		// If one of these items was selected, highlight it by using
+		// normal (non-reversed) mode.
+		if (_suggestion_selected) {
+			int selrow = sugg_vpos + _sugg_item;
+			wmove(_win, selrow, 2);
+			wchgat(_win, sugg_width, A_NORMAL, 0, NULL);
+		}
+	}
+	// We're done being all reversed and stuff.
 	wattroff(_win, A_REVERSE);
+
+	// Put the cursor where it ought to be. Make it visible, if that
+	// would be appropriate for our activation state.
 	wmove(_win, 0, value_hpos + _cursor_pos);
-	curs_set(_has_focus ? 1 : 0);
+	curs_set(_has_focus && !_suggestion_selected ? 1 : 0);
 }
 
