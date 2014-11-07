@@ -22,7 +22,6 @@ enum {
 	Cut = 0x18, //CAN ^X
 	Copy = 0x03, //ETX ^C
 	Paste = 0x16, //SYN ^V
-	Delete = 0x0B, //VT ^K
 	Undo = 0x1A, //SUB ^Z
 	Redo = 0x19, //EM ^Y
 

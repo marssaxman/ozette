@@ -210,7 +210,7 @@ void Editor::Controller::key_save(UI::Frame &ctx)
 	UI::Dialog::Input dialog;
 	dialog.prompt = "Save File";
 	dialog.value = _targetpath;
-	dialog.action = [this](UI::Frame &ctx, std::string path)
+	dialog.commit = [this](UI::Frame &ctx, std::string path)
 	{
 		_doc.Write(path);
 	};

@@ -37,7 +37,7 @@ void Browser::show_projects(UI::Frame &ctx)
 	UI::Dialog::Picker dialog;
 	dialog.prompt = "Select Project";
 	dialog.values = _projects;
-	dialog.action = [this](UI::Frame &ctx, std::string path)
+	dialog.commit = [this](UI::Frame &ctx, std::string path)
 	{
 		select_project(ctx, path);
 	};

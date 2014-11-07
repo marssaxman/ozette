@@ -23,14 +23,16 @@ class Dialog
 {
 public:
 	// There are several flavors of dialog box. Set up the
-	// one you want then call Dialog::Show().
+	// one you want then call Dialog::Show(). The dialog will
+	// call you back when it is done.
+	typedef std::function<void(Frame&, std::string)> action_t;
 
 	// An input box suggests a value, which the user may
 	// choose to edit.
 	struct Input {
 		std::string prompt;
 		std::string value;
-		std::function<void(Frame&,std::string)> action = nullptr;
+		action_t commit = nullptr;;
 	};
 	static void Show(const Input &options, Frame &ctx);
 
@@ -39,9 +41,17 @@ public:
 	struct Picker {
 		std::string prompt;
 		std::vector<std::string> values;
-		std::function<void(Frame&,std::string)> action = nullptr;
+		action_t commit = nullptr;
 	};
 	static void Show(const Picker &options, Frame &ctx);
+
+	struct Confirm {
+		std::string prompt;
+		std::string value;
+		action_t commit = nullptr;
+		action_t retry = nullptr;
+	};
+	static void Show(const Confirm &options, Frame &ctx);
 
 	~Dialog();
 	// Dialogs belong to some UI element, which will manage the
@@ -93,7 +103,9 @@ private:
 	std::string _prompt;
 	std::string _value;
 	std::vector<std::string> _suggestions;
-	std::function<void(Frame &ctx, std::string value)> _action;
+	bool _show_value = true;
+	action_t _commit = nullptr;
+	action_t _retry = nullptr;
 
 	// The cursor may be in the edit field or the suggestion list.
 	size_t _cursor_pos = 0;

@@ -6,7 +6,7 @@ void UI::Dialog::Show(const Input &options, Frame &ctx)
 	std::unique_ptr<Dialog> it(new Dialog);
 	it->_prompt = options.prompt;
 	it->_value = options.value;
-	it->_action = options.action;
+	it->_commit = options.commit;
 	it->_cursor_pos = it->_value.size();
 	ctx.show_dialog(std::move(it));
 }
@@ -16,11 +16,22 @@ void UI::Dialog::Show(const Picker &options, Frame &ctx)
 	std::unique_ptr<Dialog> it(new Dialog);
 	it->_prompt = options.prompt;
 	it->_suggestions = options.values;
+	it->_commit = options.commit;
 	if (!it->_suggestions.empty()) {
 		it->_suggestion_selected = true;
 		it->_value = it->_suggestions.front();
 	}
-	it->_action = options.action;
+	ctx.show_dialog(std::move(it));
+}
+
+void UI::Dialog::Show(const Confirm &options, Frame &ctx)
+{
+	std::unique_ptr<Dialog> it(new Dialog);
+	it->_prompt = options.prompt;
+	it->_value = options.value;
+	it->_commit = options.commit;
+	it->_retry = options.retry;
+	it->_show_value = false;
 	ctx.show_dialog(std::move(it));
 }
 
@@ -94,20 +105,21 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 		case Control::Close:	// control-W
 			// the user no longer wants this action
 			// this dialog has no further purpose
+			if (_retry) _retry(ctx, _value);
 			return false;
 		case Control::Return:
 		case Control::Enter:
 			// the user is happy with their choice
 			// tell the action to proceed and then
 			// inform our host that we are finished
-			_action(ctx, _value);
+			if (_commit) _commit(ctx, _value);
 			return false;
 		case KEY_LEFT: arrow_left(); break;
 		case KEY_RIGHT: arrow_right(); break;
 		case KEY_UP: arrow_up(); break;
 		case KEY_DOWN: arrow_down(); break;
 		case Control::Backspace: delete_prev(); break;
-		case Control::Delete: delete_next(); break;
+		case KEY_DC: delete_next(); break;
 		default:
 			// we only care about non-control chars now
 			if (ch < 32 || ch > 127) break;
@@ -116,7 +128,7 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 			// item corresponding to that digit
 			if (ch >= '0' && ch <= '9' && _suggestion_selected) {
 				select_suggestion(ch - '0');
-				_action(ctx, _value);
+				if (_commit) _commit(ctx, _value);
 				return false;
 			}
 			// in all other situations, the keypress should be
@@ -148,15 +160,16 @@ void UI::Dialog::paint()
 	wmove(_win, 0, 0);
 	if (!_prompt.empty()) {
 		waddnstr(_win, _prompt.c_str(), width);
-		waddch(_win, ':');
-		waddch(_win, ' ');
+		if (_show_value) waddstr(_win, ": ");
 	}
 	int value_vpos, value_hpos;
 	getyx(_win, value_vpos, value_hpos);
 	(void)value_vpos; // unused
-	if (!_suggestion_selected) wattron(_win, A_UNDERLINE);
-	waddnstr(_win, _value.c_str(), width - value_hpos);
-	if (!_suggestion_selected) wattroff(_win, A_UNDERLINE);
+	if (_show_value) {
+		if (!_suggestion_selected) wattron(_win, A_UNDERLINE);
+		waddnstr(_win, _value.c_str(), width - value_hpos);
+		if (!_suggestion_selected) wattroff(_win, A_UNDERLINE);
+	}
 	int end_vpos, end_hpos;
 	getyx(_win, end_vpos, end_hpos);
 	(void)end_vpos; // unused

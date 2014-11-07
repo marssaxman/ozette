@@ -12,7 +12,7 @@ Control::Info Control::keys[Count] = {
 		{'H', "BS"}, //08 BS ( H h
 	{'I', "Tab"},  //09 HT ) I i - Tab key
 	{'J', "Enter"},  //0A LF * J j - Enter key
-	{'K', "Delete"}, //0B VT + K k
+		{'K', "VT"}, //0B VT + K k
 		{'L', "FF"},  //0C FF , L l
 	{'M', "Return"},  //0D CR - M m - Return key
 	{'N', "New File"}, //0E SO . N n
