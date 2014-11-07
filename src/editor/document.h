@@ -62,6 +62,7 @@ private:
 	void sanitize(location_t *loc);
 	location_t sanitize(const location_t &loc);
 	bool attempt_modify();
+	void clear_modify();
 
 	std::unique_ptr<Line> _blank;
 	std::vector<std::unique_ptr<Line>> _lines;

@@ -67,6 +67,7 @@ void Editor::Document::Write(std::string path)
 		file << line->text() << std::endl;
 	}
 	file.close();
+	clear_modify();
 }
 
 Editor::location_t Editor::Document::home()
@@ -285,4 +286,12 @@ bool Editor::Document::attempt_modify()
 		_status = "Modified";
 	}
 	return _modified;
+}
+
+void Editor::Document::clear_modify()
+{
+	if (_modified) {
+		_modified = false;
+		_status.clear();
+	}
 }
