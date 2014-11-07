@@ -27,7 +27,7 @@ protected:
 	virtual void set_title(std::string text) override;
 	virtual void set_status(std::string text) override;
 	virtual void set_help(const Control::Panel &help) override;
-	virtual void show_dialog(std::unique_ptr<Dialog> &&action);
+	virtual void show_dialog(std::unique_ptr<Dialog> &&dialog) override;
 	void layout_contentwin();
 	void layout_taskbar();
 	void paint();

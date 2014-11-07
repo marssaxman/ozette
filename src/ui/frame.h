@@ -20,7 +20,7 @@ public:
 	virtual void set_title(std::string text) = 0;
 	virtual void set_status(std::string text) = 0;
 	virtual void set_help(const Control::Panel &help) = 0;
-	virtual void show_dialog(std::unique_ptr<Dialog> &&dlg) = 0;
+	virtual void show_dialog(std::unique_ptr<Dialog> &&dialog) = 0;
 };
 } // namespace UI
 

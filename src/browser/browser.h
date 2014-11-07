@@ -13,9 +13,9 @@ public:
 	virtual void open(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	void show_projects(UI::Frame &ctx);
-	void set_project(UI::Frame &ctx, std::string path);
 private:
 	virtual void render(ListForm::Builder &lines) override;
+	void select_project(UI::Frame &ctx, std::string path);
 	void find_projects();
 	static bool dir_exists(std::string path);
 	static bool file_exists(std::string path);

@@ -22,24 +22,28 @@ class Frame;
 class Dialog
 {
 public:
-	// The dialog class manages an interface for interacting with
-	// some action which will be performed when the user commits.
-	class Action
-	{
-	public:
-		virtual ~Action() = default;
-		// The user is happy with their choice and wants
-		// the action to proceed. The dialog will close.
-		virtual void commit(UI::Frame &ctx, std::string value) = 0;
+	// There are several flavors of dialog box. Set up the
+	// one you want then call Dialog::Show().
+
+	// An input box suggests a value, which the user may
+	// choose to edit.
+	struct Input {
+		std::string prompt;
+		std::string value;
+		std::function<void(Frame&,std::string)> action = nullptr;
 	};
+	static void Show(const Input &options, Frame &ctx);
 
-	// Every dialog instance gets a unique controller object, which
-	// carries whatever state is necessary should the user commit
-	// the requested action.
-	Dialog(std::string prompt, std::string value, std::unique_ptr<Action> &&action);
-	Dialog(std::string prompt, std::vector<std::string> values, std::unique_ptr<Action> &&action);
+	// A picker shows a list of values. The user may choose
+	// one, or they may type in their own value instead.
+	struct Picker {
+		std::string prompt;
+		std::vector<std::string> values;
+		std::function<void(Frame&,std::string)> action = nullptr;
+	};
+	static void Show(const Picker &options, Frame &ctx);
+
 	~Dialog();
-
 	// Dialogs belong to some UI element, which will manage the
 	// location of the window and its activation state. This may be
 	// some window, which will raise and lower the dialog along with
@@ -59,6 +63,7 @@ public:
 	bool process(UI::Frame &ctx, int ch);
 
 private:
+	Dialog();
 	void paint();
 	void arrow_left();
 	void arrow_right();
@@ -79,21 +84,24 @@ private:
 	int _host_v = 0;
 	int _host_h = 0;
 
+	// Our content is drawn in a window in a panel.
 	WINDOW *_win = nullptr;
 	PANEL *_panel = nullptr;
 	bool _has_focus = true;
-	std::unique_ptr<Action> _action;
-	// Do we need to repaint the window?
-	bool _repaint = true;
 
+	// These are the values configured by the client.
 	std::string _prompt;
 	std::string _value;
 	std::vector<std::string> _suggestions;
+	std::function<void(Frame &ctx, std::string value)> _action;
 
 	// The cursor may be in the edit field or the suggestion list.
 	size_t _cursor_pos = 0;
 	bool _suggestion_selected = false;
 	size_t _sugg_item = 0;
+	// Do we need to repaint the window?
+	bool _repaint = true;
+
 };
 } // namespace UI
 

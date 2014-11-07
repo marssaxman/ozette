@@ -3,6 +3,7 @@
 #include "dialog.h"
 #include <dirent.h>
 #include <sys/stat.h>
+#include <assert.h>
 
 Browser::Browser():
 	_homedir(getenv("HOME"))
@@ -31,26 +32,16 @@ bool Browser::process(UI::Frame &ctx, int ch)
 	return more;
 }
 
-namespace {
-class SetProject : public UI::Dialog::Action
-{
-public:
-	SetProject(Browser *browser): _browser(browser) {}
-	virtual void commit(UI::Frame &ctx, std::string path) override
-	{
-		_browser->set_project(ctx, path);
-	}
-	Browser *_browser;
-};
-} // namespace
-
 void Browser::show_projects(UI::Frame &ctx)
 {
-	auto action = new SetProject(this);
-	std::unique_ptr<UI::Dialog::Action> actionptr(action);
-	auto dialog = new UI::Dialog("Select Project", _projects, std::move(actionptr));
-	std::unique_ptr<UI::Dialog> dialogptr(dialog);
-	ctx.show_dialog(std::move(dialogptr));
+	UI::Dialog::Picker dialog;
+	dialog.prompt = "Select Project";
+	dialog.values = _projects;
+	dialog.action = [this](UI::Frame &ctx, std::string path)
+	{
+		select_project(ctx, path);
+	};
+	UI::Dialog::Show(dialog, ctx);
 }
 
 void Browser::render(ListForm::Builder &lines)
@@ -60,7 +51,7 @@ void Browser::render(ListForm::Builder &lines)
 	}
 }
 
-void Browser::set_project(UI::Frame &ctx, std::string path)
+void Browser::select_project(UI::Frame &ctx, std::string path)
 {
 	_project.reset(new DirTree::Root(path));
 	ctx.set_title("Lindi: " + path);

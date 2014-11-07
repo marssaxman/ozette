@@ -1,28 +1,27 @@
 #include "dialog.h"
+#include "frame.h"
 
-UI::Dialog::Dialog(std::string prompt, std::string value, std::unique_ptr<Action> &&action):
-	_win(newwin(0, 0, 0, 0)),
-	_panel(new_panel(_win)),
-	_action(std::move(action))
+void UI::Dialog::Show(const Input &options, Frame &ctx)
 {
-	_prompt = prompt;
-	_value = value;
-	_cursor_pos = value.size();
+	std::unique_ptr<Dialog> it(new Dialog);
+	it->_prompt = options.prompt;
+	it->_value = options.value;
+	it->_action = options.action;
+	it->_cursor_pos = it->_value.size();
+	ctx.show_dialog(std::move(it));
 }
 
-UI::Dialog::Dialog(std::string prompt, std::vector<std::string> items, std::unique_ptr<Action> &&action):
-	_win(newwin(0, 0, 0, 0)),
-	_panel(new_panel(_win)),
-	_action(std::move(action))
+void UI::Dialog::Show(const Picker &options, Frame &ctx)
 {
-	_prompt = prompt;
-	_suggestions = items;
-	if (!_suggestions.empty()) {
-		_suggestion_selected = true;
-		_sugg_item = 0;
-		_value = _suggestions[0];
+	std::unique_ptr<Dialog> it(new Dialog);
+	it->_prompt = options.prompt;
+	it->_suggestions = options.values;
+	if (!it->_suggestions.empty()) {
+		it->_suggestion_selected = true;
+		it->_value = it->_suggestions.front();
 	}
-	_cursor_pos = _value.size();
+	it->_action = options.action;
+	ctx.show_dialog(std::move(it));
 }
 
 UI::Dialog::~Dialog()
@@ -101,7 +100,7 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 			// the user is happy with their choice
 			// tell the action to proceed and then
 			// inform our host that we are finished
-			_action->commit(ctx, _value);
+			_action(ctx, _value);
 			return false;
 		case KEY_LEFT: arrow_left(); break;
 		case KEY_RIGHT: arrow_right(); break;
@@ -117,7 +116,7 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 			// item corresponding to that digit
 			if (ch >= '0' && ch <= '9' && _suggestion_selected) {
 				select_suggestion(ch - '0');
-				_action->commit(ctx, _value);
+				_action(ctx, _value);
 				return false;
 			}
 			// in all other situations, the keypress should be
@@ -129,6 +128,12 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 		paint();
 	}
 	return true;
+}
+
+UI::Dialog::Dialog():
+	_win(newwin(0, 0, 0, 0)),
+	_panel(new_panel(_win))
+{
 }
 
 void UI::Dialog::paint()

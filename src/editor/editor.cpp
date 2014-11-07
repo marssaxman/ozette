@@ -1,6 +1,7 @@
 #include "editor.h"
 #include "control.h"
 #include "dialog.h"
+#include <assert.h>
 
 Editor::Controller::Controller():
 	_cursor(_doc, _update)
@@ -204,27 +205,16 @@ void Editor::Controller::key_return(UI::Frame &ctx)
 	_update.forward(_cursor.location());
 }
 
-namespace {
-class SaveDocument : public UI::Dialog::Action
-{
-public:
-	SaveDocument(Editor::Document &doc): _doc(doc) {}
-	virtual void commit(UI::Frame &ctx, std::string path) override
-	{
-		// go write the document to disk at the specified path
-	}
-private:
-	Editor::Document &_doc;
-};
-} // namespace
-
 void Editor::Controller::key_save(UI::Frame &ctx)
 {
-	auto ctrl = new SaveDocument(_doc);
-	std::unique_ptr<UI::Dialog::Action> host(ctrl);
-	auto dialog = new UI::Dialog("Save File", _targetpath, std::move(host));
-	std::unique_ptr<UI::Dialog> dialogptr(dialog);
-	ctx.show_dialog(std::move(dialogptr));
+	UI::Dialog::Input dialog;
+	dialog.prompt = "Save File";
+	dialog.value = _targetpath;
+	dialog.action = [this](UI::Frame &ctx, std::string path)
+	{
+		// go save the document somehow
+	};
+	UI::Dialog::Show(dialog, ctx);
 }
 
 void Editor::Controller::key_up(bool extend)
