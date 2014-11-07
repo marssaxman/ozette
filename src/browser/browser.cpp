@@ -1,5 +1,6 @@
 #include "browser.h"
 #include "control.h"
+#include "dialog.h"
 #include <dirent.h>
 #include <sys/stat.h>
 
@@ -15,7 +16,7 @@ void Browser::open(UI::Frame &ctx)
 	using namespace Control;
 	Panel help = {{
 		{Open, NewFile, 0, 0, Find, GoTo},
-		{Quit, Save, Close, Projects, 0, 0} // Projects, Config, Help
+		{Quit, Save, Close, Projects, 0, Help} // Config/Settings
 	}};
 	ctx.set_help(help);
 }
@@ -59,7 +60,8 @@ void Browser::show_projects(UI::Frame &ctx)
 	action->_list = _projects;
 	action->_browser = this;
 	std::unique_ptr<UI::Dialog::Action> actionptr(action);
-	ctx.show_dialog(std::move(actionptr));
+	std::unique_ptr<UI::Dialog> dialog(new UI::Dialog(std::move(actionptr)));
+	ctx.show_dialog(std::move(dialog));
 }
 
 void Browser::render(ListForm::Builder &lines)

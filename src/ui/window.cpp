@@ -131,9 +131,9 @@ void UI::Window::set_help(const Control::Panel &help)
 	layout_taskbar();
 }
 
-void UI::Window::show_dialog(std::unique_ptr<Dialog::Action> &&host)
+void UI::Window::show_dialog(std::unique_ptr<Dialog> &&host)
 {
-	_dialog.reset(new Dialog(std::move(host)));
+	_dialog = std::move(host);
 	_dialog->layout(_contentwin);
 }
 

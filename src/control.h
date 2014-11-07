@@ -37,9 +37,9 @@ enum {
 
 	Projects = 0x10, //DLE ^P
 	Quit = 0x11, //DC1 ^Q
+	Help = 0x1F, //US ^?
 
 	// Ideas for the future
-	// Y = redo?
 	// R = run, B = build, K = clean?
 	// edit, diff, log, blame?
 };

@@ -25,7 +25,7 @@ void Editor::Controller::open(UI::Frame &ctx)
 	using namespace Control;
 	Panel help = {{
 		{Cut, Copy, Paste, 0, Find, GoTo},
-		{Close, Save, Revert, Undo, Redo, 0} //Redo, Help
+		{Close, Save, Revert, Undo, Redo, Help}
 	}};
 	ctx.set_help(help);
 }
@@ -229,7 +229,8 @@ void Editor::Controller::key_save(UI::Frame &ctx)
 {
 	auto ctrl = new SaveDocument(_targetpath, _doc);
 	std::unique_ptr<UI::Dialog::Action> host(ctrl);
-	ctx.show_dialog(std::move(host));
+	std::unique_ptr<UI::Dialog> dialog(new UI::Dialog(std::move(host)));
+	ctx.show_dialog(std::move(dialog));
 }
 
 void Editor::Controller::key_up(bool extend)

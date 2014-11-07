@@ -1,36 +1,36 @@
 #include "control.h"
 
 Control::Info Control::keys[Count] = {
-	{' ', ""}, //00 NUL
-		{'A', "SOH"}, //01
-		{'B', "STX"}, //02
-	{'C', "Copy"}, //03 ETX
-		{'D', "EOT"}, //04
-		{'E', "ENQ"}, //05
-	{'F', "Find"}, //06 ACK
-	{'G', "Go To"}, //07 BEL
-		{'H', "BS"}, //08
-	{'I', "Tab"},  //09 HT - tab
-	{'J', "Enter"},  //0A LF - enter
-	{'K', "Delete"}, //0B VT
-		{'L', "FF"},  //0C
-	{'M', "Return"},  //0D CR - return
-	{'N', "New File"}, //0E
-	{'O', "Open"}, //0F SI
-	{'P', "Projects"},//10 DLE
-	{'Q', "Quit"}, //11 DC1
-	{'R', "Revert"}, //12 DC2
-	{'S', "Save"}, //13 DC3
-		{'T', "DC4"}, //14
-		{'U', "NAK"}, //15
-	{'V', "Paste"}, //16 SYN
-	{'W', "Close"}, //17 ETB
-	{'X', "Cut"}, //18 CAN
-	{'Y', "Redo"}, //19 EM
-	{'Z', "Undo"}, //1A SUB
-	{'[', "Escape"}, //1B ESC
-		{'\\', "FS"}, //1C
-		{']', "GS"},  //1D
-		{'^', "RS"},  //1E
-		{'_', "US"},  //1F
+	{' ', ""}, //00 NUL   @ `
+		{'A', "SOH"}, //01 SOH ! A a
+		{'B', "STX"}, //02 STX " B b
+	{'C', "Copy"}, //03 ETX # C c
+		{'D', "EOT"}, //04 EOT $ D d
+		{'E', "ENQ"}, //05 ENQ % E e
+	{'F', "Find"}, //06 ACK & F f
+	{'G', "Go To"}, //07 BEL ' G g
+		{'H', "BS"}, //08 BS ( H h
+	{'I', "Tab"},  //09 HT ) I i - Tab key
+	{'J', "Enter"},  //0A LF * J j - Enter key
+	{'K', "Delete"}, //0B VT + K k
+		{'L', "FF"},  //0C FF , L l
+	{'M', "Return"},  //0D CR - M m - Return key
+	{'N', "New File"}, //0E SO . N n
+	{'O', "Open"}, //0F SI / O o
+	{'P', "Projects"},//10 DLE 0 P p
+	{'Q', "Quit"}, //11 DC1 1 Q q
+	{'R', "Revert"}, //12 DC2 2 R r
+	{'S', "Save"}, //13 DC3 3 S s
+		{'T', "DC4"}, //14 DC4 4 T t
+		{'U', "NAK"}, //15 NAK 5 U u
+	{'V', "Paste"}, //16 SYN 6 V v
+	{'W', "Close"}, //17 ETB 7 W w
+	{'X', "Cut"}, //18 CAN 8 X x
+	{'Y', "Redo"}, //19 EM 9 Y y
+	{'Z', "Undo"}, //1A SUB : Z z
+	{'[', "Escape"}, //1B ESC ; [ {
+		{'\\', "FS"}, //1C FS < \ |
+		{']', "GS"},  //1D GS = ] }
+		{'^', "RS"},  //1E RS > ^ ~
+	{'?', "Help"},  //1F US ? _ DEL
 };
