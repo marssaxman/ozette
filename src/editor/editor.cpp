@@ -207,14 +207,7 @@ void Editor::Controller::key_return(UI::Frame &ctx)
 
 void Editor::Controller::key_save(UI::Frame &ctx)
 {
-	UI::Dialog::Input dialog;
-	dialog.prompt = "Save File";
-	dialog.value = _targetpath;
-	dialog.commit = [this](UI::Frame &ctx, std::string path)
-	{
-		_doc.Write(path);
-	};
-	UI::Dialog::Show(dialog, ctx);
+	save(ctx, _targetpath);
 }
 
 void Editor::Controller::key_up(bool extend)
@@ -313,3 +306,41 @@ void Editor::Controller::adjust_selection(bool extend)
 		drop_selection();
 	}
 }
+
+void Editor::Controller::save(UI::Frame &ctx, std::string path)
+{
+	UI::Dialog::Input dialog;
+	dialog.prompt = "Save File";
+	dialog.value = path;
+	dialog.commit = [this](UI::Frame &ctx, std::string path)
+	{
+		// Clearing out the path name is the same as cancelling.
+		if (path.empty()) {
+			return;
+		}
+		// If they confirmed the existing name, we can write it out.
+		if (path == _targetpath) {
+			_doc.Write(path);
+			return;
+		}
+		// This is a different path than the file used to have.
+		// Ask the user to confirm that they meant to change it.
+		UI::Dialog::Confirm dialog;
+		dialog.prompt = "Save file under a different name?";
+		dialog.value = path;
+		dialog.commit = [this](UI::Frame &ctx, std::string path)
+		{
+			if (path.empty()) return;
+			_doc.Write(path);
+			_targetpath = path;
+			ctx.set_title(path);
+		};
+		dialog.retry = [this](UI::Frame &ctx, std::string path)
+		{
+			save(ctx, path);
+		};
+		UI::Dialog::Show(dialog, ctx);
+	};
+	UI::Dialog::Show(dialog, ctx);
+}
+

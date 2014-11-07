@@ -49,6 +49,8 @@ protected:
 	// selection using shift-arrow-key movement.
 	void drop_selection();
 	void adjust_selection(bool extend);
+	// File management basics.
+	void save(UI::Frame &ctx, std::string dest);
 private:
 	std::string _targetpath;
 	Document _doc;

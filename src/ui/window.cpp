@@ -98,9 +98,21 @@ void UI::Window::bring_forward(int focus_relative)
 bool UI::Window::process(int ch)
 {
 	if (_dialog) {
-		if (_dialog->process(*this, ch)) return true;
-		_dialog.reset();
-		paint();
+		// A dialog may invoke actions which may result in its
+		// own replacement. We will temporarily move it into a
+		// local variable while it has control.
+		std::unique_ptr<Dialog> temp(std::move(_dialog));
+		if (temp->process(*this, ch)) {
+			// If this dialog wants to stick around, we
+			// expect that it hasn't done anything which
+			// would result in its own replacement.
+			assert(_dialog.get() == nullptr);
+			_dialog = std::move(temp);
+		} else {
+			// The dialog has gone away. We probably need
+			// to redraw something.
+			paint();
+		}
 		return true;
 	}
 	bool out = _controller->process(*this, ch);

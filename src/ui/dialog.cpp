@@ -105,13 +105,13 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 		case Control::Close:	// control-W
 			// the user no longer wants this action
 			// this dialog has no further purpose
-			if (_retry) _retry(ctx, _value);
 			return false;
 		case Control::Return:
 		case Control::Enter:
 			// the user is happy with their choice
 			// tell the action to proceed and then
 			// inform our host that we are finished
+			if(!_show_value) break;
 			if (_commit) _commit(ctx, _value);
 			return false;
 		case KEY_LEFT: arrow_left(); break;
@@ -131,6 +131,19 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 				if (_commit) _commit(ctx, _value);
 				return false;
 			}
+			// if this is a non-value-showing dialog and the key
+			// was "Y", that's commit; if it was "N", that's retry
+			if (!_show_value) {
+				if (ch == 'Y' || ch == 'y') {
+					if (_commit) _commit(ctx, _value);
+					return false;
+				}
+				if (ch == 'N' || ch == 'n') {
+					if (_retry) _retry(ctx, _value);
+					return false;
+				}
+			}
+
 			// in all other situations, the keypress should be
 			// inserted into the field at the cursor point.
 			key_insert(ch);
@@ -160,7 +173,7 @@ void UI::Dialog::paint()
 	wmove(_win, 0, 0);
 	if (!_prompt.empty()) {
 		waddnstr(_win, _prompt.c_str(), width);
-		if (_show_value) waddstr(_win, ": ");
+		waddstr(_win, _show_value ? ": " : " [Y/n]");
 	}
 	int value_vpos, value_hpos;
 	getyx(_win, value_vpos, value_hpos);
@@ -219,6 +232,9 @@ void UI::Dialog::paint()
 	// Put the cursor where it ought to be. Make it visible, if that
 	// would be appropriate for our activation state.
 	wmove(_win, 0, value_hpos + _cursor_pos);
+	bool show_cursor = _has_focus;
+	show_cursor &= !_suggestion_selected;
+	show_cursor &= _show_value;
 	curs_set(_has_focus && !_suggestion_selected? 1: 0);
 
 	// We no longer need to repaint.
