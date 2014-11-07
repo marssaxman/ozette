@@ -109,7 +109,6 @@ void UI::Dialog::paint()
 
 	int height, width;
 	getmaxyx(_win, height, width);
-	(void)height; // unused
 
 	// Draw the prompt and the current value string.
 	wmove(_win, 0, 0);
@@ -129,34 +128,34 @@ void UI::Dialog::paint()
 	(void)end_vpos; // unused
 	whline(_win, ' ', width - end_hpos);
 
-	if (!_state.suggestions.empty()) {
-		// Draw each suggested value on its own line.
-		int sugg_vpos = value_vpos + 1;
-		int sugg_width = width - 4;
-		for (unsigned i = 0; i < _state.suggestions.size(); ++i) {
-			wmove(_win, sugg_vpos + i, 0);
-			if (i < 10 && _suggestion_selected) {
-				waddch(_win, '0' + i);
-				waddch(_win, ':');
-			} else {
-				waddstr(_win, "  ");
-			}
-			waddnstr(_win, _state.suggestions[i].c_str(), sugg_width);
-			int curv, curh;
-			getyx(_win, curv, curh);
-			(void)curv; //ignored
-			whline(_win, ' ', width - curh);
+	// Draw each suggested value on its own line.
+	int sugg_vpos = value_vpos + 1;
+	int sugg_width = width - 4;
+	for (unsigned i = 0; i < _state.suggestions.size(); ++i) {
+		int vpos = sugg_vpos + i;
+		if (vpos >= height) break;
+		wmove(_win, vpos, 0);
+		if (i < 10 && _suggestion_selected) {
+			waddch(_win, '0' + i);
+			waddch(_win, ':');
+		} else {
+			waddstr(_win, "  ");
 		}
-		// Draw a blank line underneath.
-		wmove(_win, sugg_vpos + _state.suggestions.size(), 0);
-		whline(_win, ' ', width);
-		// If one of these items was selected, highlight it by using
-		// normal (non-reversed) mode.
-		if (_suggestion_selected) {
-			int selrow = sugg_vpos + _sugg_item;
-			wmove(_win, selrow, 2);
-			wchgat(_win, sugg_width, A_NORMAL, 0, NULL);
+		bool selrow = (_suggestion_selected && i == _sugg_item);
+		if (selrow) {
+			wattroff(_win, A_REVERSE);
+			if (vpos + 1 == height) wattron(_win, A_UNDERLINE);
 		}
+		waddnstr(_win, _state.suggestions[i].c_str(), sugg_width);
+		int curv, curh;
+		getyx(_win, curv, curh);
+		(void)curv; //ignored
+		whline(_win, ' ', width - curh - 2);
+		if (selrow) {
+			wattron(_win, A_REVERSE);
+			if (vpos + 1 == height) wattroff(_win, A_UNDERLINE);
+		}
+		mvwaddstr(_win, vpos, width - 2, "  ");
 	}
 	// We're done being all reversed and stuff.
 	wattroff(_win, A_REVERSE);
@@ -175,14 +174,7 @@ void UI::Dialog::update_window_dimensions()
 	// We will put the dialog at the bottom of its window, as wide as the
 	// host and as many rows tall as its content, up to half the height of
 	// the host window.
-	int content_height = 1;
-	if (!_state.suggestions.empty()) {
-		// Draw each suggested value on its own row
-		content_height += _state.suggestions.size();
-		// Put a blank line on the bottom to separate the dialog
-		// from whatever might be hanging out below it
-		content_height++;
-	}
+	int content_height = 1 + _state.suggestions.size();
 	int new_height = std::min(content_height, _host_height / 2);
 	int new_width = _host_width;
 	int new_v = _host_v + _host_height - new_height;
