@@ -19,6 +19,7 @@ public:
 		None
 	};
 	bool is_directory() { return type() == Type::Directory; }
+	bool is_file() { return type() == Type::File; }
 	Type type() { initcheck(); return _type; }
 	time_t mtime() { initcheck(); return _mtime; }
 	std::vector<DirTree> &items();

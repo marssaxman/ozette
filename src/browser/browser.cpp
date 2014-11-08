@@ -35,20 +35,9 @@ void Browser::paint(WINDOW *view, bool active)
 	wmove(view, 0, 0);
 	wclrtoeol(view);
 	for (size_t i = _scrollpos; i < _list.size() && row < height; ++i) {
-		auto &item = _list[i];
-		DirTree *entry = item.entry;
 		wmove(view, row, 0);
-		int rowchars = width;
-		for (unsigned tab = 0; tab < item.indent; tab++) {
-			waddnstr(view, "    ", rowchars);
-			rowchars -= 4;
-		}
-		bool isdir = entry->is_directory();
-		waddnstr(view, isdir? "+ ": "  ", rowchars);
-		rowchars -= 2;
-		waddnstr(view, entry->name().c_str(), rowchars - 1);
-		waddnstr(view, isdir? "/": " ", rowchars);
-		wclrtoeol(view);
+		whline(view, ' ', width);
+		paint_row(view, _list[i], width);
 		if (active && i == _selection) {
 			mvwchgat(view, row, 0, width, A_REVERSE, 0, NULL);
 		}
@@ -83,6 +72,29 @@ void Browser::view(std::string path)
 		_list.clear();
 		_tree = DirTree(path);
 		_rebuild_list = true;
+	}
+}
+
+void Browser::paint_row(WINDOW *view, row_t &display, int width)
+{
+	int rowchars = width;
+	for (unsigned tab = 0; tab < display.indent; tab++) {
+		waddnstr(view, "    ", rowchars);
+		rowchars -= 4;
+	}
+	bool isdir = display.entry->is_directory();
+	waddnstr(view, isdir? "+ ": "  ", rowchars);
+	rowchars -= 2;
+	waddnstr(view, display.entry->name().c_str(), rowchars - 1);
+	waddnstr(view, isdir? "/": " ", rowchars);
+	if (display.entry->is_file()) {
+		char buf[256];
+		time_t mtime = display.entry->mtime();
+		size_t dchars = strftime(buf, 255, "%c", localtime(&mtime));
+		int vpos, hpos;
+		getyx(view, vpos, hpos);
+		int drawchars = std::min((int)dchars, width - hpos);
+		mvwaddnstr(view, vpos, width - drawchars, buf, drawchars);
 	}
 }
 

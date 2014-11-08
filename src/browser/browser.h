@@ -13,6 +13,12 @@ public:
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	void view(std::string path);
 private:
+	struct row_t {
+		unsigned indent;
+		bool expanded;
+		DirTree *entry;
+	};
+	void paint_row(WINDOW *view, row_t &display, int width);
 	void key_return(UI::Frame &ctx);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
@@ -25,11 +31,6 @@ private:
 	void remove_rows(size_t index, unsigned indent);
 	DirTree *sel_entry() { return _list[_selection].entry; }
 	DirTree _tree;
-	struct row_t {
-		unsigned indent;
-		bool expanded;
-		DirTree *entry;
-	};
 	std::vector<row_t> _list;
 	size_t _selection = 0;
 	size_t _scrollpos = 0;
