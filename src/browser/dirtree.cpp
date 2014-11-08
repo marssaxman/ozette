@@ -1,5 +1,6 @@
 #include "dirtree.h"
 #include <dirent.h>
+#include <algorithm>
 #include <sys/stat.h>
 
 DirTree::DirTree(std::string path):
@@ -11,6 +12,11 @@ DirTree::DirTree(std::string dir, std::string name):
 	_path(dir + "/" + name),
 	_name(name)
 {
+	_casefold_name = _name;
+	for_each(_casefold_name.begin(), _casefold_name.end(), [](char& in)
+	{
+		in = ::toupper(in);
+	});
 }
 
 void DirTree::scan()
@@ -40,6 +46,11 @@ std::vector<DirTree> &DirTree::items()
 	return _items;
 }
 
+static bool entry_order(const DirTree &a, const DirTree &b)
+{
+	return a.casefold_name() < b.casefold_name();
+}
+
 void DirTree::iterate()
 {
 	_items.clear();
@@ -51,4 +62,5 @@ void DirTree::iterate()
 		_items.emplace_back(_path, entry->d_name);
 	}
 	closedir(pdir);
+	std::sort(_items.begin(), _items.end(), entry_order);
 }

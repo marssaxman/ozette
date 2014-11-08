@@ -12,6 +12,7 @@ public:
 	void scan();
 	std::string path() const { return _path; }
 	std::string name() const { return _name; }
+	std::string casefold_name() const { return _casefold_name; }
 	enum class Type {
 		Directory,
 		File,
@@ -28,6 +29,7 @@ private:
 	void iterate();
 	std::string _path;
 	std::string _name;
+	std::string _casefold_name;
 	bool _scanned = false;
 	Type _type = Type::None;
 	time_t _mtime = 0;

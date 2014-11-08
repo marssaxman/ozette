@@ -33,7 +33,7 @@ void Browser::activate(UI::Frame &ctx)
 //		{Open, NewFile, 0, 0, 0, Find},
 //		{Quit, Save, Close, Directory, 0, Help} // Config/Settings
 		{Open, NewFile, 0, 0, 0, 0},
-		{Quit, 0, Close, Directory, 0, 0},
+		{Quit, 0, 0, Directory, 0, 0},
 	}};
 	ctx.set_help(help);
 	if (_rebuild_list) ctx.repaint();
