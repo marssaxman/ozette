@@ -2,6 +2,7 @@
 #define APP_H
 
 #include <string>
+#include <vector>
 
 // Abstract interface for centralized application actions.
 class App
@@ -14,6 +15,8 @@ public:
 	virtual void quit() = 0;
 	virtual void set_clipboard(std::string text) = 0;
 	virtual std::string get_clipboard() = 0;
+	virtual void get_config(std::string name, std::vector<std::string> &lines) = 0;
+	virtual void set_config(std::string name, const std::vector<std::string> &lines) = 0;
 };
 
 #endif	//APP_H

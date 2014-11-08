@@ -5,6 +5,7 @@
 #include "shell.h"
 #include "browser.h"
 #include <string>
+#include <vector>
 #include <map>
 
 class Lindi : public App
@@ -17,22 +18,24 @@ public:
 	virtual void quit() override { _done = true; }
 	virtual void set_clipboard(std::string text) override;
 	virtual std::string get_clipboard() override;
+	virtual void get_config(std::string name, std::vector<std::string> &lines) override;
+	virtual void set_config(std::string name, const std::vector<std::string> &lines) override;
 
 	void run();
 private:
 	void change_directory();
 	void new_file();
-	void activate_browser();
 	int fix_control_quirks(int ch);
+	void set_mru(std::string path, std::vector<std::string> &mru);
 
 	UI::Shell _shell;
-	Browser *_browser = nullptr;;
-	UI::Window *_browserwindow = nullptr;
 	std::string _home_dir;
 	std::string _current_dir;
+	std::string _config_dir;
 	std::map<std::string, UI::Window*> _editors;
 	std::string _clipboard;
 	bool _done = false;
+	std::vector<std::string> _recent_dirs;
 };
 
 #endif	//LINDI_H

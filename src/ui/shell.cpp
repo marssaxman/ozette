@@ -180,7 +180,7 @@ void UI::Shell::relayout()
 	// Divide any remaining space among any remaining windows and stagger
 	// each remaining window proportionally across the screen.
 	assert(_width >= _columnWidth);
-	assert(!_columns.empty());
+	if(_columns.empty()) return;
 	size_t ubound = _columns.size() - 1;
 	int right_edge = _width - _columnWidth;
 	_spacing = (ubound > 0) ? right_edge / ubound : 0;

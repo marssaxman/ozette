@@ -257,6 +257,7 @@ void UI::Window::paint()
 
 void UI::Window::paint_content()
 {
+	curs_set(0);
 	_controller->paint(_contentwin, _has_focus);
 	_dirty_content = false;
 }

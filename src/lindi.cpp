@@ -3,11 +3,13 @@
 #include "editor.h"
 #include "control.h"
 #include <unistd.h>
+#include <fstream>
+#include <sys/stat.h>
 
 Lindi::Lindi():
 	_shell(*this),
-	_browser(new Browser("~")),
-	_home_dir(getenv("HOME"))
+	_home_dir(getenv("HOME")),
+	_config_dir(_home_dir + "/.lindi")
 {
 	char *cwd = get_current_dir_name();
 	if (cwd) {
@@ -16,9 +18,7 @@ Lindi::Lindi():
 	} else {
 		_current_dir = _home_dir;
 	}
-	_browser->view(_current_dir);
-        std::unique_ptr<UI::Controller> browser(_browser);
-        _browserwindow = _shell.open_window(std::move(browser));
+	Browser::open(_current_dir, _shell);
 }
 
 std::string Lindi::current_dir() const
@@ -59,6 +59,28 @@ std::string Lindi::get_clipboard()
 	return _clipboard;
 }
 
+void Lindi::get_config(std::string name, std::vector<std::string> &lines)
+{
+	lines.clear();
+	std::string str;
+	std::ifstream file(_config_dir + "/" + name);
+	while (std::getline(file, str)) {
+		lines.push_back(str);
+	}
+	file.close();
+}
+
+void Lindi::set_config(std::string name, const std::vector<std::string> &lines)
+{
+	// if the lindi prefs directory doesn't exist yet, create it
+	mkdir(_config_dir.c_str(), S_IRWXU);
+	std::ofstream file(_config_dir + "/" + name, std::ios::trunc);
+	for (auto &line: lines) {
+		file << line << std::endl;
+	}
+	file.close();
+}
+
 void Lindi::run()
 {
 	timeout(20);
@@ -79,11 +101,14 @@ void Lindi::change_directory()
 {
 	UI::Dialog::Picker dialog;
 	dialog.prompt = "Change Directory";
-	dialog.values.push_back(_current_dir);
+	get_config("recent_dirs", dialog.values);
+	set_mru(_current_dir, dialog.values);
 	dialog.commit = [this](UI::Frame &ctx, std::string path)
 	{
-		_browser->view(path);
-		activate_browser();
+		_current_dir = path;
+		Browser::change_directory(path);
+		set_mru(path, _recent_dirs);
+		set_config("recent_dirs", _recent_dirs);
 	};
 	UI::Dialog::Show(dialog, *_shell.active());
 }
@@ -92,11 +117,6 @@ void Lindi::new_file()
 {
 	std::unique_ptr<UI::Controller> ed(new Editor::Controller());
 	_shell.open_window(std::move(ed));
-}
-
-void Lindi::activate_browser()
-{
-	_shell.make_active(_browserwindow);
 }
 
 int Lindi::fix_control_quirks(int ch)
@@ -119,5 +139,19 @@ int Lindi::fix_control_quirks(int ch)
 
 	default:
 	return ch;
+	}
+}
+
+void Lindi::set_mru(std::string path, std::vector<std::string> &mru)
+{
+	// make this item the front of the list
+	// if there are other instances, remove them
+	mru.insert(mru.begin(), path);
+	for (size_t i = 1; i < mru.size();) {
+		if (mru[i] == path) {
+			mru.erase(mru.begin() + i);
+		} else {
+			++i;
+		}
 	}
 }

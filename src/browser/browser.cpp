@@ -2,9 +2,27 @@
 #include "control.h"
 #include "dialog.h"
 
+Browser *Browser::_instance;
+
+void Browser::change_directory(std::string path)
+{
+	if (_instance) _instance->view(path);
+}
+
+void Browser::open(std::string path, UI::Shell &shell)
+{
+	if (_instance) {
+		shell.make_active(_instance->_window);
+	} else {
+		std::unique_ptr<UI::Controller> controller(new Browser(path));
+		_instance->_window = shell.open_window(std::move(controller));
+	}
+}
+
 Browser::Browser(std::string path):
 	_tree(path)
 {
+	_instance = this;
 }
 
 void Browser::activate(UI::Frame &ctx)
@@ -37,7 +55,7 @@ void Browser::paint(WINDOW *view, bool active)
 	for (size_t i = _scrollpos; i < _list.size() && row < height; ++i) {
 		wmove(view, row, 0);
 		whline(view, ' ', width);
-		paint_row(view, _list[i], width);
+		paint_row(view, row, _list[i], width);
 		if (active && i == _selection) {
 			mvwchgat(view, row, 0, width, A_REVERSE, 0, NULL);
 		}
@@ -58,6 +76,7 @@ bool Browser::process(UI::Frame &ctx, int ch)
 	}
 	switch (ch) {
 		case Control::Return: key_return(ctx); break;
+		case Control::Close: return false; break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
 		case ' ': key_space(ctx); break;
@@ -75,7 +94,7 @@ void Browser::view(std::string path)
 	}
 }
 
-void Browser::paint_row(WINDOW *view, row_t &display, int width)
+void Browser::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 {
 	int rowchars = width;
 	for (unsigned tab = 0; tab < display.indent; tab++) {
@@ -85,16 +104,18 @@ void Browser::paint_row(WINDOW *view, row_t &display, int width)
 	bool isdir = display.entry->is_directory();
 	waddnstr(view, isdir? "+ ": "  ", rowchars);
 	rowchars -= 2;
-	waddnstr(view, display.entry->name().c_str(), rowchars - 1);
+	std::string name = display.entry->name();
+	waddnstr(view, name.c_str(), rowchars - 1);
+	rowchars -= std::min(rowchars, (int)name.size());
 	waddnstr(view, isdir? "/": " ", rowchars);
+	rowchars--;
 	if (display.entry->is_file()) {
 		char buf[256];
 		time_t mtime = display.entry->mtime();
-		size_t dchars = strftime(buf, 255, "%c", localtime(&mtime));
-		int vpos, hpos;
-		getyx(view, vpos, hpos);
-		int drawchars = std::min((int)dchars, width - hpos);
-		mvwaddnstr(view, vpos, width - drawchars, buf, drawchars);
+		// add an extra space on the end because it's prettier
+		size_t dchars = strftime(buf, 255, "%c ", localtime(&mtime));
+		int drawch = std::min((int)dchars, rowchars);
+		mvwaddnstr(view, vpos, width-drawch, buf, drawch);
 	}
 }
 
