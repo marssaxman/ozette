@@ -3,6 +3,7 @@
 
 #include <string>
 
+namespace UI {
 namespace HelpBar {
 struct Label {
 	Label(char m, bool c, std::string t);
@@ -17,5 +18,6 @@ struct Panel {
         Label label[kHeight][kWidth];
 };
 } // namespace HelpBar
+} // namespace UI
 
 #endif //UI_HELPBAR_H
