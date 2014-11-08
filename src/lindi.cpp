@@ -73,7 +73,10 @@ void Lindi::get_config(std::string name, std::vector<std::string> &lines)
 void Lindi::set_config(std::string name, const std::vector<std::string> &lines)
 {
 	// if the lindi prefs directory doesn't exist yet, create it
-	mkdir(_config_dir.c_str(), S_IRWXU);
+	struct stat st;
+	if (stat(_config_dir.c_str(), &st)) {
+		mkdir(_config_dir.c_str(), S_IRWXU);
+	}
 	std::ofstream file(_config_dir + "/" + name, std::ios::trunc);
 	for (auto &line: lines) {
 		file << line << std::endl;
@@ -101,7 +104,8 @@ void Lindi::change_directory()
 {
 	UI::Dialog::Picker dialog;
 	dialog.prompt = "Change Directory";
-	get_config("recent_dirs", dialog.values);
+	get_config("recent_dirs", _recent_dirs);
+	dialog.values = _recent_dirs;
 	set_mru(_current_dir, dialog.values);
 	dialog.commit = [this](UI::Frame &ctx, std::string path)
 	{

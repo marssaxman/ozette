@@ -26,7 +26,7 @@ private:
 	void change_directory();
 	void new_file();
 	int fix_control_quirks(int ch);
-	void set_mru(std::string path, std::vector<std::string> &mru);
+	static void set_mru(std::string path, std::vector<std::string> &mru);
 
 	UI::Shell _shell;
 	std::string _home_dir;
