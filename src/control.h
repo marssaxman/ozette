@@ -31,11 +31,20 @@ enum {
 	Save = 0x13, //DC3 ^S
 
 	Find = 0x06, //ACK ^F
-	GoTo = 0x07, //BEL ^G
+	FindNext = 0x07, // BEL ^G
+	ToLine = 0x0C, //FF ^L
 
 	Directory = 0x04, //EOT ^D
 	Quit = 0x11, //DC1 ^Q
 	Help = 0x1F, //US ^?
+
+	// Not control keys in the ASCII sense but invoked with the ctrl key
+	LeftArrow = 0x21C,
+	RightArrow = 0x22B,
+	UpArrow = 0x231,
+	DownArrow = 0x208,
+	ShiftLeftArrow = 0x21D,
+	ShiftRightArrow = 0x22C,
 
 	// Ideas for the future
 	// R = run, B = build, K = clean?

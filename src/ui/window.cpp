@@ -2,6 +2,7 @@
 #include "control.h"
 #include <algorithm>
 #include <assert.h>
+#include <cstring>
 
 UI::Window::Window(App &app, std::unique_ptr<Controller> &&controller):
 	_app(app),
@@ -101,14 +102,14 @@ bool UI::Window::process(int ch)
 {
 	if (ch != ERR) clear_result();
 	if (_dialog) {
-		// A dialog may invoke actions which may result in its
-		// own replacement. We will temporarily move it into a
-		// local variable while it has control.
+		// A dialog may invoke actions which may result in its own replacement.
+		// We will temporarily move it into a local variable while it has
+		// control, so we don't delete the object while its methods are on the
+		// call stack.
 		std::unique_ptr<Dialog> temp(std::move(_dialog));
 		if (temp->process(*this, ch)) {
 			// If this dialog wants to stick around, we
-			// expect that it hasn't done anything which
-			// would result in its own replacement.
+			// expect that it hasn't done anything to change _dialog.
 			assert(_dialog.get() == nullptr);
 			_dialog = std::move(temp);
 		} else {
@@ -143,10 +144,26 @@ void UI::Window::set_status(std::string text)
 	_dirty_chrome = true;
 }
 
-void UI::Window::set_help(const Control::Panel &help)
+void UI::Window::set_help(const Control::Panel &panel)
 {
-	_help = help;
+	for (unsigned v = 0; v < Control::Panel::height; v++) {
+		for (unsigned h = 0; h < Control::Panel::width; h++) {
+			auto &it = _help.label[v][h];
+			int key = panel.label[v][h];
+			if (0 != key) {
+				it.mnemonic = Control::keys[key].mnemonic;
+				it.is_ctrl = true;
+				memcpy(it.text, Control::keys[key].label, 10);
+			} else {
+				it.mnemonic = '\0';
+				it.is_ctrl = false;
+				it.text[0] = '\0';
+			}
+		}
+	}
+	_dirty_chrome = true;
 	layout_taskbar();
+	paint();
 }
 
 void UI::Window::show_dialog(std::unique_ptr<Dialog> &&host)
@@ -342,26 +359,26 @@ void UI::Window::paint_taskbar(int height, int width)
 	}
 
 	// Render the help panel for this window.
-	int labelwidth = width / Control::Panel::width;
+	int labelwidth = width / HelpBar::Panel::kWidth;
 	int textwidth = labelwidth - 4;
 	unsigned v = 0;
 	unsigned h = 0;
 
 	int key_highlight = _has_focus ? A_REVERSE : 0;
-	int cells = Control::Panel::width * Control::Panel::height;
+	int cells = HelpBar::Panel::kWidth * HelpBar::Panel::kHeight;
 	for (int i = 0; i < cells; ++i) {
-		v = i / Control::Panel::width;
-		h = i % Control::Panel::width;
-		unsigned ctl = _help.label[v][h];
-		if (!ctl) continue;
+		v = i / HelpBar::Panel::kWidth;
+		h = i % HelpBar::Panel::kWidth;
+		auto &label = _help.label[v][h];
+		if (0 == label.mnemonic) continue;
 		unsigned labelpos = h * labelwidth;
 		wmove(_framewin, v+ypos, labelpos+xpos);
 		wattron(_framewin, key_highlight);
-		waddch(_framewin, '^');
-		waddch(_framewin, Control::keys[ctl].mnemonic);
+		waddch(_framewin, label.is_ctrl? '^': ' ');
+		waddch(_framewin, label.mnemonic);
 		wattroff(_framewin, key_highlight);
 		waddch(_framewin, ' ');
-		waddnstr(_framewin, Control::keys[ctl].label, textwidth);
+		waddnstr(_framewin, label.text, textwidth);
 		waddch(_framewin, ' ');
 	}
 }

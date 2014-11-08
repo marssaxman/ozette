@@ -34,6 +34,12 @@ void UI::Dialog::Show(const Confirm &options, Frame &ctx)
 	it->_commit = options.yes;
 	it->_retry = options.no;
 	it->_show_value = false;
+	using namespace Control;
+	Panel help = {{
+		{'Y', 0, 0, 0, 0, 0},
+		{'N', Escape, 0, 0, 0, 0},
+	}};
+	ctx.set_help(help);
 	ctx.show_dialog(std::move(it));
 }
 

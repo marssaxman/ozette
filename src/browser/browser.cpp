@@ -28,7 +28,7 @@ Browser::Browser(std::string path):
 
 void Browser::activate(UI::Frame &ctx)
 {
-	set_title(ctx);
+	ctx.set_title(_tree.path());
 	using namespace Control;
 	Panel help = {{
 		{Open, NewFile, 0, 0, 0, 0},
@@ -91,6 +91,7 @@ bool Browser::process(UI::Frame &ctx, int ch)
 {
 	if (_rebuild_list) {
 		build_list();
+		ctx.set_title(_tree.path());
 		_rebuild_list = false;
 		ctx.repaint();
 	}
@@ -165,14 +166,6 @@ void Browser::key_down(UI::Frame &ctx)
 void Browser::key_space(UI::Frame &ctx)
 {
 	toggle(ctx);
-}
-
-void Browser::set_title(UI::Frame &ctx)
-{
-	std::string title = "Lindi";
-	std::string path = _tree.path();
-	if (!path.empty()) title += ": " + path;
-	ctx.set_title(title);
 }
 
 void Browser::build_list()

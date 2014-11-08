@@ -31,7 +31,7 @@ private:
 	void ctl_paste(UI::Frame &ctx);
 	void ctl_close(UI::Frame &ctx);
 	void ctl_save(UI::Frame &ctx);
-	void ctl_goto(UI::Frame &ctx);
+	void ctl_toline(UI::Frame &ctx);
 
 	// Navigation keystrokes move the cursor around the document.
 	void key_up(bool extend);

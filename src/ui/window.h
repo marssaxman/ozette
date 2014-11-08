@@ -8,6 +8,7 @@
 #include "controller.h"
 #include "app.h"
 #include "dialog.h"
+#include "helpbar.h"
 
 namespace UI {
 class Window : public Frame
@@ -73,7 +74,7 @@ private:
 	std::string _title;
 	std::string _status;
 	bool _swap_titlebar = false;
-	Control::Panel _help;
+	HelpBar::Panel _help;
 };
 } // namespace UI
 

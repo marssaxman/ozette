@@ -59,27 +59,19 @@ bool UI::Shell::process(int ch)
 	// the focus window.
 	switch (ch) {
 		case ERR: poll(); break;
-		// case 0x21D	// control-shift left arrow
-		case 0x21C: {	// Control--left arrow
+		case Control::LeftArrow: {
 			if (_focus > 0) {
 				set_focus(_focus - 1);
 			} else {
 				set_focus(_columns.size() - 1);
 			}
 		} break;
-		// case 0x22C	// control-shift-right arrow
-		case 0x22B: {	// Control-right arrow
+		case Control::RightArrow: {
 			size_t next = _focus + 1;
 			if (next >= _columns.size()) {
 				next = 0;
 			}
 			set_focus(next);
-		} break;
-		case 0x231: { // Control-up arrow
-			set_focus(0);
-		} break;
-		case 0x208: { // control-down arrow
-			set_focus(_columns.size() - 1);
 		} break;
 		case KEY_RESIZE: {
 			get_screen_size();

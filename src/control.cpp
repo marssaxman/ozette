@@ -8,12 +8,12 @@ Control::Info Control::keys[Count] = {
 	{'D', "Directory"}, //04 EOT $ D d
 		{'E', "ENQ"}, //05 ENQ % E e
 	{'F', "Find"}, //06 ACK & F f
-	{'G', "Go To"}, //07 BEL ' G g
+	{'G', "Find Next"}, //07 BEL ' G g
 		{'H', "BS"}, //08 BS ( H h
 	{'I', "Tab"},  //09 HT ) I i - Tab key
 	{'J', "Enter"},  //0A LF * J j - Enter key
 		{'K', "VT"}, //0B VT + K k
-		{'L', "FF"},  //0C FF , L l
+	{'L', "To Line"},  //0C FF , L l
 	{'M', "Return"},  //0D CR - M m - Return key
 	{'N', "New File"}, //0E SO . N n
 	{'O', "Open"}, //0F SI / O o

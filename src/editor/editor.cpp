@@ -28,9 +28,7 @@ void Editor::Controller::activate(UI::Frame &ctx)
 	ctx.set_status(_doc.status());
 	using namespace Control;
 	Panel help = {{
-//		{Cut, Copy, Paste, 0, GoTo, Find},
-//		{Close, Save, Revert, Undo, Redo, Help}
-		{Cut, Copy, Paste, 0, GoTo, 0},
+		{Cut, Copy, Paste, 0, ToLine, Find},
 		{Close, Save, 0, 0, 0, 0},
 	}};
 	ctx.set_help(help);
@@ -70,7 +68,7 @@ bool Editor::Controller::process(UI::Frame &ctx, int ch)
 		case Control::Close: ctl_close(ctx); break;
 		case Control::Save: ctl_save(ctx); break;
 
-		case Control::GoTo: ctl_goto(ctx); break;
+		case Control::ToLine: ctl_toline(ctx); break;
 
 		case KEY_DOWN: key_down(false); break;
 		case KEY_UP: key_up(false); break;
@@ -224,7 +222,7 @@ void Editor::Controller::ctl_save(UI::Frame &ctx)
 	save(ctx, _targetpath);
 }
 
-void Editor::Controller::ctl_goto(UI::Frame &ctx)
+void Editor::Controller::ctl_toline(UI::Frame &ctx)
 {
 	UI::Dialog::Input dialog;
 	// illogical as it is, the rest of the world seems to think that it is a
@@ -378,6 +376,9 @@ void Editor::Controller::save(UI::Frame &ctx, std::string path)
 		if (path == _targetpath) {
 			_doc.Write(path);
 			ctx.set_status(_doc.status());
+			std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
+			stat += (_doc.maxline() > 1) ? " lines" : " line";
+			ctx.show_result(stat);
 			return;
 		}
 		// This is a different path than the file used to have.
