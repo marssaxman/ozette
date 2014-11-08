@@ -31,7 +31,7 @@ void Editor::Controller::activate(UI::Frame &ctx)
 //		{Cut, Copy, Paste, 0, GoTo, Find},
 //		{Close, Save, Revert, Undo, Redo, Help}
 		{Cut, Copy, Paste, 0, GoTo, 0},
-		{Close, Save, Revert, 0, 0, 0},
+		{Close, Save, 0, 0, 0, 0},
 	}};
 	ctx.set_help(help);
 }
@@ -64,7 +64,6 @@ bool Editor::Controller::process(UI::Frame &ctx, int ch)
 
 		case Control::Close: ctl_close(ctx); break;
 		case Control::Save: ctl_save(ctx); break;
-		case Control::Revert: ctl_revert(ctx); break;
 
 		case Control::GoTo: ctl_goto(ctx); break;
 
@@ -218,10 +217,6 @@ void Editor::Controller::ctl_close(UI::Frame &ctx)
 void Editor::Controller::ctl_save(UI::Frame &ctx)
 {
 	save(ctx, _targetpath);
-}
-
-void Editor::Controller::ctl_revert(UI::Frame &ctx)
-{
 }
 
 void Editor::Controller::ctl_goto(UI::Frame &ctx)

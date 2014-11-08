@@ -29,7 +29,6 @@ enum {
 	Close = 0x17, //ETB ^W
 	NewFile = 0x0E, // SO ^N
 	Save = 0x13, //DC3 ^S
-	Revert = 0x12, //DC2 ^R
 
 	Find = 0x06, //ACK ^F
 	GoTo = 0x07, //BEL ^G

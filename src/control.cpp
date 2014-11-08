@@ -19,7 +19,7 @@ Control::Info Control::keys[Count] = {
 	{'O', "Open"}, //0F SI / O o
 		{'P', "DLE"},//10 DLE 0 P p
 	{'Q', "Quit"}, //11 DC1 1 Q q
-	{'R', "Revert"}, //12 DC2 2 R r
+		{'R', "DC2"}, //12 DC2 2 R r
 	{'S', "Save"}, //13 DC3 3 S s
 		{'T', "DC4"}, //14 DC4 4 T t
 		{'U', "NAK"}, //15 NAK 5 U u

@@ -351,12 +351,9 @@ void UI::Window::paint_taskbar(int height, int width)
 		v = i / Control::Panel::width;
 		h = i % Control::Panel::width;
 		unsigned ctl = _help.label[v][h];
+		if (!ctl) continue;
 		unsigned labelpos = h * labelwidth;
 		wmove(_framewin, v+ypos, labelpos+xpos);
-		if (!ctl) {
-			waddnstr(_framewin, " -", textwidth);
-			continue;
-		}
 		wattron(_framewin, key_highlight);
 		waddch(_framewin, '^');
 		waddch(_framewin, Control::keys[ctl].mnemonic);
