@@ -17,6 +17,7 @@ public:
 	virtual bool process(UI::Frame &ctx, int ch) override;
 
 private:
+	void postprocess(UI::Frame &ctx);
 	void paint_line(WINDOW *view, row_t v, bool active);
 	bool line_is_visible(line_t index) const;
 	void reveal_cursor();
@@ -30,6 +31,7 @@ private:
 	void ctl_close(UI::Frame &ctx);
 	void ctl_save(UI::Frame &ctx);
 	void ctl_revert(UI::Frame &ctx);
+	void ctl_goto(UI::Frame &ctx);
 
 	// Navigation keystrokes move the cursor around the document.
 	void key_up(bool extend);

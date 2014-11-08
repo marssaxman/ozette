@@ -72,13 +72,24 @@ void Editor::Document::Write(std::string path)
 
 Editor::location_t Editor::Document::home()
 {
-	location_t loc = {0,0};
-	return loc;
+	return home(0);
 }
 
 Editor::location_t Editor::Document::end()
 {
-	location_t loc = {_maxline, line(_maxline).size()};
+	return end(_maxline);
+}
+
+Editor::location_t Editor::Document::home(line_t index)
+{
+	location_t loc = {std::min(index, _maxline), 0};
+	return loc;
+}
+
+Editor::location_t Editor::Document::end(line_t index)
+{
+	if (index > _maxline) index = _maxline;
+	location_t loc = {index, line(_maxline).size()};
 	return loc;
 }
 

@@ -30,7 +30,7 @@ void Editor::Controller::activate(UI::Frame &ctx)
 	Panel help = {{
 //		{Cut, Copy, Paste, 0, GoTo, Find},
 //		{Close, Save, Revert, Undo, Redo, Help}
-		{Cut, Copy, Paste, 0, 0, 0},
+		{Cut, Copy, Paste, 0, GoTo, 0},
 		{Close, Save, Revert, 0, 0, 0},
 	}};
 	ctx.set_help(help);
@@ -66,6 +66,8 @@ bool Editor::Controller::process(UI::Frame &ctx, int ch)
 		case Control::Save: ctl_save(ctx); break;
 		case Control::Revert: ctl_revert(ctx); break;
 
+		case Control::GoTo: ctl_goto(ctx); break;
+
 		case KEY_DOWN: key_down(false); break;
 		case KEY_UP: key_up(false); break;
 		case KEY_LEFT: key_left(false); break;
@@ -87,12 +89,17 @@ bool Editor::Controller::process(UI::Frame &ctx, int ch)
 		case KEY_BTAB: break;	// shift-tab
 		default: if (ch >= 32 && ch < 127) key_insert(ch);
 	}
+	postprocess(ctx);
+	return true;
+}
+
+void Editor::Controller::postprocess(UI::Frame &ctx)
+{
 	reveal_cursor();
 	if (_update.has_dirty()) {
 		ctx.repaint();
 		ctx.set_status(_doc.status());
 	}
-	return true;
 }
 
 void Editor::Controller::paint_line(WINDOW *dest, row_t v, bool active)
@@ -215,6 +222,23 @@ void Editor::Controller::ctl_save(UI::Frame &ctx)
 
 void Editor::Controller::ctl_revert(UI::Frame &ctx)
 {
+}
+
+void Editor::Controller::ctl_goto(UI::Frame &ctx)
+{
+	UI::Dialog::Input dialog;
+	dialog.prompt = "Go to line (";
+	dialog.prompt += std::to_string(_cursor.location().line);
+	dialog.prompt += ")";
+	dialog.commit = [this](UI::Frame &ctx, std::string value)
+	{
+		long valnum = std::stol(value);
+		size_t index = (valnum >= 0) ? valnum : 0;
+		_cursor.move_to(_doc.home(index));
+		drop_selection();
+		postprocess(ctx);
+	};
+	UI::Dialog::Show(dialog, ctx);
 }
 
 void Editor::Controller::key_up(bool extend)
