@@ -28,8 +28,10 @@ void Editor::Controller::activate(UI::Frame &ctx)
 	ctx.set_status(_doc.status());
 	using namespace Control;
 	Panel help = {{
-		{Cut, Copy, Paste, 0, GoTo, Find},
-		{Close, Save, Revert, Undo, Redo, Help}
+//		{Cut, Copy, Paste, 0, GoTo, Find},
+//		{Close, Save, Revert, Undo, Redo, Help}
+		{Cut, Copy, Paste, 0, 0, 0},
+		{Close, Save, Revert, 0, 0, 0},
 	}};
 	ctx.set_help(help);
 }
