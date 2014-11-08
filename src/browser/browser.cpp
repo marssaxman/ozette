@@ -122,7 +122,7 @@ void Browser::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 		rowchars -= 4;
 	}
 	bool isdir = display.entry->is_directory();
-	waddnstr(view, isdir? "+ ": "  ", rowchars);
+	waddnstr(view, display.expanded? "- ": (isdir? "+ ": "  "), rowchars);
 	rowchars -= 2;
 	std::string name = display.entry->name();
 	waddnstr(view, name.c_str(), rowchars - 1);
