@@ -76,6 +76,7 @@ void UI::Window::set_focus()
 
 void UI::Window::clear_focus()
 {
+	_controller->deactivate(*this);
 	_has_focus = false;
 	_dirty_chrome = true;
 	_dirty_content = true;

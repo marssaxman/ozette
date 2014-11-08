@@ -4,6 +4,7 @@
 #include "controller.h"
 #include "dirtree.h"
 #include "shell.h"
+#include <set>
 
 class Browser : public UI::Controller
 {
@@ -12,11 +13,12 @@ public:
 	static void open(std::string path, UI::Shell &shell);
 	Browser(std::string path);
 	virtual void activate(UI::Frame &ctx) override;
+	virtual void deactivate(UI::Frame &ctx) override;
 	virtual void paint(WINDOW *view, bool active) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	void view(std::string path);
 private:
-	~Browser() {_instance = nullptr;}
+	~Browser() { _instance = nullptr; }
 	static Browser *_instance;
 	UI::Window *_window = nullptr;
 	struct row_t {
@@ -33,11 +35,12 @@ private:
 	void build_list();
 	void toggle(UI::Frame &ctx);
 	void edit_file(UI::Frame &ctx);
-	void insert_rows(size_t index, unsigned indent, DirTree *entry);
+	size_t insert_rows(size_t index, unsigned indent, DirTree *entry);
 	void remove_rows(size_t index, unsigned indent);
 	DirTree *sel_entry() { return _list[_selection].entry; }
 	DirTree _tree;
 	std::vector<row_t> _list;
+	std::set<std::string> _expanded_items;
 	size_t _selection = 0;
 	size_t _scrollpos = 0;
 	bool _rebuild_list = true;

@@ -36,6 +36,10 @@ void Editor::Controller::activate(UI::Frame &ctx)
 	ctx.set_help(help);
 }
 
+void Editor::Controller::deactivate(UI::Frame &ctx)
+{
+}
+
 void Editor::Controller::paint(WINDOW *dest, bool active)
 {
 	update_dimensions(dest);
@@ -50,7 +54,8 @@ void Editor::Controller::paint(WINDOW *dest, bool active)
 	position_t curs = _cursor.position();
 	curs.v -= std::min(curs.v, _scrollpos);
 	wmove(dest, curs.v, curs.h);
-	curs_set(active ? 1 : 0);
+	bool show_cursor = active && _selection.empty();
+	curs_set(show_cursor ? 1 : 0);
 	_update.reset();
 }
 

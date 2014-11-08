@@ -3,6 +3,7 @@
 #include "dialog.h"
 
 Browser *Browser::_instance;
+static std::string kExpansionStateKey = "expanded_dirs";
 
 void Browser::change_directory(std::string path)
 {
@@ -30,13 +31,30 @@ void Browser::activate(UI::Frame &ctx)
 	set_title(ctx);
 	using namespace Control;
 	Panel help = {{
-//		{Open, NewFile, 0, 0, 0, Find},
-//		{Quit, Save, Close, Directory, 0, Help} // Config/Settings
 		{Open, NewFile, 0, 0, 0, 0},
 		{Quit, 0, 0, Directory, 0, 0},
 	}};
 	ctx.set_help(help);
+
+	if (_expanded_items.empty()) {
+		std::vector<std::string> paths;
+		ctx.app().get_config(kExpansionStateKey, paths);
+		for (auto &path: paths) {
+			_expanded_items.insert(path);
+		}
+		if (!paths.empty()) _rebuild_list = true;
+	}
+
 	if (_rebuild_list) ctx.repaint();
+}
+
+void Browser::deactivate(UI::Frame &ctx)
+{
+	std::vector<std::string> paths;
+	for (auto &line: _expanded_items) {
+		paths.push_back(line);
+	}
+	ctx.app().set_config(kExpansionStateKey, paths);
 }
 
 void Browser::paint(WINDOW *view, bool active)
@@ -175,12 +193,14 @@ void Browser::toggle(UI::Frame &ctx)
 	if (!entry->is_directory()) return;
 	if (display.expanded) {
 		// collapse it
-		remove_rows(_selection + 1, display.indent + 1);
+		_expanded_items.erase(display.entry->path());
 		display.expanded = false;
+		remove_rows(_selection + 1, display.indent + 1);
 	} else {
 		// expand it
-		insert_rows(_selection + 1, display.indent + 1, entry);
+		_expanded_items.insert(display.entry->path());
 		display.expanded = true;
+		insert_rows(_selection + 1, display.indent + 1, entry);
 	}
 	ctx.repaint();
 }
@@ -191,12 +211,17 @@ void Browser::edit_file(UI::Frame &ctx)
 	ctx.app().edit_file(display.entry->path());
 }
 
-void Browser::insert_rows(size_t index, unsigned indent, DirTree *entry)
+size_t Browser::insert_rows(size_t index, unsigned indent, DirTree *entry)
 {
 	for (auto &item: entry->items()) {
-		row_t display = {indent, false, &item};
+		bool expand = _expanded_items.count(item.path()) > 0;
+		row_t display = {indent, expand, &item};
 		_list.insert(_list.begin() + index++, display);
+		if (expand) {
+			index = insert_rows(index, indent + 1, &item);
+		}
 	}
+	return index;
 }
 
 void Browser::remove_rows(size_t index, unsigned indent)

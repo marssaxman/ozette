@@ -13,6 +13,7 @@ public:
 	Controller();
 	Controller(std::string targetpath);
 	virtual void activate(UI::Frame &ctx) override;
+	virtual void deactivate(UI::Frame &ctx) override;
 	virtual void paint(WINDOW *view, bool active) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 
