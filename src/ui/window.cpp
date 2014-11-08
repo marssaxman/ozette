@@ -171,10 +171,11 @@ void UI::Window::show_result(std::string message)
 	}
 	voff += height - 1;
 	hoff += (width - labelwidth) / 2;
-	_resultwin = newwin(height, labelwidth, voff, hoff);
+	_resultwin = newwin(1, labelwidth, voff, hoff);
 	_resultpanel = new_panel(_resultwin);
+	wmove(_resultwin, 0, 0);
 	wattron(_resultwin, A_REVERSE);
-	mvwaddstr(_resultwin, 0, 0, "[ ");
+	waddstr(_resultwin, "[ ");
 	waddnstr(_resultwin, message.c_str(), numchars);
 	waddstr(_resultwin, " ]");
 	curs_set(0);
