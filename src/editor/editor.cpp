@@ -222,12 +222,15 @@ void Editor::Controller::ctl_save(UI::Frame &ctx)
 void Editor::Controller::ctl_goto(UI::Frame &ctx)
 {
 	UI::Dialog::Input dialog;
+	// illogical as it is, the rest of the world seems to think that it is a
+	// good idea for line numbers to start counting at 1, so we will 
+	// accommodate their perverse desires in the name of compatibility.
 	dialog.prompt = "Go to line (";
-	dialog.prompt += std::to_string(_cursor.location().line);
+	dialog.prompt += std::to_string(_cursor.location().line + 1);
 	dialog.prompt += ")";
 	dialog.commit = [this](UI::Frame &ctx, std::string value)
 	{
-		long valnum = std::stol(value);
+		long valnum = std::stol(value) - 1;
 		size_t index = (valnum >= 0) ? valnum : 0;
 		_cursor.move_to(_doc.home(index));
 		drop_selection();
