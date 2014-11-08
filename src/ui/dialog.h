@@ -7,8 +7,7 @@
 #include <ncurses.h>
 #include <panel.h>
 #include <vector>
-#include "control.h"
-
+#include "helpbar.h"
 
 namespace UI {
 class Frame;
@@ -64,6 +63,7 @@ public:
 	void set_focus();
 	void clear_focus();
 	void bring_forward();
+	void set_help(HelpBar::Panel &panel);
 
 	// The dialog host must supply it with events so that it can
 	// run the text editing and determine when it should close.

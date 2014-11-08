@@ -153,11 +153,11 @@ void UI::Window::set_help(const Control::Panel &panel)
 			if (0 != key) {
 				it.mnemonic = Control::keys[key].mnemonic;
 				it.is_ctrl = true;
-				memcpy(it.text, Control::keys[key].label, 10);
+				it.text = Control::keys[key].label;
 			} else {
 				it.mnemonic = '\0';
 				it.is_ctrl = false;
-				it.text[0] = '\0';
+				it.text.clear();
 			}
 		}
 	}
@@ -169,6 +169,7 @@ void UI::Window::set_help(const Control::Panel &panel)
 void UI::Window::show_dialog(std::unique_ptr<Dialog> &&host)
 {
 	clear_result();
+	_dirty_chrome = true;
 	_dialog = std::move(host);
 	_dialog->layout(_contentwin);
 }
@@ -349,6 +350,13 @@ void UI::Window::paint_right_frame(int height, int width)
 
 void UI::Window::paint_taskbar(int height, int width)
 {
+	HelpBar::Panel panel;
+	if (_dialog) {
+		_dialog->set_help(panel);
+	} else {
+		panel = _help;
+	}
+
 	int xpos = _lframe ? 1 : 0;
 	width -= xpos;
 	if (_rframe) width--;
@@ -369,7 +377,7 @@ void UI::Window::paint_taskbar(int height, int width)
 	for (int i = 0; i < cells; ++i) {
 		v = i / HelpBar::Panel::kWidth;
 		h = i % HelpBar::Panel::kWidth;
-		auto &label = _help.label[v][h];
+		auto &label = panel.label[v][h];
 		if (0 == label.mnemonic) continue;
 		unsigned labelpos = h * labelwidth;
 		wmove(_framewin, v+ypos, labelpos+xpos);
@@ -378,7 +386,7 @@ void UI::Window::paint_taskbar(int height, int width)
 		waddch(_framewin, label.mnemonic);
 		wattroff(_framewin, key_highlight);
 		waddch(_framewin, ' ');
-		waddnstr(_framewin, label.text, textwidth);
+		waddnstr(_framewin, label.text.c_str(), textwidth);
 		waddch(_framewin, ' ');
 	}
 }

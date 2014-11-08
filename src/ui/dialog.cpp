@@ -34,12 +34,6 @@ void UI::Dialog::Show(const Confirm &options, Frame &ctx)
 	it->_commit = options.yes;
 	it->_retry = options.no;
 	it->_show_value = false;
-	using namespace Control;
-	Panel help = {{
-		{'Y', 0, 0, 0, 0, 0},
-		{'N', Escape, 0, 0, 0, 0},
-	}};
-	ctx.set_help(help);
 	ctx.show_dialog(std::move(it));
 }
 
@@ -104,6 +98,15 @@ void UI::Dialog::clear_focus()
 void UI::Dialog::bring_forward()
 {
 	top_panel(_panel);
+}
+
+void UI::Dialog::set_help(HelpBar::Panel &panel)
+{
+	if (!_show_value) {
+		panel.label[0][0] = {'Y', false, "Yes"};
+		panel.label[1][0] = {'N', false, "No"};
+	}
+	panel.label[1][5] = {'[', true, "Escape"};
 }
 
 bool UI::Dialog::process(UI::Frame &ctx, int ch)
