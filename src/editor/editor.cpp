@@ -201,7 +201,7 @@ void Editor::Controller::ctl_close(UI::Frame &ctx)
 		ctx.app().close_file(_targetpath);
 	}
 	// ask the user if they want to save first
-	UI::Dialog::Confirm dialog;
+	UI::Dialog::Layout dialog;
 	dialog.prompt = "You have modified this file. Save changes before closing?";
 	dialog.yes = [this](UI::Frame &ctx, std::string)
 	{
@@ -224,9 +224,9 @@ void Editor::Controller::ctl_save(UI::Frame &ctx)
 
 void Editor::Controller::ctl_toline(UI::Frame &ctx)
 {
-	UI::Dialog::Input dialog;
+	UI::Dialog::Layout dialog;
 	// illogical as it is, the rest of the world seems to think that it is a
-	// good idea for line numbers to start counting at 1, so we will 
+	// good idea for line numbers to start counting at 1, so we will
 	// accommodate their perverse desires in the name of compatibility.
 	dialog.prompt = "Go to line (";
 	dialog.prompt += std::to_string(_cursor.location().line + 1);
@@ -362,7 +362,7 @@ void Editor::Controller::adjust_selection(bool extend)
 
 void Editor::Controller::save(UI::Frame &ctx, std::string path)
 {
-	UI::Dialog::Input dialog;
+	UI::Dialog::Layout dialog;
 	dialog.prompt = "Save File";
 	dialog.value = path;
 	dialog.commit = [this](UI::Frame &ctx, std::string path)
@@ -383,9 +383,10 @@ void Editor::Controller::save(UI::Frame &ctx, std::string path)
 		}
 		// This is a different path than the file used to have.
 		// Ask the user to confirm that they meant to change it.
-		UI::Dialog::Confirm dialog;
+		UI::Dialog::Layout dialog;
 		dialog.prompt = "Save file under a different name?";
 		dialog.value = path;
+		dialog.show_value = false;
 		dialog.yes = [this](UI::Frame &ctx, std::string path)
 		{
 			if (path.empty()) return;

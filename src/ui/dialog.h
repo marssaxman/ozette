@@ -26,31 +26,16 @@ public:
 	// call you back when it is done.
 	typedef std::function<void(Frame&, std::string)> action_t;
 
-	// An input box suggests a value, which the user may
-	// choose to edit.
-	struct Input {
+	struct Layout {
 		std::string prompt;
+		bool show_value = true;
 		std::string value;
-		action_t commit = nullptr;;
-	};
-	static void Show(const Input &options, Frame &ctx);
-
-	// A picker shows a list of values. The user may choose
-	// one, or they may type in their own value instead.
-	struct Picker {
-		std::string prompt;
-		std::vector<std::string> values;
+		std::vector<std::string> options;
 		action_t commit = nullptr;
-	};
-	static void Show(const Picker &options, Frame &ctx);
-
-	struct Confirm {
-		std::string prompt;
-		std::string value;
 		action_t yes = nullptr;
 		action_t no = nullptr;
 	};
-	static void Show(const Confirm &options, Frame &ctx);
+	static void Show(const Layout &layout, Frame &ctx);
 
 	~Dialog();
 	// Dialogs belong to some UI element, which will manage the
@@ -73,7 +58,7 @@ public:
 	bool process(UI::Frame &ctx, int ch);
 
 private:
-	Dialog();
+	Dialog(const Layout &layout);
 	void paint();
 	void arrow_left();
 	void arrow_right();
@@ -99,13 +84,8 @@ private:
 	PANEL *_panel = nullptr;
 	bool _has_focus = true;
 
-	// These are the values configured by the client.
-	std::string _prompt;
-	std::string _value;
-	std::vector<std::string> _suggestions;
-	bool _show_value = true;
-	action_t _commit = nullptr;
-	action_t _retry = nullptr;
+	// Layout structure supplied by the client.
+	Layout _layout;
 
 	// The cursor may be in the edit field or the suggestion list.
 	size_t _cursor_pos = 0;
