@@ -1,65 +1,37 @@
 #ifndef BROWSER_DIRTREE_H
 #define BROWSER_DIRTREE_H
 
-#include "listform.h"
+#include <vector>
+#include <string>
 
-namespace DirTree {
-
-// Every item in the directory tree is a node.
-class Node : public ListForm::Source
+class DirTree
 {
 public:
-	Node(std::string path, unsigned indent);
-	virtual ~Node() = default;
+	DirTree(std::string path);
+	DirTree(std::string dir, std::string name);
+	void scan();
 	std::string path() const { return _path; }
-	unsigned indent() const { return _indent; }
+	std::string name() const { return _name; }
+	enum class Type {
+		Directory,
+		File,
+		Other,
+		None
+	};
+	bool is_directory() { return type() == Type::Directory; }
+	Type type() { initcheck(); return _type; }
+	time_t mtime() { initcheck(); return _mtime; }
+	std::vector<DirTree> &items();
 private:
+	void initcheck() { if (!_scanned) scan(); }
+	void iterate();
 	std::string _path;
-	unsigned _indent = 0;
-};
-
-// A directory is a node which contains other items.
-class Directory : public Node
-{
-public:
-	Directory(std::string path, unsigned indent, unsigned subindent);
-protected:
-	std::vector<std::unique_ptr<Node>> _items;
-};
-
-// The root directory is the beginning of our search.
-class Root : public Directory
-{
-public:
-	Root(std::string path);
-	virtual void render(ListForm::Builder &fields) override;
-};
-
-// A branch is a directory which lives inside another.
-class Branch : public Directory
-{
-public:
-	Branch(std::string name, std::string path, unsigned indent);
-	virtual void render(ListForm::Builder &fields) override;
-	std::string name() const { return _name; }
-	void toggle() { _open = !_open; }
-	bool is_open() const { return _open; }
-private:
 	std::string _name;
-	bool _open = false;
+	bool _scanned = false;
+	Type _type = Type::None;
+	time_t _mtime = 0;
+	bool _iterated = false;
+	std::vector<DirTree> _items;
 };
-
-// Files are the editable units of the source tree.
-class File : public Node
-{
-public:
-	File(std::string name, std::string path, unsigned indent);
-	virtual void render(ListForm::Builder &fields) override;
-	std::string name() const { return _name; }
-private:
-	std::string _name;
-};
-
-} // namespace DirTree
 
 #endif	//BROWSER_DIRTREE_H

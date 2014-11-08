@@ -6,7 +6,7 @@
 
 Lindi::Lindi():
 	_shell(*this),
-	_browser(new Browser),
+	_browser(new Browser("~")),
 	_home_dir(getenv("HOME"))
 {
 	char *cwd = get_current_dir_name();

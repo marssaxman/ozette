@@ -1,21 +1,39 @@
 #ifndef BROWSER_BROWSER_H
 #define BROWSER_BROWSER_H
 
-#include "listform.h"
+#include "controller.h"
 #include "dirtree.h"
-#include <memory>
 
-class Browser : public ListForm::Controller
+class Browser : public UI::Controller
 {
-	typedef ListForm::Controller inherited;
 public:
-	Browser();
+	Browser(std::string path);
 	virtual void activate(UI::Frame &ctx) override;
+	virtual void paint(WINDOW *view, bool active) override;
+	virtual bool process(UI::Frame &ctx, int ch) override;
 	void view(std::string path);
 private:
+	void key_return(UI::Frame &ctx);
+	void key_up(UI::Frame &ctx);
+	void key_down(UI::Frame &ctx);
+	void key_space(UI::Frame &ctx);
 	void set_title(UI::Frame &ctx);
-	virtual void render(ListForm::Builder &lines) override;
-	std::unique_ptr<DirTree::Root> _tree;
+	void build_list();
+	void toggle(UI::Frame &ctx);
+	void edit_file(UI::Frame &ctx);
+	void insert_rows(size_t index, unsigned indent, DirTree *entry);
+	void remove_rows(size_t index, unsigned indent);
+	DirTree *sel_entry() { return _list[_selection].entry; }
+	DirTree _tree;
+	struct row_t {
+		unsigned indent;
+		bool expanded;
+		DirTree *entry;
+	};
+	std::vector<row_t> _list;
+	size_t _selection = 0;
+	size_t _scrollpos = 0;
+	bool _rebuild_list = true;
 };
 
 #endif // BROWSER_BROWSER_H
