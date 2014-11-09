@@ -7,11 +7,11 @@
 #include "cursor.h"
 
 namespace Editor {
-class Controller : public UI::View
+class View : public UI::View
 {
 public:
-	Controller();
-	Controller(std::string targetpath);
+	View();
+	View(std::string targetpath);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual void paint(WINDOW *view, bool active) override;

@@ -35,7 +35,7 @@ void Lindi::edit_file(std::string path)
 		return;
 	}
 	// We don't have an editor for this file, so we should create one.
-	std::unique_ptr<UI::View> ed(new Editor::Controller(path));
+	std::unique_ptr<UI::View> ed(new Editor::View(path));
 	UI::Window *win = _shell.open_window(std::move(ed));
 	_editors[path] = win;
 }
@@ -119,7 +119,7 @@ void Lindi::change_directory()
 
 void Lindi::new_file()
 {
-	std::unique_ptr<UI::View> ed(new Editor::Controller());
+	std::unique_ptr<UI::View> ed(new Editor::View());
 	_shell.open_window(std::move(ed));
 }
 

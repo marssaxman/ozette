@@ -4,20 +4,20 @@
 #include <assert.h>
 #include <sys/stat.h>
 
-Editor::Controller::Controller():
+Editor::View::View():
 	_cursor(_doc, _update)
 {
 	// new blank buffer
 }
 
-Editor::Controller::Controller(std::string targetpath):
+Editor::View::View(std::string targetpath):
 	_targetpath(targetpath),
 	_doc(targetpath),
 	_cursor(_doc, _update)
 {
 }
 
-void Editor::Controller::activate(UI::Frame &ctx)
+void Editor::View::activate(UI::Frame &ctx)
 {
 	// Set the title according to the target path
 	if (_targetpath.empty()) {
@@ -34,11 +34,11 @@ void Editor::Controller::activate(UI::Frame &ctx)
 	ctx.set_help(help);
 }
 
-void Editor::Controller::deactivate(UI::Frame &ctx)
+void Editor::View::deactivate(UI::Frame &ctx)
 {
 }
 
-void Editor::Controller::paint(WINDOW *dest, bool active)
+void Editor::View::paint(WINDOW *dest, bool active)
 {
 	update_dimensions(dest);
 	if (active != _last_active || dest != _last_dest) {
@@ -57,7 +57,7 @@ void Editor::Controller::paint(WINDOW *dest, bool active)
 	_update.reset();
 }
 
-bool Editor::Controller::process(UI::Frame &ctx, int ch)
+bool Editor::View::process(UI::Frame &ctx, int ch)
 {
 	if (ERR == ch) return true;
 	switch (ch) {
@@ -95,7 +95,7 @@ bool Editor::Controller::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-void Editor::Controller::postprocess(UI::Frame &ctx)
+void Editor::View::postprocess(UI::Frame &ctx)
 {
 	reveal_cursor();
 	if (_update.has_dirty()) {
@@ -104,7 +104,7 @@ void Editor::Controller::postprocess(UI::Frame &ctx)
 	}
 }
 
-void Editor::Controller::paint_line(WINDOW *dest, row_t v, bool active)
+void Editor::View::paint_line(WINDOW *dest, row_t v, bool active)
 {
 	size_t index = v + _scrollpos;
 	if (!_update.is_dirty(index)) return;
@@ -131,12 +131,12 @@ void Editor::Controller::paint_line(WINDOW *dest, row_t v, bool active)
 	}
 }
 
-bool Editor::Controller::line_is_visible(size_t index) const
+bool Editor::View::line_is_visible(size_t index) const
 {
 	return index >= _scrollpos && (index - _scrollpos) < _height;
 }
 
-void Editor::Controller::reveal_cursor()
+void Editor::View::reveal_cursor()
 {
 	line_t line = _cursor.location().line;
 	// If the cursor is already on screen, do nothing.
@@ -148,7 +148,7 @@ void Editor::Controller::reveal_cursor()
 	_update.all();
 }
 
-void Editor::Controller::update_dimensions(WINDOW *view)
+void Editor::View::update_dimensions(WINDOW *view)
 {
 	int height, width;
 	getmaxyx(view, height, width);
@@ -169,20 +169,20 @@ void Editor::Controller::update_dimensions(WINDOW *view)
 	}
 }
 
-void Editor::Controller::ctl_cut(UI::Frame &ctx)
+void Editor::View::ctl_cut(UI::Frame &ctx)
 {
 	ctl_copy(ctx);
 	delete_selection();
 }
 
-void Editor::Controller::ctl_copy(UI::Frame &ctx)
+void Editor::View::ctl_copy(UI::Frame &ctx)
 {
 	if (_selection.empty()) return;
 	std::string clip = _doc.text(_selection);
 	ctx.app().set_clipboard(clip);
 }
 
-void Editor::Controller::ctl_paste(UI::Frame &ctx)
+void Editor::View::ctl_paste(UI::Frame &ctx)
 {
 	delete_selection();
 	std::string clip = ctx.app().get_clipboard();
@@ -194,7 +194,7 @@ void Editor::Controller::ctl_paste(UI::Frame &ctx)
 	_cursor.move_to(newloc);
 }
 
-void Editor::Controller::ctl_close(UI::Frame &ctx)
+void Editor::View::ctl_close(UI::Frame &ctx)
 {
 	if (!_doc.modified()) {
 		// no formality needed, we're done
@@ -217,12 +217,12 @@ void Editor::Controller::ctl_close(UI::Frame &ctx)
 	UI::Dialog::Show(dialog, ctx);
 }
 
-void Editor::Controller::ctl_save(UI::Frame &ctx)
+void Editor::View::ctl_save(UI::Frame &ctx)
 {
 	save(ctx, _targetpath);
 }
 
-void Editor::Controller::ctl_toline(UI::Frame &ctx)
+void Editor::View::ctl_toline(UI::Frame &ctx)
 {
 	UI::Dialog::Layout dialog;
 	// illogical as it is, the rest of the world seems to think that it is a
@@ -242,55 +242,55 @@ void Editor::Controller::ctl_toline(UI::Frame &ctx)
 	UI::Dialog::Show(dialog, ctx);
 }
 
-void Editor::Controller::key_up(bool extend)
+void Editor::View::key_up(bool extend)
 {
 	_cursor.up(1);
 	adjust_selection(extend);
 }
 
-void Editor::Controller::key_down(bool extend)
+void Editor::View::key_down(bool extend)
 {
 	_cursor.down(1);
 	adjust_selection(extend);
 }
 
-void Editor::Controller::key_left(bool extend)
+void Editor::View::key_left(bool extend)
 {
 	_cursor.left();
 	adjust_selection(extend);
 }
 
-void Editor::Controller::key_right(bool extend)
+void Editor::View::key_right(bool extend)
 {
 	_cursor.right();
 	adjust_selection(extend);
 }
 
-void Editor::Controller::key_page_up()
+void Editor::View::key_page_up()
 {
 	_cursor.up(_halfheight);
 	drop_selection();
 }
 
-void Editor::Controller::key_page_down()
+void Editor::View::key_page_down()
 {
 	_cursor.down(_halfheight);
 	drop_selection();
 }
 
-void Editor::Controller::key_home()
+void Editor::View::key_home()
 {
 	_cursor.home();
 	drop_selection();
 }
 
-void Editor::Controller::key_end()
+void Editor::View::key_end()
 {
 	_cursor.end();
 	drop_selection();
 }
 
-void Editor::Controller::delete_selection()
+void Editor::View::delete_selection()
 {
 	if (_selection.empty()) return;
 	_cursor.move_to(_doc.erase(_selection));
@@ -298,7 +298,7 @@ void Editor::Controller::delete_selection()
 	drop_selection();
 }
 
-void Editor::Controller::key_insert(char ch)
+void Editor::View::key_insert(char ch)
 {
 	delete_selection();
 	_cursor.move_to(_doc.insert(_cursor.location(), ch));
@@ -306,12 +306,12 @@ void Editor::Controller::key_insert(char ch)
 	_selection.reset(_anchor);
 }
 
-void Editor::Controller::key_tab(UI::Frame &ctx)
+void Editor::View::key_tab(UI::Frame &ctx)
 {
 	key_insert('\t');
 }
 
-void Editor::Controller::key_enter(UI::Frame &ctx)
+void Editor::View::key_enter(UI::Frame &ctx)
 {
 	// Split the line at the cursor position, but don't move the cursor.
 	delete_selection();
@@ -319,7 +319,7 @@ void Editor::Controller::key_enter(UI::Frame &ctx)
 	_update.forward(_cursor.location());
 }
 
-void Editor::Controller::key_return(UI::Frame &ctx)
+void Editor::View::key_return(UI::Frame &ctx)
 {
 	// Split the line at the cursor position and move the cursor to the new line.
 	delete_selection();
@@ -327,19 +327,19 @@ void Editor::Controller::key_return(UI::Frame &ctx)
 	_update.forward(_cursor.location());
 }
 
-void Editor::Controller::key_backspace(UI::Frame &ctx)
+void Editor::View::key_backspace(UI::Frame &ctx)
 {
 	if (_selection.empty()) key_left(true);
 	delete_selection();
 }
 
-void Editor::Controller::key_delete(UI::Frame &ctx)
+void Editor::View::key_delete(UI::Frame &ctx)
 {
 	if (_selection.empty()) key_right(true);
 	delete_selection();
 }
 
-void Editor::Controller::drop_selection()
+void Editor::View::drop_selection()
 {
 	// The selection is no longer interesting. Move the anchor to the
 	// current cursor location and reset the selection around it.
@@ -347,7 +347,7 @@ void Editor::Controller::drop_selection()
 	_selection.reset(_anchor);
 }
 
-void Editor::Controller::adjust_selection(bool extend)
+void Editor::View::adjust_selection(bool extend)
 {
 	if (extend) {
 		// The cursor has moved in range-selection mode.
@@ -360,7 +360,7 @@ void Editor::Controller::adjust_selection(bool extend)
 	}
 }
 
-void Editor::Controller::save(UI::Frame &ctx, std::string path)
+void Editor::View::save(UI::Frame &ctx, std::string path)
 {
 	UI::Dialog::Layout dialog;
 	dialog.prompt = "Save File";
