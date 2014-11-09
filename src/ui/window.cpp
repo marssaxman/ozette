@@ -49,6 +49,7 @@ void UI::Window::layout(int xpos, int width)
 	// then we should layout our content window too. Otherwise, if
 	// the window is in the wrong place, simply relocate it.
 	int old_height, old_width;
+	wmove(_framewin, 0, 0);
 	getmaxyx(_framewin, old_height, old_width);
 	int old_vert, old_horz;
 	getbegyx(_framewin, old_vert, old_horz);
@@ -125,11 +126,6 @@ bool UI::Window::process(int ch)
 	bool out = _controller->process(*this, ch);
 	paint();
 	return out;
-}
-
-bool UI::Window::poll()
-{
-	return process(ERR);
 }
 
 void UI::Window::set_title(std::string text)

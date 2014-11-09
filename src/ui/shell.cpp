@@ -58,7 +58,6 @@ bool UI::Shell::process(int ch)
 	// the focus window. All other keypresses are delegated to
 	// the focus window.
 	switch (ch) {
-		case ERR: poll(); break;
 		case Control::LeftArrow: {
 			if (_focus > 0) {
 				set_focus(_focus - 1);
@@ -83,15 +82,6 @@ bool UI::Shell::process(int ch)
 	}
 	reap();
 	return !_columns.empty();
-}
-
-void UI::Shell::poll()
-{
-	for (size_t i = _columns.size(); i-- > 0;) {
-		if (!_columns[i]->poll()) {
-			close_window(i);
-		}
-	}
 }
 
 void UI::Shell::reap()

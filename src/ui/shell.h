@@ -17,7 +17,6 @@ public:
 	void make_active(Window *window);
 	Window *active() const { return _columns[_focus].get(); }
 protected:
-	void poll();
 	void reap();
 	// get the terminal width and height, then calculate column width
 	void get_screen_size();

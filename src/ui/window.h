@@ -21,7 +21,6 @@ public:
 	void clear_focus();
 	void bring_forward(int focus_relative);
 	bool process(int ch);
-	bool poll();
 protected:
 	virtual void repaint() override { _dirty_content = true; }
 	virtual App &app() override { return _app; }
