@@ -1,7 +1,6 @@
 #ifndef EDITOR_UPDATE_H
 #define EDITOR_UPDATE_H
 
-#include "controller.h"
 #include "coordinates.h"
 
 namespace Editor {

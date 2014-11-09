@@ -12,7 +12,7 @@ public:
 	Shell(App &app);
 	~Shell();
 	bool process(int ch);
-	Window *open_window(std::unique_ptr<Controller> &&wincontrol);
+	Window *open_window(std::unique_ptr<View> &&wincontrol);
 	void close_window(Window *window);
 	void make_active(Window *window);
 	Window *active() const { return _columns[_focus].get(); }

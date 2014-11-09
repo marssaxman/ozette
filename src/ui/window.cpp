@@ -4,15 +4,15 @@
 #include <assert.h>
 #include <cstring>
 
-UI::Window::Window(App &app, std::unique_ptr<Controller> &&controller):
+UI::Window::Window(App &app, std::unique_ptr<View> &&view):
 	_app(app),
-	_controller(std::move(controller)),
+	_view(std::move(view)),
 	_framewin(newwin(0, 0, 0, 0)),
 	_framepanel(new_panel(_framewin)),
 	_contentwin(newwin(0, 0, 0, 0)),
 	_contentpanel(new_panel(_contentwin))
 {
-	_controller->activate(*this);
+	_view->activate(*this);
 	paint();
 }
 
@@ -68,7 +68,7 @@ void UI::Window::layout(int xpos, int width)
 
 void UI::Window::set_focus()
 {
-	_controller->activate(*this);
+	_view->activate(*this);
 	_has_focus = true;
 	_dirty_chrome = true;
 	_dirty_content = true;
@@ -78,7 +78,7 @@ void UI::Window::set_focus()
 
 void UI::Window::clear_focus()
 {
-	_controller->deactivate(*this);
+	_view->deactivate(*this);
 	_has_focus = false;
 	_dirty_chrome = true;
 	_dirty_content = true;
@@ -118,12 +118,12 @@ bool UI::Window::process(int ch)
 			// activating the window again, so tell the
 			// controller to check up on whatever it was
 			// doing.
-			_controller->activate(*this);
+			_view->activate(*this);
 		}
 		paint();
 		return true;
 	}
-	bool out = _controller->process(*this, ch);
+	bool out = _view->process(*this, ch);
 	paint();
 	return out;
 }
@@ -275,7 +275,7 @@ void UI::Window::paint_content()
 {
 	curs_set(0);
 	wmove(_contentwin, 0, 0);
-	_controller->paint(_contentwin, _has_focus);
+	_view->paint(_contentwin, _has_focus);
 	_dirty_content = false;
 }
 

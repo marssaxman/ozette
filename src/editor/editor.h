@@ -1,13 +1,13 @@
 #ifndef EDITOR_EDITOR_H
 #define EDITOR_EDITOR_H
 
-#include "controller.h"
+#include "view.h"
 #include "document.h"
 #include "update.h"
 #include "cursor.h"
 
 namespace Editor {
-class Controller : public UI::Controller
+class Controller : public UI::View
 {
 public:
 	Controller();

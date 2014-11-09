@@ -15,8 +15,8 @@ void Browser::open(std::string path, UI::Shell &shell)
 	if (_instance) {
 		shell.make_active(_instance->_window);
 	} else {
-		std::unique_ptr<UI::Controller> controller(new Browser(path));
-		_instance->_window = shell.open_window(std::move(controller));
+		std::unique_ptr<UI::View> view(new Browser(path));
+		_instance->_window = shell.open_window(std::move(view));
 	}
 }
 

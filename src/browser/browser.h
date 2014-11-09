@@ -1,12 +1,12 @@
 #ifndef BROWSER_BROWSER_H
 #define BROWSER_BROWSER_H
 
-#include "controller.h"
+#include "view.h"
 #include "dirtree.h"
 #include "shell.h"
 #include <set>
 
-class Browser : public UI::Controller
+class Browser : public UI::View
 {
 public:
 	static void change_directory(std::string path);

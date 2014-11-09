@@ -5,7 +5,7 @@
 #include <panel.h>
 #include <memory>
 #include <vector>
-#include "controller.h"
+#include "view.h"
 #include "app.h"
 #include "dialog.h"
 #include "helpbar.h"
@@ -14,7 +14,7 @@ namespace UI {
 class Window : public Frame
 {
 public:
-	Window(App &app, std::unique_ptr<Controller> &&controller);
+	Window(App &app, std::unique_ptr<View> &&controller);
 	~Window();
 	void layout(int xpos, int width);
 	void set_focus();
@@ -43,12 +43,12 @@ protected:
 	void paint_taskbar(int height, int width);
 private:
 	App &_app;
-	std::unique_ptr<Controller> _controller;
+	std::unique_ptr<View> _view;
 	// The frame represents the outer dimensions of the window and
 	// contains all the UI chrome.
 	WINDOW *_framewin = nullptr;
 	PANEL *_framepanel = nullptr;
-	// The content window belongs to the controller and represents the
+	// The content window belongs to the view and represents the
 	// data that this window exists to display and manipulate.
 	WINDOW *_contentwin = nullptr;
 	PANEL *_contentpanel = nullptr;
