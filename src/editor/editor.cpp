@@ -192,6 +192,7 @@ void Editor::View::ctl_paste(UI::Frame &ctx)
 		_update.forward(oldloc);
 	}
 	_cursor.move_to(newloc);
+	drop_selection();
 }
 
 void Editor::View::ctl_close(UI::Frame &ctx)
@@ -268,13 +269,13 @@ void Editor::View::key_right(bool extend)
 
 void Editor::View::key_page_up()
 {
-	_cursor.up(_halfheight);
+	_cursor.up(_halfheight+1);
 	drop_selection();
 }
 
 void Editor::View::key_page_down()
 {
-	_cursor.down(_halfheight);
+	_cursor.down(_halfheight+1);
 	drop_selection();
 }
 
@@ -293,8 +294,8 @@ void Editor::View::key_end()
 void Editor::View::delete_selection()
 {
 	if (_selection.empty()) return;
+	_update.forward(_selection.begin());
 	_cursor.move_to(_doc.erase(_selection));
-	_update.forward(_cursor.location());
 	drop_selection();
 }
 
