@@ -23,11 +23,7 @@ class Dialog : public UI::View
 {
 	typedef UI::View inherited;
 public:
-	// There are several flavors of dialog box. Set up the
-	// one you want then call Dialog::Show(). The dialog will
-	// call you back when it is done.
 	typedef std::function<void(Frame&, std::string)> action_t;
-
 	struct Layout {
 		std::string prompt;
 		bool show_value = true;
@@ -37,7 +33,7 @@ public:
 		action_t yes = nullptr;
 		action_t no = nullptr;
 	};
-	static void Show(const Layout &layout, Frame &ctx);
+	Dialog(const Layout &layout);
 
 	// Dialogs belong to some UI element, which will manage the
 	// location of the window and its activation state. This may be
@@ -54,7 +50,6 @@ protected:
 	virtual void paint(WINDOW *view, bool active) override;
 
 private:
-	Dialog(const Layout &layout);
 	void arrow_left();
 	void arrow_right();
 	void arrow_up();

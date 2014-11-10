@@ -114,7 +114,8 @@ void Lindi::change_directory()
 		set_mru(path, _recent_dirs);
 		set_config("recent_dirs", _recent_dirs);
 	};
-	UI::Dialog::Show(dialog, *_shell.active());
+	std::unique_ptr<UI::Dialog> dptr(new UI::Dialog(dialog));
+	_shell.active()->show_dialog(std::move(dptr));
 }
 
 void Lindi::new_file()

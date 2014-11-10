@@ -21,13 +21,13 @@ public:
 	void clear_focus();
 	void bring_forward(int focus_relative);
 	bool process(int ch);
+	virtual void show_dialog(std::unique_ptr<Dialog> &&dialog) override;
 protected:
 	virtual void repaint() override { _dirty_content = true; }
 	virtual App &app() override { return _app; }
 	virtual void set_title(std::string text) override;
 	virtual void set_status(std::string text) override;
 	virtual void set_help(const Control::Panel &help) override;
-	virtual void show_dialog(std::unique_ptr<Dialog> &&dialog) override;
 	virtual void show_result(std::string message) override;
 	void clear_result();
 	void calculate_content(int &vpos, int &hpos, int &height, int &width);

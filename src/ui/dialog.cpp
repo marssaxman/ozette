@@ -2,10 +2,15 @@
 #include "frame.h"
 #include <assert.h>
 
-void UI::Dialog::Show(const Layout &layout, Frame &ctx)
+UI::Dialog::Dialog(const Layout &layout):
+	_layout(layout)
 {
-	std::unique_ptr<Dialog> it(new Dialog(layout));
-	ctx.show_dialog(std::move(it));
+	if (_layout.value.empty() && !_layout.options.empty()) {
+		_suggestion_selected = true;
+		_sugg_item = 0;
+		_layout.value = _layout.options.front();
+	}
+	_cursor_pos = _layout.value.size();
 }
 
 void UI::Dialog::layout(int vpos, int hpos, int height, int width)
@@ -81,17 +86,6 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 		ctx.repaint();
 	}
 	return true;
-}
-
-UI::Dialog::Dialog(const Layout &layout):
-	_layout(layout)
-{
-	if (_layout.value.empty() && !_layout.options.empty()) {
-		_suggestion_selected = true;
-		_sugg_item = 0;
-		_layout.value = _layout.options.front();
-	}
-	_cursor_pos = _layout.value.size();
 }
 
 void UI::Dialog::paint(WINDOW *view, bool active)
