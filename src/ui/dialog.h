@@ -11,7 +11,6 @@
 #include "view.h"
 
 namespace UI {
-class Frame;
 // A dialog is a modal input control.
 // Use it when you need to get information from the user before
 // performing an action. This may be data input or simply a
@@ -60,14 +59,6 @@ private:
 	void select_suggestion(size_t i);
 	void select_field();
 	void set_value(std::string val);
-
-	// We will get these dimensions whenever we are told to update
-	// our layout, since we may need to perform internal layouts
-	// when our content changes.
-	int _host_height = 0;
-	int _host_width = 0;
-	int _host_v = 0;
-	int _host_h = 0;
 
 	// Layout structure supplied by the client.
 	Layout _layout;
