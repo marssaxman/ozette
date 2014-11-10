@@ -30,6 +30,7 @@ protected:
 	virtual void show_dialog(std::unique_ptr<Dialog> &&dialog) override;
 	virtual void show_result(std::string message) override;
 	void clear_result();
+	void calculate_content(int &vpos, int &hpos, int &height, int &width);
 	void layout_contentwin();
 	void layout_taskbar();
 	void paint();
@@ -48,10 +49,6 @@ private:
 	// contains all the UI chrome.
 	WINDOW *_framewin = nullptr;
 	PANEL *_framepanel = nullptr;
-	// The content window belongs to the view and represents the
-	// data that this window exists to display and manipulate.
-	WINDOW *_contentwin = nullptr;
-	PANEL *_contentpanel = nullptr;
 	// There may be a dialog box overlaid on the content window, if the
 	// user is currently engaged in some process which requires input.
 	std::unique_ptr<UI::Dialog> _dialog;
@@ -59,7 +56,7 @@ private:
 	WINDOW *_resultwin = nullptr;
 	PANEL *_resultpanel = nullptr;
 	// Are we the active window? This changes the way we draw our chrome.
-	bool _has_focus = true;
+	bool _has_focus = false;
 	// What are the dimensional attributes we worked out during layout?
 	bool _lframe = false;
 	bool _rframe = false;

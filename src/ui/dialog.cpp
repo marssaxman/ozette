@@ -14,14 +14,12 @@ UI::Dialog::~Dialog()
 	delwin(_win);
 }
 
-void UI::Dialog::layout(WINDOW *view)
+void UI::Dialog::layout(int host_v, int host_h, int host_height, int host_width)
 {
-	// The dialog should be sized for its content and positioned above the
-	// specified window. Find out where the window is and how big it is so
-	// we can compute appropriate dimensions for the dialog.
-	getmaxyx(view, _host_height, _host_width);
-	getbegyx(view, _host_v, _host_h);
-
+	_host_v = host_v;
+	_host_h = host_h;
+	_host_height = host_height;
+	_host_width = host_width;
 	// Go lay the window out for these host dimensions and our current
 	// content dimensions, which may change as the suggestion list changes.
 	// We will put the dialog at the bottom of its window, as wide as the

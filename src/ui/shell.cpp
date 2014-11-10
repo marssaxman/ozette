@@ -134,7 +134,6 @@ void UI::Shell::close_window(Window *window)
 void UI::Shell::set_focus(size_t index)
 {
 	assert(index >= 0 && index < _columns.size());
-	if (_focus == index) return;
 	if (_focus < _columns.size()) {
 		_columns[_focus]->clear_focus();
 	}

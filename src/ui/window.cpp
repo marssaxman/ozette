@@ -8,9 +8,7 @@ UI::Window::Window(App &app, std::unique_ptr<View> &&view):
 	_app(app),
 	_view(std::move(view)),
 	_framewin(newwin(0, 0, 0, 0)),
-	_framepanel(new_panel(_framewin)),
-	_contentwin(newwin(0, 0, 0, 0)),
-	_contentpanel(new_panel(_contentwin))
+	_framepanel(new_panel(_framewin))
 {
 	_view->activate(*this);
 	paint();
@@ -20,8 +18,6 @@ UI::Window::~Window()
 {
 	del_panel(_framepanel);
 	delwin(_framewin);
-	del_panel(_contentpanel);
-	delwin(_contentwin);
 }
 
 void UI::Window::layout(int xpos, int width)
@@ -89,7 +85,7 @@ void UI::Window::clear_focus()
 void UI::Window::bring_forward(int focus_relative)
 {
 	top_panel(_framepanel);
-	top_panel(_contentpanel);
+	_view->bring_forward();
 	if (_dialog) _dialog->bring_forward();
 	bool swap_titlebar = focus_relative > 0;
 	if (swap_titlebar != _swap_titlebar) {
@@ -167,7 +163,9 @@ void UI::Window::show_dialog(std::unique_ptr<Dialog> &&host)
 	clear_result();
 	_dirty_chrome = true;
 	_dialog = std::move(host);
-	_dialog->layout(_contentwin);
+	int vpos, hpos, height, width;
+	calculate_content(vpos, hpos, height, width);
+	_dialog->layout(vpos, hpos, height, width);
 }
 
 void UI::Window::show_result(std::string message)
@@ -175,10 +173,8 @@ void UI::Window::show_result(std::string message)
 	clear_result();
 	int numchars = message.size();
 	int labelwidth = 2 + numchars + 2;
-	int voff, hoff;
-	getbegyx(_contentwin, voff, hoff);
-	int height, width;
-	getmaxyx(_contentwin, height, width);
+	int voff, hoff, height, width;
+	calculate_content(voff, hoff, height, width);
 	if (labelwidth > width) {
 		labelwidth = width;
 		numchars = labelwidth - 4;
@@ -204,51 +200,39 @@ void UI::Window::clear_result()
 	_resultwin = nullptr;
 }
 
-void UI::Window::layout_contentwin()
+void UI::Window::calculate_content(int &vpos, int &hpos, int &height, int &width)
 {
 	// Compute the location and dimension of the content window,
 	// relative to the location and dimension of the frame window.
-	int new_height, new_width;
-	getmaxyx(_framewin, new_height, new_width);
-	int new_vpos, new_hpos;
-	getbegyx(_framewin, new_vpos, new_hpos);
+	getmaxyx(_framewin, height, width);
+	getbegyx(_framewin, vpos, hpos);
 
 	// Adjust these dimensions inward to account for the space
 	// used by the frame. Every window has a title bar.
-	new_vpos++;
-	new_height--;
+	vpos++;
+	height--;
 	// The window may have a one-column left frame.
 	if (_lframe) {
-		new_hpos++;
-		new_width--;
+		hpos++;
+		width--;
 	}
 	// The window may have a one-column right frame.
 	if (_rframe) {
-		new_width--;
+		width--;
 	}
 	// There may be a task bar, whose height may vary.
-	new_height -= _taskbar_height;
+	height -= _taskbar_height;
+}
 
-	// Find out how where and how large the content window is.
-	// If our existing content window is the wrong size, recreate it.
-	// Otherwise, if it needs to be relocated, move its panel.
-	int old_height, old_width;
-	getmaxyx(_contentwin, old_height, old_width);
-	int old_vpos, old_hpos;
-	getbegyx(_contentwin, old_vpos, old_hpos);
-	if (old_height != new_height || old_width != new_width) {
-		WINDOW *win = newwin(new_height, new_width, new_vpos, new_hpos);
-		replace_panel(_contentpanel, win);
-		delwin(_contentwin);
-		_contentwin = win;
-		_dirty_content = true;
-	} else if (old_vpos != new_vpos || old_hpos != new_vpos) {
-		move_panel(_contentpanel, new_vpos, new_hpos);
-	}
-
+void UI::Window::layout_contentwin()
+{
+	int new_vpos, new_hpos, new_height, new_width;
+	calculate_content(new_vpos, new_hpos, new_height, new_width);
+	_view->layout(new_vpos, new_hpos, new_height, new_width);
+	_dirty_content = true;
 	// If we have a dialog box open, tell it how to lay itself out.
 	if (_dialog) {
-		_dialog->layout(_contentwin);
+		_dialog->layout(new_vpos, new_hpos, new_height, new_width);
 	}
 }
 
@@ -273,9 +257,7 @@ void UI::Window::paint()
 
 void UI::Window::paint_content()
 {
-	curs_set(0);
-	wmove(_contentwin, 0, 0);
-	_view->paint(_contentwin, _has_focus);
+	_view->paint(_has_focus);
 	_dirty_content = false;
 }
 

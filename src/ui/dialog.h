@@ -44,7 +44,7 @@ public:
 	// its own state, or it may be the UI shell itself, in which case
 	// the dialog floats over all the other windows. The dialog does
 	// not particularly have to care.
-	void layout(WINDOW *overlay);
+	void layout(int vpos, int hpos, int height, int width);
 	void set_focus();
 	void clear_focus();
 	void bring_forward();
