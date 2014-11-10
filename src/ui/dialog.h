@@ -8,6 +8,7 @@
 #include <panel.h>
 #include <vector>
 #include "helpbar.h"
+#include "view.h"
 
 namespace UI {
 class Frame;
@@ -18,8 +19,9 @@ class Frame;
 // opens and shows a prompt, the user types in it, then either
 // cancel the action, thereby dismissing the dialog, or they can
 // commit their input and start the action.
-class Dialog
+class Dialog : public UI::View
 {
+	typedef UI::View inherited;
 public:
 	// There are several flavors of dialog box. Set up the
 	// one you want then call Dialog::Show(). The dialog will
@@ -37,29 +39,22 @@ public:
 	};
 	static void Show(const Layout &layout, Frame &ctx);
 
-	~Dialog();
 	// Dialogs belong to some UI element, which will manage the
 	// location of the window and its activation state. This may be
 	// some window, which will raise and lower the dialog along with
 	// its own state, or it may be the UI shell itself, in which case
 	// the dialog floats over all the other windows. The dialog does
 	// not particularly have to care.
-	void layout(int vpos, int hpos, int height, int width);
-	void set_focus();
-	void clear_focus();
-	void bring_forward();
+	virtual void layout(int vpos, int hpos, int height, int width) override;
+	virtual bool process(UI::Frame &ctx, int ch) override;
+	virtual void paint(bool active) override { inherited::paint(active); }
 	void set_help(HelpBar::Panel &panel);
 
-	// The dialog host must supply it with events so that it can
-	// run the text editing and determine when it should close.
-	// The dialog will return true if it wants to stay open, false
-	// if it is ready to be dismissed. The dialog will stay visible
-	// until the dialog object is deleted.
-	bool process(UI::Frame &ctx, int ch);
+protected:
+	virtual void paint(WINDOW *view, bool active) override;
 
 private:
 	Dialog(const Layout &layout);
-	void paint();
 	void arrow_left();
 	void arrow_right();
 	void arrow_up();
@@ -78,11 +73,6 @@ private:
 	int _host_width = 0;
 	int _host_v = 0;
 	int _host_h = 0;
-
-	// Our content is drawn in a window in a panel.
-	WINDOW *_win = nullptr;
-	PANEL *_panel = nullptr;
-	bool _has_focus = true;
 
 	// Layout structure supplied by the client.
 	Layout _layout;

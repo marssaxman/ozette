@@ -8,65 +8,12 @@ void UI::Dialog::Show(const Layout &layout, Frame &ctx)
 	ctx.show_dialog(std::move(it));
 }
 
-UI::Dialog::~Dialog()
+void UI::Dialog::layout(int vpos, int hpos, int height, int width)
 {
-	del_panel(_panel);
-	delwin(_win);
-}
-
-void UI::Dialog::layout(int host_v, int host_h, int host_height, int host_width)
-{
-	_host_v = host_v;
-	_host_h = host_h;
-	_host_height = host_height;
-	_host_width = host_width;
-	// Go lay the window out for these host dimensions and our current
-	// content dimensions, which may change as the suggestion list changes.
-	// We will put the dialog at the bottom of its window, as wide as the
-	// host and as many rows tall as its content, up to half the height of
-	// the host window.
 	int content_height = 1 + _layout.options.size();
-	int new_height = std::min(content_height, _host_height / 2);
-	int new_width = _host_width;
-	int new_v = _host_v + _host_height - new_height;
-	int new_h = _host_h;
-
-	// Find out where our window is located and how large it happens to be.
-	// We may need to move and/or resize it.
-	int old_height, old_width;
-	getmaxyx(_win, old_height, old_width);
-	int old_v, old_h;
-	getbegyx(_win, old_v, old_h);
-	if (new_height != old_height || new_width != old_width) {
-		WINDOW *win = newwin(new_height, new_width, new_v, new_h);
-		replace_panel(_panel, win);
-		delwin(_win);
-		_win = win;
-	} else if (new_v != old_v || new_h != old_h) {
-		move_panel(_panel, new_v, new_h);
-	}
-	paint();
-}
-
-void UI::Dialog::set_focus()
-{
-	if (!_has_focus) {
-		_has_focus = true;
-		paint();
-	}
-}
-
-void UI::Dialog::clear_focus()
-{
-	if (_has_focus) {
-		_has_focus = false;
-		paint();
-	}
-}
-
-void UI::Dialog::bring_forward()
-{
-	top_panel(_panel);
+	int new_height = std::min(content_height, height / 2);
+	int new_vpos = vpos + height - new_height;
+	inherited::layout(new_vpos, hpos, new_height, width);
 }
 
 void UI::Dialog::set_help(HelpBar::Panel &panel)
@@ -131,14 +78,12 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 			break;
 	}
 	if (_repaint) {
-		paint();
+		ctx.repaint();
 	}
 	return true;
 }
 
 UI::Dialog::Dialog(const Layout &layout):
-	_win(newwin(0, 0, 0, 0)),
-	_panel(new_panel(_win)),
 	_layout(layout)
 {
 	if (_layout.value.empty() && !_layout.options.empty()) {
@@ -149,32 +94,32 @@ UI::Dialog::Dialog(const Layout &layout):
 	_cursor_pos = _layout.value.size();
 }
 
-void UI::Dialog::paint()
+void UI::Dialog::paint(WINDOW *view, bool active)
 {
 	// Everything drawn in a dialog is reversed by default.
-	wattron(_win, A_REVERSE);
+	wattron(view, A_REVERSE);
 
 	int height, width;
-	getmaxyx(_win, height, width);
+	getmaxyx(view, height, width);
 
 	// Draw the prompt and the current value string.
-	wmove(_win, 0, 0);
-	waddnstr(_win, _layout.prompt.c_str(), width);
+	wmove(view, 0, 0);
+	waddnstr(view, _layout.prompt.c_str(), width);
 	if (_layout.show_value) {
-		waddstr(_win, ": ");
+		waddstr(view, ": ");
 	}
 	int value_vpos, value_hpos;
-	getyx(_win, value_vpos, value_hpos);
+	getyx(view, value_vpos, value_hpos);
 	(void)value_vpos; // unused
 	if (_layout.show_value) {
-		if (!_suggestion_selected) wattron(_win, A_UNDERLINE);
-		waddnstr(_win, _layout.value.c_str(), width - value_hpos);
-		if (!_suggestion_selected) wattroff(_win, A_UNDERLINE);
+		if (!_suggestion_selected) wattron(view, A_UNDERLINE);
+		waddnstr(view, _layout.value.c_str(), width - value_hpos);
+		if (!_suggestion_selected) wattroff(view, A_UNDERLINE);
 	}
 	int end_vpos, end_hpos;
-	getyx(_win, end_vpos, end_hpos);
+	getyx(view, end_vpos, end_hpos);
 	(void)end_vpos; // unused
-	whline(_win, ' ', width - end_hpos);
+	whline(view, ' ', width - end_hpos);
 
 	// Draw each suggested value on its own line.
 	int sugg_vpos = value_vpos + 1;
@@ -190,43 +135,40 @@ void UI::Dialog::paint()
 	for (unsigned i = 0; i < _layout.options.size(); ++i) {
 		int vpos = sugg_vpos + i;
 		if (vpos >= height) break;
-		wmove(_win, vpos, 0);
+		wmove(view, vpos, 0);
 		if (i < 10 && _suggestion_selected) {
-			waddstr(_win, "  ");
-			waddch(_win, '0' + i);
-			waddstr(_win, ": ");
+			waddstr(view, "  ");
+			waddch(view, '0' + i);
+			waddstr(view, ": ");
 		} else {
-			waddstr(_win, "     ");
+			waddstr(view, "     ");
 		}
 		bool selrow = (_suggestion_selected && i == _sugg_item);
 		if (selrow) {
-			wattroff(_win, A_REVERSE);
-			if (vpos + 1 == height) wattron(_win, A_UNDERLINE);
+			wattroff(view, A_REVERSE);
+			if (vpos + 1 == height) wattron(view, A_UNDERLINE);
 		}
-		waddnstr(_win, _layout.options[i].c_str(), sugg_width);
+		waddnstr(view, _layout.options[i].c_str(), sugg_width);
 		int curv, curh;
-		getyx(_win, curv, curh);
+		getyx(view, curv, curh);
 		(void)curv; //ignored
-		whline(_win, ' ', width - curh - 2);
+		whline(view, ' ', width - curh - 2);
 		if (selrow) {
-			wattron(_win, A_REVERSE);
-			if (vpos + 1 == height) wattroff(_win, A_UNDERLINE);
+			wattron(view, A_REVERSE);
+			if (vpos + 1 == height) wattroff(view, A_UNDERLINE);
 		}
-		mvwaddstr(_win, vpos, width - 2, "  ");
+		mvwaddstr(view, vpos, width - 2, "  ");
 	}
 	// We're done being all reversed and stuff.
-	wattroff(_win, A_REVERSE);
+	wattroff(view, A_REVERSE);
 
 	// Put the cursor where it ought to be. Make it visible, if that
 	// would be appropriate for our activation state.
-	wmove(_win, 0, value_hpos + _cursor_pos);
-	bool show_cursor = _has_focus;
+	wmove(view, 0, value_hpos + _cursor_pos);
+	bool show_cursor = active;
 	show_cursor &= !_suggestion_selected;
 	show_cursor &= _layout.show_value;
 	curs_set(show_cursor? 1: 0);
-
-	// We no longer need to repaint.
-	_repaint = false;
 }
 
 void UI::Dialog::arrow_left()

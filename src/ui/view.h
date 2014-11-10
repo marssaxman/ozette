@@ -11,11 +11,11 @@ class View
 public:
 	View();
 	virtual ~View();
-	void layout(int v, int h, int height, int width);
+	virtual void layout(int v, int h, int height, int width);
 	void bring_forward();
 	virtual void paint(bool active);
-	virtual void activate(Frame &ctx) = 0;
-	virtual void deactivate(Frame &ctx) = 0;
+	virtual void activate(Frame &ctx) {}
+	virtual void deactivate(Frame &ctx) {}
 	virtual bool process(Frame &ctx, int ch) = 0;
 protected:
 	virtual void paint(WINDOW *view, bool active) = 0;

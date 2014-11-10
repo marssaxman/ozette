@@ -68,7 +68,7 @@ void UI::Window::set_focus()
 	_has_focus = true;
 	_dirty_chrome = true;
 	_dirty_content = true;
-	if (_dialog) _dialog->set_focus();
+	if (_dialog) _dialog->activate(*this);
 	paint();
 }
 
@@ -78,7 +78,7 @@ void UI::Window::clear_focus()
 	_has_focus = false;
 	_dirty_chrome = true;
 	_dirty_content = true;
-	if (_dialog) _dialog->clear_focus();
+	if (_dialog) _dialog->deactivate(*this);
 	paint();
 }
 
@@ -258,6 +258,7 @@ void UI::Window::paint()
 void UI::Window::paint_content()
 {
 	_view->paint(_has_focus);
+	if (_dialog) _dialog->paint(_has_focus);
 	_dirty_content = false;
 }
 
