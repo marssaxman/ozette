@@ -43,7 +43,7 @@ public:
 	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void paint(bool active) override { inherited::paint(active); }
-	void set_help(HelpBar::Panel &panel);
+	virtual void set_help(HelpBar::Panel &panel) override;
 
 protected:
 	virtual void paint(WINDOW *view, bool active) override;

@@ -16,6 +16,7 @@ public:
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual void paint(WINDOW *view, bool active) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
+	virtual void set_help(UI::HelpBar::Panel &panel) override;
 	void view(std::string path);
 private:
 	~Browser() { _instance = nullptr; }

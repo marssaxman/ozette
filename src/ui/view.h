@@ -4,6 +4,7 @@
 #include <ncurses.h>
 #include <panel.h>
 #include "frame.h"
+#include "helpbar.h"
 
 namespace UI {
 class View
@@ -17,6 +18,7 @@ public:
 	virtual void activate(Frame &ctx) {}
 	virtual void deactivate(Frame &ctx) {}
 	virtual bool process(Frame &ctx, int ch) = 0;
+	virtual void set_help(HelpBar::Panel &panel) {}
 protected:
 	virtual void paint(WINDOW *view, bool active) = 0;
 private:

@@ -39,6 +39,7 @@ void UI::Window::layout(int xpos, int width)
 	if (_rframe) {
 		width++;
 	}
+	_taskbar_height = HelpBar::Panel::kHeight;
 
 	// What are the dimensions and location of our existing frame?
 	// If the window has the wrong size, we must rebuild it, and
@@ -136,28 +137,6 @@ void UI::Window::set_status(std::string text)
 	_dirty_chrome = true;
 }
 
-void UI::Window::set_help(const Control::Panel &panel)
-{
-	for (unsigned v = 0; v < Control::Panel::height; v++) {
-		for (unsigned h = 0; h < Control::Panel::width; h++) {
-			auto &it = _help.label[v][h];
-			int key = panel.label[v][h];
-			if (0 != key) {
-				it.mnemonic = Control::keys[key].mnemonic;
-				it.is_ctrl = true;
-				it.text = Control::keys[key].label;
-			} else {
-				it.mnemonic = '\0';
-				it.is_ctrl = false;
-				it.text.clear();
-			}
-		}
-	}
-	_dirty_chrome = true;
-	layout_taskbar();
-	paint();
-}
-
 void UI::Window::show_dialog(std::unique_ptr<Dialog> &&host)
 {
 	clear_result();
@@ -240,7 +219,7 @@ void UI::Window::layout_taskbar()
 {
 	unsigned new_height = 0;
 	// The help panel occupies two lines
-	new_height += Control::Panel::height;
+	new_height += HelpBar::Panel::kHeight;
 	// Is that the height we planned for?
 	if (new_height != _taskbar_height) {
 		_taskbar_height = new_height;
@@ -333,7 +312,7 @@ void UI::Window::paint_taskbar(int height, int width)
 	if (_dialog) {
 		_dialog->set_help(panel);
 	} else {
-		panel = _help;
+		_view->set_help(panel);
 	}
 
 	int xpos = _lframe ? 1 : 0;

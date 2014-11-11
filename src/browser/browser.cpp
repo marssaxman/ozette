@@ -29,13 +29,6 @@ Browser::Browser(std::string path):
 void Browser::activate(UI::Frame &ctx)
 {
 	ctx.set_title(_tree.path());
-	using namespace Control;
-	Panel help = {{
-		{Open, NewFile, 0, 0, 0, 0},
-		{Quit, 0, 0, Directory, 0, 0},
-	}};
-	ctx.set_help(help);
-
 	if (_expanded_items.empty()) {
 		std::vector<std::string> paths;
 		ctx.app().get_config(kExpansionStateKey, paths);
@@ -104,6 +97,15 @@ bool Browser::process(UI::Frame &ctx, int ch)
 		default: break;
 	}
 	return true;
+}
+
+void Browser::set_help(UI::HelpBar::Panel &panel)
+{
+	using namespace UI::HelpBar;
+	panel.label[0][0] = Label('O', true, "Open");
+	panel.label[0][1] = Label('N', true, "New File");
+	panel.label[1][0] = Label('Q', true, "Quit");
+	panel.label[1][3] = Label('D', true, "Directory");
 }
 
 void Browser::view(std::string path)

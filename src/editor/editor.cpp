@@ -26,12 +26,6 @@ void Editor::View::activate(UI::Frame &ctx)
 		ctx.set_title(_targetpath);
 	}
 	ctx.set_status(_doc.status());
-	using namespace Control;
-	Panel help = {{
-		{Cut, Copy, Paste, 0, ToLine, Find},
-		{Close, Save, 0, 0, 0, 0},
-	}};
-	ctx.set_help(help);
 }
 
 void Editor::View::deactivate(UI::Frame &ctx)
@@ -93,6 +87,18 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 	}
 	postprocess(ctx);
 	return true;
+}
+
+void Editor::View::set_help(UI::HelpBar::Panel &panel)
+{
+	using namespace UI::HelpBar;
+	panel.label[0][0] = Label('X', true, "Cut");
+	panel.label[0][1] = Label('C', true, "Copy");
+	panel.label[0][2] = Label('V', true, "Paste");
+	panel.label[0][4] = Label('L', true, "To Line");
+	panel.label[0][5] = Label('F', true, "Find");
+	panel.label[1][0] = Label('W', true, "Close");
+	panel.label[1][1] = Label('S', true, "Save");
 }
 
 void Editor::View::postprocess(UI::Frame &ctx)

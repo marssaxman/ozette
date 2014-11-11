@@ -16,7 +16,7 @@ public:
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual void paint(WINDOW *view, bool active) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
-
+	virtual void set_help(UI::HelpBar::Panel &panel) override;
 private:
 	void postprocess(UI::Frame &ctx);
 	void paint_line(WINDOW *view, row_t v, bool active);

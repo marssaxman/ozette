@@ -27,7 +27,6 @@ protected:
 	virtual App &app() override { return _app; }
 	virtual void set_title(std::string text) override;
 	virtual void set_status(std::string text) override;
-	virtual void set_help(const Control::Panel &help) override;
 	virtual void show_result(std::string message) override;
 	void clear_result();
 	void calculate_content(int &vpos, int &hpos, int &height, int &width);
@@ -70,7 +69,6 @@ private:
 	std::string _title;
 	std::string _status;
 	bool _swap_titlebar = false;
-	HelpBar::Panel _help;
 };
 } // namespace UI
 
