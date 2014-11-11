@@ -248,6 +248,7 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 	dialog.prompt += ")";
 	dialog.commit = [this](UI::Frame &ctx, std::string value)
 	{
+		if (value.empty()) return;
 		long valnum = std::stol(value) - 1;
 		size_t index = (valnum >= 0) ? valnum : 0;
 		_cursor.move_to(_doc.home(index));
