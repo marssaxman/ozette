@@ -37,6 +37,8 @@ public:
 	// Where is the character which follows or precedes this one?
 	location_t next(location_t loc);
 	location_t prev(location_t loc);
+	// Where is the next occurrence of the specified string?
+	location_t find(std::string text, location_t begin);
 
 	// Get a reference to a specific line, which may be a blank
 	// if no such line exists.

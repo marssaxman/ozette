@@ -63,6 +63,7 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::Save: ctl_save(ctx); break;
 
 		case Control::ToLine: ctl_toline(ctx); break;
+		case Control::Find: ctl_find(ctx); break;
 
 		case KEY_DOWN: key_down(false); break;
 		case KEY_UP: key_up(false); break;
@@ -240,8 +241,8 @@ void Editor::View::ctl_save(UI::Frame &ctx)
 void Editor::View::ctl_toline(UI::Frame &ctx)
 {
 	UI::Dialog::Input::Layout dialog;
-	// illogical as it is, the rest of the world seems to think that it is a
-	// good idea for line numbers to start counting at 1, so we will
+	// illogical as it is, the rest of the world seems to think that it is
+	// a good idea for line numbers to start counting at 1, so we will
 	// accommodate their perverse desires in the name of compatibility.
 	dialog.prompt = "Go to line (";
 	dialog.prompt += std::to_string(_cursor.location().line + 1);
@@ -254,6 +255,28 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 		_cursor.move_to(_doc.home(index));
 		drop_selection();
 		postprocess(ctx);
+	};
+	std::unique_ptr<UI::View> dptr(new UI::Dialog::Input(dialog));
+	ctx.show_dialog(std::move(dptr));
+}
+
+void Editor::View::ctl_find(UI::Frame &ctx)
+{
+	UI::Dialog::Input::Layout dialog;
+	dialog.prompt = "Find";
+	if (!_find_text.empty()) {
+		dialog.prompt += " (" + _find_text + ")";
+	}
+	dialog.commit = [this](UI::Frame &ctx, std::string value)
+	{
+		if (!value.empty()) {
+			_find_text = value;
+		}
+		location_t loc = _doc.next(_cursor.location());
+		auto next = _doc.find(_find_text, loc);
+		_cursor.move_to(next);
+		reveal_cursor();
+		ctx.repaint();
 	};
 	std::unique_ptr<UI::View> dptr(new UI::Dialog::Input(dialog));
 	ctx.show_dialog(std::move(dptr));

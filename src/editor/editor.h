@@ -33,6 +33,7 @@ private:
 	void ctl_close(UI::Frame &ctx);
 	void ctl_save(UI::Frame &ctx);
 	void ctl_toline(UI::Frame &ctx);
+	void ctl_find(UI::Frame &ctx);
 
 	// Navigation keystrokes move the cursor around the document.
 	void key_up(bool extend);
@@ -74,6 +75,7 @@ private:
 	Cursor _cursor;
 	location_t _anchor;
 	Range _selection;
+	std::string _find_text;
 
 	// Update status: must we perform a full repaint?
 	bool _last_active = false;

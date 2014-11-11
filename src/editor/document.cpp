@@ -134,6 +134,18 @@ Editor::location_t Editor::Document::prev(location_t loc)
 	return loc;
 }
 
+Editor::location_t Editor::Document::find(std::string needle, location_t loc)
+{
+	do {
+		loc.offset = line(loc.line).text().find(needle, loc.offset);
+		if (loc.offset != std::string::npos) {
+			return loc;
+		}
+		loc.offset = 0;
+	} while (loc.line++ < _maxline);
+	return end();
+}
+
 Editor::Line &Editor::Document::line(line_t index)
 {
 	// Get the line at the specified index.
