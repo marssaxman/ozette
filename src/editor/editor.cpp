@@ -274,6 +274,14 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 		}
 		location_t loc = _doc.next(_cursor.location());
 		auto next = _doc.find(_find_text, loc);
+		if (next == _doc.end()) {
+			ctx.show_result("Search wrapped");
+			next = _doc.find(_find_text, _doc.home());
+			if (next == _doc.end()) {
+				ctx.show_result("Not found");
+				return;
+			}
+		}
 		_cursor.move_to(next);
 		reveal_cursor();
 		ctx.repaint();
