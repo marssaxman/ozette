@@ -7,7 +7,7 @@
 #include "control.h"
 
 namespace UI {
-class Dialog;
+class View;
 // A frame represents the portion of a window managed by the shell.
 // This interface allows the window's controller to manipulate those
 // elements of the window which refer to its content and not to its
@@ -24,7 +24,7 @@ public:
 	virtual void set_status(std::string text) = 0;
 	// Open a dialog box and request input from the user.
 	// The controller will be suspended while the dialog is open.
-	virtual void show_dialog(std::unique_ptr<Dialog> &&dialog) = 0;
+	virtual void show_dialog(std::unique_ptr<View> &&dialog) = 0;
 	// Some process has completed. Show the result to the user as
 	// a temporary floating result bar.
 	virtual void show_result(std::string) = 0;

@@ -7,7 +7,6 @@
 #include <vector>
 #include "view.h"
 #include "app.h"
-#include "dialog.h"
 #include "helpbar.h"
 
 namespace UI {
@@ -21,7 +20,7 @@ public:
 	void clear_focus();
 	void bring_forward(int focus_relative);
 	bool process(int ch);
-	virtual void show_dialog(std::unique_ptr<Dialog> &&dialog) override;
+	virtual void show_dialog(std::unique_ptr<View> &&dialog) override;
 protected:
 	virtual void repaint() override { _dirty_content = true; }
 	virtual App &app() override { return _app; }
@@ -50,7 +49,7 @@ private:
 	PANEL *_framepanel = nullptr;
 	// There may be a dialog box overlaid on the content window, if the
 	// user is currently engaged in some process which requires input.
-	std::unique_ptr<UI::Dialog> _dialog;
+	std::unique_ptr<View> _dialog;
 	// There may be an ephemeral result box overlaid on the content window.
 	WINDOW *_resultwin = nullptr;
 	PANEL *_resultpanel = nullptr;

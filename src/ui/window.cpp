@@ -104,7 +104,7 @@ bool UI::Window::process(int ch)
 		// We will temporarily move it into a local variable while it has
 		// control, so we don't delete the object while its methods are on the
 		// call stack.
-		std::unique_ptr<Dialog> temp(std::move(_dialog));
+		std::unique_ptr<View> temp(std::move(_dialog));
 		if (temp->process(*this, ch)) {
 			// If this dialog wants to stick around, we
 			// expect that it hasn't done anything to change _dialog.
@@ -137,7 +137,7 @@ void UI::Window::set_status(std::string text)
 	_dirty_chrome = true;
 }
 
-void UI::Window::show_dialog(std::unique_ptr<Dialog> &&host)
+void UI::Window::show_dialog(std::unique_ptr<View> &&host)
 {
 	clear_result();
 	_dirty_chrome = true;

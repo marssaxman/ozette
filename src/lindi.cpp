@@ -2,6 +2,7 @@
 #include "browser.h"
 #include "editor.h"
 #include "control.h"
+#include "dialog.h"
 #include <unistd.h>
 #include <fstream>
 #include <sys/stat.h>
@@ -114,7 +115,7 @@ void Lindi::change_directory()
 		set_mru(path, _recent_dirs);
 		set_config("recent_dirs", _recent_dirs);
 	};
-	std::unique_ptr<UI::Dialog> dptr(new UI::Dialog(dialog));
+	std::unique_ptr<UI::View> dptr(new UI::Dialog(dialog));
 	_shell.active()->show_dialog(std::move(dptr));
 }
 

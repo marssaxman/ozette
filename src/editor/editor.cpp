@@ -221,7 +221,7 @@ void Editor::View::ctl_close(UI::Frame &ctx)
 		// just close it
 		ctx.app().close_file(_targetpath);
 	};
-	std::unique_ptr<UI::Dialog> dptr(new UI::Dialog(dialog));
+	std::unique_ptr<UI::View> dptr(new UI::Dialog(dialog));
 	ctx.show_dialog(std::move(dptr));
 }
 
@@ -247,7 +247,7 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 		drop_selection();
 		postprocess(ctx);
 	};
-	std::unique_ptr<UI::Dialog> dptr(new UI::Dialog(dialog));
+	std::unique_ptr<UI::View> dptr(new UI::Dialog(dialog));
 	ctx.show_dialog(std::move(dptr));
 }
 
@@ -407,10 +407,10 @@ void Editor::View::save(UI::Frame &ctx, std::string path)
 		{
 			save(ctx, path);
 		};
-		std::unique_ptr<UI::Dialog> dptr(new UI::Dialog(dialog));
+		std::unique_ptr<UI::View> dptr(new UI::Dialog(dialog));
 		ctx.show_dialog(std::move(dptr));
 	};
-	std::unique_ptr<UI::Dialog> dptr(new UI::Dialog(dialog));
+	std::unique_ptr<UI::View> dptr(new UI::Dialog(dialog));
 	ctx.show_dialog(std::move(dptr));
 }
 
