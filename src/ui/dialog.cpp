@@ -109,9 +109,7 @@ void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
 	int value_vpos, value_hpos;
 	getyx(view, value_vpos, value_hpos);
 	(void)value_vpos; // unused
-	if (!_suggestion_selected) wattron(view, A_UNDERLINE);
 	waddnstr(view, _layout.value.c_str(), width - value_hpos);
-	if (!_suggestion_selected) wattroff(view, A_UNDERLINE);
 	int end_vpos, end_hpos;
 	getyx(view, end_vpos, end_hpos);
 	(void)end_vpos; // unused
