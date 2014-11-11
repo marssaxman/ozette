@@ -50,7 +50,7 @@ void Browser::deactivate(UI::Frame &ctx)
 	ctx.app().set_config(kExpansionStateKey, paths);
 }
 
-void Browser::paint(WINDOW *view, bool active)
+void Browser::paint_into(WINDOW *view, bool active)
 {
 	int height, width;
 	getmaxyx(view, height, width);

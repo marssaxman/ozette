@@ -20,7 +20,7 @@ public:
 	virtual bool process(Frame &ctx, int ch) = 0;
 	virtual void set_help(HelpBar::Panel &panel) {}
 protected:
-	virtual void paint(WINDOW *view, bool active) = 0;
+	virtual void paint_into(WINDOW *view, bool active) = 0;
 private:
 	WINDOW *_window = nullptr;
 	PANEL *_panel = nullptr;

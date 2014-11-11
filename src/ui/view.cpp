@@ -37,5 +37,5 @@ void UI::View::paint(bool active)
 {
 	wmove(_window, 0, 0);
 	curs_set(0);
-	paint(_window, active);
+	paint_into(_window, active);
 }

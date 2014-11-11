@@ -2,7 +2,54 @@
 #include "frame.h"
 #include <assert.h>
 
-UI::Dialog::Dialog(const Layout &layout):
+UI::Dialog::Base::Base(std::string prompt):
+	_prompt(prompt)
+{
+}
+
+void UI::Dialog::Base::layout(int vpos, int hpos, int height, int width)
+{
+	int content_height = 1 + extra_height();
+	int new_height = std::min(content_height, height / 2);
+	int new_vpos = vpos + height - new_height;
+	inherited::layout(new_vpos, hpos, new_height, width);
+}
+
+bool UI::Dialog::Base::process(UI::Frame &ctx, int ch)
+{
+	switch (ch) {
+		case Control::Escape:	// escape key
+		case Control::Close:	// control-W
+			// the user no longer wants this action
+			// this dialog has no further purpose
+			ctx.show_result("Cancelled");
+			return false;
+		default: break;
+	}
+	return true;
+}
+
+void UI::Dialog::Base::paint_into(WINDOW *view, bool active)
+{
+	// Everything drawn in a dialog is reversed by default.
+	wattron(view, A_REVERSE);
+	// Fill the dialog window.
+	wmove(view, 0, 0);
+	int height, width;
+	getmaxyx(view, height, width);
+	(void)height; // unused
+	whline(view, ' ', width);
+	waddnstr(view, _prompt.c_str(), width);
+	wattroff(view, A_REVERSE);
+}
+
+void UI::Dialog::Base::set_help(HelpBar::Panel &panel)
+{
+	panel.label[1][0] = HelpBar::Label('[', true, "Escape");
+}
+
+UI::Dialog::Input::Input(const Layout &layout):
+	Base(layout.prompt),
 	_layout(layout)
 {
 	if (_layout.value.empty() && !_layout.options.empty()) {
@@ -13,38 +60,14 @@ UI::Dialog::Dialog(const Layout &layout):
 	_cursor_pos = _layout.value.size();
 }
 
-void UI::Dialog::layout(int vpos, int hpos, int height, int width)
-{
-	int content_height = 1 + _layout.options.size();
-	int new_height = std::min(content_height, height / 2);
-	int new_vpos = vpos + height - new_height;
-	inherited::layout(new_vpos, hpos, new_height, width);
-}
-
-void UI::Dialog::set_help(HelpBar::Panel &panel)
-{
-	if (!_layout.show_value) {
-		panel.label[0][0] = {'Y', false, "Yes"};
-		panel.label[1][0] = {'N', false, "No"};
-	}
-	panel.label[1][5] = {'[', true, "Escape"};
-}
-
-bool UI::Dialog::process(UI::Frame &ctx, int ch)
+bool UI::Dialog::Input::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
-		case Control::Escape:	// escape key
-		case Control::Close:	// control-W
-			// the user no longer wants this action
-			// this dialog has no further purpose
-			ctx.show_result("Cancelled");
-			return false;
 		case Control::Return:
 		case Control::Enter:
 			// the user is happy with their choice
 			// tell the action to proceed and then
 			// inform our host that we are finished
-			if(!_layout.show_value) break;
 			if (_layout.commit) _layout.commit(ctx, _layout.value);
 			return false;
 		case KEY_LEFT: arrow_left(); break;
@@ -64,19 +87,6 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 				if (_layout.commit) _layout.commit(ctx, _layout.value);
 				return false;
 			}
-			// if this is a non-value-showing dialog and the key
-			// was "Y", that's commit; if it was "N", that's retry
-			if (!_layout.show_value) {
-				if (ch == 'Y' || ch == 'y') {
-					if (_layout.yes) _layout.yes(ctx, _layout.value);
-					return false;
-				}
-				if (ch == 'N' || ch == 'n') {
-					if (_layout.no) _layout.no(ctx, _layout.value);
-					return false;
-				}
-			}
-
 			// in all other situations, the keypress should be
 			// inserted into the field at the cursor point.
 			key_insert(ch);
@@ -85,31 +95,23 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 	if (_repaint) {
 		ctx.repaint();
 	}
-	return true;
+	return inherited::process(ctx, ch);
 }
 
-void UI::Dialog::paint(WINDOW *view, bool active)
+void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
 {
-	// Everything drawn in a dialog is reversed by default.
-	wattron(view, A_REVERSE);
+	inherited::paint_into(view, active);
 
+	wattron(view, A_REVERSE);
+	waddstr(view, ": ");
 	int height, width;
 	getmaxyx(view, height, width);
-
-	// Draw the prompt and the current value string.
-	wmove(view, 0, 0);
-	waddnstr(view, _layout.prompt.c_str(), width);
-	if (_layout.show_value) {
-		waddstr(view, ": ");
-	}
 	int value_vpos, value_hpos;
 	getyx(view, value_vpos, value_hpos);
 	(void)value_vpos; // unused
-	if (_layout.show_value) {
-		if (!_suggestion_selected) wattron(view, A_UNDERLINE);
-		waddnstr(view, _layout.value.c_str(), width - value_hpos);
-		if (!_suggestion_selected) wattroff(view, A_UNDERLINE);
-	}
+	if (!_suggestion_selected) wattron(view, A_UNDERLINE);
+	waddnstr(view, _layout.value.c_str(), width - value_hpos);
+	if (!_suggestion_selected) wattroff(view, A_UNDERLINE);
 	int end_vpos, end_hpos;
 	getyx(view, end_vpos, end_hpos);
 	(void)end_vpos; // unused
@@ -161,11 +163,10 @@ void UI::Dialog::paint(WINDOW *view, bool active)
 	wmove(view, 0, value_hpos + _cursor_pos);
 	bool show_cursor = active;
 	show_cursor &= !_suggestion_selected;
-	show_cursor &= _layout.show_value;
 	curs_set(show_cursor? 1: 0);
 }
 
-void UI::Dialog::arrow_left()
+void UI::Dialog::Input::arrow_left()
 {
 	if (_suggestion_selected) {
 		select_field();
@@ -176,7 +177,7 @@ void UI::Dialog::arrow_left()
 	}
 }
 
-void UI::Dialog::arrow_right()
+void UI::Dialog::Input::arrow_right()
 {
 	if (_suggestion_selected) {
 		select_field();
@@ -187,7 +188,7 @@ void UI::Dialog::arrow_right()
 	}
 }
 
-void UI::Dialog::arrow_up()
+void UI::Dialog::Input::arrow_up()
 {
 	if (!_suggestion_selected) return;
 	if (_sugg_item > 0) {
@@ -197,7 +198,7 @@ void UI::Dialog::arrow_up()
 	}
 }
 
-void UI::Dialog::arrow_down()
+void UI::Dialog::Input::arrow_down()
 {
 	if (_suggestion_selected) {
 		select_suggestion(_sugg_item + 1);
@@ -206,7 +207,7 @@ void UI::Dialog::arrow_down()
 	}
 }
 
-void UI::Dialog::delete_prev()
+void UI::Dialog::Input::delete_prev()
 {
 	select_field();
 	if (_layout.value.empty()) return;
@@ -217,7 +218,7 @@ void UI::Dialog::delete_prev()
 	_repaint = true;
 }
 
-void UI::Dialog::delete_next()
+void UI::Dialog::Input::delete_next()
 {
 	select_field();
 	if (_layout.value.empty()) return;
@@ -227,14 +228,14 @@ void UI::Dialog::delete_next()
 	_repaint = true;
 }
 
-void UI::Dialog::key_insert(int ch)
+void UI::Dialog::Input::key_insert(int ch)
 {
 	select_field();
 	_layout.value.insert(_cursor_pos++, 1, ch);
 	_repaint = true;
 }
 
-void UI::Dialog::select_suggestion(size_t i)
+void UI::Dialog::Input::select_suggestion(size_t i)
 {
 	if (i >= _layout.options.size()) return;
 	if (_suggestion_selected && _sugg_item == i) return;
@@ -244,7 +245,7 @@ void UI::Dialog::select_suggestion(size_t i)
 	set_value(_layout.options[i]);
 }
 
-void UI::Dialog::select_field()
+void UI::Dialog::Input::select_field()
 {
 	if (!_suggestion_selected) return;
 	_suggestion_selected = false;
@@ -252,9 +253,46 @@ void UI::Dialog::select_field()
 	_repaint = true;
 }
 
-void UI::Dialog::set_value(std::string val)
+void UI::Dialog::Input::set_value(std::string val)
 {
 	if (val == _layout.value) return;
 	_layout.value = val;
 	_repaint = true;
+}
+
+UI::Dialog::Branch::Branch(std::string p, const std::vector<Option> &opts):
+	Base(p),
+	_options(opts)
+{
+}
+
+bool UI::Dialog::Branch::process(UI::Frame &ctx, int ch)
+{
+	for (auto &opt: _options) {
+		if (toupper(ch) == toupper(opt.key)) {
+			opt.action(ctx);
+			return false;
+		}
+	}
+	return inherited::process(ctx, ch);
+}
+
+void UI::Dialog::Branch::set_help(HelpBar::Panel &panel)
+{
+	inherited::set_help(panel);
+	unsigned v = 0;
+	unsigned h = 0;
+	for (auto &opt: _options) {
+		if (h >= HelpBar::Panel::kWidth) {
+			h = 1; // skip the cancel command
+			v++;
+		}
+		if (v >= HelpBar::Panel::kHeight) {
+			break;
+		}
+		panel.label[v][h].mnemonic = opt.key;
+		panel.label[v][h].is_ctrl = false;
+		panel.label[v][h].text = opt.description;
+		h++;
+	}
 }

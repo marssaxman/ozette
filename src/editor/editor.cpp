@@ -32,7 +32,7 @@ void Editor::View::deactivate(UI::Frame &ctx)
 {
 }
 
-void Editor::View::paint(WINDOW *dest, bool active)
+void Editor::View::paint_into(WINDOW *dest, bool active)
 {
 	update_dimensions(dest);
 	if (active != _last_active || dest != _last_dest) {
@@ -208,20 +208,27 @@ void Editor::View::ctl_close(UI::Frame &ctx)
 		ctx.app().close_file(_targetpath);
 	}
 	// ask the user if they want to save first
-	UI::Dialog::Layout dialog;
-	dialog.prompt = "You have modified this file. Save changes before closing?";
-	dialog.yes = [this](UI::Frame &ctx, std::string)
+	std::string prompt = "You have modified this file. Save changes before closing?";
+	UI::Dialog::Branch::Option yes;
+	yes.key = 'Y';
+	yes.description = "Yes";
+	yes.action = [this](UI::Frame &ctx)
 	{
 		// save the file
 		_doc.Write(_targetpath);
 		ctx.app().close_file(_targetpath);
 	};
-	dialog.no = [this](UI::Frame &ctx, std::string path)
+	UI::Dialog::Branch::Option no;
+	no.key = 'N';
+	no.description = "No";
+	no.action = [this](UI::Frame &ctx)
 	{
 		// just close it
 		ctx.app().close_file(_targetpath);
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog(dialog));
+	std::vector<UI::Dialog::Branch::Option> options = {yes, no};
+	auto dialog = new UI::Dialog::Branch(prompt, options);
+	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
 }
 
@@ -232,7 +239,7 @@ void Editor::View::ctl_save(UI::Frame &ctx)
 
 void Editor::View::ctl_toline(UI::Frame &ctx)
 {
-	UI::Dialog::Layout dialog;
+	UI::Dialog::Input::Layout dialog;
 	// illogical as it is, the rest of the world seems to think that it is a
 	// good idea for line numbers to start counting at 1, so we will
 	// accommodate their perverse desires in the name of compatibility.
@@ -247,7 +254,7 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 		drop_selection();
 		postprocess(ctx);
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog(dialog));
+	std::unique_ptr<UI::View> dptr(new UI::Dialog::Input(dialog));
 	ctx.show_dialog(std::move(dptr));
 }
 
@@ -371,7 +378,7 @@ void Editor::View::adjust_selection(bool extend)
 
 void Editor::View::save(UI::Frame &ctx, std::string path)
 {
-	UI::Dialog::Layout dialog;
+	UI::Dialog::Input::Layout dialog;
 	dialog.prompt = "Save File";
 	dialog.value = path;
 	dialog.commit = [this](UI::Frame &ctx, std::string path)
@@ -392,25 +399,30 @@ void Editor::View::save(UI::Frame &ctx, std::string path)
 		}
 		// This is a different path than the file used to have.
 		// Ask the user to confirm that they meant to change it.
-		UI::Dialog::Layout dialog;
-		dialog.prompt = "Save file under a different name?";
-		dialog.value = path;
-		dialog.show_value = false;
-		dialog.yes = [this](UI::Frame &ctx, std::string path)
+		UI::Dialog::Branch::Option yes;
+		yes.key = 'Y';
+		yes.description = "Yes";
+		yes.action = [this, path](UI::Frame &ctx)
 		{
 			if (path.empty()) return;
 			_doc.Write(path);
 			_targetpath = path;
 			ctx.set_title(path);
 		};
-		dialog.no = [this](UI::Frame &ctx, std::string path)
+		UI::Dialog::Branch::Option no;
+		no.key = 'N';
+		no.description = "No";
+		no.action = [this, path](UI::Frame &ctx)
 		{
 			save(ctx, path);
 		};
-		std::unique_ptr<UI::View> dptr(new UI::Dialog(dialog));
+		std::string prompt = "Save file under a different name?";
+		std::vector<UI::Dialog::Branch::Option> options = {yes, no};
+		auto dialog = new UI::Dialog::Branch(prompt, options);
+		std::unique_ptr<UI::View> dptr(dialog);
 		ctx.show_dialog(std::move(dptr));
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog(dialog));
+	std::unique_ptr<UI::View> dptr(new UI::Dialog::Input(dialog));
 	ctx.show_dialog(std::move(dptr));
 }
 

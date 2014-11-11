@@ -10,44 +10,41 @@
 #include "helpbar.h"
 #include "view.h"
 
-namespace UI {
 // A dialog is a modal input control.
-// Use it when you need to get information from the user before
-// performing an action. This may be data input or simply a
-// confirmation of intent. The pattern is simply that the dialog
-// opens and shows a prompt, the user types in it, then either
-// cancel the action, thereby dismissing the dialog, or they can
-// commit their input and start the action.
-class Dialog : public UI::View
+namespace UI {
+namespace Dialog {
+class Base : public UI::View
 {
 	typedef UI::View inherited;
+public:
+	Base(std::string prompt);
+	virtual void layout(int vpos, int hpos, int height, int width) override;
+	virtual bool process(UI::Frame &ctx, int ch) override;
+	virtual void set_help(HelpBar::Panel &panel) override;
+protected:
+	virtual void paint_into(WINDOW *view, bool active) override;
+	virtual unsigned extra_height() const { return 0; }
+private:
+	std::string _prompt;
+};
+
+
+class Input : public Base
+{
+	typedef Base inherited;
 public:
 	typedef std::function<void(Frame&, std::string)> action_t;
 	struct Layout {
 		std::string prompt;
-		bool show_value = true;
 		std::string value;
 		std::vector<std::string> options;
 		action_t commit = nullptr;
-		action_t yes = nullptr;
-		action_t no = nullptr;
 	};
-	Dialog(const Layout &layout);
-
-	// Dialogs belong to some UI element, which will manage the
-	// location of the window and its activation state. This may be
-	// some window, which will raise and lower the dialog along with
-	// its own state, or it may be the UI shell itself, in which case
-	// the dialog floats over all the other windows. The dialog does
-	// not particularly have to care.
-	virtual void layout(int vpos, int hpos, int height, int width) override;
+	Input(const Layout &layout);
 	virtual bool process(UI::Frame &ctx, int ch) override;
-	virtual void paint(bool active) override { inherited::paint(active); }
-	virtual void set_help(HelpBar::Panel &panel) override;
-
 protected:
-	virtual void paint(WINDOW *view, bool active) override;
-
+	virtual void paint_into(WINDOW *view, bool active) override;
+	virtual unsigned extra_height() const override { return _layout.options.size(); }
 private:
 	void arrow_left();
 	void arrow_right();
@@ -71,6 +68,26 @@ private:
 	bool _repaint = true;
 
 };
+
+// Present a branch dialog when the job meets a fork in the road and needs
+// the user to select the appropriate direction.
+class Branch : public Base
+{
+	typedef Base inherited;
+public:
+	struct Option {
+		char key = '\0';
+		std::string description;
+		std::function<void(UI::Frame &ctx)> action = nullptr;
+	};
+	Branch(std::string prompt, const std::vector<Option> &options);
+	virtual bool process(UI::Frame &ctx, int ch) override;
+	virtual void set_help(HelpBar::Panel &panel) override;
+private:
+	std::vector<Option> _options;
+};
+
+} // namespace Dialog
 } // namespace UI
 
 #endif UI_DIALOG_H

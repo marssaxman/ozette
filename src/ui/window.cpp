@@ -145,6 +145,7 @@ void UI::Window::show_dialog(std::unique_ptr<View> &&host)
 	int vpos, hpos, height, width;
 	calculate_content(vpos, hpos, height, width);
 	_dialog->layout(vpos, hpos, height, width);
+	_dirty_content = true;
 }
 
 void UI::Window::show_result(std::string message)

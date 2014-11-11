@@ -103,7 +103,7 @@ void Lindi::run()
 
 void Lindi::change_directory()
 {
-	UI::Dialog::Layout dialog;
+	UI::Dialog::Input::Layout dialog;
 	dialog.prompt = "Change Directory";
 	get_config("recent_dirs", _recent_dirs);
 	dialog.options = _recent_dirs;
@@ -115,7 +115,7 @@ void Lindi::change_directory()
 		set_mru(path, _recent_dirs);
 		set_config("recent_dirs", _recent_dirs);
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog(dialog));
+	std::unique_ptr<UI::View> dptr(new UI::Dialog::Input(dialog));
 	_shell.active()->show_dialog(std::move(dptr));
 }
 

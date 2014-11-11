@@ -14,10 +14,11 @@ public:
 	Browser(std::string path);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
-	virtual void paint(WINDOW *view, bool active) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
 	void view(std::string path);
+protected:
+	virtual void paint_into(WINDOW *view, bool active) override;
 private:
 	~Browser() { _instance = nullptr; }
 	static Browser *_instance;
