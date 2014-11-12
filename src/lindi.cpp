@@ -3,28 +3,18 @@
 #include "editor.h"
 #include "control.h"
 #include "dialog.h"
-#include <unistd.h>
 #include <fstream>
 #include <sys/stat.h>
 
 Lindi::Lindi():
-	_shell(*this),
-	_home_dir(getenv("HOME")),
-	_config_dir(_home_dir + "/.lindi")
+	_shell(*this)
 {
-	char *cwd = get_current_dir_name();
-	if (cwd) {
-		_current_dir = cwd;
-		free(cwd);
-	} else {
-		_current_dir = _home_dir;
-	}
-	Browser::open(_current_dir, _shell);
+	Browser::open(_paths.current(), _shell);
 }
 
 std::string Lindi::current_dir() const
 {
-	return _current_dir;
+	return _paths.current();
 }
 
 void Lindi::edit_file(std::string path)
@@ -64,7 +54,7 @@ void Lindi::get_config(std::string name, std::vector<std::string> &lines)
 {
 	lines.clear();
 	std::string str;
-	std::ifstream file(_config_dir + "/" + name);
+	std::ifstream file(_paths.config() + "/" + name);
 	while (std::getline(file, str)) {
 		lines.push_back(str);
 	}
@@ -75,10 +65,10 @@ void Lindi::set_config(std::string name, const std::vector<std::string> &lines)
 {
 	// if the lindi prefs directory doesn't exist yet, create it
 	struct stat st;
-	if (stat(_config_dir.c_str(), &st)) {
-		mkdir(_config_dir.c_str(), S_IRWXU);
+	if (stat(_paths.config().c_str(), &st)) {
+		mkdir(_paths.config().c_str(), S_IRWXU);
 	}
-	std::ofstream file(_config_dir + "/" + name, std::ios::trunc);
+	std::ofstream file(_paths.config() + "/" + name, std::ios::trunc);
 	for (auto &line: lines) {
 		file << line << std::endl;
 	}
@@ -104,7 +94,7 @@ void Lindi::run()
 
 void Lindi::show_browser()
 {
-	Browser::open(_current_dir, _shell);
+	Browser::open(_paths.current(), _shell);
 }
 
 void Lindi::change_directory()
@@ -113,10 +103,10 @@ void Lindi::change_directory()
 	dialog.prompt = "Change Directory";
 	get_config("recent_dirs", _recent_dirs);
 	dialog.options = _recent_dirs;
-	set_mru(_current_dir, dialog.options);
+	set_mru(_paths.current(), dialog.options);
 	dialog.commit = [this](UI::Frame &ctx, std::string path)
 	{
-		_current_dir = path;
+		_paths.set_current(path);
 		Browser::change_directory(path);
 		set_mru(path, _recent_dirs);
 		set_config("recent_dirs", _recent_dirs);
