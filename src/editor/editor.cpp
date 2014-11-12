@@ -3,6 +3,7 @@
 #include "dialog.h"
 #include <assert.h>
 #include <sys/stat.h>
+#include <cctype>
 
 Editor::View::View():
 	_cursor(_doc, _update)
@@ -84,7 +85,9 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::Backspace: key_backspace(ctx); break;
 		case KEY_DC: key_delete(ctx); break;
 		case KEY_BTAB: break;	// shift-tab
-		default: if (ch >= 32 && ch < 127) key_insert(ch);
+		default: {
+			if (isprint(ch)) key_insert(ch);
+		} break;
 	}
 	postprocess(ctx);
 	return true;
@@ -278,12 +281,12 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 			next = _doc.find(_find_text, _doc.home());
 			if (next == _doc.end()) {
 				ctx.show_result("Not found");
-				return;
+				next = _cursor.location();
 			} else if (next == _cursor.location()) {
 				ctx.show_result("This is the only occurrence");
-				return;
+			} else {
+				ctx.show_result("Search wrapped");
 			}
-			ctx.show_result("Search wrapped");
 		}
 		_cursor.move_to(next);
 		reveal_cursor();
