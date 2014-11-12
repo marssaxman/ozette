@@ -101,15 +101,21 @@ void UI::Shell::get_screen_size()
 	_columnWidth = std::min(80, _width);
 }
 
-UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view)
+UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view, Position pos)
 {
 	// We reserve the top row for the title bar.
 	// Aside from that, new windows fill the terminal rows.
 	// Windows are never wider than 80 columns.
 	Window *win = new Window(_app, std::move(view));
-	_columns.emplace_back(win);
+	size_t index;
+	switch (pos) {
+		case Position::Left: index = 0; break;
+		case Position::Any: index = _focus + 1; break;
+		case Position::Right: index = _columns.size(); break;
+	}
+	_columns.emplace(_columns.begin() + index, win);
 	relayout();
-	set_focus(_columns.size() - 1);
+	set_focus(index);
 	return win;
 }
 

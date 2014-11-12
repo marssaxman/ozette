@@ -12,7 +12,12 @@ public:
 	Shell(App &app);
 	~Shell();
 	bool process(int ch);
-	Window *open_window(std::unique_ptr<View> &&wincontrol);
+	enum class Position {
+		Left,
+		Any,
+		Right
+	};
+	Window *open_window(std::unique_ptr<View> &&view, Position pos = Position::Any);
 	void close_window(Window *window);
 	void make_active(Window *window);
 	Window *active() const { return _columns[_focus].get(); }
