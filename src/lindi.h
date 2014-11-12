@@ -23,6 +23,7 @@ public:
 
 	void run();
 private:
+	void show_browser();
 	void change_directory();
 	void new_file();
 	int fix_control_quirks(int ch);
