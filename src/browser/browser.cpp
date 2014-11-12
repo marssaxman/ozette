@@ -90,6 +90,7 @@ bool Browser::process(UI::Frame &ctx, int ch)
 		ctx.repaint();
 	}
 	switch (ch) {
+		case ERR: break; // polling
 		case Control::Return: key_return(ctx); break;
 		case Control::Close: return false; break;
 		case Control::Escape: clear_filter(ctx); break;
@@ -100,6 +101,7 @@ bool Browser::process(UI::Frame &ctx, int ch)
 		case ' ': key_space(ctx); break;
 		default: {
 			if(isprint(ch)) key_char(ctx, ch);
+			else clear_filter(ctx);
 		} break;
 	}
 	return true;
