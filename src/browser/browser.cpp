@@ -1,6 +1,7 @@
 #include "browser.h"
 #include "control.h"
 #include "dialog.h"
+#include <cctype>
 
 Browser *Browser::_instance;
 static std::string kExpansionStateKey = "expanded_dirs";
@@ -91,10 +92,15 @@ bool Browser::process(UI::Frame &ctx, int ch)
 	switch (ch) {
 		case Control::Return: key_return(ctx); break;
 		case Control::Close: return false; break;
+		case Control::Escape: clear_filter(ctx); break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
+		case KEY_RIGHT: key_right(ctx); break;
+		case KEY_LEFT: key_left(ctx); break;
 		case ' ': key_space(ctx); break;
-		default: break;
+		default: {
+			if(isprint(ch)) key_char(ctx, ch);
+		} break;
 	}
 	return true;
 }
@@ -128,6 +134,13 @@ void Browser::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 	waddnstr(view, display.expanded? "- ": (isdir? "+ ": "  "), rowchars);
 	rowchars -= 2;
 	std::string name = display.entry->name();
+	if (name.substr(0, _name_filter.size()) == _name_filter) {
+		wattron(view, A_UNDERLINE);
+		waddnstr(view, _name_filter.c_str(), rowchars - 1);
+		rowchars -= _name_filter.size();
+		wattroff(view, A_UNDERLINE);
+		name = name.substr(_name_filter.size());
+	}
 	waddnstr(view, name.c_str(), rowchars - 1);
 	rowchars -= std::min(rowchars, (int)name.size());
 	waddnstr(view, isdir? "/": " ", rowchars);
@@ -153,6 +166,7 @@ void Browser::key_return(UI::Frame &ctx)
 
 void Browser::key_up(UI::Frame &ctx)
 {
+	// Move to previous line in the listbox.
 	if (0 == _selection) return;
 	_selection--;
 	ctx.repaint();
@@ -160,14 +174,66 @@ void Browser::key_up(UI::Frame &ctx)
 
 void Browser::key_down(UI::Frame &ctx)
 {
+	// Move to next line in the listbox.
 	if (_selection + 1 == _list.size()) return;
 	_selection++;
 	ctx.repaint();
 }
 
+void Browser::key_left(UI::Frame &ctx)
+{
+	// Move to previous match for filename filter.
+	if (_selection == 0) return;
+	for (size_t i = _selection - 1; i >= 0; --i) {
+		if (matches_filter(i)) {
+			_selection = i;
+			ctx.repaint();
+			return;
+		}
+	}
+}
+
+void Browser::key_right(UI::Frame &ctx)
+{
+	// Move to next match for filename filter.
+	for (size_t i = _selection + 1; i < _list.size(); ++i) {
+		if (matches_filter(i)) {
+			_selection = i;
+			ctx.repaint();
+			return;
+		}
+	}
+}
+
 void Browser::key_space(UI::Frame &ctx)
 {
 	toggle(ctx);
+}
+
+void Browser::key_char(UI::Frame &ctx, char ch)
+{
+	_name_filter.push_back(ch);
+	for (size_t i = _selection; i < _list.size(); ++i) {
+		if (matches_filter(i)) {
+			_selection = i;
+			break;
+		}
+	}
+	ctx.repaint();
+}
+
+void Browser::clear_filter(UI::Frame &ctx)
+{
+	if (_name_filter.empty()) return;
+	_name_filter.clear();
+	ctx.repaint();
+}
+
+bool Browser::matches_filter(size_t index)
+{
+	if (index >= _list.size()) return false;
+	std::string name = _list[index].entry->name();
+	return name.substr(0, _name_filter.size()) == _name_filter;
 }
 
 void Browser::build_list()
@@ -183,6 +249,7 @@ void Browser::build_list()
 
 void Browser::toggle(UI::Frame &ctx)
 {
+	clear_filter(ctx);
 	auto &display = _list[_selection];
 	auto entry = display.entry;
 	if (!entry->is_directory()) return;
@@ -202,6 +269,7 @@ void Browser::toggle(UI::Frame &ctx)
 
 void Browser::edit_file(UI::Frame &ctx)
 {
+	clear_filter(ctx);
 	auto &display = _list[_selection];
 	ctx.app().edit_file(display.entry->path());
 }

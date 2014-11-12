@@ -32,7 +32,12 @@ private:
 	void key_return(UI::Frame &ctx);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
+	void key_left(UI::Frame &ctx);
+	void key_right(UI::Frame &ctx);
 	void key_space(UI::Frame &ctx);
+	void key_char(UI::Frame &ctx, char ch);
+	void clear_filter(UI::Frame &ctx);
+	bool matches_filter(size_t index);
 	void set_title(UI::Frame &ctx);
 	void build_list();
 	void toggle(UI::Frame &ctx);
@@ -46,6 +51,7 @@ private:
 	size_t _selection = 0;
 	size_t _scrollpos = 0;
 	bool _rebuild_list = true;
+	std::string _name_filter;
 };
 
 #endif // BROWSER_BROWSER_H
