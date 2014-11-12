@@ -188,9 +188,9 @@ void Browser::key_left(UI::Frame &ctx)
 {
 	// Move to previous match for filename filter.
 	if (_selection == 0) return;
-	for (size_t i = _selection - 1; i >= 0; --i) {
-		if (matches_filter(i)) {
-			_selection = i;
+	for (size_t i = _selection; i > 0; --i) {
+		if (matches_filter(i-1)) {
+			_selection = i-1;
 			ctx.repaint();
 			return;
 		}
