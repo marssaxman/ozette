@@ -167,6 +167,7 @@ void Browser::key_return(UI::Frame &ctx)
 void Browser::key_up(UI::Frame &ctx)
 {
 	// Move to previous line in the listbox.
+	clear_filter(ctx);
 	if (0 == _selection) return;
 	_selection--;
 	ctx.repaint();
@@ -174,6 +175,7 @@ void Browser::key_up(UI::Frame &ctx)
 
 void Browser::key_down(UI::Frame &ctx)
 {
+	clear_filter(ctx);
 	// Move to next line in the listbox.
 	if (_selection + 1 == _list.size()) return;
 	_selection++;
