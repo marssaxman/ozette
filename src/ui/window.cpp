@@ -49,15 +49,19 @@ void UI::Window::layout(int xpos, int width)
 	getmaxyx(stdscr, screen_height, screen_width);
 	// We will expand our edges by one pixel in each direction if
 	// we have space for it so that we can draw a window frame.
-	_lframe = xpos > 0;
-	if (_lframe) {
+	bool new_lframe = xpos > 0;
+	if (new_lframe) {
 		xpos--;
 		width++;
 	}
-	_rframe = (xpos + width) < screen_width;
-	if (_rframe) {
+	_dirty_chrome |= new_lframe != _lframe;
+	_lframe = new_lframe;
+	bool new_rframe = (xpos + width) < screen_width;
+	if (new_rframe) {
 		width++;
 	}
+	_dirty_chrome |= new_rframe != _rframe;
+	_rframe = new_rframe;
 	_taskbar_height = HelpBar::Panel::kHeight;
 
 	// What are the dimensions and location of our existing frame?
