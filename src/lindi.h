@@ -4,7 +4,6 @@
 #include "app.h"
 #include "shell.h"
 #include "browser.h"
-#include "paths.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -30,7 +29,9 @@ private:
 	static void set_mru(std::string path, std::vector<std::string> &mru);
 
 	UI::Shell _shell;
-	Paths _paths;
+	std::string _home_dir;
+	std::string _current_dir;
+	std::string _config_dir;
 	std::map<std::string, UI::Window*> _editors;
 	std::string _clipboard;
 	bool _done = false;
