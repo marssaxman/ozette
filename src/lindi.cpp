@@ -27,6 +27,17 @@ std::string Lindi::current_dir() const
 	return _current_dir;
 }
 
+std::string Lindi::display_path(std::string path) const
+{
+	if (path.substr(0, _current_dir.size()) == _current_dir) {
+		return path.substr(1 + _current_dir.size());
+	}
+	if (path.substr(0, _home_dir.size()) == _home_dir) {
+		return "~" + path.substr(_home_dir.size());
+	}
+	return path;
+}
+
 void Lindi::edit_file(std::string path)
 {
 	// If we already have this file open, bring it forward.

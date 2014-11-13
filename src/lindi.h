@@ -13,6 +13,7 @@ class Lindi : public App
 public:
 	Lindi();
 	virtual std::string current_dir() const override;
+	virtual std::string display_path(std::string path) const override;
 	virtual void edit_file(std::string path) override;
 	virtual void close_file(std::string path) override;
 	virtual void set_clipboard(std::string text) override;
