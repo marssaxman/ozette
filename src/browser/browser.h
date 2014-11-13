@@ -48,6 +48,7 @@ private:
 		DirTree *entry;
 	};
 	void paint_row(WINDOW *view, int vpos, row_t &display, int width);
+	void poll(UI::Frame &ctx);
 	void key_return(UI::Frame &ctx);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
@@ -72,6 +73,7 @@ private:
 	size_t _scrollpos = 0;
 	bool _rebuild_list = true;
 	std::string _name_filter;
+	time_t _name_filter_time = 0;
 };
 
 #endif // BROWSER_BROWSER_H

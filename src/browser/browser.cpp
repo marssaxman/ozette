@@ -110,7 +110,7 @@ bool Browser::process(UI::Frame &ctx, int ch)
 		ctx.repaint();
 	}
 	switch (ch) {
-		case ERR: break; // polling
+		case ERR: poll(ctx); break;
 		case Control::Return: key_return(ctx); break;
 		case Control::Close: return false; break;
 		case Control::Escape: clear_filter(ctx); break;
@@ -175,6 +175,16 @@ void Browser::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 		size_t dchars = strftime(buf, 255, "%c ", localtime(&mtime));
 		int drawch = std::min((int)dchars, rowchars);
 		mvwaddnstr(view, vpos, width-drawch, buf, drawch);
+	}
+}
+
+void Browser::poll(UI::Frame &ctx)
+{
+	if (!_name_filter.empty()) {
+		if (_name_filter_time + 2 <= time(NULL)) {
+			_name_filter.clear();
+			ctx.repaint();
+		}
 	}
 }
 
@@ -251,12 +261,14 @@ void Browser::key_tab(UI::Frame &ctx)
 		}
 	}
 	_name_filter = prefix;
+	_name_filter_time = time(NULL);
 	ctx.repaint();
 }
 
 void Browser::key_char(UI::Frame &ctx, char ch)
 {
 	_name_filter.push_back(ch);
+	_name_filter_time = time(NULL);
 	for (size_t i = _selection; i < _list.size(); ++i) {
 		if (matches_filter(i)) {
 			_selection = i;
