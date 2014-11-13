@@ -114,6 +114,7 @@ bool Browser::process(UI::Frame &ctx, int ch)
 		case Control::Return: key_return(ctx); break;
 		case Control::Close: return false; break;
 		case Control::Escape: clear_filter(ctx); break;
+		case Control::Tab: key_tab(ctx); break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
 		case KEY_RIGHT: key_right(ctx); break;
@@ -232,6 +233,25 @@ void Browser::key_right(UI::Frame &ctx)
 void Browser::key_space(UI::Frame &ctx)
 {
 	toggle(ctx);
+}
+
+void Browser::key_tab(UI::Frame &ctx)
+{
+	// If there is a name filter, collect all the names which match,
+	// then extend the name filter to the common prefix of all names
+	if (_name_filter.empty()) return;
+	std::string prefix;
+	for (size_t i = 0; i < _list.size(); ++i) {
+		if (!matches_filter(i)) continue;
+		std::string name = _list[i].entry->name();
+		if (prefix.empty()) {
+			prefix = name;
+		} else while (name.substr(0, prefix.size()) != prefix) {
+			prefix.pop_back();
+		}
+	}
+	_name_filter = prefix;
+	ctx.repaint();
 }
 
 void Browser::key_char(UI::Frame &ctx, char ch)
