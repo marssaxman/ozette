@@ -20,7 +20,7 @@ public:
 	Window *open_window(std::unique_ptr<View> &&view, Position pos = Position::Any);
 	void close_window(Window *window);
 	void make_active(Window *window);
-	Window *active() const { return _columns[_focus].get(); }
+	Window *active() const { return _tabs[_focus].get(); }
 protected:
 	void reap();
 	// get the terminal width and height, then calculate column width
@@ -37,7 +37,7 @@ private:
 	App &_app;
 	int _width = 0;
 	int _height = 0;
-	std::vector<std::unique_ptr<Window>> _columns;
+	std::vector<std::unique_ptr<Window>> _tabs;
 	int _spacing = 0;
 	int _columnWidth = 0;
 	size_t _focus = 0;

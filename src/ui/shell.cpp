@@ -47,7 +47,7 @@ UI::Shell::Shell(App &app):
 UI::Shell::~Shell()
 {
 	// Delete all of the windows.
-	_columns.clear();
+	_tabs.clear();
 	// Clean up ncurses.
 	endwin();
 }
@@ -62,12 +62,12 @@ bool UI::Shell::process(int ch)
 			if (_focus > 0) {
 				set_focus(_focus - 1);
 			} else {
-				set_focus(_columns.size() - 1);
+				set_focus(_tabs.size() - 1);
 			}
 		} break;
 		case Control::RightArrow: {
 			size_t next = _focus + 1;
-			if (next >= _columns.size()) {
+			if (next >= _tabs.size()) {
 				next = 0;
 			}
 			set_focus(next);
@@ -81,7 +81,7 @@ bool UI::Shell::process(int ch)
 		} break;
 	}
 	reap();
-	return !_columns.empty();
+	return !_tabs.empty();
 }
 
 void UI::Shell::reap()
@@ -111,9 +111,9 @@ UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view, Position pos)
 	switch (pos) {
 		case Position::Left: index = 0; break;
 		case Position::Any: index = _focus + 1; break;
-		case Position::Right: index = _columns.size(); break;
+		case Position::Right: index = _tabs.size(); break;
 	}
-	_columns.emplace(_columns.begin() + index, win);
+	_tabs.emplace(_tabs.begin() + index, win);
 	relayout();
 	set_focus(index);
 	return win;
@@ -121,8 +121,8 @@ UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view, Position pos)
 
 void UI::Shell::make_active(Window *window)
 {
-	for (unsigned i = 0; i < _columns.size(); ++i) {
-		if (_columns[i].get() == window) {
+	for (unsigned i = 0; i < _tabs.size(); ++i) {
+		if (_tabs[i].get() == window) {
 			set_focus(i);
 		}
 	}
@@ -130,8 +130,8 @@ void UI::Shell::make_active(Window *window)
 
 void UI::Shell::close_window(Window *window)
 {
-	for (unsigned i = 0; i < _columns.size(); ++i) {
-		if (_columns[i].get() == window) {
+	for (unsigned i = 0; i < _tabs.size(); ++i) {
+		if (_tabs[i].get() == window) {
 			close_window(i);
 		}
 	}
@@ -139,12 +139,12 @@ void UI::Shell::close_window(Window *window)
 
 void UI::Shell::set_focus(size_t index)
 {
-	assert(index >= 0 && index < _columns.size());
-	if (_focus < _columns.size()) {
-		_columns[_focus]->clear_focus();
+	assert(index >= 0 && index < _tabs.size());
+	if (_focus < _tabs.size()) {
+		_tabs[_focus]->clear_focus();
 	}
 	_focus = index;
-	_columns[_focus]->set_focus();
+	_tabs[_focus]->set_focus();
 	// We want to keep as much of the background
 	// visible as we can. This means we must stack
 	// windows on the left of the focus in ascending
@@ -152,12 +152,12 @@ void UI::Shell::set_focus(size_t index)
 	// are stacked in descending order. We raise the
 	// focus window last.
 	for (size_t i = 0; i < _focus; ++i) {
-		_columns[i]->bring_forward(-1);
+		_tabs[i]->bring_forward(-1);
 	}
-	for (size_t i = _columns.size() - 1; i > _focus; --i) {
-		_columns[i]->bring_forward(1);
+	for (size_t i = _tabs.size() - 1; i > _focus; --i) {
+		_tabs[i]->bring_forward(1);
 	}
-	_columns[_focus]->bring_forward(0);
+	_tabs[_focus]->bring_forward(0);
 }
 
 void UI::Shell::relayout()
@@ -167,20 +167,20 @@ void UI::Shell::relayout()
 	// Divide any remaining space among any remaining windows and stagger
 	// each remaining window proportionally across the screen.
 	assert(_width >= _columnWidth);
-	if(_columns.empty()) return;
-	size_t ubound = _columns.size() - 1;
+	if(_tabs.empty()) return;
+	size_t ubound = _tabs.size() - 1;
 	int right_edge = _width - _columnWidth;
 	_spacing = (ubound > 0) ? right_edge / ubound : 0;
 	for (unsigned i = 0; i <= ubound; ++i) {
 		int offset = (ubound - i) * _spacing;
 		int xpos = (i > 0) ? right_edge - offset : 0;
-		_columns[i]->layout(xpos, _columnWidth);
+		_tabs[i]->layout(xpos, _columnWidth);
 	}
 }
 
 void UI::Shell::send_to_focus(int ch)
 {
-	bool more = _columns[_focus]->process(ch);
+	bool more = _tabs[_focus]->process(ch);
 	if (more) return;
 	close_window(_focus);
 	relayout();
@@ -191,7 +191,7 @@ void UI::Shell::close_window(size_t index)
 	// If this window has focus, move focus first.
 	// It will make everything simpler afterward.
 	if (_focus == index) {
-		if (index + 1 < _columns.size()) {
+		if (index + 1 < _tabs.size()) {
 			set_focus(index + 1);
 		} else if (index > 0) {
 			set_focus(index - 1);
@@ -200,8 +200,8 @@ void UI::Shell::close_window(size_t index)
 	// Remove the window from the active list, but
 	// don't delete it yet, because one of its
 	// methods might be on our call stack.
-	_doomed.emplace(std::move(_columns[index]));
-	_columns.erase(_columns.begin() + index);
+	_doomed.emplace(std::move(_tabs[index]));
+	_tabs.erase(_tabs.begin() + index);
 	// If the current focus window's index is greater
 	// than the index we just deleted, change the
 	// index to its new, correct value.
