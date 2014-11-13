@@ -41,6 +41,7 @@ std::string Lindi::display_path(std::string path) const
 void Lindi::edit_file(std::string path)
 {
 	// If we already have this file open, bring it forward.
+	path = canonical_abspath(path);
 	auto existing = _editors.find(path);
 	if (existing != _editors.end()) {
 		_shell.make_active(existing->second);
@@ -106,6 +107,7 @@ void Lindi::run()
 		switch (ch) {
 			case Control::UpArrow: show_browser(); break;
 			case Control::NewFile: new_file(); break;
+			case Control::Open: open_file(); break;
 			case Control::Directory: change_directory(); break;
 			default: _done |= !_shell.process(ch);
 		}
@@ -139,6 +141,19 @@ void Lindi::new_file()
 {
 	std::unique_ptr<UI::View> ed(new Editor::View());
 	_shell.open_window(std::move(ed));
+}
+
+void Lindi::open_file()
+{
+	UI::Dialog::Input::Layout dialog;
+	dialog.prompt = "Open";
+	dialog.commit = [this](UI::Frame &ctx, std::string path)
+	{
+		if (path.empty()) return;
+		edit_file(path);
+	};
+	std::unique_ptr<UI::View> dptr(new UI::Dialog::Input(dialog));
+	_shell.active()->show_dialog(std::move(dptr));
 }
 
 int Lindi::fix_control_quirks(int ch)
@@ -177,3 +192,46 @@ void Lindi::set_mru(std::string path, std::vector<std::string> &mru)
 		}
 	}
 }
+
+std::string Lindi::canonical_abspath(std::string path)
+{
+	// Canonicalize this path and expand it as necessary to produce
+	// a full path relative to the filesystem root.
+	if (path.empty()) return _current_dir;
+	std::string out;
+	size_t offset = 0;
+	if (path[0] == '/') {
+		offset = 1;
+	} else {
+		out = _current_dir;
+	}
+	while (offset != std::string::npos) {
+		size_t nextseg = path.find_first_of('/', offset);
+		std::string seg;
+		if (nextseg == std::string::npos) {
+			seg = path.substr(offset);
+			offset = nextseg;
+		} else {
+			seg = path.substr(offset, nextseg - offset);
+			offset = nextseg + 1;
+		}
+		if (seg.empty()) continue;
+		if (seg == ".") continue;
+		if (seg == "~") {
+			out = _home_dir;
+			continue;
+		}
+		if (seg == "..") {
+			size_t trunc = out.find_last_of('/');
+			if (trunc == std::string::npos) {
+				trunc = 0;
+			}
+			out.resize(trunc);
+			continue;
+		}
+		out += "/" + seg;
+	}
+	return out;
+}
+
+

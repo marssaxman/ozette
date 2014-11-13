@@ -26,8 +26,10 @@ private:
 	void show_browser();
 	void change_directory();
 	void new_file();
+	void open_file();
 	int fix_control_quirks(int ch);
 	static void set_mru(std::string path, std::vector<std::string> &mru);
+	std::string canonical_abspath(std::string path);
 
 	UI::Shell _shell;
 	std::string _home_dir;
