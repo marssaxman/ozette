@@ -12,7 +12,6 @@ public:
 	virtual std::string current_dir() const = 0;
 	virtual void edit_file(std::string path) = 0;
 	virtual void close_file(std::string path) = 0;
-	virtual void quit() = 0;
 	virtual void set_clipboard(std::string text) = 0;
 	virtual std::string get_clipboard() = 0;
 	virtual void get_config(std::string name, std::vector<std::string> &lines) = 0;

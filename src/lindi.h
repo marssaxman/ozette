@@ -16,7 +16,6 @@ public:
 	virtual std::string current_dir() const override;
 	virtual void edit_file(std::string path) override;
 	virtual void close_file(std::string path) override;
-	virtual void quit() override { _done = true; }
 	virtual void set_clipboard(std::string text) override;
 	virtual std::string get_clipboard() override;
 	virtual void get_config(std::string name, std::vector<std::string> &lines) override;

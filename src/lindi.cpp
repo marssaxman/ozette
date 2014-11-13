@@ -84,7 +84,6 @@ void Lindi::run()
 		int ch = fix_control_quirks(getch());
 		switch (ch) {
 			case Control::UpArrow: show_browser(); break;
-			case Control::Quit: quit(); break;
 			case Control::NewFile: new_file(); break;
 			case Control::Directory: change_directory(); break;
 			default: _done |= !_shell.process(ch);

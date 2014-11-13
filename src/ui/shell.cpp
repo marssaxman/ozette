@@ -72,6 +72,13 @@ bool UI::Shell::process(int ch)
 			}
 			set_focus(next);
 		} break;
+		case Control::Quit: {
+			for (size_t index = _tabs.size(); index > 0; --index) {
+				if (!_tabs[index - 1]->process(Control::Close)) {
+					close_window(index - 1);
+				}
+			}
+		} break;
 		case KEY_RESIZE: {
 			get_screen_size();
 			relayout();
