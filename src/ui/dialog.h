@@ -63,7 +63,7 @@ public:
 	virtual bool process(UI::Frame &ctx, int ch) override;
 protected:
 	virtual void paint_into(WINDOW *view, bool active) override;
-	virtual unsigned extra_height() const override { return _layout.options.size(); }
+	virtual unsigned extra_height() const override { return _options.size(); }
 private:
 	void arrow_left();
 	void arrow_right();
@@ -77,7 +77,9 @@ private:
 	void set_value(std::string val);
 
 	// Layout structure supplied by the client.
-	Layout _layout;
+	std::string _value;
+	std::vector<std::string> _options;
+	action_t _commit = nullptr;
 
 	// The cursor may be in the edit field or the suggestion list.
 	size_t _cursor_pos = 0;

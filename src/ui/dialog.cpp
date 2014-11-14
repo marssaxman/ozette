@@ -69,14 +69,16 @@ void UI::Dialog::Base::set_help(HelpBar::Panel &panel)
 
 UI::Dialog::Input::Input(const Layout &layout):
 	Base(layout.prompt),
-	_layout(layout)
+	_value(layout.value),
+	_options(layout.options),
+	_commit(layout.commit)
 {
-	if (_layout.value.empty() && !_layout.options.empty()) {
+	if (_value.empty() && !_options.empty()) {
 		_suggestion_selected = true;
 		_sugg_item = 0;
-		_layout.value = _layout.options.front();
+		_value = _options.front();
 	}
-	_cursor_pos = _layout.value.size();
+	_cursor_pos = _value.size();
 }
 
 bool UI::Dialog::Input::process(UI::Frame &ctx, int ch)
@@ -87,7 +89,7 @@ bool UI::Dialog::Input::process(UI::Frame &ctx, int ch)
 			// the user is happy with their choice
 			// tell the action to proceed and then
 			// inform our host that we are finished
-			if (_layout.commit) _layout.commit(ctx, _layout.value);
+			if (_commit) _commit(ctx, _value);
 			return false;
 		case KEY_LEFT: arrow_left(); break;
 		case KEY_RIGHT: arrow_right(); break;
@@ -103,7 +105,7 @@ bool UI::Dialog::Input::process(UI::Frame &ctx, int ch)
 			// item corresponding to that digit
 			if (ch >= '0' && ch <= '9' && _suggestion_selected) {
 				select_suggestion(ch - '0');
-				if (_layout.commit) _layout.commit(ctx, _layout.value);
+				if (_commit) _commit(ctx, _value);
 				return false;
 			}
 			// in all other situations, the keypress should be
@@ -128,7 +130,7 @@ void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
 	int value_vpos, value_hpos;
 	getyx(view, value_vpos, value_hpos);
 	(void)value_vpos; // unused
-	waddnstr(view, _layout.value.c_str(), width - value_hpos);
+	waddnstr(view, _value.c_str(), width - value_hpos);
 	int end_vpos, end_hpos;
 	getyx(view, end_vpos, end_hpos);
 	(void)end_vpos; // unused
@@ -145,7 +147,7 @@ void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
 	// space for the quick-select number captions.
 	sugg_width -= 3;
 
-	for (unsigned i = 0; i < _layout.options.size(); ++i) {
+	for (unsigned i = 0; i < _options.size(); ++i) {
 		int vpos = sugg_vpos + i;
 		if (vpos >= height) break;
 		wmove(view, vpos, 0);
@@ -161,7 +163,7 @@ void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
 			wattroff(view, A_REVERSE);
 			if (vpos + 1 == height) wattron(view, A_UNDERLINE);
 		}
-		waddnstr(view, _layout.options[i].c_str(), sugg_width);
+		waddnstr(view, _options[i].c_str(), sugg_width);
 		int curv, curh;
 		getyx(view, curv, curh);
 		(void)curv; //ignored
@@ -187,7 +189,7 @@ void UI::Dialog::Input::arrow_left()
 {
 	if (_suggestion_selected) {
 		select_field();
-		_cursor_pos = _layout.value.size();
+		_cursor_pos = _value.size();
 	} else {
 		_cursor_pos -= std::min(_cursor_pos, 1U);
 		_repaint = true;
@@ -199,7 +201,7 @@ void UI::Dialog::Input::arrow_right()
 	if (_suggestion_selected) {
 		select_field();
 		_cursor_pos = 0;
-	} else if (_cursor_pos < _layout.value.size()) {
+	} else if (_cursor_pos < _value.size()) {
 		_cursor_pos++;
 		_repaint = true;
 	}
@@ -227,53 +229,53 @@ void UI::Dialog::Input::arrow_down()
 void UI::Dialog::Input::delete_prev()
 {
 	select_field();
-	if (_layout.value.empty()) return;
+	if (_value.empty()) return;
 	if (_cursor_pos == 0) return;
 	_cursor_pos--;
-	auto deliter = _layout.value.begin() + _cursor_pos;
-	_layout.value.erase(deliter);
+	auto deliter = _value.begin() + _cursor_pos;
+	_value.erase(deliter);
 	_repaint = true;
 }
 
 void UI::Dialog::Input::delete_next()
 {
 	select_field();
-	if (_layout.value.empty()) return;
-	if (_cursor_pos >= _layout.value.size()) return;
-	auto deliter = _layout.value.begin() + _cursor_pos;
-	_layout.value.erase(deliter);
+	if (_value.empty()) return;
+	if (_cursor_pos >= _value.size()) return;
+	auto deliter = _value.begin() + _cursor_pos;
+	_value.erase(deliter);
 	_repaint = true;
 }
 
 void UI::Dialog::Input::key_insert(int ch)
 {
 	select_field();
-	_layout.value.insert(_cursor_pos++, 1, ch);
+	_value.insert(_cursor_pos++, 1, ch);
 	_repaint = true;
 }
 
 void UI::Dialog::Input::select_suggestion(size_t i)
 {
-	if (i >= _layout.options.size()) return;
+	if (i >= _options.size()) return;
 	if (_suggestion_selected && _sugg_item == i) return;
 	_suggestion_selected = true;
 	_sugg_item = i;
 	_repaint = true;
-	set_value(_layout.options[i]);
+	set_value(_options[i]);
 }
 
 void UI::Dialog::Input::select_field()
 {
 	if (!_suggestion_selected) return;
 	_suggestion_selected = false;
-	_cursor_pos = _layout.value.size();
+	_cursor_pos = _value.size();
 	_repaint = true;
 }
 
 void UI::Dialog::Input::set_value(std::string val)
 {
-	if (val == _layout.value) return;
-	_layout.value = val;
+	if (val == _value) return;
+	_value = val;
 	_repaint = true;
 }
 
