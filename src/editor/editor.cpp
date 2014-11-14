@@ -416,6 +416,7 @@ void Editor::View::drop_selection()
 {
 	// The selection is no longer interesting. Move the anchor to the
 	// current cursor location and reset the selection around it.
+	_update.range(_selection);
 	_anchor = _cursor.location();
 	_selection.reset(_anchor);
 }

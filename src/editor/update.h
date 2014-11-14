@@ -29,7 +29,7 @@ public:
 	void reset();
 	void at(location_t loc);
 	void at(line_t line);
-	void range(line_t from, line_t to);
+	void range(const Range &range);
 	void forward(location_t loc);
 	void all();
 	bool has_dirty() const { return _dirty; }
