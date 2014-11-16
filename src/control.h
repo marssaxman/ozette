@@ -52,7 +52,6 @@ enum {
 
 	// Navigation
 	Find = 0x06, //ACK ^F
-	FindNext = 0x07, // BEL ^G
 	ToLine = 0x0C, //FF ^L
 
 	// Application global commands
@@ -64,6 +63,7 @@ enum {
 	SOH = 0x01, // ! A a
 	STX = 0x02, // " B b
 	ENQ = 0x05, // % E e
+	BEL = 0x07, // ` G g
 	BS = 0x08, // ( H h
 	VT = 0x0B, // + K k
 	DLE = 0x10, // 0 P p
