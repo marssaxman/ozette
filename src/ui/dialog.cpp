@@ -128,9 +128,7 @@ void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
 	// Put the cursor where it ought to be. Make it visible, if that
 	// would be appropriate for our activation state.
 	wmove(view, 0, value_hpos + _cursor_pos);
-	bool show_cursor = active;
-	show_cursor &= !_suggestion_selected;
-	curs_set(show_cursor? 1: 0);
+	curs_set(active? 1: 0);
 }
 
 void UI::Dialog::Input::arrow_left()
@@ -275,7 +273,7 @@ bool UI::Dialog::Pick::process(Frame &ctx, int ch)
 
 void UI::Dialog::Pick::paint_into(WINDOW *view, bool active)
 {
-	inherited::paint_into(view, active);
+	inherited::paint_into(view, active && !_suggestion_selected);
 	int height, width;
 	getmaxyx(view, height, width);
 	int old_ypos, old_xpos;
