@@ -93,8 +93,6 @@ bool UI::Dialog::Input::process(UI::Frame &ctx, int ch)
 			return false;
 		case KEY_LEFT: arrow_left(); break;
 		case KEY_RIGHT: arrow_right(); break;
-		case KEY_UP: arrow_up(); break;
-		case KEY_DOWN: arrow_down(); break;
 		case Control::Backspace: delete_prev(); break;
 		case KEY_DC: delete_next(); break;
 		default:
@@ -207,25 +205,6 @@ void UI::Dialog::Input::arrow_right()
 	}
 }
 
-void UI::Dialog::Input::arrow_up()
-{
-	if (!_suggestion_selected) return;
-	if (_sugg_item > 0) {
-		select_suggestion(_sugg_item - 1);
-	} else {
-		select_field();
-	}
-}
-
-void UI::Dialog::Input::arrow_down()
-{
-	if (_suggestion_selected) {
-		select_suggestion(_sugg_item + 1);
-	} else {
-		select_suggestion(0);
-	}
-}
-
 void UI::Dialog::Input::delete_prev()
 {
 	select_field();
@@ -315,3 +294,33 @@ void UI::Dialog::Branch::set_help(HelpBar::Panel &panel)
 		h++;
 	}
 }
+
+bool UI::Dialog::Pick::process(Frame &ctx, int ch)
+{
+	switch (ch) {
+		case KEY_UP: arrow_up(); break;
+		case KEY_DOWN: arrow_down(); break;
+		default: return inherited::process(ctx, ch);
+	}
+	return true;
+}
+
+void UI::Dialog::Pick::arrow_up()
+{
+	if (!_suggestion_selected) return;
+	if (_sugg_item > 0) {
+		select_suggestion(_sugg_item - 1);
+	} else {
+		select_field();
+	}
+}
+
+void UI::Dialog::Pick::arrow_down()
+{
+	if (_suggestion_selected) {
+		select_suggestion(_sugg_item + 1);
+	} else {
+		select_suggestion(0);
+	}
+}
+

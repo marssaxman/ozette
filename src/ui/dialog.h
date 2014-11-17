@@ -63,17 +63,17 @@ public:
 protected:
 	Input(const Layout &layout);
 	virtual void paint_into(WINDOW *view, bool active) override;
+	void select_suggestion(size_t i);
+	void select_field();
 	std::vector<std::string> _options;
+	bool _suggestion_selected = false;
+	size_t _sugg_item = 0;
 private:
 	void arrow_left();
 	void arrow_right();
-	void arrow_up();
-	void arrow_down();
 	void delete_prev();
 	void delete_next();
 	void key_insert(int ch);
-	void select_suggestion(size_t i);
-	void select_field();
 	void set_value(std::string val);
 
 	// Layout structure supplied by the client.
@@ -82,8 +82,6 @@ private:
 
 	// The cursor may be in the edit field or the suggestion list.
 	size_t _cursor_pos = 0;
-	bool _suggestion_selected = false;
-	size_t _sugg_item = 0;
 	// Do we need to repaint the window?
 	bool _repaint = true;
 
@@ -108,12 +106,17 @@ private:
 	std::vector<Option> _options;
 };
 
+// Picker asks the user to enter a file path.
 class Pick : public Input
 {
+	typedef Input inherited;
 public:
 	Pick(const Layout &layout): Input(layout) {}
+	virtual bool process(Frame &ctx, int ch) override;
 protected:
 	virtual unsigned extra_height() const override { return _options.size(); }
+	void arrow_up();
+	void arrow_down();
 };
 
 class Find: public Input
