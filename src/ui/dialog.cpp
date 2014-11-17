@@ -133,24 +133,14 @@ void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
 
 void UI::Dialog::Input::arrow_left()
 {
-	if (_suggestion_selected) {
-		select_field();
-		_cursor_pos = _value.size();
-	} else {
-		_cursor_pos -= std::min(_cursor_pos, 1U);
-		_repaint = true;
-	}
+	_cursor_pos -= std::min(_cursor_pos, 1U);
+	_repaint = true;
 }
 
 void UI::Dialog::Input::arrow_right()
 {
-	if (_suggestion_selected) {
-		select_field();
-		_cursor_pos = 0;
-	} else if (_cursor_pos < _value.size()) {
-		_cursor_pos++;
-		_repaint = true;
-	}
+	_cursor_pos++;
+	_repaint = true;
 }
 
 void UI::Dialog::Input::delete_prev()
@@ -254,6 +244,8 @@ UI::Dialog::Pick::Pick(const Layout &layout):
 bool UI::Dialog::Pick::process(Frame &ctx, int ch)
 {
 	switch (ch) {
+		case KEY_LEFT: arrow_left(ctx); break;
+		case KEY_RIGHT: arrow_right(ctx); break;
 		case KEY_UP: arrow_up(); break;
 		case KEY_DOWN: arrow_down(); break;
 		default: {
@@ -321,6 +313,26 @@ void UI::Dialog::Pick::paint_into(WINDOW *view, bool active)
 
 	wmove(view, old_ypos, old_xpos);
 	wattroff(view, A_REVERSE);
+}
+
+void UI::Dialog::Pick::arrow_left(Frame &ctx)
+{
+	if (_suggestion_selected) {
+		select_field();
+		_cursor_pos = _value.size();
+	} else {
+		inherited::process(ctx, KEY_LEFT);
+	}
+}
+
+void UI::Dialog::Pick::arrow_right(Frame &ctx)
+{
+	if (_suggestion_selected) {
+		select_field();
+		_cursor_pos = 0;
+	} else if (_cursor_pos < _value.size()) {
+		inherited::process(ctx, KEY_RIGHT);
+	}
 }
 
 void UI::Dialog::Pick::arrow_up()

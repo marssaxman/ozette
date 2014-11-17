@@ -70,6 +70,7 @@ protected:
 	size_t _sugg_item = 0;
 	action_t _commit = nullptr;
 	std::string _value;
+	size_t _cursor_pos = 0;
 private:
 	void arrow_left();
 	void arrow_right();
@@ -77,12 +78,7 @@ private:
 	void delete_next();
 	void key_insert(int ch);
 	void set_value(std::string val);
-
-	// The cursor may be in the edit field or the suggestion list.
-	size_t _cursor_pos = 0;
-	// Do we need to repaint the window?
 	bool _repaint = true;
-
 };
 
 // Present a branch dialog when the job meets a fork in the road and needs
@@ -114,6 +110,9 @@ public:
 protected:
 	virtual unsigned extra_height() const override { return _options.size(); }
 	virtual void paint_into(WINDOW *view, bool active) override;
+private:
+	void arrow_left(Frame &ctx);
+	void arrow_right(Frame &ctx);
 	void arrow_up();
 	void arrow_down();
 };
