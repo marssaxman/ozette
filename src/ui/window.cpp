@@ -121,7 +121,7 @@ void UI::Window::bring_forward(int focus_relative)
 
 bool UI::Window::process(int ch)
 {
-	if (ch != ERR) clear_result();
+	clear_result();
 	if (_dialog) {
 		// A dialog may invoke actions which may result in its own replacement.
 		// We will temporarily move it into a local variable while it has
@@ -144,6 +144,24 @@ bool UI::Window::process(int ch)
 		return true;
 	}
 	bool out = _view->process(*this, ch);
+	paint();
+	return out;
+}
+
+bool UI::Window::poll()
+{
+	if (_dialog) {
+		std::unique_ptr<View> temp(std::move(_dialog));
+		if (temp->poll(*this)) {
+			assert(_dialog.get() == nullptr);
+			_dialog = std::move(temp);
+		} else {
+			_view->activate(*this);
+		}
+		paint();
+		return true;
+	}
+	bool out = _view->poll(*this);
 	paint();
 	return out;
 }

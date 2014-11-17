@@ -206,7 +206,12 @@ void UI::Shell::relayout()
 
 void UI::Shell::send_to_focus(int ch)
 {
-	bool more = _tabs[_focus]->process(ch);
+	bool more = false;
+	if (ch == ERR) {
+		more = _tabs[_focus]->poll();
+	} else {
+		more = _tabs[_focus]->process(ch);
+	}
 	if (more) return;
 	close_window(_focus);
 	relayout();

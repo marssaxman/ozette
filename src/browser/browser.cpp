@@ -71,6 +71,15 @@ void Browser::deactivate(UI::Frame &ctx)
 	ctx.app().set_config(kExpansionStateKey, paths);
 }
 
+void Browser::check_rebuild(UI::Frame &ctx)
+{
+	if (!_rebuild_list) return;
+	build_list();
+	ctx.set_title(_tree.path());
+	_rebuild_list = false;
+	ctx.repaint();
+}
+
 void Browser::paint_into(WINDOW *view, bool active)
 {
 	int height, width;
@@ -103,14 +112,8 @@ void Browser::paint_into(WINDOW *view, bool active)
 
 bool Browser::process(UI::Frame &ctx, int ch)
 {
-	if (_rebuild_list) {
-		build_list();
-		ctx.set_title(_tree.path());
-		_rebuild_list = false;
-		ctx.repaint();
-	}
+	check_rebuild(ctx);
 	switch (ch) {
-		case ERR: poll(ctx); break;
 		case Control::Return: key_return(ctx); break;
 		case Control::Close: return false; break;
 		case Control::Escape: clear_filter(ctx); break;
@@ -124,6 +127,18 @@ bool Browser::process(UI::Frame &ctx, int ch)
 			if(isprint(ch)) key_char(ctx, ch);
 			else clear_filter(ctx);
 		} break;
+	}
+	return true;
+}
+
+bool Browser::poll(UI::Frame &ctx)
+{
+	check_rebuild(ctx);
+	if (!_name_filter.empty()) {
+		if (_name_filter_time + 2 <= time(NULL)) {
+			_name_filter.clear();
+			ctx.repaint();
+		}
 	}
 	return true;
 }
@@ -175,16 +190,6 @@ void Browser::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 		size_t dchars = strftime(buf, 255, "%c ", localtime(&mtime));
 		int drawch = std::min((int)dchars, rowchars);
 		mvwaddnstr(view, vpos, width-drawch, buf, drawch);
-	}
-}
-
-void Browser::poll(UI::Frame &ctx)
-{
-	if (!_name_filter.empty()) {
-		if (_name_filter_time + 2 <= time(NULL)) {
-			_name_filter.clear();
-			ctx.repaint();
-		}
 	}
 }
 

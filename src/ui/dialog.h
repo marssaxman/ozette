@@ -60,6 +60,7 @@ public:
 		action_t commit = nullptr;
 	};
 	virtual bool process(UI::Frame &ctx, int ch) override;
+	virtual bool poll(UI::Frame &ctx) override;
 protected:
 	Input(const Layout &layout);
 	virtual void paint_into(WINDOW *view, bool active) override;

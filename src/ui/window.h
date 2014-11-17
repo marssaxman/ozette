@@ -39,6 +39,7 @@ public:
 	void clear_focus();
 	void bring_forward(int focus_relative);
 	bool process(int ch);
+	bool poll();
 	virtual void show_dialog(std::unique_ptr<View> &&dialog) override;
 protected:
 	virtual void repaint() override { _dirty_content = true; }

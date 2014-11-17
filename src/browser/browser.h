@@ -34,9 +34,11 @@ public:
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
+	virtual bool poll(UI::Frame &ctx) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
 	void view(std::string path);
 protected:
+	void check_rebuild(UI::Frame &ctx);
 	virtual void paint_into(WINDOW *view, bool active) override;
 private:
 	~Browser() { _instance = nullptr; }
@@ -48,7 +50,6 @@ private:
 		DirTree *entry;
 	};
 	void paint_row(WINDOW *view, int vpos, row_t &display, int width);
-	void poll(UI::Frame &ctx);
 	void key_return(UI::Frame &ctx);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);

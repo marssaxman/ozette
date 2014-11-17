@@ -104,6 +104,14 @@ bool UI::Dialog::Input::process(UI::Frame &ctx, int ch)
 	return inherited::process(ctx, ch);
 }
 
+bool UI::Dialog::Input::poll(Frame &ctx)
+{
+	if (_repaint) {
+		ctx.repaint();
+	}
+	return inherited::poll(ctx);
+}
+
 void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
 {
 	inherited::paint_into(view, active);

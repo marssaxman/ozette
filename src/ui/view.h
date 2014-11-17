@@ -37,6 +37,7 @@ public:
 	virtual void activate(Frame &ctx) {}
 	virtual void deactivate(Frame &ctx) {}
 	virtual bool process(Frame &ctx, int ch) = 0;
+	virtual bool poll(Frame &ctx) { return true; }
 	virtual void set_help(HelpBar::Panel &panel) {}
 protected:
 	virtual void paint_into(WINDOW *view, bool active) = 0;
