@@ -113,6 +113,7 @@ public:
 	virtual bool process(Frame &ctx, int ch) override;
 protected:
 	virtual unsigned extra_height() const override { return _options.size(); }
+	virtual void paint_into(WINDOW *view, bool active) override;
 	void arrow_up();
 	void arrow_down();
 };

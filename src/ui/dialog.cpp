@@ -112,6 +112,7 @@ void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
 	waddstr(view, ": ");
 	int height, width;
 	getmaxyx(view, height, width);
+	(void)height;	//unused
 	int value_vpos, value_hpos;
 	getyx(view, value_vpos, value_hpos);
 	(void)value_vpos; // unused
@@ -121,44 +122,6 @@ void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
 	(void)end_vpos; // unused
 	whline(view, ' ', width - end_hpos);
 
-	// Draw each suggested value on its own line.
-	int sugg_vpos = value_vpos + 1;
-	int sugg_width = width;
-	int sugg_hpos = 0;
-	// Reserve two columns on each side as a margin.
-	sugg_width -= 4;
-	sugg_hpos += 2;
-	// Reduce the field width by three more chars to give
-	// space for the quick-select number captions.
-	sugg_width -= 3;
-
-	for (unsigned i = 0; i < _options.size(); ++i) {
-		int vpos = sugg_vpos + i;
-		if (vpos >= height) break;
-		wmove(view, vpos, 0);
-		if (i < 10 && _suggestion_selected) {
-			waddstr(view, "  ");
-			waddch(view, '0' + i);
-			waddstr(view, ": ");
-		} else {
-			waddstr(view, "     ");
-		}
-		bool selrow = (_suggestion_selected && i == _sugg_item);
-		if (selrow) {
-			wattroff(view, A_REVERSE);
-			if (vpos + 1 == height) wattron(view, A_UNDERLINE);
-		}
-		waddnstr(view, _options[i].c_str(), sugg_width);
-		int curv, curh;
-		getyx(view, curv, curh);
-		(void)curv; //ignored
-		whline(view, ' ', width - curh - 2);
-		if (selrow) {
-			wattron(view, A_REVERSE);
-			if (vpos + 1 == height) wattroff(view, A_UNDERLINE);
-		}
-		mvwaddstr(view, vpos, width - 2, "  ");
-	}
 	// We're done being all reversed and stuff.
 	wattroff(view, A_REVERSE);
 
@@ -308,6 +271,58 @@ bool UI::Dialog::Pick::process(Frame &ctx, int ch)
 		} break;
 	}
 	return true;
+}
+
+void UI::Dialog::Pick::paint_into(WINDOW *view, bool active)
+{
+	inherited::paint_into(view, active);
+	int height, width;
+	getmaxyx(view, height, width);
+	int old_ypos, old_xpos;
+	getyx(view, old_ypos, old_xpos);
+	wattron(view, A_REVERSE);
+
+	// Draw each suggested value on its own line.
+	int sugg_vpos = old_ypos + 1;
+	int sugg_width = width;
+	int sugg_hpos = 0;
+	// Reserve two columns on each side as a margin.
+	sugg_width -= 4;
+	sugg_hpos += 2;
+	// Reduce the field width by three more chars to give
+	// space for the quick-select number captions.
+	sugg_width -= 3;
+
+	for (unsigned i = 0; i < _options.size(); ++i) {
+		int vpos = sugg_vpos + i;
+		if (vpos >= height) break;
+		wmove(view, vpos, 0);
+		if (i < 10 && _suggestion_selected) {
+			waddstr(view, "  ");
+			waddch(view, '0' + i);
+			waddstr(view, ": ");
+		} else {
+			waddstr(view, "     ");
+		}
+		bool selrow = (_suggestion_selected && i == _sugg_item);
+		if (selrow) {
+			wattroff(view, A_REVERSE);
+			if (vpos + 1 == height) wattron(view, A_UNDERLINE);
+		}
+		waddnstr(view, _options[i].c_str(), sugg_width);
+		int curv, curh;
+		getyx(view, curv, curh);
+		(void)curv; //ignored
+		whline(view, ' ', width - curh - 2);
+		if (selrow) {
+			wattron(view, A_REVERSE);
+			if (vpos + 1 == height) wattroff(view, A_UNDERLINE);
+		}
+		mvwaddstr(view, vpos, width - 2, "  ");
+	}
+
+	wmove(view, old_ypos, old_xpos);
+	wattroff(view, A_REVERSE);
 }
 
 void UI::Dialog::Pick::arrow_up()
