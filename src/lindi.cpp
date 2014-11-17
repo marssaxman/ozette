@@ -152,7 +152,7 @@ void Lindi::change_directory()
 		set_mru(path, _recent_dirs);
 		set_config("recent_dirs", _recent_dirs);
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog::Input(dialog));
+	std::unique_ptr<UI::View> dptr(new UI::Dialog::Pick(dialog));
 	_shell.active()->show_dialog(std::move(dptr));
 }
 
@@ -171,7 +171,7 @@ void Lindi::open_file()
 		if (path.empty()) return;
 		edit_file(path);
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog::Input(dialog));
+	std::unique_ptr<UI::View> dptr(new UI::Dialog::Pick(dialog));
 	_shell.active()->show_dialog(std::move(dptr));
 }
 

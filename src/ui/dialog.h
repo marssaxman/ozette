@@ -59,11 +59,11 @@ public:
 		std::vector<std::string> options;
 		action_t commit = nullptr;
 	};
-	Input(const Layout &layout);
 	virtual bool process(UI::Frame &ctx, int ch) override;
 protected:
+	Input(const Layout &layout);
 	virtual void paint_into(WINDOW *view, bool active) override;
-	virtual unsigned extra_height() const override { return _options.size(); }
+	std::vector<std::string> _options;
 private:
 	void arrow_left();
 	void arrow_right();
@@ -78,7 +78,6 @@ private:
 
 	// Layout structure supplied by the client.
 	std::string _value;
-	std::vector<std::string> _options;
 	action_t _commit = nullptr;
 
 	// The cursor may be in the edit field or the suggestion list.
@@ -96,16 +95,37 @@ class Branch : public Base
 {
 	typedef Base inherited;
 public:
+	typedef std::function<void(UI::Frame &ctx)> action_t;
 	struct Option {
 		char key = '\0';
 		std::string description;
-		std::function<void(UI::Frame &ctx)> action = nullptr;
+		action_t action = nullptr;
 	};
 	Branch(std::string prompt, const std::vector<Option> &options);
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(HelpBar::Panel &panel) override;
 private:
 	std::vector<Option> _options;
+};
+
+class Pick : public Input
+{
+public:
+	Pick(const Layout &layout): Input(layout) {}
+protected:
+	virtual unsigned extra_height() const override { return _options.size(); }
+};
+
+class Find: public Input
+{
+public:
+	Find(const Layout &layout): Input(layout) {}
+};
+
+class GoLine: public Input
+{
+public:
+	GoLine(const Layout &layout): Input(layout) {}
 };
 
 } // namespace Dialog

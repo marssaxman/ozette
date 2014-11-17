@@ -69,8 +69,8 @@ void UI::Dialog::Base::set_help(HelpBar::Panel &panel)
 
 UI::Dialog::Input::Input(const Layout &layout):
 	Base(layout.prompt),
-	_value(layout.value),
 	_options(layout.options),
+	_value(layout.value),
 	_commit(layout.commit)
 {
 	if (_value.empty() && !_options.empty()) {
