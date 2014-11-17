@@ -68,6 +68,8 @@ protected:
 	std::vector<std::string> _options;
 	bool _suggestion_selected = false;
 	size_t _sugg_item = 0;
+	action_t _commit = nullptr;
+	std::string _value;
 private:
 	void arrow_left();
 	void arrow_right();
@@ -75,10 +77,6 @@ private:
 	void delete_next();
 	void key_insert(int ch);
 	void set_value(std::string val);
-
-	// Layout structure supplied by the client.
-	std::string _value;
-	action_t _commit = nullptr;
 
 	// The cursor may be in the edit field or the suggestion list.
 	size_t _cursor_pos = 0;

@@ -70,8 +70,8 @@ void UI::Dialog::Base::set_help(HelpBar::Panel &panel)
 UI::Dialog::Input::Input(const Layout &layout):
 	Base(layout.prompt),
 	_options(layout.options),
-	_value(layout.value),
-	_commit(layout.commit)
+	_commit(layout.commit),
+	_value(layout.value)
 {
 	if (_value.empty() && !_options.empty()) {
 		_suggestion_selected = true;
@@ -98,14 +98,6 @@ bool UI::Dialog::Input::process(UI::Frame &ctx, int ch)
 		default:
 			// we only care about non-control chars now
 			if (ch < 32 || ch > 127) break;
-			// if this is a digit character and the selection
-			// is on the suggestion list, insta-commit the
-			// item corresponding to that digit
-			if (ch >= '0' && ch <= '9' && _suggestion_selected) {
-				select_suggestion(ch - '0');
-				if (_commit) _commit(ctx, _value);
-				return false;
-			}
 			// in all other situations, the keypress should be
 			// inserted into the field at the cursor point.
 			key_insert(ch);
@@ -300,7 +292,17 @@ bool UI::Dialog::Pick::process(Frame &ctx, int ch)
 	switch (ch) {
 		case KEY_UP: arrow_up(); break;
 		case KEY_DOWN: arrow_down(); break;
-		default: return inherited::process(ctx, ch);
+		default: {
+			// if this is a digit character and the selection
+			// is on the suggestion list, insta-commit the
+			// item corresponding to that digit
+			if (ch >= '0' && ch <= '9' && _suggestion_selected) {
+				select_suggestion(ch - '0');
+				if (_commit) _commit(ctx, _value);
+				return false;
+			}
+			return inherited::process(ctx, ch);
+		} break;
 	}
 	return true;
 }
