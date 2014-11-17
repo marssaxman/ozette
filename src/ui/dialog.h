@@ -109,7 +109,7 @@ class Pick : public Input
 {
 	typedef Input inherited;
 public:
-	Pick(const Layout &layout): Input(layout) {}
+	Pick(const Layout &layout);
 	virtual bool process(Frame &ctx, int ch) override;
 protected:
 	virtual unsigned extra_height() const override { return _options.size(); }

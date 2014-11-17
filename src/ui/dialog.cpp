@@ -73,11 +73,6 @@ UI::Dialog::Input::Input(const Layout &layout):
 	_commit(layout.commit),
 	_value(layout.value)
 {
-	if (_value.empty() && !_options.empty()) {
-		_suggestion_selected = true;
-		_sugg_item = 0;
-		_value = _options.front();
-	}
 	_cursor_pos = _value.size();
 }
 
@@ -285,6 +280,14 @@ void UI::Dialog::Branch::set_help(HelpBar::Panel &panel)
 		panel.label[v][h].text = opt.description;
 		h++;
 	}
+}
+
+UI::Dialog::Pick::Pick(const Layout &layout):
+	Input(layout)
+{
+	_suggestion_selected = true;
+	_sugg_item = 0;
+	_value = _options.front();
 }
 
 bool UI::Dialog::Pick::process(Frame &ctx, int ch)
