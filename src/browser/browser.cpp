@@ -183,14 +183,14 @@ void Browser::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 	rowchars -= std::min(rowchars, (int)name.size());
 	waddnstr(view, isdir? "/": " ", rowchars);
 	rowchars--;
-	if (display.entry->is_file()) {
-		char buf[256];
-		time_t mtime = display.entry->mtime();
-		// add an extra space on the end because it's prettier
-		size_t dchars = strftime(buf, 255, "%c ", localtime(&mtime));
-		int drawch = std::min((int)dchars, rowchars);
-		mvwaddnstr(view, vpos, width-drawch, buf, drawch);
-	}
+	// The rest of the status info only applies to files.
+	if (!display.entry->is_file()) return;
+	char buf[256];
+	time_t mtime = display.entry->mtime();
+	// add an extra space on the end because it's prettier
+	size_t dchars = strftime(buf, 255, "%c ", localtime(&mtime));
+	int drawch = std::min((int)dchars, rowchars);
+	mvwaddnstr(view, vpos, width-drawch, buf, drawch);
 }
 
 void Browser::key_return(UI::Frame &ctx)
@@ -272,9 +272,10 @@ void Browser::key_tab(UI::Frame &ctx)
 
 void Browser::key_char(UI::Frame &ctx, char ch)
 {
+	size_t start = _name_filter.empty()? 0: _selection;
 	_name_filter.push_back(ch);
 	_name_filter_time = time(NULL);
-	for (size_t i = _selection; i < _list.size(); ++i) {
+	for (size_t i = start; i < _list.size(); ++i) {
 		if (matches_filter(i)) {
 			_selection = i;
 			break;
