@@ -46,7 +46,7 @@ void Editor::Update::range(const Range &range)
 	line_t from = std::min(a, b);
 	line_t to = std::max(a, b);
 	_start = _dirty? std::min(_start, from): from;
-	_end = _dirty? std::max(_start, to): to;
+	_end = _dirty? std::max(_end, to): to;
 	_dirty = true;
 }
 
