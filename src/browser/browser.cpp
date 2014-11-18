@@ -82,20 +82,20 @@ void Browser::check_rebuild(UI::Frame &ctx)
 
 void Browser::paint_into(WINDOW *view, bool active)
 {
-	int height, width;
-	getmaxyx(view, height, width);
+	int width;
+	getmaxyx(view, _height, width);
 
 	// adjust scrolling as necessary to keep the cursor visible
-	size_t max_visible_row = _scrollpos + height - 2;
+	size_t max_visible_row = _scrollpos + _height - 2;
 	if (_selection < _scrollpos || _selection > max_visible_row) {
-		size_t halfpage = (size_t)height/2;
+		size_t halfpage = (size_t)_height/2;
 		_scrollpos = _selection - std::min(halfpage, _selection);
 	}
 
 	int row = 1;
 	wmove(view, 0, 0);
 	wclrtoeol(view);
-	for (size_t i = _scrollpos; i < _list.size() && row < height; ++i) {
+	for (size_t i = _scrollpos; i < _list.size() && row < _height; ++i) {
 		wmove(view, row, 0);
 		whline(view, ' ', width);
 		paint_row(view, row, _list[i], width);
@@ -104,7 +104,7 @@ void Browser::paint_into(WINDOW *view, bool active)
 		}
 		row++;
 	}
-	while (row < height) {
+	while (row < _height) {
 		wmove(view, row++, 0);
 		wclrtoeol(view);
 	}
@@ -120,6 +120,8 @@ bool Browser::process(UI::Frame &ctx, int ch)
 		case Control::Tab: key_tab(ctx); break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
+		case KEY_PPAGE: key_page_up(ctx); break;
+		case KEY_NPAGE: key_page_down(ctx); break;
 		case KEY_RIGHT: key_right(ctx); break;
 		case KEY_LEFT: key_left(ctx); break;
 		case ' ': key_space(ctx); break;
@@ -235,6 +237,21 @@ void Browser::key_down(UI::Frame &ctx)
 	// Move to next line in the listbox.
 	if (_selection + 1 == _list.size()) return;
 	_selection++;
+	ctx.repaint();
+}
+
+void Browser::key_page_up(UI::Frame &ctx)
+{
+	// Move to last line of previous page.
+	clear_filter(ctx);
+	_selection = _scrollpos - std::min(_scrollpos, 1U);
+	ctx.repaint();
+}
+
+void Browser::key_page_down(UI::Frame &ctx)
+{
+	// Move to first line of next page.
+	_selection = std::min(_scrollpos + _height, _list.size()-1);
 	ctx.repaint();
 }
 
