@@ -31,6 +31,7 @@ public:
 	virtual std::string current_dir() const = 0;
 	virtual std::string display_path(std::string path) const = 0;
 	virtual void edit_file(std::string path) = 0;
+	virtual void rename_file(std::string from, std::string to) = 0;
 	virtual void close_file(std::string path) = 0;
 	virtual void set_clipboard(std::string text) = 0;
 	virtual std::string get_clipboard() = 0;

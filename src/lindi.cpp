@@ -72,9 +72,20 @@ void Lindi::edit_file(std::string path)
 	_editors[path] = win;
 }
 
+void Lindi::rename_file(std::string from, std::string to)
+{
+	// Somebody has moved or renamed a file. If there is an editor
+	// open for it, update our editor map.
+	auto existing = _editors.find(canonical_abspath(from));
+	if (existing == _editors.end()) return;
+	auto window = existing->second;
+	_editors.erase(existing);
+	_editors[canonical_abspath(to)] = window;
+}
+
 void Lindi::close_file(std::string path)
 {
-	auto iter = _editors.find(path);
+	auto iter = _editors.find(canonical_abspath(path));
 	if (iter != _editors.end()) {
 		_shell.close_window(iter->second);
 		_editors.erase(iter);
@@ -159,7 +170,7 @@ void Lindi::change_directory()
 void Lindi::new_file()
 {
 	std::unique_ptr<UI::View> ed(new Editor::View());
-	_shell.open_window(std::move(ed));
+	_editors[canonical_abspath("")] = _shell.open_window(std::move(ed));
 }
 
 void Lindi::open_file()

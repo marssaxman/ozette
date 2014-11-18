@@ -452,6 +452,7 @@ void Editor::View::save(UI::Frame &ctx, std::string path)
 		{
 			if (path.empty()) return;
 			_doc.Write(path);
+			ctx.app().rename_file(_targetpath, path);
 			_targetpath = path;
 			ctx.set_title(path);
 		};
