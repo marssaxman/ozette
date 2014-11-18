@@ -30,7 +30,6 @@ class Browser : public UI::View
 public:
 	static void change_directory(std::string path);
 	static void open(std::string path, UI::Shell &shell);
-	Browser(std::string path);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
@@ -41,6 +40,7 @@ protected:
 	void check_rebuild(UI::Frame &ctx);
 	virtual void paint_into(WINDOW *view, bool active) override;
 private:
+	Browser(std::string path);
 	~Browser() { _instance = nullptr; }
 	static Browser *_instance;
 	UI::Window *_window = nullptr;
