@@ -334,13 +334,15 @@ void Editor::View::key_right(bool extend)
 
 void Editor::View::key_page_up()
 {
-	_cursor.up(_halfheight+1);
+	// move the cursor to the last line of the previous page
+	_cursor.move_to(_doc.home(_scrollpos - std::min(_scrollpos, 1U)));
 	drop_selection();
 }
 
 void Editor::View::key_page_down()
 {
-	_cursor.down(_halfheight+1);
+	// move the cursor to the first line of the next page
+	_cursor.move_to(_doc.home(_scrollpos + _height));
 	drop_selection();
 }
 
