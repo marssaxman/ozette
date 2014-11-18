@@ -185,10 +185,28 @@ void Browser::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 	rowchars--;
 	// The rest of the status info only applies to files.
 	if (!display.entry->is_file()) return;
+
 	char buf[256];
 	time_t mtime = display.entry->mtime();
-	// add an extra space on the end because it's prettier
-	size_t dchars = strftime(buf, 255, "%c ", localtime(&mtime));
+	struct tm mtm = *localtime(&mtime);
+	time_t nowtime = time(NULL);
+	struct tm nowtm = *localtime(&nowtime);
+	// Pick a format string which highlights the most relevant information
+	// about this file's modification date. Format strings end with an extra
+	// space because it looks prettier that way.
+	const char *format = "%c ";
+	if (mtm.tm_year != nowtm.tm_year) {
+		format = "%b %Y "; // month of year
+	} else if (nowtm.tm_yday - mtm.tm_yday > 6) {
+		format = "%e %b "; // day of month
+	} else if (nowtm.tm_yday - mtm.tm_yday > 1) {
+		format = "%a "; // day of week
+	} else if (nowtm.tm_yday != mtm.tm_yday) {
+		format = "yesterday ";
+	} else {
+		format = "%X ";	// time
+	}
+	size_t dchars = strftime(buf, 255, format, &mtm);
 	int drawch = std::min((int)dchars, rowchars);
 	mvwaddnstr(view, vpos, width-drawch, buf, drawch);
 }
