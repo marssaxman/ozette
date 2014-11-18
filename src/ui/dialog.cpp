@@ -201,40 +201,37 @@ void UI::Dialog::Input::set_value(std::string val)
 	_repaint = true;
 }
 
-UI::Dialog::Branch::Branch(std::string p, const std::vector<Option> &opts):
+UI::Dialog::Confirmation::Confirmation(std::string p, action_t y, action_t n):
 	Base(p),
-	_options(opts)
+	_yes(y),
+	_no(n)
 {
 }
 
-bool UI::Dialog::Branch::process(UI::Frame &ctx, int ch)
+bool UI::Dialog::Confirmation::process(UI::Frame &ctx, int ch)
 {
-	for (auto &opt: _options) {
-		if (toupper(ch) == toupper(opt.key)) {
-			opt.action(ctx);
-			return false;
-		}
+	switch (toupper(ch)) {
+		case 'Y': _yes(ctx); return false;
+		case 'N': _no(ctx); return false;
+		case 'A': if (_all) { _all(ctx); return false; }
+		default: break;
 	}
 	return inherited::process(ctx, ch);
 }
 
-void UI::Dialog::Branch::set_help(HelpBar::Panel &panel)
+void UI::Dialog::Confirmation::set_help(HelpBar::Panel &panel)
 {
 	inherited::set_help(panel);
-	unsigned v = 0;
-	unsigned h = 0;
-	for (auto &opt: _options) {
-		if (h >= HelpBar::Panel::kWidth) {
-			h = 1; // skip the cancel command
-			v++;
-		}
-		if (v >= HelpBar::Panel::kHeight) {
-			break;
-		}
-		panel.label[v][h].mnemonic = opt.key;
-		panel.label[v][h].is_ctrl = false;
-		panel.label[v][h].text = opt.description;
-		h++;
+	panel.label[0][0].mnemonic = 'Y';
+	panel.label[0][0].is_ctrl = false;
+	panel.label[0][0].text = "Yes";
+	panel.label[0][1].mnemonic = 'N';
+	panel.label[0][1].is_ctrl = false;
+	panel.label[0][1].text = "No";
+	if (_all) {
+		panel.label[0][2].mnemonic = 'A';
+		panel.label[0][2].is_ctrl = false;
+		panel.label[0][2].text = "All";
 	}
 }
 

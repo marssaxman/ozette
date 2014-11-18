@@ -232,25 +232,18 @@ void Editor::View::ctl_close(UI::Frame &ctx)
 	}
 	// ask the user if they want to save first
 	std::string prompt = "You have modified this file. Save changes before closing?";
-	UI::Dialog::Branch::Option yes;
-	yes.key = 'Y';
-	yes.description = "Yes";
-	yes.action = [this](UI::Frame &ctx)
+	auto yes_action = [this](UI::Frame &ctx)
 	{
 		// save the file
 		_doc.Write(_targetpath);
 		ctx.app().close_file(_targetpath);
 	};
-	UI::Dialog::Branch::Option no;
-	no.key = 'N';
-	no.description = "No";
-	no.action = [this](UI::Frame &ctx)
+	auto no_action = [this](UI::Frame &ctx)
 	{
 		// just close it
 		ctx.app().close_file(_targetpath);
 	};
-	std::vector<UI::Dialog::Branch::Option> options = {yes, no};
-	auto dialog = new UI::Dialog::Branch(prompt, options);
+	auto dialog = new UI::Dialog::Confirmation(prompt, yes_action, no_action);
 	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
 }
@@ -455,26 +448,19 @@ void Editor::View::save(UI::Frame &ctx, std::string path)
 		}
 		// This is a different path than the file used to have.
 		// Ask the user to confirm that they meant to change it.
-		UI::Dialog::Branch::Option yes;
-		yes.key = 'Y';
-		yes.description = "Yes";
-		yes.action = [this, path](UI::Frame &ctx)
+		auto yes_action = [this, path](UI::Frame &ctx)
 		{
 			if (path.empty()) return;
 			_doc.Write(path);
 			_targetpath = path;
 			ctx.set_title(path);
 		};
-		UI::Dialog::Branch::Option no;
-		no.key = 'N';
-		no.description = "No";
-		no.action = [this, path](UI::Frame &ctx)
+		auto no_action = [this, path](UI::Frame &ctx)
 		{
 			save(ctx, path);
 		};
 		std::string prompt = "Save file under a different name?";
-		std::vector<UI::Dialog::Branch::Option> options = {yes, no};
-		auto dialog = new UI::Dialog::Branch(prompt, options);
+		auto dialog = new UI::Dialog::Confirmation(prompt, yes_action, no_action);
 		std::unique_ptr<UI::View> dptr(dialog);
 		ctx.show_dialog(std::move(dptr));
 	};

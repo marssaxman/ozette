@@ -76,23 +76,19 @@ private:
 	bool _repaint = true;
 };
 
-// Present a branch dialog when the job meets a fork in the road and needs
-// the user to select the appropriate direction.
-class Branch : public Base
+// Yes/no confirmation dialog, with optional "all".
+class Confirmation : public Base
 {
 	typedef Base inherited;
 public:
 	typedef std::function<void(UI::Frame &ctx)> action_t;
-	struct Option {
-		char key = '\0';
-		std::string description;
-		action_t action = nullptr;
-	};
-	Branch(std::string prompt, const std::vector<Option> &options);
+	Confirmation(std::string prompt, action_t yes, action_t no);
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(HelpBar::Panel &panel) override;
 private:
-	std::vector<Option> _options;
+	action_t _yes;
+	action_t _no;
+	action_t _all = nullptr;
 };
 
 // Picker asks the user to enter a file path.
