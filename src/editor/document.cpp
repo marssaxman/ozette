@@ -311,8 +311,8 @@ Editor::location_t Editor::Document::sanitize(const location_t &loc)
 {
 	// Verify that this location refers to a real place.
 	// Fix it if either of its dimensions would be out-of-bounds.
-	line_t index = std::min(loc.line, _lines.size());
-	offset_t offset = _lines.empty() ? 0 : std::min(loc.offset, _lines[loc.line]->size());
+	line_t index = std::min(loc.line, _lines.size()-1);
+	offset_t offset = _lines.empty()? 0: std::min(loc.offset, _lines[index]->size());
 	return location_t(index, offset);
 }
 
