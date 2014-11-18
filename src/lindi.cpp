@@ -140,19 +140,19 @@ void Lindi::show_browser()
 
 void Lindi::change_directory()
 {
-	UI::Dialog::Input::Layout dialog;
-	dialog.prompt = "Change Directory";
+	std::string prompt = "Change Directory";
 	get_config("recent_dirs", _recent_dirs);
-	dialog.options = _recent_dirs;
-	set_mru(_current_dir, dialog.options);
-	dialog.commit = [this](UI::Frame &ctx, std::string path)
+	auto options = _recent_dirs;
+	set_mru(_current_dir, options);
+	auto commit = [this](UI::Frame &ctx, std::string path)
 	{
 		_current_dir = path;
 		Browser::change_directory(path);
 		set_mru(path, _recent_dirs);
 		set_config("recent_dirs", _recent_dirs);
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog::Pick(dialog));
+	auto dialog = new UI::Dialog::Pick(prompt, options, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
 	_shell.active()->show_dialog(std::move(dptr));
 }
 
@@ -164,14 +164,15 @@ void Lindi::new_file()
 
 void Lindi::open_file()
 {
-	UI::Dialog::Input::Layout dialog;
-	dialog.prompt = "Open";
-	dialog.commit = [this](UI::Frame &ctx, std::string path)
+	std::string prompt = "Open";
+	std::vector<std::string> options;
+	auto commit = [this](UI::Frame &ctx, std::string path)
 	{
 		if (path.empty()) return;
 		edit_file(path);
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog::Pick(dialog));
+	auto dialog = new UI::Dialog::Pick(prompt, options, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
 	_shell.active()->show_dialog(std::move(dptr));
 }
 

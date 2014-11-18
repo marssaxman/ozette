@@ -262,14 +262,13 @@ void Editor::View::ctl_save(UI::Frame &ctx)
 
 void Editor::View::ctl_toline(UI::Frame &ctx)
 {
-	UI::Dialog::Input::Layout dialog;
 	// illogical as it is, the rest of the world seems to think that it is
 	// a good idea for line numbers to start counting at 1, so we will
 	// accommodate their perverse desires in the name of compatibility.
-	dialog.prompt = "Go to line (";
-	dialog.prompt += std::to_string(_cursor.location().line + 1);
-	dialog.prompt += ")";
-	dialog.commit = [this](UI::Frame &ctx, std::string value)
+	std::string prompt = "Go to line (";
+	prompt += std::to_string(_cursor.location().line + 1);
+	prompt += ")";
+	auto commit = [this](UI::Frame &ctx, std::string value)
 	{
 		if (value.empty()) return;
 		long valnum = std::stol(value) - 1;
@@ -278,18 +277,18 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 		drop_selection();
 		postprocess(ctx);
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog::GoLine(dialog));
+	auto dialog = new UI::Dialog::GoLine(prompt, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
 }
 
 void Editor::View::ctl_find(UI::Frame &ctx)
 {
-	UI::Dialog::Input::Layout dialog;
-	dialog.prompt = "Find";
+	std::string prompt = "Find";
 	if (!_find_text.empty()) {
-		dialog.prompt += " (" + _find_text + ")";
+		prompt += " (" + _find_text + ")";
 	}
-	dialog.commit = [this](UI::Frame &ctx, std::string value)
+	auto commit = [this](UI::Frame &ctx, std::string value)
 	{
 		if (!value.empty()) {
 			_find_text = value;
@@ -311,7 +310,8 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 		reveal_cursor();
 		ctx.repaint();
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog::Find(dialog));
+	auto dialog = new UI::Dialog::Find(prompt, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
 }
 
@@ -436,10 +436,8 @@ void Editor::View::adjust_selection(bool extend)
 
 void Editor::View::save(UI::Frame &ctx, std::string path)
 {
-	UI::Dialog::Input::Layout dialog;
-	dialog.prompt = "Save File";
-	dialog.value = path;
-	dialog.commit = [this](UI::Frame &ctx, std::string path)
+	std::string prompt = "Save File";
+	auto commit = [this](UI::Frame &ctx, std::string path)
 	{
 		// Clearing out the path name is the same as cancelling.
 		if (path.empty()) {
@@ -480,7 +478,8 @@ void Editor::View::save(UI::Frame &ctx, std::string path)
 		std::unique_ptr<UI::View> dptr(dialog);
 		ctx.show_dialog(std::move(dptr));
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog::Pick(dialog));
+	auto dialog = new UI::Dialog::Pick(prompt, path, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
 }
 

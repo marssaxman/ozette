@@ -67,13 +67,10 @@ void UI::Dialog::Base::set_help(HelpBar::Panel &panel)
 	panel.label[1][0] = HelpBar::Label('[', true, "Escape");
 }
 
-UI::Dialog::Input::Input(const Layout &layout):
-	Base(layout.prompt),
-	_options(layout.options),
-	_commit(layout.commit),
-	_value(layout.value)
+UI::Dialog::Input::Input(std::string prompt, action_t commit):
+	Base(prompt),
+	_commit(commit)
 {
-	_cursor_pos = _value.size();
 }
 
 bool UI::Dialog::Input::process(UI::Frame &ctx, int ch)
@@ -241,12 +238,22 @@ void UI::Dialog::Branch::set_help(HelpBar::Panel &panel)
 	}
 }
 
-UI::Dialog::Pick::Pick(const Layout &layout):
-	Input(layout)
+UI::Dialog::Pick::Pick(std::string prompt, std::vector<std::string> options, action_t commit):
+	Input(prompt, commit)
 {
+	_options = options;
 	_suggestion_selected = true;
 	_sugg_item = 0;
-	_value = _options.front();
+	if (!_options.empty()) {
+		_value = _options.front();
+	}
+}
+
+UI::Dialog::Pick::Pick(std::string prompt, std::string value, action_t commit):
+	Input(prompt, commit)
+{
+	_value = value;
+	_cursor_pos = _value.size();
 }
 
 bool UI::Dialog::Pick::process(Frame &ctx, int ch)
