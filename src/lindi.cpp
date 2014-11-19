@@ -129,6 +129,10 @@ void Lindi::set_config(std::string name, const std::vector<std::string> &lines)
 	file.close();
 }
 
+void Lindi::exec(std::string title, std::string exe, const std::vector<std::string> &argv)
+{
+}
+
 void Lindi::run()
 {
 	timeout(20);

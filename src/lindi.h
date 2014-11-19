@@ -40,6 +40,7 @@ public:
 	virtual std::string get_clipboard() override;
 	virtual void get_config(std::string name, std::vector<std::string> &lines) override;
 	virtual void set_config(std::string name, const std::vector<std::string> &lines) override;
+	virtual void exec(std::string title, std::string exe, const std::vector<std::string> &argv) override;
 
 	void run();
 private:

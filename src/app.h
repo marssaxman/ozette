@@ -37,6 +37,7 @@ public:
 	virtual std::string get_clipboard() = 0;
 	virtual void get_config(std::string name, std::vector<std::string> &lines) = 0;
 	virtual void set_config(std::string name, const std::vector<std::string> &lines) = 0;
+	virtual void exec(std::string title, std::string exe, const std::vector<std::string> &argv) = 0;
 };
 
 #endif	//APP_H
