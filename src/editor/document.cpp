@@ -119,7 +119,7 @@ Editor::location_t Editor::Document::home(line_t index)
 Editor::location_t Editor::Document::end(line_t index)
 {
 	if (index > _maxline) index = _maxline;
-	location_t loc = {index, line(_maxline).size()};
+	location_t loc = {index, line(index).size()};
 	return loc;
 }
 
