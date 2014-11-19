@@ -139,6 +139,7 @@ bool UI::Window::process(int ch)
 			// controller to check up on whatever it was
 			// doing.
 			_view->activate(*this);
+			_dirty_content = true;
 		}
 		paint();
 		return true;
@@ -219,6 +220,7 @@ void UI::Window::clear_result()
 	delwin(_resultwin);
 	_resultpanel = nullptr;
 	_resultwin = nullptr;
+	_dirty_content = true;
 }
 
 void UI::Window::calculate_content(int &vpos, int &hpos, int &height, int &width)
