@@ -52,7 +52,7 @@ void Editor::View::activate(UI::Frame &ctx)
 	} else {
 		ctx.set_title(ctx.app().display_path(_targetpath));
 	}
-	ctx.set_status(_doc.status());
+	set_status(ctx);
 }
 
 void Editor::View::deactivate(UI::Frame &ctx)
@@ -142,7 +142,7 @@ void Editor::View::postprocess(UI::Frame &ctx)
 	reveal_cursor();
 	if (_update.has_dirty()) {
 		ctx.repaint();
-		ctx.set_status(_doc.status());
+		set_status(ctx);
 	}
 }
 
@@ -210,6 +210,16 @@ void Editor::View::update_dimensions(WINDOW *view)
 		_scrollpos = std::min(_scrollpos, _maxscroll);
 		_update.all();
 	}
+}
+
+void Editor::View::set_status(UI::Frame &ctx)
+{
+	std::string status = _doc.status();
+	if (!_doc.readonly()) {
+		if (!status.empty()) status.push_back(' ');
+		status += std::to_string(_cursor.location().line);
+	}
+	ctx.set_status(status);
 }
 
 void Editor::View::ctl_cut(UI::Frame &ctx)
@@ -315,8 +325,7 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 			}
 		}
 		_cursor.move_to(next);
-		reveal_cursor();
-		ctx.repaint();
+		postprocess(ctx);
 	};
 	auto dialog = new UI::Dialog::Find(prompt, commit);
 	std::unique_ptr<UI::View> dptr(dialog);
