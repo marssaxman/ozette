@@ -60,8 +60,9 @@ bool Console::View::poll(UI::Frame &ctx)
 	if (_subpid <= 0) return true;
 	//int sub_stdin = _rwepipe[0];
 	int sub_stdout = _rwepipe[1];
-	//int sub_stderr = _rwepipe[2];
+	int sub_stderr = _rwepipe[2];
 	bool dirty = _log->read(sub_stdout);
+	dirty |= _log->read(sub_stderr);
 	if (dirty) {
 		ctx.repaint();
 	}
