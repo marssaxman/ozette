@@ -27,13 +27,23 @@ Console::View *Console::View::_instance;
 
 void Console::View::exec(std::string cmd, UI::Shell &shell)
 {
+	std::vector<std::string> args = {"-c", cmd};
+	exec(cmd, "sh", args, shell);
+}
+
+void Console::View::exec(
+		std::string title,
+		std::string exe,
+		const std::vector<std::string> &argv,
+		UI::Shell &shell)
+{
 	if (_instance) {
 		shell.make_active(_instance->_window);
 	} else {
 		std::unique_ptr<UI::View> view(new Console::View());
 		_instance->_window = shell.open_window(std::move(view));
 	}
-	_instance->exec(cmd);
+	_instance->exec(title, exe, argv);
 }
 
 void Console::View::activate(UI::Frame &ctx)
@@ -99,31 +109,22 @@ void Console::View::paint_into(WINDOW *view, bool active)
 	}
 }
 
-void Console::View::exec(std::string cmd)
+void Console::View::exec(std::string title, std::string exe, const std::vector<std::string> &args)
 {
 	close_subproc();
-	// Parse the command string, extracting the executable path and the
-	// arguments vector.
-	std::vector<std::string> segs;
-	size_t off = 0;
-	size_t next = cmd.find_first_of(' ');
-	while (next != std::string::npos) {
-		segs.push_back(cmd.substr(off, next-off));
-		off = next + 1;
-		next = cmd.find_first_of(' ', off);
-	}
-	segs.push_back(cmd.substr(off));
 	// Convert this vector into an old-style C array of chars.
-	const char *exe = segs[0].c_str();
-	const char **argv = new const char*[segs.size()+1];
+	// Allocate one extra slot at the beginning for the exe name,
+	// and one extra at the end to serve as terminator.
+	const char **argv = new const char*[1+args.size()+1];
 	unsigned i = 0;
-	for (auto &seg: segs) {
-		argv[i++] = seg.c_str();
+	argv[i++] = exe.c_str();
+	for (auto &arg: args) {
+		argv[i++] = arg.c_str();
 	}
 	argv[i] = nullptr;
-	_subpid = popenRWE(_rwepipe, exe, argv);
+	_subpid = popenRWE(_rwepipe, exe.c_str(), argv);
 	delete[] argv;
-	_log.reset(new Log(cmd));
+	_log.reset(new Log(title));
 }
 
 void Console::View::close_subproc()

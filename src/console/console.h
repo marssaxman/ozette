@@ -30,6 +30,7 @@ class View : public UI::View
 {
 public:
 	static void exec(std::string cmd, UI::Shell &shell);
+	static void exec(std::string title, std::string exe, const std::vector<std::string> &argv, UI::Shell &shell);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
@@ -42,7 +43,7 @@ protected:
 	UI::Window *_window = nullptr;
 	virtual void paint_into(WINDOW *view, bool active) override;
 private:
-	void exec(std::string cmd);
+	void exec(std::string title, std::string exe, const std::vector<std::string> &argv);
 	void close_subproc();
 	void set_title(UI::Frame &ctx);
 	int _subpid = 0;
