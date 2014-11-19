@@ -25,6 +25,7 @@ Browser commands:
     ^N - New - open an editor for a new, nameless file
     ^D - ChDir - change the current working directory
     ^E - Execute - run some command and log output to the console
+    ^F - Find - search for text across all files in the directory
 
 == Text editor
 
