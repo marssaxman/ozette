@@ -478,7 +478,7 @@ void Editor::View::save(UI::Frame &ctx, std::string path)
 			return;
 		}
 		// If they confirmed the existing name, we can write it out.
-		if (path == _targetpath) {
+		if (path == _targetpath || _targetpath.empty()) {
 			_doc.Write(path);
 			ctx.set_status(_doc.status());
 			std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
