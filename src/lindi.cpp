@@ -22,6 +22,7 @@
 #include "editor.h"
 #include "control.h"
 #include "dialog.h"
+#include "help.h"
 #include <unistd.h>
 #include <fstream>
 #include <sys/stat.h>
@@ -139,6 +140,7 @@ void Lindi::run()
 			case Control::NewFile: new_file(); break;
 			case Control::Open: open_file(); break;
 			case Control::Directory: change_directory(); break;
+			case Control::Help: show_help(); break;
 			default: _done |= !_shell.process(ch);
 		}
 	} while (!_done);
@@ -185,6 +187,22 @@ void Lindi::open_file()
 	auto dialog = new UI::Dialog::Pick(prompt, options, commit);
 	std::unique_ptr<UI::View> dptr(dialog);
 	_shell.active()->show_dialog(std::move(dptr));
+}
+
+void Lindi::show_help()
+{
+	static const std::string help_key = " Help ";
+	static const std::string abs_help = canonical_abspath(help_key);
+	auto existing = _editors.find(abs_help);
+	if (existing != _editors.end()) {
+		_shell.make_active(existing->second);
+		return;
+	}
+	std::string helptext((const char*)HELP, HELP_len);
+	Editor::Document doc;
+	doc.View(helptext);
+	std::unique_ptr<UI::View> ed(new Editor::View(help_key, std::move(doc)));
+	_editors[abs_help] = _shell.open_window(std::move(ed));
 }
 
 int Lindi::fix_control_quirks(int ch)

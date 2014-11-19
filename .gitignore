@@ -1,3 +1,8 @@
+# compiled .o files live under obj
 obj/
+
+# lindi is the linked executable
 lindi
 
+# help.cpp is generated from the HELP file
+src/help.cpp

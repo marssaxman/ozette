@@ -222,16 +222,10 @@ bool UI::Dialog::Confirmation::process(UI::Frame &ctx, int ch)
 void UI::Dialog::Confirmation::set_help(HelpBar::Panel &panel)
 {
 	inherited::set_help(panel);
-	panel.label[0][0].mnemonic = 'Y';
-	panel.label[0][0].is_ctrl = false;
-	panel.label[0][0].text = "Yes";
-	panel.label[0][1].mnemonic = 'N';
-	panel.label[0][1].is_ctrl = false;
-	panel.label[0][1].text = "No";
+	panel.label[0][0] = HelpBar::Label('Y', false, "Yes");
+	panel.label[0][1] = HelpBar::Label('N', false, "No");
 	if (_all) {
-		panel.label[0][2].mnemonic = 'A';
-		panel.label[0][2].is_ctrl = false;
-		panel.label[0][2].text = "All";
+		panel.label[0][2] = HelpBar::Label('A', false, "All");
 	}
 }
 

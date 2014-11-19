@@ -37,6 +37,13 @@ Editor::View::View(std::string targetpath):
 {
 }
 
+Editor::View::View(std::string title, Document &&doc):
+	_targetpath(title),
+	_doc(std::move(doc)),
+	_cursor(_doc, _update)
+{
+}
+
 void Editor::View::activate(UI::Frame &ctx)
 {
 	// Set the title according to the target path
@@ -67,6 +74,7 @@ void Editor::View::paint_into(WINDOW *dest, bool active)
 	curs.v -= std::min(curs.v, _scrollpos);
 	wmove(dest, curs.v, curs.h);
 	bool show_cursor = active && _selection.empty();
+	show_cursor &= !_doc.readonly();
 	curs_set(show_cursor ? 1 : 0);
 	_update.reset();
 }
@@ -115,13 +123,18 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 void Editor::View::set_help(UI::HelpBar::Panel &panel)
 {
 	using namespace UI::HelpBar;
-	panel.label[0][0] = Label('X', true, "Cut");
-	panel.label[0][1] = Label('C', true, "Copy");
-	panel.label[0][2] = Label('V', true, "Paste");
+	if (!_doc.readonly()) {
+		panel.label[0][0] = Label('X', true, "Cut");
+		panel.label[0][1] = Label('C', true, "Copy");
+		panel.label[0][2] = Label('V', true, "Paste");
+	}
 	panel.label[0][4] = Label('L', true, "To Line");
 	panel.label[0][5] = Label('F', true, "Find");
 	panel.label[1][0] = Label('W', true, "Close");
-	panel.label[1][1] = Label('S', true, "Save");
+	if (!_doc.readonly()) {
+		panel.label[1][1] = Label('S', true, "Save");
+	}
+	panel.label[1][5] = Label('?', true, "Help");
 }
 
 void Editor::View::postprocess(UI::Frame &ctx)
@@ -167,6 +180,7 @@ bool Editor::View::line_is_visible(size_t index) const
 
 void Editor::View::reveal_cursor()
 {
+	if (_doc.readonly()) return;
 	line_t line = _cursor.location().line;
 	// If the cursor is already on screen, do nothing.
 	if (line_is_visible(line)) return;
@@ -226,9 +240,10 @@ void Editor::View::ctl_paste(UI::Frame &ctx)
 
 void Editor::View::ctl_close(UI::Frame &ctx)
 {
-	if (!_doc.modified()) {
+	if (_doc.readonly() || !_doc.modified()) {
 		// no formality needed, we're done
 		ctx.app().close_file(_targetpath);
+		return;
 	}
 	// ask the user if they want to save first
 	std::string prompt = "You have modified this file. Save changes before closing?";
@@ -310,24 +325,36 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 
 void Editor::View::key_up(bool extend)
 {
-	_cursor.up(1);
-	adjust_selection(extend);
+	if (_doc.readonly()) {
+		_scrollpos -= std::min(_scrollpos, 1U);
+		_update.all();
+	} else {
+		_cursor.up(1);
+		adjust_selection(extend);
+	}
 }
 
 void Editor::View::key_down(bool extend)
 {
-	_cursor.down(1);
-	adjust_selection(extend);
+	if (_doc.readonly()) {
+		_scrollpos = std::min(_scrollpos + 1, _maxscroll);
+		_update.all();
+	} else {
+		_cursor.down(1);
+		adjust_selection(extend);
+	}
 }
 
 void Editor::View::key_left(bool extend)
 {
+	if (_doc.readonly()) return;
 	_cursor.left();
 	adjust_selection(extend);
 }
 
 void Editor::View::key_right(bool extend)
 {
+	if (_doc.readonly()) return;
 	_cursor.right();
 	adjust_selection(extend);
 }
@@ -431,6 +458,7 @@ void Editor::View::adjust_selection(bool extend)
 
 void Editor::View::save(UI::Frame &ctx, std::string path)
 {
+	if (_doc.readonly()) return;
 	std::string prompt = "Save File";
 	auto commit = [this](UI::Frame &ctx, std::string path)
 	{

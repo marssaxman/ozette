@@ -89,6 +89,17 @@ void Editor::Document::Write(std::string path)
 	clear_modify();
 }
 
+void Editor::Document::View(std::string text)
+{
+	// Replace all lines with the contents of this string.
+	_lines.clear();
+	_maxline = 0;
+	insert(home(), text);
+	_modified = false;
+	_read_only = true;
+	_status.clear();
+}
+
 Editor::location_t Editor::Document::home()
 {
 	return home(0);
