@@ -70,6 +70,7 @@ private:
 	void delete_selection();
 	void key_insert(char ch);
 	void key_tab(UI::Frame &ctx);
+	void key_btab(UI::Frame &ctx);
 	void key_enter(UI::Frame &ctx);
 	void key_return(UI::Frame &ctx);
 	void key_backspace(UI::Frame &ctx);

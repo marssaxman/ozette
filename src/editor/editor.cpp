@@ -111,7 +111,7 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::Return: key_return(ctx); break;
 		case Control::Backspace: key_backspace(ctx); break;
 		case KEY_DC: key_delete(ctx); break;
-		case KEY_BTAB: break;	// shift-tab
+		case KEY_BTAB: key_btab(ctx); break;	// shift-tab
 		default: {
 			if (isprint(ch)) key_insert(ch);
 		} break;
@@ -414,7 +414,44 @@ void Editor::View::key_insert(char ch)
 
 void Editor::View::key_tab(UI::Frame &ctx)
 {
-	key_insert('\t');
+	if (_selection.empty()) {
+		key_insert('\t');
+	} else {
+		// indent all lines touched by the selection one more tab
+		// then extend the selection to encompass all of those lines,
+		// because that's what VS does and I like it that way.
+		line_t begin = _selection.begin().line;
+		line_t end = _selection.end().line;
+		for (line_t index = begin; index <= end; ++index) {
+			_doc.insert(_doc.home(index), '\t');
+		}
+		_anchor = _doc.home(begin);
+		_cursor.move_to(_doc.end(end));
+		_selection.extend(_anchor, _cursor.location());
+		_update.range(_selection);
+	}
+}
+
+void Editor::View::key_btab(UI::Frame &ctx)
+{
+	// Shift-tab unindents the selection, if present, or simply the current
+	// line if there is no selection.
+	// Remove the leftmost tab character from all of the selected lines, then
+	// extend the selection to encompass all of those lines.
+	line_t begin = _selection.begin().line;
+	line_t end = _selection.end().line;
+	for (line_t index = begin; index <= end; ++index) {
+		std::string text = _doc.line(index).text();
+		if (text.empty()) continue;
+		if (text.front() != '\t') continue;
+		location_t pretab = _doc.home(index);
+		location_t posttab = _doc.next(pretab);
+		_doc.erase(Range(pretab, posttab));
+	}
+	_anchor = _doc.home(begin);
+	_cursor.move_to(_doc.end(end));
+	_selection.extend(_anchor, _cursor.location());
+	_update.range(_selection);
 }
 
 void Editor::View::key_enter(UI::Frame &ctx)
@@ -429,7 +466,13 @@ void Editor::View::key_return(UI::Frame &ctx)
 {
 	// Split the line at the cursor position and move the cursor to the new line.
 	delete_selection();
+	line_t old_index = _cursor.location().line;
 	_cursor.move_to(_doc.split(_cursor.location()));
+	// Add whatever string of whitespace characters begins the previous line.
+	for (char ch: _doc.line(old_index).text()) {
+		if (!isspace(ch)) break;
+		key_insert(ch);
+	}
 	_update.forward(_cursor.location());
 }
 
