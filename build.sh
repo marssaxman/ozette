@@ -20,7 +20,7 @@
 # standard compiler options; adjust these as you please
 ccflags="-Wall -Wno-endif-labels -g -falign-functions=4"
 ccflags="$ccflags -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS"
-ccflags="$ccflags -std=c++11 -Wno-unused-local-typedefs"
+ccflags="$ccflags -std=c++11"
 # compiler command - needs to be gcc so we can have the -MD option
 # without -MD, we have no way to generate dependency information.
 cpp="gcc"
