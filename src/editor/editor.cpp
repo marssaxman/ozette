@@ -71,7 +71,7 @@ void Editor::View::paint_into(WINDOW *dest, bool active)
 		paint_line(dest, i, active);
 	}
 	position_t curs = _cursor.position();
-	curs.v -= std::min(curs.v, _scrollpos);
+	curs.v -= std::min(curs.v, _scroll.v);
 	wmove(dest, curs.v, curs.h);
 	bool show_cursor = active && _selection.empty();
 	show_cursor &= !_doc.readonly();
@@ -148,7 +148,7 @@ void Editor::View::postprocess(UI::Frame &ctx)
 
 void Editor::View::paint_line(WINDOW *dest, row_t v, bool active)
 {
-	size_t index = v + _scrollpos;
+	size_t index = v + _scroll.v;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)v, 0);
 	auto &line = _doc.line(index);
@@ -175,7 +175,7 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, bool active)
 
 bool Editor::View::line_is_visible(size_t index) const
 {
-	return index >= _scrollpos && (index - _scrollpos) < _height;
+	return index >= _scroll.v && (index - _scroll.v) < _height;
 }
 
 void Editor::View::reveal_cursor()
@@ -185,9 +185,9 @@ void Editor::View::reveal_cursor()
 	// If the cursor is already on screen, do nothing.
 	if (line_is_visible(line)) return;
 	// Try to center the viewport over the cursor.
-	_scrollpos = (line > _halfheight) ? (line - _halfheight) : 0;
+	_scroll.v = (line > _halfheight) ? (line - _halfheight) : 0;
 	// Don't scroll so far we reveal empty space.
-	_scrollpos = std::min(_scrollpos, _maxscroll);
+	_scroll.v = std::min(_scroll.v, _maxscroll);
 	_update.all();
 }
 
@@ -207,7 +207,7 @@ void Editor::View::update_dimensions(WINDOW *view)
 	size_t newmax = std::max(_doc.maxline(), _height) - _halfheight;
 	if (newmax != _maxscroll) {
 		_maxscroll = newmax;
-		_scrollpos = std::min(_scrollpos, _maxscroll);
+		_scroll.v = std::min(_scroll.v, _maxscroll);
 		_update.all();
 	}
 }
@@ -337,7 +337,7 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 void Editor::View::key_up(bool extend)
 {
 	if (_doc.readonly()) {
-		_scrollpos -= std::min(_scrollpos, 1U);
+		_scroll.v -= std::min(_scroll.v, 1U);
 		_update.all();
 	} else {
 		_cursor.up(1);
@@ -348,7 +348,7 @@ void Editor::View::key_up(bool extend)
 void Editor::View::key_down(bool extend)
 {
 	if (_doc.readonly()) {
-		_scrollpos = std::min(_scrollpos + 1, _maxscroll);
+		_scroll.v = std::min(_scroll.v + 1, _maxscroll);
 		_update.all();
 	} else {
 		_cursor.down(1);
@@ -373,14 +373,14 @@ void Editor::View::key_right(bool extend)
 void Editor::View::key_page_up()
 {
 	// move the cursor to the last line of the previous page
-	_cursor.move_to(_doc.home(_scrollpos - std::min(_scrollpos, 1U)));
+	_cursor.move_to(_doc.home(_scroll.v - std::min(_scroll.v, 1U)));
 	drop_selection();
 }
 
 void Editor::View::key_page_down()
 {
 	// move the cursor to the first line of the next page
-	_cursor.move_to(_doc.home(_scrollpos + _height));
+	_cursor.move_to(_doc.home(_scroll.v + _height));
 	drop_selection();
 }
 

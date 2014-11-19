@@ -106,8 +106,8 @@ private:
 	size_t _height = 0;
 	size_t _halfheight = 0;
 	size_t _maxscroll = 0;
-	// What is the vertical position of the viewrect?
-	size_t _scrollpos = 0;
+	// Where is the viewrect origin?
+	position_t _scroll = {0,0};
 };
 } // namespace Editor
 
