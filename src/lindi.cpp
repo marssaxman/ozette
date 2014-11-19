@@ -20,6 +20,7 @@
 #include "lindi.h"
 #include "browser.h"
 #include "editor.h"
+#include "console.h"
 #include "control.h"
 #include "dialog.h"
 #include "help.h"
@@ -141,6 +142,7 @@ void Lindi::run()
 			case Control::Open: open_file(); break;
 			case Control::Directory: change_directory(); break;
 			case Control::Help: show_help(); break;
+			case Control::Execute: execute(); break;
 			default: _done |= !_shell.process(ch);
 		}
 	} while (!_done);
@@ -203,6 +205,18 @@ void Lindi::show_help()
 	doc.View(helptext);
 	std::unique_ptr<UI::View> ed(new Editor::View(help_key, std::move(doc)));
 	_editors[abs_help] = _shell.open_window(std::move(ed));
+}
+
+void Lindi::execute()
+{
+	std::string prompt = "exec";
+	auto commit = [this](UI::Frame &ctx, std::string cmd)
+	{
+		Console::exec(cmd, _shell);
+	};
+	auto dialog = new UI::Dialog::Command(prompt, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
+	_shell.active()->show_dialog(std::move(dptr));
 }
 
 int Lindi::fix_control_quirks(int ch)

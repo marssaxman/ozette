@@ -58,11 +58,11 @@ enum {
 	Directory = 0x04, //EOT ^D
 	Quit = 0x11, //DC1 ^Q
 	Help = 0x1F, //US ^?
+	Execute = 0x05, //ENQ ^E
 
 	// Unused ASCII control codes
 	SOH = 0x01, // ! A a
 	STX = 0x02, // " B b
-	ENQ = 0x05, // % E e
 	BEL = 0x07, // ` G g
 	BS = 0x08, // ( H h
 	VT = 0x0B, // + K k

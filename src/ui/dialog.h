@@ -121,6 +121,12 @@ public:
 	GoLine(std::string prompt, action_t commit): Input(prompt, commit) {}
 };
 
+class Command: public Input
+{
+public:
+	Command(std::string prompt, action_t commit): Input(prompt, commit) {}
+};
+
 } // namespace Dialog
 } // namespace UI
 
