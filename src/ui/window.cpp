@@ -46,6 +46,7 @@ void UI::Window::layout(int xpos, int width)
 	// window's nominal dimensions, then see if we need to adjust
 	// the actual window to match.
 	int screen_height, screen_width;
+	wmove(stdscr, 0, 0);
 	getmaxyx(stdscr, screen_height, screen_width);
 	// We will expand our edges by one pixel in each direction if
 	// we have space for it so that we can draw a window frame.
@@ -54,13 +55,11 @@ void UI::Window::layout(int xpos, int width)
 		xpos--;
 		width++;
 	}
-	_dirty_chrome |= new_lframe != _lframe;
 	_lframe = new_lframe;
 	bool new_rframe = (xpos + width) < screen_width;
 	if (new_rframe) {
 		width++;
 	}
-	_dirty_chrome |= new_rframe != _rframe;
 	_rframe = new_rframe;
 	_taskbar_height = HelpBar::Panel::kHeight;
 
@@ -78,11 +77,11 @@ void UI::Window::layout(int xpos, int width)
 		replace_panel(_framepanel, replacement);
 		delwin(_framewin);
 		_framewin = replacement;
-		_dirty_chrome = true;
 	} else if (old_vert != 0 || old_horz != xpos) {
 		move_panel(_framepanel, 0, xpos);
 	}
 	layout_contentwin();
+	_dirty_chrome = true;
 	paint();
 }
 
