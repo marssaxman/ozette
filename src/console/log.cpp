@@ -44,7 +44,7 @@ void Console::Log::read_one(char ch)
 		case '\t': {
 			do {
 				_lines.back().push_back(' ');
-			} while (_lines.back().size() & 4);
+			} while (_lines.back().size() & 3);
 		} break;
 		default: if (isprint(ch)) {
 			_lines.back().push_back(ch);

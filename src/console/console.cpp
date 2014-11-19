@@ -38,6 +38,7 @@ void Console::View::exec(std::string cmd, UI::Shell &shell)
 
 void Console::View::activate(UI::Frame &ctx)
 {
+	set_title(ctx);
 }
 
 void Console::View::deactivate(UI::Frame &ctx)
@@ -49,6 +50,7 @@ bool Console::View::process(UI::Frame &ctx, int ch)
 	switch (ch) {
 		case Control::Close: return false;
 	}
+	set_title(ctx);
 	return true;
 }
 
@@ -63,7 +65,15 @@ bool Console::View::poll(UI::Frame &ctx)
 	if (dirty) {
 		ctx.repaint();
 	}
+	set_title(ctx);
 	return true;
+}
+
+void Console::View::set_help(UI::HelpBar::Panel &panel)
+{
+	panel.label[1][0] = UI::HelpBar::Label('W', true, "Close");
+	panel.label[1][1] = UI::HelpBar::Label('E', true, "Execute");
+	panel.label[1][5] = UI::HelpBar::Label('?', true, "Help");
 }
 
 Console::View::~View()
@@ -122,3 +132,11 @@ void Console::View::close_subproc()
 	_subpid = 0;
 }
 
+void Console::View::set_title(UI::Frame &ctx)
+{
+	std::string title = "Console";
+	if (_log.get()) {
+		title += ": " + _log->command();
+	}
+	ctx.set_title(title);
+}

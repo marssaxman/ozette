@@ -32,6 +32,7 @@ public:
 	bool empty() const { return _lines.empty(); }
 	size_t size() const { return _lines.size(); }
 	const std::string &operator[](size_t index) const { return _lines[index]; }
+	const std::string &command() const { return _command; }
 private:
 	void read_one(char ch);
 	std::string _command;

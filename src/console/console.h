@@ -34,6 +34,7 @@ public:
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual bool poll(UI::Frame &ctx) override;
+	virtual void set_help(UI::HelpBar::Panel &panel) override;
 protected:
 	View() { _instance = this; }
 	~View();
@@ -43,6 +44,7 @@ protected:
 private:
 	void exec(std::string cmd);
 	void close_subproc();
+	void set_title(UI::Frame &ctx);
 	int _subpid = 0;
 	int _rwepipe[3] = {0,0,0};
 	std::unique_ptr<Log> _log;

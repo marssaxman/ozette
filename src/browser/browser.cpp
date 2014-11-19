@@ -151,7 +151,8 @@ void Browser::set_help(UI::HelpBar::Panel &panel)
 	panel.label[0][0] = Label('O', true, "Open");
 	panel.label[0][1] = Label('N', true, "New File");
 	panel.label[1][0] = Label('Q', true, "Quit");
-	panel.label[1][3] = Label('D', true, "Directory");
+	panel.label[1][1] = Label('E', true, "Execute");
+	panel.label[1][2] = Label('D', true, "Directory");
 	panel.label[1][5] = Label('?', true, "Help");
 }
 
