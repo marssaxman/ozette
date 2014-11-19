@@ -279,7 +279,7 @@ void UI::Window::paint()
 
 void UI::Window::paint_content()
 {
-	_view->paint(_has_focus);
+	_view->paint(_has_focus && !_dialog.get() && !_resultwin);
 	if (_dialog) _dialog->paint(_has_focus);
 	_dirty_content = false;
 }
