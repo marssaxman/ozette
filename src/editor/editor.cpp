@@ -217,7 +217,8 @@ void Editor::View::set_status(UI::Frame &ctx)
 	std::string status = _doc.status();
 	if (!_doc.readonly()) {
 		if (!status.empty()) status.push_back(' ');
-		status += std::to_string(_cursor.location().line);
+		// humans use weird 1-based line numbers
+		status += std::to_string(1 + _cursor.location().line);
 	}
 	ctx.set_status(status);
 }
