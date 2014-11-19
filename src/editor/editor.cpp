@@ -153,7 +153,7 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, bool active)
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)v, 0);
 	auto &line = _doc.line(index);
-	line.paint(dest, _width);
+	line.paint(dest, _scroll.h, _width);
 	if (!active) return;
 	if (_selection.empty()) return;
 	column_t selbegin = 0;
@@ -174,22 +174,31 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, bool active)
 	}
 }
 
-bool Editor::View::line_is_visible(size_t index) const
-{
-	return index >= _scroll.v && (index - _scroll.v) < _height;
-}
-
 void Editor::View::reveal_cursor()
 {
 	if (_doc.readonly()) return;
+	// If the cursor is on a line which is not on screen, scroll vertically to
+	// position the line in the center of the window.
 	line_t line = _cursor.location().line;
-	// If the cursor is already on screen, do nothing.
-	if (line_is_visible(line)) return;
-	// Try to center the viewport over the cursor.
-	_scroll.v = (line > _halfheight) ? (line - _halfheight) : 0;
-	// Don't scroll so far we reveal empty space.
-	_scroll.v = std::min(_scroll.v, _maxscroll);
-	_update.all();
+	if (line < _scroll.v || (line - _scroll.v) >= _height) {
+		// Try to center the viewport over the cursor.
+		_scroll.v = (line > _halfheight) ? (line - _halfheight) : 0;
+		// Don't scroll so far we reveal empty space.
+		_scroll.v = std::min(_scroll.v, _maxscroll);
+		_update.all();
+	}
+	// Try to keep the view scrolled left if possible, but if that would put the
+	// cursor offscreen, scroll right by the cursor position plus one tab width.
+	if (_cursor.position().h >= _width) {
+		column_t newh = _cursor.position().h + Editor::kTabWidth - _width;
+		if (newh != _scroll.h) {
+			_scroll.h = newh;
+			_update.all();
+		}
+	} else if (_scroll.h > 0) {
+		_scroll.h = 0;
+		_update.all();
+	}
 }
 
 void Editor::View::update_dimensions(WINDOW *view)

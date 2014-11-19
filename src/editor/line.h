@@ -41,7 +41,7 @@ public:
 	// Get char offset for some display column
 	virtual offset_t offset(column_t h);
 	// Render characters from location in buffer
-	virtual void paint(WINDOW *view, unsigned width);
+	virtual void paint(WINDOW *view, column_t hoff, unsigned width);
 private:
 	void advance(char ch, column_t &h);
 };
