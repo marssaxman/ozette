@@ -67,13 +67,10 @@ void UI::Dialog::Base::set_help(HelpBar::Panel &panel)
 	panel.label[1][0] = HelpBar::Label('[', true, "Escape");
 }
 
-UI::Dialog::Input::Input(const Layout &layout):
-	Base(layout.prompt),
-	_options(layout.options),
-	_commit(layout.commit),
-	_value(layout.value)
+UI::Dialog::Input::Input(std::string prompt, action_t commit):
+	Base(prompt),
+	_commit(commit)
 {
-	_cursor_pos = _value.size();
 }
 
 bool UI::Dialog::Input::process(UI::Frame &ctx, int ch)
@@ -204,49 +201,50 @@ void UI::Dialog::Input::set_value(std::string val)
 	_repaint = true;
 }
 
-UI::Dialog::Branch::Branch(std::string p, const std::vector<Option> &opts):
+UI::Dialog::Confirmation::Confirmation(std::string p, action_t y, action_t n):
 	Base(p),
-	_options(opts)
+	_yes(y),
+	_no(n)
 {
 }
 
-bool UI::Dialog::Branch::process(UI::Frame &ctx, int ch)
+bool UI::Dialog::Confirmation::process(UI::Frame &ctx, int ch)
 {
-	for (auto &opt: _options) {
-		if (toupper(ch) == toupper(opt.key)) {
-			opt.action(ctx);
-			return false;
-		}
+	switch (toupper(ch)) {
+		case 'Y': _yes(ctx); return false;
+		case 'N': _no(ctx); return false;
+		case 'A': if (_all) { _all(ctx); return false; }
+		default: break;
 	}
 	return inherited::process(ctx, ch);
 }
 
-void UI::Dialog::Branch::set_help(HelpBar::Panel &panel)
+void UI::Dialog::Confirmation::set_help(HelpBar::Panel &panel)
 {
 	inherited::set_help(panel);
-	unsigned v = 0;
-	unsigned h = 0;
-	for (auto &opt: _options) {
-		if (h >= HelpBar::Panel::kWidth) {
-			h = 1; // skip the cancel command
-			v++;
-		}
-		if (v >= HelpBar::Panel::kHeight) {
-			break;
-		}
-		panel.label[v][h].mnemonic = opt.key;
-		panel.label[v][h].is_ctrl = false;
-		panel.label[v][h].text = opt.description;
-		h++;
+	panel.label[0][0] = HelpBar::Label('Y', false, "Yes");
+	panel.label[0][1] = HelpBar::Label('N', false, "No");
+	if (_all) {
+		panel.label[0][2] = HelpBar::Label('A', false, "All");
 	}
 }
 
-UI::Dialog::Pick::Pick(const Layout &layout):
-	Input(layout)
+UI::Dialog::Pick::Pick(std::string prompt, std::vector<std::string> options, action_t commit):
+	Input(prompt, commit)
 {
+	_options = options;
 	_suggestion_selected = true;
 	_sugg_item = 0;
-	_value = _options.front();
+	if (!_options.empty()) {
+		_value = _options.front();
+	}
+}
+
+UI::Dialog::Pick::Pick(std::string prompt, std::string value, action_t commit):
+	Input(prompt, commit)
+{
+	_value = value;
+	_cursor_pos = _value.size();
 }
 
 bool UI::Dialog::Pick::process(Frame &ctx, int ch)

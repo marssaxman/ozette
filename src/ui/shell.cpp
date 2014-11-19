@@ -59,8 +59,6 @@ UI::Shell::Shell(App &app):
 	// useful to be able to cancel things with the escape
 	// key than to use it to type control characters.
 	set_escdelay(25);
-	// Find out how big the terminal is.
-	get_screen_size();
 }
 
 UI::Shell::~Shell()
@@ -99,7 +97,6 @@ bool UI::Shell::process(int ch)
 			}
 		} break;
 		case KEY_RESIZE: {
-			get_screen_size();
 			relayout();
 		} break;
 		default: {
@@ -119,12 +116,6 @@ void UI::Shell::reap()
 	while (!_doomed.empty()) {
 		_doomed.pop();
 	}
-}
-
-void UI::Shell::get_screen_size()
-{
-	getmaxyx(stdscr, _height, _width);
-	_columnWidth = std::min(80, _width);
 }
 
 UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view, Position pos)
@@ -192,7 +183,8 @@ void UI::Shell::relayout()
 	// characters' width.
 	// Divide any remaining space among any remaining windows and stagger
 	// each remaining window proportionally across the screen.
-	assert(_width >= _columnWidth);
+	getmaxyx(stdscr, _height, _width);
+	_columnWidth = std::min(80, _width);
 	if(_tabs.empty()) return;
 	size_t ubound = _tabs.size() - 1;
 	int right_edge = _width - _columnWidth;

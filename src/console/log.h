@@ -17,27 +17,27 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef APP_H
-#define APP_H
+#ifndef CONSOLE_LOG_H
+#define CONSOLE_LOG_H
 
 #include <string>
 #include <vector>
 
-// Abstract interface for centralized application actions.
-class App
+namespace Console {
+class Log
 {
 public:
-	virtual ~App() = default;
-	virtual std::string current_dir() const = 0;
-	virtual std::string display_path(std::string path) const = 0;
-	virtual void edit_file(std::string path) = 0;
-	virtual void rename_file(std::string from, std::string to) = 0;
-	virtual void close_file(std::string path) = 0;
-	virtual void set_clipboard(std::string text) = 0;
-	virtual std::string get_clipboard() = 0;
-	virtual void get_config(std::string name, std::vector<std::string> &lines) = 0;
-	virtual void set_config(std::string name, const std::vector<std::string> &lines) = 0;
-	virtual void exec(std::string title, std::string exe, const std::vector<std::string> &argv) = 0;
+	Log(std::string command): _command(command), _lines(1) {}
+	bool read(int fd);
+	bool empty() const { return _lines.empty(); }
+	size_t size() const { return _lines.size(); }
+	const std::string &operator[](size_t index) const { return _lines[index]; }
+	const std::string &command() const { return _command; }
+private:
+	void read_one(char ch);
+	std::string _command;
+	std::vector<std::string> _lines;
 };
+} // namespace Console
 
-#endif	//APP_H
+#endif //CONSOLE_LOG_H

@@ -34,11 +34,13 @@ public:
 	virtual std::string current_dir() const override;
 	virtual std::string display_path(std::string path) const override;
 	virtual void edit_file(std::string path) override;
+	virtual void rename_file(std::string from, std::string to) override;
 	virtual void close_file(std::string path) override;
 	virtual void set_clipboard(std::string text) override;
 	virtual std::string get_clipboard() override;
 	virtual void get_config(std::string name, std::vector<std::string> &lines) override;
 	virtual void set_config(std::string name, const std::vector<std::string> &lines) override;
+	virtual void exec(std::string title, std::string exe, const std::vector<std::string> &argv) override;
 
 	void run();
 private:
@@ -46,6 +48,8 @@ private:
 	void change_directory();
 	void new_file();
 	void open_file();
+	void show_help();
+	void execute();
 	int fix_control_quirks(int ch);
 	static void set_mru(std::string path, std::vector<std::string> &mru);
 	std::string canonical_abspath(std::string path);

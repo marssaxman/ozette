@@ -42,8 +42,6 @@ public:
 	Window *active() const { return _tabs[_focus].get(); }
 protected:
 	void reap();
-	// get the terminal width and height, then calculate column width
-	void get_screen_size();
 	// change the focus to a specific window
 	void set_focus(size_t index);
 	// reposition all the windows after create/remove/resize

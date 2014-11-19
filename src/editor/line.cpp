@@ -61,16 +61,17 @@ void Editor::Line::advance(char ch, column_t &h)
 	} while (ch == '\t' && h % kTabWidth);
 }
 
-void Editor::Line::paint(WINDOW *dest, unsigned width)
+void Editor::Line::paint(WINDOW *dest, column_t hoff, unsigned width)
 {
 	column_t h = 0;
+	width += hoff;
 	for (char ch: text()) {
 		if (h == width) break;
 		if (ch != '\t') {
-			waddch(dest, ch);
+			if (h >= hoff) waddch(dest, ch);
 			h++;
 		} else do {
-			waddch(dest, ' ');
+			if (h >= hoff) waddch(dest, ' ');
 			h++;
 		} while (h < width && 0 != h % kTabWidth);
 	}

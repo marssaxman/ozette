@@ -89,6 +89,17 @@ void Editor::Document::Write(std::string path)
 	clear_modify();
 }
 
+void Editor::Document::View(std::string text)
+{
+	// Replace all lines with the contents of this string.
+	_lines.clear();
+	_maxline = 0;
+	insert(home(), text);
+	_modified = false;
+	_read_only = true;
+	_status.clear();
+}
+
 Editor::location_t Editor::Document::home()
 {
 	return home(0);
@@ -108,7 +119,7 @@ Editor::location_t Editor::Document::home(line_t index)
 Editor::location_t Editor::Document::end(line_t index)
 {
 	if (index > _maxline) index = _maxline;
-	location_t loc = {index, line(_maxline).size()};
+	location_t loc = {index, line(index).size()};
 	return loc;
 }
 
@@ -311,8 +322,8 @@ Editor::location_t Editor::Document::sanitize(const location_t &loc)
 {
 	// Verify that this location refers to a real place.
 	// Fix it if either of its dimensions would be out-of-bounds.
-	line_t index = std::min(loc.line, _lines.size());
-	offset_t offset = _lines.empty() ? 0 : std::min(loc.offset, _lines[loc.line]->size());
+	line_t index = std::min(loc.line, _lines.size()-1);
+	offset_t offset = _lines.empty()? 0: std::min(loc.offset, _lines[index]->size());
 	return location_t(index, offset);
 }
 

@@ -31,6 +31,7 @@ class View : public UI::View
 public:
 	View();
 	View(std::string targetpath);
+	View(std::string title, Document &&doc);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
@@ -40,7 +41,6 @@ protected:
 private:
 	void postprocess(UI::Frame &ctx);
 	void paint_line(WINDOW *view, row_t v, bool active);
-	bool line_is_visible(line_t index) const;
 	void reveal_cursor();
 	void update_dimensions(WINDOW *view);
 	void set_status(UI::Frame &ctx);
@@ -69,6 +69,7 @@ private:
 	void delete_selection();
 	void key_insert(char ch);
 	void key_tab(UI::Frame &ctx);
+	void key_btab(UI::Frame &ctx);
 	void key_enter(UI::Frame &ctx);
 	void key_return(UI::Frame &ctx);
 	void key_backspace(UI::Frame &ctx);
@@ -104,8 +105,8 @@ private:
 	size_t _height = 0;
 	size_t _halfheight = 0;
 	size_t _maxscroll = 0;
-	// What is the vertical position of the viewrect?
-	size_t _scrollpos = 0;
+	// Where is the viewrect origin?
+	position_t _scroll = {0,0};
 };
 } // namespace Editor
 

@@ -82,20 +82,20 @@ void Browser::check_rebuild(UI::Frame &ctx)
 
 void Browser::paint_into(WINDOW *view, bool active)
 {
-	int height, width;
-	getmaxyx(view, height, width);
+	int width;
+	getmaxyx(view, _height, width);
 
 	// adjust scrolling as necessary to keep the cursor visible
-	size_t max_visible_row = _scrollpos + height - 2;
+	size_t max_visible_row = _scrollpos + _height - 2;
 	if (_selection < _scrollpos || _selection > max_visible_row) {
-		size_t halfpage = (size_t)height/2;
+		size_t halfpage = (size_t)_height/2;
 		_scrollpos = _selection - std::min(halfpage, _selection);
 	}
 
 	int row = 1;
 	wmove(view, 0, 0);
 	wclrtoeol(view);
-	for (size_t i = _scrollpos; i < _list.size() && row < height; ++i) {
+	for (size_t i = _scrollpos; i < _list.size() && row < _height; ++i) {
 		wmove(view, row, 0);
 		whline(view, ' ', width);
 		paint_row(view, row, _list[i], width);
@@ -104,7 +104,7 @@ void Browser::paint_into(WINDOW *view, bool active)
 		}
 		row++;
 	}
-	while (row < height) {
+	while (row < _height) {
 		wmove(view, row++, 0);
 		wclrtoeol(view);
 	}
@@ -114,12 +114,15 @@ bool Browser::process(UI::Frame &ctx, int ch)
 {
 	check_rebuild(ctx);
 	switch (ch) {
+		case Control::Find: ctl_find(ctx); break;
 		case Control::Return: key_return(ctx); break;
 		case Control::Close: return false; break;
 		case Control::Escape: clear_filter(ctx); break;
 		case Control::Tab: key_tab(ctx); break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
+		case KEY_PPAGE: key_page_up(ctx); break;
+		case KEY_NPAGE: key_page_down(ctx); break;
 		case KEY_RIGHT: key_right(ctx); break;
 		case KEY_LEFT: key_left(ctx); break;
 		case ' ': key_space(ctx); break;
@@ -148,8 +151,11 @@ void Browser::set_help(UI::HelpBar::Panel &panel)
 	using namespace UI::HelpBar;
 	panel.label[0][0] = Label('O', true, "Open");
 	panel.label[0][1] = Label('N', true, "New File");
+	panel.label[0][5] = Label('F', true, "Find");
 	panel.label[1][0] = Label('Q', true, "Quit");
-	panel.label[1][3] = Label('D', true, "Directory");
+	panel.label[1][1] = Label('E', true, "Execute");
+	panel.label[1][2] = Label('D', true, "Directory");
+	panel.label[1][5] = Label('?', true, "Help");
 }
 
 void Browser::view(std::string path)
@@ -183,14 +189,53 @@ void Browser::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 	rowchars -= std::min(rowchars, (int)name.size());
 	waddnstr(view, isdir? "/": " ", rowchars);
 	rowchars--;
-	if (display.entry->is_file()) {
-		char buf[256];
-		time_t mtime = display.entry->mtime();
-		// add an extra space on the end because it's prettier
-		size_t dchars = strftime(buf, 255, "%c ", localtime(&mtime));
-		int drawch = std::min((int)dchars, rowchars);
-		mvwaddnstr(view, vpos, width-drawch, buf, drawch);
+	// The rest of the status info only applies to files.
+	if (!display.entry->is_file()) return;
+
+	char buf[256];
+	time_t mtime = display.entry->mtime();
+	struct tm mtm = *localtime(&mtime);
+	time_t nowtime = time(NULL);
+	struct tm nowtm = *localtime(&nowtime);
+	// Pick a format string which highlights the most relevant information
+	// about this file's modification date. Format strings end with an extra
+	// space because it looks prettier that way.
+	const char *format = "%c ";
+	if (mtm.tm_year != nowtm.tm_year) {
+		format = "%b %Y "; // month of year
+	} else if (nowtm.tm_yday - mtm.tm_yday > 6) {
+		format = "%e %b "; // day of month
+	} else if (nowtm.tm_yday - mtm.tm_yday > 1) {
+		format = "%a "; // day of week
+	} else if (nowtm.tm_yday != mtm.tm_yday) {
+		format = "yesterday ";
+	} else {
+		format = "%X ";	// time
 	}
+	size_t dchars = strftime(buf, 255, format, &mtm);
+	int drawch = std::min((int)dchars, rowchars);
+	mvwaddnstr(view, vpos, width-drawch, buf, drawch);
+}
+
+void Browser::ctl_find(UI::Frame &ctx)
+{
+	std::string prompt = "Find";
+	auto action = [this](UI::Frame &ctx, std::string text)
+	{
+		std::vector<std::string> args = {"-H", "-n", "-I", text};
+		auto receiver = [&args](DirTree &item)
+		{
+			if (item.is_file()) {
+				args.push_back(item.path());
+			}
+			return true;
+		};
+		_tree.recurse(receiver);
+		ctx.app().exec("find: " + text, "grep", args);
+	};
+	auto dialog = new UI::Dialog::Find(prompt, action);
+	std::unique_ptr<UI::View> dptr(dialog);
+	ctx.show_dialog(std::move(dptr));
 }
 
 void Browser::key_return(UI::Frame &ctx)
@@ -217,6 +262,21 @@ void Browser::key_down(UI::Frame &ctx)
 	// Move to next line in the listbox.
 	if (_selection + 1 == _list.size()) return;
 	_selection++;
+	ctx.repaint();
+}
+
+void Browser::key_page_up(UI::Frame &ctx)
+{
+	// Move to last line of previous page.
+	clear_filter(ctx);
+	_selection = _scrollpos - std::min(_scrollpos, 1U);
+	ctx.repaint();
+}
+
+void Browser::key_page_down(UI::Frame &ctx)
+{
+	// Move to first line of next page.
+	_selection = std::min(_scrollpos + _height, _list.size()-1);
 	ctx.repaint();
 }
 
@@ -272,9 +332,10 @@ void Browser::key_tab(UI::Frame &ctx)
 
 void Browser::key_char(UI::Frame &ctx, char ch)
 {
+	size_t start = _name_filter.empty()? 0: _selection;
 	_name_filter.push_back(ch);
 	_name_filter_time = time(NULL);
-	for (size_t i = _selection; i < _list.size(); ++i) {
+	for (size_t i = start; i < _list.size(); ++i) {
 		if (matches_filter(i)) {
 			_selection = i;
 			break;

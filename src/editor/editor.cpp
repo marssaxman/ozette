@@ -37,6 +37,13 @@ Editor::View::View(std::string targetpath):
 {
 }
 
+Editor::View::View(std::string title, Document &&doc):
+	_targetpath(title),
+	_doc(std::move(doc)),
+	_cursor(_doc, _update)
+{
+}
+
 void Editor::View::activate(UI::Frame &ctx)
 {
 	// Set the title according to the target path
@@ -45,7 +52,7 @@ void Editor::View::activate(UI::Frame &ctx)
 	} else {
 		ctx.set_title(ctx.app().display_path(_targetpath));
 	}
-	ctx.set_status(_doc.status());
+	set_status(ctx);
 }
 
 void Editor::View::deactivate(UI::Frame &ctx)
@@ -64,9 +71,11 @@ void Editor::View::paint_into(WINDOW *dest, bool active)
 		paint_line(dest, i, active);
 	}
 	position_t curs = _cursor.position();
-	curs.v -= std::min(curs.v, _scrollpos);
+	curs.h -= std::min(curs.h, _scroll.h);
+	curs.v -= std::min(curs.v, _scroll.v);
 	wmove(dest, curs.v, curs.h);
 	bool show_cursor = active && _selection.empty();
+	show_cursor &= !_doc.readonly();
 	curs_set(show_cursor ? 1 : 0);
 	_update.reset();
 }
@@ -103,7 +112,7 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::Return: key_return(ctx); break;
 		case Control::Backspace: key_backspace(ctx); break;
 		case KEY_DC: key_delete(ctx); break;
-		case KEY_BTAB: break;	// shift-tab
+		case KEY_BTAB: key_btab(ctx); break;	// shift-tab
 		default: {
 			if (isprint(ch)) key_insert(ch);
 		} break;
@@ -115,13 +124,18 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 void Editor::View::set_help(UI::HelpBar::Panel &panel)
 {
 	using namespace UI::HelpBar;
-	panel.label[0][0] = Label('X', true, "Cut");
-	panel.label[0][1] = Label('C', true, "Copy");
-	panel.label[0][2] = Label('V', true, "Paste");
+	if (!_doc.readonly()) {
+		panel.label[0][0] = Label('X', true, "Cut");
+		panel.label[0][1] = Label('C', true, "Copy");
+		panel.label[0][2] = Label('V', true, "Paste");
+	}
 	panel.label[0][4] = Label('L', true, "To Line");
 	panel.label[0][5] = Label('F', true, "Find");
 	panel.label[1][0] = Label('W', true, "Close");
-	panel.label[1][1] = Label('S', true, "Save");
+	if (!_doc.readonly()) {
+		panel.label[1][1] = Label('S', true, "Save");
+	}
+	panel.label[1][5] = Label('?', true, "Help");
 }
 
 void Editor::View::postprocess(UI::Frame &ctx)
@@ -129,17 +143,17 @@ void Editor::View::postprocess(UI::Frame &ctx)
 	reveal_cursor();
 	if (_update.has_dirty()) {
 		ctx.repaint();
-		ctx.set_status(_doc.status());
+		set_status(ctx);
 	}
 }
 
 void Editor::View::paint_line(WINDOW *dest, row_t v, bool active)
 {
-	size_t index = v + _scrollpos;
+	size_t index = v + _scroll.v;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)v, 0);
 	auto &line = _doc.line(index);
-	line.paint(dest, _width);
+	line.paint(dest, _scroll.h, _width);
 	if (!active) return;
 	if (_selection.empty()) return;
 	column_t selbegin = 0;
@@ -160,21 +174,31 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, bool active)
 	}
 }
 
-bool Editor::View::line_is_visible(size_t index) const
-{
-	return index >= _scrollpos && (index - _scrollpos) < _height;
-}
-
 void Editor::View::reveal_cursor()
 {
+	if (_doc.readonly()) return;
+	// If the cursor is on a line which is not on screen, scroll vertically to
+	// position the line in the center of the window.
 	line_t line = _cursor.location().line;
-	// If the cursor is already on screen, do nothing.
-	if (line_is_visible(line)) return;
-	// Try to center the viewport over the cursor.
-	_scrollpos = (line > _halfheight) ? (line - _halfheight) : 0;
-	// Don't scroll so far we reveal empty space.
-	_scrollpos = std::min(_scrollpos, _maxscroll);
-	_update.all();
+	if (line < _scroll.v || (line - _scroll.v) >= _height) {
+		// Try to center the viewport over the cursor.
+		_scroll.v = (line > _halfheight) ? (line - _halfheight) : 0;
+		// Don't scroll so far we reveal empty space.
+		_scroll.v = std::min(_scroll.v, _maxscroll);
+		_update.all();
+	}
+	// Try to keep the view scrolled left if possible, but if that would put the
+	// cursor offscreen, scroll right by the cursor position plus one tab width.
+	if (_cursor.position().h >= _width) {
+		column_t newh = _cursor.position().h + Editor::kTabWidth - _width;
+		if (newh != _scroll.h) {
+			_scroll.h = newh;
+			_update.all();
+		}
+	} else if (_scroll.h > 0) {
+		_scroll.h = 0;
+		_update.all();
+	}
 }
 
 void Editor::View::update_dimensions(WINDOW *view)
@@ -193,9 +217,21 @@ void Editor::View::update_dimensions(WINDOW *view)
 	size_t newmax = std::max(_doc.maxline(), _height) - _halfheight;
 	if (newmax != _maxscroll) {
 		_maxscroll = newmax;
-		_scrollpos = std::min(_scrollpos, _maxscroll);
+		_scroll.v = std::min(_scroll.v, _maxscroll);
 		_update.all();
 	}
+}
+
+void Editor::View::set_status(UI::Frame &ctx)
+{
+	std::string status = _doc.status();
+	if (!_doc.readonly()) {
+		if (!status.empty()) status.push_back(' ');
+		status.push_back('@');
+		// humans use weird 1-based line numbers
+		status += std::to_string(1 + _cursor.location().line);
+	}
+	ctx.set_status(status);
 }
 
 void Editor::View::ctl_cut(UI::Frame &ctx)
@@ -226,31 +262,25 @@ void Editor::View::ctl_paste(UI::Frame &ctx)
 
 void Editor::View::ctl_close(UI::Frame &ctx)
 {
-	if (!_doc.modified()) {
+	if (_doc.readonly() || !_doc.modified()) {
 		// no formality needed, we're done
 		ctx.app().close_file(_targetpath);
+		return;
 	}
 	// ask the user if they want to save first
 	std::string prompt = "You have modified this file. Save changes before closing?";
-	UI::Dialog::Branch::Option yes;
-	yes.key = 'Y';
-	yes.description = "Yes";
-	yes.action = [this](UI::Frame &ctx)
+	auto yes_action = [this](UI::Frame &ctx)
 	{
 		// save the file
 		_doc.Write(_targetpath);
 		ctx.app().close_file(_targetpath);
 	};
-	UI::Dialog::Branch::Option no;
-	no.key = 'N';
-	no.description = "No";
-	no.action = [this](UI::Frame &ctx)
+	auto no_action = [this](UI::Frame &ctx)
 	{
 		// just close it
 		ctx.app().close_file(_targetpath);
 	};
-	std::vector<UI::Dialog::Branch::Option> options = {yes, no};
-	auto dialog = new UI::Dialog::Branch(prompt, options);
+	auto dialog = new UI::Dialog::Confirmation(prompt, yes_action, no_action);
 	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
 }
@@ -262,14 +292,13 @@ void Editor::View::ctl_save(UI::Frame &ctx)
 
 void Editor::View::ctl_toline(UI::Frame &ctx)
 {
-	UI::Dialog::Input::Layout dialog;
 	// illogical as it is, the rest of the world seems to think that it is
 	// a good idea for line numbers to start counting at 1, so we will
 	// accommodate their perverse desires in the name of compatibility.
-	dialog.prompt = "Go to line (";
-	dialog.prompt += std::to_string(_cursor.location().line + 1);
-	dialog.prompt += ")";
-	dialog.commit = [this](UI::Frame &ctx, std::string value)
+	std::string prompt = "Go to line (";
+	prompt += std::to_string(_cursor.location().line + 1);
+	prompt += ")";
+	auto commit = [this](UI::Frame &ctx, std::string value)
 	{
 		if (value.empty()) return;
 		long valnum = std::stol(value) - 1;
@@ -278,18 +307,18 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 		drop_selection();
 		postprocess(ctx);
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog::GoLine(dialog));
+	auto dialog = new UI::Dialog::GoLine(prompt, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
 }
 
 void Editor::View::ctl_find(UI::Frame &ctx)
 {
-	UI::Dialog::Input::Layout dialog;
-	dialog.prompt = "Find";
+	std::string prompt = "Find";
 	if (!_find_text.empty()) {
-		dialog.prompt += " (" + _find_text + ")";
+		prompt += " (" + _find_text + ")";
 	}
-	dialog.commit = [this](UI::Frame &ctx, std::string value)
+	auto commit = [this](UI::Frame &ctx, std::string value)
 	{
 		if (!value.empty()) {
 			_find_text = value;
@@ -308,46 +337,60 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 			}
 		}
 		_cursor.move_to(next);
-		reveal_cursor();
-		ctx.repaint();
+		postprocess(ctx);
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog::Find(dialog));
+	auto dialog = new UI::Dialog::Find(prompt, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
 }
 
 void Editor::View::key_up(bool extend)
 {
-	_cursor.up(1);
-	adjust_selection(extend);
+	if (_doc.readonly()) {
+		_scroll.v -= std::min(_scroll.v, 1U);
+		_update.all();
+	} else {
+		_cursor.up();
+		adjust_selection(extend);
+	}
 }
 
 void Editor::View::key_down(bool extend)
 {
-	_cursor.down(1);
-	adjust_selection(extend);
+	if (_doc.readonly()) {
+		_scroll.v = std::min(_scroll.v + 1, _maxscroll);
+		_update.all();
+	} else {
+		_cursor.down();
+		adjust_selection(extend);
+	}
 }
 
 void Editor::View::key_left(bool extend)
 {
+	if (_doc.readonly()) return;
 	_cursor.left();
 	adjust_selection(extend);
 }
 
 void Editor::View::key_right(bool extend)
 {
+	if (_doc.readonly()) return;
 	_cursor.right();
 	adjust_selection(extend);
 }
 
 void Editor::View::key_page_up()
 {
-	_cursor.up(_halfheight+1);
+	// move the cursor to the last line of the previous page
+	_cursor.move_to(_doc.home(_scroll.v - std::min(_scroll.v, 1U)));
 	drop_selection();
 }
 
 void Editor::View::key_page_down()
 {
-	_cursor.down(_halfheight+1);
+	// move the cursor to the first line of the next page
+	_cursor.move_to(_doc.home(_scroll.v + _height));
 	drop_selection();
 }
 
@@ -381,7 +424,44 @@ void Editor::View::key_insert(char ch)
 
 void Editor::View::key_tab(UI::Frame &ctx)
 {
-	key_insert('\t');
+	if (_selection.empty()) {
+		key_insert('\t');
+	} else {
+		// indent all lines touched by the selection one more tab
+		// then extend the selection to encompass all of those lines,
+		// because that's what VS does and I like it that way.
+		line_t begin = _selection.begin().line;
+		line_t end = _selection.end().line;
+		for (line_t index = begin; index <= end; ++index) {
+			_doc.insert(_doc.home(index), '\t');
+		}
+		_anchor = _doc.home(begin);
+		_cursor.move_to(_doc.end(end));
+		_selection.extend(_anchor, _cursor.location());
+		_update.range(_selection);
+	}
+}
+
+void Editor::View::key_btab(UI::Frame &ctx)
+{
+	// Shift-tab unindents the selection, if present, or simply the current
+	// line if there is no selection.
+	// Remove the leftmost tab character from all of the selected lines, then
+	// extend the selection to encompass all of those lines.
+	line_t begin = _selection.begin().line;
+	line_t end = _selection.end().line;
+	for (line_t index = begin; index <= end; ++index) {
+		std::string text = _doc.line(index).text();
+		if (text.empty()) continue;
+		if (text.front() != '\t') continue;
+		location_t pretab = _doc.home(index);
+		location_t posttab = _doc.next(pretab);
+		_doc.erase(Range(pretab, posttab));
+	}
+	_anchor = _doc.home(begin);
+	_cursor.move_to(_doc.end(end));
+	_selection.extend(_anchor, _cursor.location());
+	_update.range(_selection);
 }
 
 void Editor::View::key_enter(UI::Frame &ctx)
@@ -396,7 +476,13 @@ void Editor::View::key_return(UI::Frame &ctx)
 {
 	// Split the line at the cursor position and move the cursor to the new line.
 	delete_selection();
+	line_t old_index = _cursor.location().line;
 	_cursor.move_to(_doc.split(_cursor.location()));
+	// Add whatever string of whitespace characters begins the previous line.
+	for (char ch: _doc.line(old_index).text()) {
+		if (!isspace(ch)) break;
+		key_insert(ch);
+	}
 	_update.forward(_cursor.location());
 }
 
@@ -436,10 +522,9 @@ void Editor::View::adjust_selection(bool extend)
 
 void Editor::View::save(UI::Frame &ctx, std::string path)
 {
-	UI::Dialog::Input::Layout dialog;
-	dialog.prompt = "Save File";
-	dialog.value = path;
-	dialog.commit = [this](UI::Frame &ctx, std::string path)
+	if (_doc.readonly()) return;
+	std::string prompt = "Save File";
+	auto commit = [this](UI::Frame &ctx, std::string path)
 	{
 		// Clearing out the path name is the same as cancelling.
 		if (path.empty()) {
@@ -447,7 +532,7 @@ void Editor::View::save(UI::Frame &ctx, std::string path)
 			return;
 		}
 		// If they confirmed the existing name, we can write it out.
-		if (path == _targetpath) {
+		if (path == _targetpath || _targetpath.empty()) {
 			_doc.Write(path);
 			ctx.set_status(_doc.status());
 			std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
@@ -457,30 +542,25 @@ void Editor::View::save(UI::Frame &ctx, std::string path)
 		}
 		// This is a different path than the file used to have.
 		// Ask the user to confirm that they meant to change it.
-		UI::Dialog::Branch::Option yes;
-		yes.key = 'Y';
-		yes.description = "Yes";
-		yes.action = [this, path](UI::Frame &ctx)
+		auto yes_action = [this, path](UI::Frame &ctx)
 		{
 			if (path.empty()) return;
 			_doc.Write(path);
+			ctx.app().rename_file(_targetpath, path);
 			_targetpath = path;
 			ctx.set_title(path);
 		};
-		UI::Dialog::Branch::Option no;
-		no.key = 'N';
-		no.description = "No";
-		no.action = [this, path](UI::Frame &ctx)
+		auto no_action = [this, path](UI::Frame &ctx)
 		{
 			save(ctx, path);
 		};
 		std::string prompt = "Save file under a different name?";
-		std::vector<UI::Dialog::Branch::Option> options = {yes, no};
-		auto dialog = new UI::Dialog::Branch(prompt, options);
+		auto dialog = new UI::Dialog::Confirmation(prompt, yes_action, no_action);
 		std::unique_ptr<UI::View> dptr(dialog);
 		ctx.show_dialog(std::move(dptr));
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog::Pick(dialog));
+	auto dialog = new UI::Dialog::Pick(prompt, path, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
 }
 

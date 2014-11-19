@@ -32,15 +32,15 @@ Editor::Cursor::Cursor(Document &doc, Update &update):
 {
 }
 
-void Editor::Cursor::up(size_t count)
+void Editor::Cursor::up()
 {
 	// Move up the screen by the specified number of rows,
 	// stopping when we reach zero. Do not move the column.
 	// If the cursor was already positioned on the top row,
 	// move the cursor left to the beginning of the line.
 	begin_move();
-	if (count <= _position.v) {
-		_position.v -= count;
+	if (_position.v) {
+		_position.v--;
 		commit_position();
 	} else {
 		_location = _doc.home();
@@ -48,7 +48,7 @@ void Editor::Cursor::up(size_t count)
 	}
 }
 
-void Editor::Cursor::down(size_t count)
+void Editor::Cursor::down()
 {
 	// Move down the screen by the specified number of rows,
 	// stopping when we are on the maximum row. Do not move
@@ -56,9 +56,8 @@ void Editor::Cursor::down(size_t count)
 	// the maximum row, move the cursor right to the end of
 	// the line.
 	begin_move();
-	auto maxv = _doc.maxline();
-	if (_position.v + count <= maxv) {
-		_position.v += count;
+	if (_position.v < _doc.maxline()) {
+		_position.v++;
 		commit_position();
 	} else {
 		_location = _doc.end();

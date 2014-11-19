@@ -20,8 +20,10 @@
 #include "lindi.h"
 #include "browser.h"
 #include "editor.h"
+#include "console.h"
 #include "control.h"
 #include "dialog.h"
+#include "help.h"
 #include <unistd.h>
 #include <fstream>
 #include <sys/stat.h>
@@ -72,9 +74,20 @@ void Lindi::edit_file(std::string path)
 	_editors[path] = win;
 }
 
+void Lindi::rename_file(std::string from, std::string to)
+{
+	// Somebody has moved or renamed a file. If there is an editor
+	// open for it, update our editor map.
+	auto existing = _editors.find(canonical_abspath(from));
+	if (existing == _editors.end()) return;
+	auto window = existing->second;
+	_editors.erase(existing);
+	_editors[canonical_abspath(to)] = window;
+}
+
 void Lindi::close_file(std::string path)
 {
-	auto iter = _editors.find(path);
+	auto iter = _editors.find(canonical_abspath(path));
 	if (iter != _editors.end()) {
 		_shell.close_window(iter->second);
 		_editors.erase(iter);
@@ -116,6 +129,11 @@ void Lindi::set_config(std::string name, const std::vector<std::string> &lines)
 	file.close();
 }
 
+void Lindi::exec(std::string title, std::string exe, const std::vector<std::string> &argv)
+{
+	Console::View::exec(title, exe, argv, _shell);
+}
+
 void Lindi::run()
 {
 	timeout(20);
@@ -128,6 +146,8 @@ void Lindi::run()
 			case Control::NewFile: new_file(); break;
 			case Control::Open: open_file(); break;
 			case Control::Directory: change_directory(); break;
+			case Control::Help: show_help(); break;
+			case Control::Execute: execute(); break;
 			default: _done |= !_shell.process(ch);
 		}
 	} while (!_done);
@@ -140,38 +160,67 @@ void Lindi::show_browser()
 
 void Lindi::change_directory()
 {
-	UI::Dialog::Input::Layout dialog;
-	dialog.prompt = "Change Directory";
+	std::string prompt = "Change Directory";
 	get_config("recent_dirs", _recent_dirs);
-	dialog.options = _recent_dirs;
-	set_mru(_current_dir, dialog.options);
-	dialog.commit = [this](UI::Frame &ctx, std::string path)
+	auto options = _recent_dirs;
+	set_mru(_current_dir, options);
+	auto commit = [this](UI::Frame &ctx, std::string path)
 	{
 		_current_dir = path;
 		Browser::change_directory(path);
 		set_mru(path, _recent_dirs);
 		set_config("recent_dirs", _recent_dirs);
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog::Pick(dialog));
+	auto dialog = new UI::Dialog::Pick(prompt, options, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
 	_shell.active()->show_dialog(std::move(dptr));
 }
 
 void Lindi::new_file()
 {
 	std::unique_ptr<UI::View> ed(new Editor::View());
-	_shell.open_window(std::move(ed));
+	_editors[canonical_abspath("")] = _shell.open_window(std::move(ed));
 }
 
 void Lindi::open_file()
 {
-	UI::Dialog::Input::Layout dialog;
-	dialog.prompt = "Open";
-	dialog.commit = [this](UI::Frame &ctx, std::string path)
+	std::string prompt = "Open";
+	std::vector<std::string> options;
+	auto commit = [this](UI::Frame &ctx, std::string path)
 	{
 		if (path.empty()) return;
 		edit_file(path);
 	};
-	std::unique_ptr<UI::View> dptr(new UI::Dialog::Pick(dialog));
+	auto dialog = new UI::Dialog::Pick(prompt, options, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
+	_shell.active()->show_dialog(std::move(dptr));
+}
+
+void Lindi::show_help()
+{
+	static const std::string help_key = " Help ";
+	static const std::string abs_help = canonical_abspath(help_key);
+	auto existing = _editors.find(abs_help);
+	if (existing != _editors.end()) {
+		_shell.make_active(existing->second);
+		return;
+	}
+	std::string helptext((const char*)HELP, HELP_len);
+	Editor::Document doc;
+	doc.View(helptext);
+	std::unique_ptr<UI::View> ed(new Editor::View(help_key, std::move(doc)));
+	_editors[abs_help] = _shell.open_window(std::move(ed));
+}
+
+void Lindi::execute()
+{
+	std::string prompt = "exec";
+	auto commit = [this](UI::Frame &ctx, std::string cmd)
+	{
+		Console::View::exec(cmd, _shell);
+	};
+	auto dialog = new UI::Dialog::Command(prompt, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
 	_shell.active()->show_dialog(std::move(dptr));
 }
 

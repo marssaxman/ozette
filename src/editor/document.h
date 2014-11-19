@@ -37,8 +37,10 @@ public:
 	Document(std::string path);
 	void Read(std::string path);
 	void Write(std::string path);
+	void View(std::string text);
 	std::string status() const { return _status; }
 	bool modified() const { return _modified; }
+	bool readonly() const { return _read_only; }
 
 	// Where are the beginning and end of the document?
 	location_t home();

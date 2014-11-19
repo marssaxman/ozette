@@ -30,7 +30,6 @@ class Browser : public UI::View
 public:
 	static void change_directory(std::string path);
 	static void open(std::string path, UI::Shell &shell);
-	Browser(std::string path);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
@@ -41,6 +40,7 @@ protected:
 	void check_rebuild(UI::Frame &ctx);
 	virtual void paint_into(WINDOW *view, bool active) override;
 private:
+	Browser(std::string path);
 	~Browser() { _instance = nullptr; }
 	static Browser *_instance;
 	UI::Window *_window = nullptr;
@@ -50,9 +50,12 @@ private:
 		DirTree *entry;
 	};
 	void paint_row(WINDOW *view, int vpos, row_t &display, int width);
+	void ctl_find(UI::Frame &ctx);
 	void key_return(UI::Frame &ctx);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
+	void key_page_up(UI::Frame &ctx);
+	void key_page_down(UI::Frame &ctx);
 	void key_left(UI::Frame &ctx);
 	void key_right(UI::Frame &ctx);
 	void key_space(UI::Frame &ctx);
@@ -72,6 +75,7 @@ private:
 	std::set<std::string> _expanded_items;
 	size_t _selection = 0;
 	size_t _scrollpos = 0;
+	int _height = 0;
 	bool _rebuild_list = true;
 	std::string _name_filter;
 	time_t _name_filter_time = 0;

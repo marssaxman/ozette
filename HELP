@@ -1,0 +1,52 @@
+
+Lindi is an editing shell for software development. It combines a directory
+browser, a text file editor, and a command console within a tabbed window
+interface modelled on pico/nano. The control keys are based on those typically
+used in desktop applications, however, and not on unix shell conventions.
+
+Global commands:
+    ^Q - Quit - close all windows
+    ^W - Close - close the current window
+    ^? - Help - display this help text
+    ^-up arrow - open the directory browser or bring it frontmost
+    ^-left arrow - move to the next window leftward
+    ^-right arrow - move to the next window rightward
+
+
+== Directory browser
+
+The browser tab displays a tree view of the current working directory. Use the
+arrow keys to move the selection up or down, or type the name of a file or
+directory to select it. Toggle a subdirectory open or closed with the space bar
+or Enter key. Select a file and press Enter to open it in an editor tab.
+
+Browser commands:
+    ^O - Open - open a file in an editor window
+    ^N - New - open an editor for a new, nameless file
+    ^D - Directory - change the current working directory
+    ^E - Execute - run some command and log output to the console
+    ^F - Find - search for text across all files in the directory
+
+== Text editor
+
+An editor displays the contents of a single file and allows you to make changes.
+Type normally to insert text at the cursor. Use the arrow keys to move the
+cursor; hold down the shift key while moving the cursor to select a range of
+text. Moving the cursor without holding the shift key will drop the selection.
+Typing anything will replace the selection with the new text, while pressing
+Backspace or Delete will remove the selected text.
+
+Page up and page down move the cursor to the last line of the previous page or
+the first line of the next page. Home and end move the cursor to the beginning
+or end of the current line. 
+
+Cut, Copy, and Paste apply to a single clipboard which is shared across all
+editors. 
+
+Editor commands:
+    ^X - Cut - place selected text on the clipboard, then delete
+    ^C - Copy - place selected text on the clipboard
+    ^V - Paste - insert clipboard text at cursor location
+    ^F - Find - move the cursor to the next occurrence of some string
+    ^L - To Line - move the cursor to the beginning of the specified line
+    ^S - Save - write the contents of the buffer back to disk
