@@ -23,7 +23,7 @@ or Enter key. Select a file and press Enter to open it in an editor tab.
 Browser commands:
     ^O - Open - open a file in an editor window
     ^N - New - open an editor for a new, nameless file
-    ^D - ChDir - change the current working directory
+    ^D - Directory - change the current working directory
     ^E - Execute - run some command and log output to the console
     ^F - Find - search for text across all files in the directory
 
@@ -48,5 +48,5 @@ Editor commands:
     ^C - Copy - place selected text on the clipboard
     ^V - Paste - insert clipboard text at cursor location
     ^F - Find - move the cursor to the next occurrence of some string
-    ^L - Go Line - move the cursor to the beginning of the specified line
+    ^L - To Line - move the cursor to the beginning of the specified line
     ^S - Save - write the contents of the buffer back to disk
