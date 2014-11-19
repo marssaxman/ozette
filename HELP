@@ -7,9 +7,6 @@ used in desktop applications, however, and not on unix shell conventions.
 Global commands:
     ^Q - Quit - close all windows
     ^W - Close - close the current window
-    ^O - Open - open a file in an editor window
-    ^N - New - open an editor for a new, nameless file
-    ^D - ChDir - change the current working directory
     ^? - Help - display this help text
     ^-up arrow - open the directory browser or bring it frontmost
     ^-left arrow - move to the next window leftward
@@ -23,6 +20,11 @@ arrow keys to move the selection up or down, or type the name of a file or
 directory to select it. Toggle a subdirectory open or closed with the space bar
 or Enter key. Select a file and press Enter to open it in an editor tab.
 
+Browser commands:
+    ^O - Open - open a file in an editor window
+    ^N - New - open an editor for a new, nameless file
+    ^D - ChDir - change the current working directory
+    ^E - Execute - run some command and log output to the console
 
 == Text editor
 
