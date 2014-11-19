@@ -50,6 +50,7 @@ private:
 		DirTree *entry;
 	};
 	void paint_row(WINDOW *view, int vpos, row_t &display, int width);
+	void ctl_find(UI::Frame &ctx);
 	void key_return(UI::Frame &ctx);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);

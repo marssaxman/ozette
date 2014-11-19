@@ -131,6 +131,7 @@ void Lindi::set_config(std::string name, const std::vector<std::string> &lines)
 
 void Lindi::exec(std::string title, std::string exe, const std::vector<std::string> &argv)
 {
+	Console::View::exec(title, exe, argv, _shell);
 }
 
 void Lindi::run()

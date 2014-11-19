@@ -136,9 +136,6 @@ void Console::View::close_subproc()
 
 void Console::View::set_title(UI::Frame &ctx)
 {
-	std::string title = "Console";
-	if (_log.get()) {
-		title += ": " + _log->command();
-	}
+	std::string title = (_log.get())? _log->command(): "Console";
 	ctx.set_title(title);
 }

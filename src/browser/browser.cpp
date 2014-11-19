@@ -114,6 +114,7 @@ bool Browser::process(UI::Frame &ctx, int ch)
 {
 	check_rebuild(ctx);
 	switch (ch) {
+		case Control::Find: ctl_find(ctx); break;
 		case Control::Return: key_return(ctx); break;
 		case Control::Close: return false; break;
 		case Control::Escape: clear_filter(ctx); break;
@@ -150,6 +151,7 @@ void Browser::set_help(UI::HelpBar::Panel &panel)
 	using namespace UI::HelpBar;
 	panel.label[0][0] = Label('O', true, "Open");
 	panel.label[0][1] = Label('N', true, "New File");
+	panel.label[0][5] = Label('F', true, "Find");
 	panel.label[1][0] = Label('Q', true, "Quit");
 	panel.label[1][1] = Label('E', true, "Execute");
 	panel.label[1][2] = Label('D', true, "Directory");
@@ -213,6 +215,27 @@ void Browser::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 	size_t dchars = strftime(buf, 255, format, &mtm);
 	int drawch = std::min((int)dchars, rowchars);
 	mvwaddnstr(view, vpos, width-drawch, buf, drawch);
+}
+
+void Browser::ctl_find(UI::Frame &ctx)
+{
+	std::string prompt = "Find";
+	auto action = [this](UI::Frame &ctx, std::string text)
+	{
+		std::vector<std::string> args = {"-H", "-n", "-I", text};
+		auto receiver = [&args](DirTree &item)
+		{
+			if (item.is_file()) {
+				args.push_back(item.path());
+			}
+			return true;
+		};
+		_tree.recurse(receiver);
+		ctx.app().exec("find: " + text, "grep", args);
+	};
+	auto dialog = new UI::Dialog::Find(prompt, action);
+	std::unique_ptr<UI::View> dptr(dialog);
+	ctx.show_dialog(std::move(dptr));
 }
 
 void Browser::key_return(UI::Frame &ctx)
