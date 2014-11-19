@@ -17,36 +17,37 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef CONSOLE_CONSOLE_H
-#define CONSOLE_CONSOLE_H
-
-#include "view.h"
-#include "shell.h"
+#include <unistd.h>
+#include <stdint.h>
 #include "log.h"
-#include <memory>
 
-namespace Console {
-class View : public UI::View
+bool Console::Log::read(int fd)
 {
-public:
-	static void exec(std::string cmd, UI::Shell &shell);
-	virtual void activate(UI::Frame &ctx) override;
-	virtual void deactivate(UI::Frame &ctx) override;
-	virtual bool process(UI::Frame &ctx, int ch) override;
-	virtual bool poll(UI::Frame &ctx) override;
-protected:
-	View() { _instance = this; }
-	~View();
-	static View *_instance;
-	UI::Window *_window = nullptr;
-	virtual void paint_into(WINDOW *view, bool active) override;
-private:
-	void exec(std::string cmd);
-	void close_subproc();
-	int _subpid = 0;
-	int _rwepipe[3] = {0,0,0};
-	std::unique_ptr<Log> _log;
-};
-} // namespace Console
+	bool got_bytes = false;
+	ssize_t actual = 0;
+	char buf[1024];
+	while ((actual = ::read(fd, buf, 1024)) > 0) {
+		got_bytes = true;
+		for (ssize_t i = 0; i < actual; ++i) {
+			read_one(buf[i]);
+		}
+	}
+	return got_bytes;
+}
 
-#endif // CONSOLE_CONSOLE_H
+void Console::Log::read_one(char ch)
+{
+	switch (ch) {
+		case '\n': {
+			 _lines.emplace_back(std::string());
+		} break;
+		case '\t': {
+			do {
+				_lines.back().push_back(' ');
+			} while (_lines.back().size() & 4);
+		} break;
+		default: if (isprint(ch)) {
+			_lines.back().push_back(ch);
+		} break;
+	}
+}

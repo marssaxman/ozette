@@ -212,7 +212,7 @@ void Lindi::execute()
 	std::string prompt = "exec";
 	auto commit = [this](UI::Frame &ctx, std::string cmd)
 	{
-		Console::exec(cmd, _shell);
+		Console::View::exec(cmd, _shell);
 	};
 	auto dialog = new UI::Dialog::Command(prompt, commit);
 	std::unique_ptr<UI::View> dptr(dialog);

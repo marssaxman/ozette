@@ -17,36 +17,26 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef CONSOLE_CONSOLE_H
-#define CONSOLE_CONSOLE_H
+#ifndef CONSOLE_LOG_H
+#define CONSOLE_LOG_H
 
-#include "view.h"
-#include "shell.h"
-#include "log.h"
-#include <memory>
+#include <string>
+#include <vector>
 
 namespace Console {
-class View : public UI::View
+class Log
 {
 public:
-	static void exec(std::string cmd, UI::Shell &shell);
-	virtual void activate(UI::Frame &ctx) override;
-	virtual void deactivate(UI::Frame &ctx) override;
-	virtual bool process(UI::Frame &ctx, int ch) override;
-	virtual bool poll(UI::Frame &ctx) override;
-protected:
-	View() { _instance = this; }
-	~View();
-	static View *_instance;
-	UI::Window *_window = nullptr;
-	virtual void paint_into(WINDOW *view, bool active) override;
+	Log(std::string command): _command(command), _lines(1) {}
+	bool read(int fd);
+	bool empty() const { return _lines.empty(); }
+	size_t size() const { return _lines.size(); }
+	const std::string &operator[](size_t index) const { return _lines[index]; }
 private:
-	void exec(std::string cmd);
-	void close_subproc();
-	int _subpid = 0;
-	int _rwepipe[3] = {0,0,0};
-	std::unique_ptr<Log> _log;
+	void read_one(char ch);
+	std::string _command;
+	std::vector<std::string> _lines;
 };
 } // namespace Console
 
-#endif // CONSOLE_CONSOLE_H
+#endif //CONSOLE_LOG_H
