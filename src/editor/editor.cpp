@@ -71,6 +71,7 @@ void Editor::View::paint_into(WINDOW *dest, bool active)
 		paint_line(dest, i, active);
 	}
 	position_t curs = _cursor.position();
+	curs.h -= std::min(curs.h, _scroll.h);
 	curs.v -= std::min(curs.v, _scroll.v);
 	wmove(dest, curs.v, curs.h);
 	bool show_cursor = active && _selection.empty();
@@ -340,7 +341,7 @@ void Editor::View::key_up(bool extend)
 		_scroll.v -= std::min(_scroll.v, 1U);
 		_update.all();
 	} else {
-		_cursor.up(1);
+		_cursor.up();
 		adjust_selection(extend);
 	}
 }
@@ -351,7 +352,7 @@ void Editor::View::key_down(bool extend)
 		_scroll.v = std::min(_scroll.v + 1, _maxscroll);
 		_update.all();
 	} else {
-		_cursor.down(1);
+		_cursor.down();
 		adjust_selection(extend);
 	}
 }

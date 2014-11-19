@@ -32,8 +32,8 @@ public:
 	Cursor(Document &doc, Update &update);
 	const location_t location() const { return _location; }
 	const position_t position() const { return _display; }
-	void up(size_t count);
-	void down(size_t count);
+	void up();
+	void down();
 	void left();
 	void right();
 	void home();
