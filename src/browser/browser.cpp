@@ -92,21 +92,19 @@ void Browser::paint_into(WINDOW *view, bool active)
 		_scrollpos = _selection - std::min(halfpage, _selection);
 	}
 
-	int row = 1;
-	wmove(view, 0, 0);
-	wclrtoeol(view);
-	for (size_t i = _scrollpos; i < _list.size() && row < _height; ++i) {
+	for (int row = 0; row < _height; ++row) {
+		size_t i = row + _scrollpos;
 		wmove(view, row, 0);
-		whline(view, ' ', width);
-		paint_row(view, row, _list[i], width);
-		if (active && i == _selection) {
+		// Shift by one to create a blank line at the beginning.
+		if (i > 0 && i <= _list.size()) {
+			whline(view, ' ', width);
+			paint_row(view, row, _list[i-1], width);
+		} else {
+			wclrtoeol(view);
+		}
+		if (active && i == 1+_selection) {
 			mvwchgat(view, row, 0, width, A_REVERSE, 0, NULL);
 		}
-		row++;
-	}
-	while (row < _height) {
-		wmove(view, row++, 0);
-		wclrtoeol(view);
 	}
 }
 
