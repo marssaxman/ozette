@@ -19,7 +19,6 @@
 
 #include "lindi.h"
 #include <signal.h>
-#include <sys/wait.h>
 #include <stdlib.h>
 
 static std::unique_ptr<Lindi> s_app;

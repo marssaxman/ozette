@@ -23,6 +23,7 @@
 #include <cctype>
 #include <fcntl.h>
 #include <signal.h>
+#include <sys/wait.h>
 #include "popenRWE.h"
 
 Console::View *Console::View::_instance;
@@ -78,20 +79,16 @@ bool Console::View::poll(UI::Frame &ctx)
 	int sub_stdout = _rwepipe[1];
 	int sub_stderr = _rwepipe[2];
 	bool dirty = _log->read(sub_stdout);
-	if (EAGAIN != errno) {
-		close_subproc();
-	} else {
-		dirty |= _log->read(sub_stderr);
-		if (EAGAIN != errno) {
-			close_subproc();
-		}
-	}
+	dirty |= _log->read(sub_stderr);
 	if (follow_edge && _scrollpos != maxscroll()) {
 		_scrollpos = maxscroll();
 		dirty = true;
 	}
 	if (dirty) {
 		ctx.repaint();
+	}
+	if (waitpid(_subpid, nullptr, WNOHANG) == _subpid) {
+		close_subproc();
 	}
 	set_title(ctx);
 	return true;
