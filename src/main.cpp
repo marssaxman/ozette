@@ -30,18 +30,10 @@ static void handle_sigint(int)
 	exit(EXIT_SUCCESS);
 }
 
-static void handle_sigchld(int)
-{
-	pid_t pid = 0;
-	do {
-		pid = waitpid(-1, NULL, WNOHANG);
-	} while (pid > 0);
-}
-
 int main(int argc, char **argv)
 {
 	(void)signal(SIGINT, handle_sigint);
-	(void)signal(SIGCHLD, handle_sigchld);
+	(void)signal(SIGPIPE, SIG_IGN);
 	s_app.reset(new Lindi);
 	for (int i = 1; i < argc; ++i) {
 		s_app->edit_file(argv[i]);
