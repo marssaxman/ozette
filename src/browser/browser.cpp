@@ -221,10 +221,10 @@ void Browser::ctl_find(UI::Frame &ctx)
 	auto action = [this](UI::Frame &ctx, std::string text)
 	{
 		std::vector<std::string> args = {"-H", "-n", "-I", text};
-		auto receiver = [&args](DirTree &item)
+		auto receiver = [&ctx, &args](DirTree &item)
 		{
 			if (item.is_file()) {
-				args.push_back(item.path());
+				args.push_back(ctx.app().display_path(item.path()));
 			}
 			return true;
 		};
