@@ -41,6 +41,7 @@ UI::Window::~Window()
 
 void UI::Window::layout(int xpos, int width)
 {
+	clear_result();
 	// Windows are vertical slices of screen space.
 	// Given this column number and a width, compute the
 	// window's nominal dimensions, then see if we need to adjust
