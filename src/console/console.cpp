@@ -75,7 +75,14 @@ bool Console::View::poll(UI::Frame &ctx)
 	int sub_stdout = _rwepipe[1];
 	int sub_stderr = _rwepipe[2];
 	bool dirty = _log->read(sub_stdout);
-	dirty |= _log->read(sub_stderr);
+	if (EAGAIN != errno) {
+		_subpid = 0;
+	} else {
+		dirty |= _log->read(sub_stderr);
+		if (EAGAIN != errno) {
+			_subpid = 0;
+		}
+	}
 	if (follow_edge && _scrollpos != maxscroll()) {
 		_scrollpos = maxscroll();
 		dirty = true;
@@ -161,6 +168,7 @@ void Console::View::set_title(UI::Frame &ctx)
 {
 	std::string title = (_log.get())? _log->command(): "Console";
 	ctx.set_title(title);
+	ctx.set_status(_subpid != 0? "running": "");
 }
 
 unsigned Console::View::maxscroll() const
