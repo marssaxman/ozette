@@ -88,7 +88,6 @@ private:
 	// Information about the file being edited
 	std::string _targetpath;
 	Document _doc;
-	bool _local_changes = false;
 
 	// Information about the editor window
 	Update _update;
@@ -101,10 +100,10 @@ private:
 	bool _last_active = false;
 	WINDOW *_last_dest = nullptr;
 	// What are the width and height of the viewrect?
-	size_t _width = 0;
-	size_t _height = 0;
-	size_t _halfheight = 0;
-	size_t _maxscroll = 0;
+	column_t _width = 0;
+	row_t _height = 0;
+	row_t _halfheight = 0;
+	row_t _maxscroll = 0;
 	// Where is the viewrect origin?
 	position_t _scroll = {0,0};
 };

@@ -214,7 +214,7 @@ void Editor::View::update_dimensions(WINDOW *view)
 		_width = (size_t)width;
 		_update.all();
 	}
-	size_t newmax = std::max(_doc.maxline(), _height) - _halfheight;
+	row_t newmax = std::max((row_t)_doc.maxline(), _height) - _halfheight;
 	if (newmax != _maxscroll) {
 		_maxscroll = newmax;
 		_scroll.v = std::min(_scroll.v, _maxscroll);

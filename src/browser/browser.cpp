@@ -269,7 +269,7 @@ void Browser::key_page_up(UI::Frame &ctx)
 {
 	// Move to last line of previous page.
 	clear_filter(ctx);
-	_selection = _scrollpos - std::min(_scrollpos, 1U);
+	_selection = _scrollpos > 0? _scrollpos-1: 0;
 	ctx.repaint();
 }
 

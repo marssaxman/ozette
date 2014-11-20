@@ -65,7 +65,7 @@ protected:
 	size_t _sugg_item = 0;
 	action_t _commit = nullptr;
 	std::string _value;
-	size_t _cursor_pos = 0;
+	unsigned _cursor_pos = 0;
 private:
 	void arrow_left();
 	void arrow_right();
