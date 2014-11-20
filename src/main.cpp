@@ -20,13 +20,14 @@
 #include "lindi.h"
 #include <signal.h>
 #include <sys/wait.h>
+#include <stdlib.h>
 
 static std::unique_ptr<Lindi> s_app;
 
 static void handle_sigint(int)
 {
 	s_app.reset();
-	exit(0);
+	exit(EXIT_SUCCESS);
 }
 
 static void handle_sigchld(int)

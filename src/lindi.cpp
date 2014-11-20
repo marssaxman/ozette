@@ -33,7 +33,7 @@ Lindi::Lindi():
 	_home_dir(getenv("HOME")),
 	_config_dir(_home_dir + "/.lindi")
 {
-	char *cwd = get_current_dir_name();
+	char *cwd = getcwd(NULL, 0);
 	if (cwd) {
 		_current_dir = cwd;
 		free(cwd);
