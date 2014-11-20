@@ -166,6 +166,12 @@ void Lindi::change_directory()
 	set_mru(_current_dir, options);
 	auto commit = [this](UI::Frame &ctx, std::string path)
 	{
+		int result = chdir(path.c_str());
+		if (0 != result) {
+			int code = errno;
+			ctx.show_result("Can't chdir: errno = " + std::to_string(code));
+			return;
+		}
 		_current_dir = path;
 		Browser::change_directory(path);
 		set_mru(path, _recent_dirs);
