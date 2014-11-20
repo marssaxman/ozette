@@ -45,6 +45,7 @@ protected:
 private:
 	void exec(std::string title, std::string exe, const std::vector<std::string> &argv);
 	void close_subproc();
+	void ctl_kill(UI::Frame &ctx);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
 	void set_title(UI::Frame &ctx);

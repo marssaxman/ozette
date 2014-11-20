@@ -21,6 +21,8 @@
 #include "control.h"
 #include "dialog.h"
 #include <cctype>
+#include <fcntl.h>
+#include <signal.h>
 #include "popenRWE.h"
 
 Console::View *Console::View::_instance;
@@ -59,6 +61,7 @@ bool Console::View::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
 		case Control::Close: return false;
+		case Control::Kill: ctl_kill(ctx); break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
 	}
@@ -76,11 +79,11 @@ bool Console::View::poll(UI::Frame &ctx)
 	int sub_stderr = _rwepipe[2];
 	bool dirty = _log->read(sub_stdout);
 	if (EAGAIN != errno) {
-		_subpid = 0;
+		close_subproc();
 	} else {
 		dirty |= _log->read(sub_stderr);
 		if (EAGAIN != errno) {
-			_subpid = 0;
+			close_subproc();
 		}
 	}
 	if (follow_edge && _scrollpos != maxscroll()) {
@@ -96,6 +99,7 @@ bool Console::View::poll(UI::Frame &ctx)
 
 void Console::View::set_help(UI::HelpBar::Panel &panel)
 {
+	panel.label[0][0] = UI::HelpBar::Label('K', true, "Kill");
 	panel.label[1][0] = UI::HelpBar::Label('W', true, "Close");
 	panel.label[1][1] = UI::HelpBar::Label('E', true, "Execute");
 	panel.label[1][5] = UI::HelpBar::Label('?', true, "Help");
@@ -123,6 +127,11 @@ void Console::View::paint_into(WINDOW *view, bool active)
 	}
 }
 
+static void set_nonblocking(int fd)
+{
+	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
+}
+
 void Console::View::exec(std::string title, std::string exe, const std::vector<std::string> &args)
 {
 	close_subproc();
@@ -138,14 +147,27 @@ void Console::View::exec(std::string title, std::string exe, const std::vector<s
 	argv[i] = nullptr;
 	_subpid = popenRWE(_rwepipe, exe.c_str(), argv);
 	delete[] argv;
+	if (_subpid > 0) {
+		set_nonblocking(_rwepipe[0]);
+		set_nonblocking(_rwepipe[1]);
+		set_nonblocking(_rwepipe[2]);
+	}
 	_log.reset(new Log(title));
 }
 
 void Console::View::close_subproc()
 {
-	if (0 <= _subpid) return;
+	if (0 >= _subpid) return;
+	kill(_subpid, SIGTERM);
 	pcloseRWE(_subpid, _rwepipe);
 	_subpid = 0;
+}
+
+void Console::View::ctl_kill(UI::Frame &ctx)
+{
+	if (0 == _subpid) return;
+	close_subproc();
+	ctx.repaint();
 }
 
 void Console::View::key_down(UI::Frame &ctx)

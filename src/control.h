@@ -54,6 +54,9 @@ enum {
 	Find = 0x06, //ACK ^F
 	ToLine = 0x0C, //FF ^L
 
+	// Console
+	Kill = 0x0B, //VT ^K
+
 	// Application global commands
 	Directory = 0x04, //EOT ^D
 	Quit = 0x11, //DC1 ^Q
@@ -65,7 +68,6 @@ enum {
 	STX = 0x02, // " B b
 	BEL = 0x07, // ` G g
 	BS = 0x08, // ( H h
-	VT = 0x0B, // + K k
 	DLE = 0x10, // 0 P p
 	DC2 = 0x12, // 2 R r
 	DC4 = 0x14, // 4 T t
