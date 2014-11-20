@@ -45,10 +45,16 @@ protected:
 private:
 	void exec(std::string title, std::string exe, const std::vector<std::string> &argv);
 	void close_subproc();
+	void key_up(UI::Frame &ctx);
+	void key_down(UI::Frame &ctx);
 	void set_title(UI::Frame &ctx);
+	unsigned maxscroll() const;
 	int _subpid = 0;
 	int _rwepipe[3] = {0,0,0};
 	std::unique_ptr<Log> _log;
+	unsigned _scrollpos = 0;
+	int _height = 0;
+	int _width = 0;
 };
 } // namespace Console
 

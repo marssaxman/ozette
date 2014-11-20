@@ -59,6 +59,8 @@ bool Console::View::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
 		case Control::Close: return false;
+		case KEY_UP: key_up(ctx); break;
+		case KEY_DOWN: key_down(ctx); break;
 	}
 	set_title(ctx);
 	return true;
@@ -68,11 +70,16 @@ bool Console::View::poll(UI::Frame &ctx)
 {
 	// We only need to poll if we have an active subprocess.
 	if (_subpid <= 0) return true;
+	bool follow_edge = _scrollpos == maxscroll();
 	//int sub_stdin = _rwepipe[0];
 	int sub_stdout = _rwepipe[1];
 	int sub_stderr = _rwepipe[2];
 	bool dirty = _log->read(sub_stdout);
 	dirty |= _log->read(sub_stderr);
+	if (follow_edge && _scrollpos != maxscroll()) {
+		_scrollpos = maxscroll();
+		dirty = true;
+	}
 	if (dirty) {
 		ctx.repaint();
 	}
@@ -97,13 +104,13 @@ void Console::View::paint_into(WINDOW *view, bool active)
 {
 	if (!_log.get()) return;
 	wmove(view, 0, 0);
-	int height, width;
-	getmaxyx(view, height, width);
-	for (int row = 0; row < height; ++row) {
+	getmaxyx(view, _height, _width);
+	for (int row = 0; row < _height; ++row) {
 		wmove(view, row, 0);
-		size_t i = row;
-		if (i < _log->size()) {
-			waddnstr(view, (*_log)[i].c_str(), width);
+		size_t i = row + _scrollpos;
+		// Sub one to create a blank leading line
+		if (i > 0 && i <= _log->size()) {
+			waddnstr(view, (*_log)[i-1].c_str(), _width);
 		}
 		wclrtoeol(view);
 	}
@@ -134,8 +141,32 @@ void Console::View::close_subproc()
 	_subpid = 0;
 }
 
+void Console::View::key_down(UI::Frame &ctx)
+{
+	if (_scrollpos < maxscroll()) {
+		_scrollpos++;
+		ctx.repaint();
+	}
+}
+
+void Console::View::key_up(UI::Frame &ctx)
+{
+	if (_scrollpos > 0) {
+		_scrollpos--;
+		ctx.repaint();
+	}
+}
+
 void Console::View::set_title(UI::Frame &ctx)
 {
 	std::string title = (_log.get())? _log->command(): "Console";
 	ctx.set_title(title);
+}
+
+unsigned Console::View::maxscroll() const
+{
+	// we'll show an extra blank line at the top and the bottom in order to
+	// help the user see when they are at the end of the log
+	int displines = (int)_log->size() + 2;
+	return (displines > _height)? (displines - _height): 0;
 }
