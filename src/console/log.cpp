@@ -21,6 +21,17 @@
 #include <stdint.h>
 #include "log.h"
 
+void Console::Log::layout(unsigned width)
+{
+	if (_width == width) return;
+	_width = width;
+	_lines.clear();
+	_lines.emplace_back(std::string());
+	for (auto ch: _raw) {
+		read_one(ch);
+	}
+}
+
 bool Console::Log::read(int fd)
 {
 	bool got_bytes = false;
@@ -28,6 +39,7 @@ bool Console::Log::read(int fd)
 	char buf[1024];
 	while ((actual = ::read(fd, buf, 1024)) > 0) {
 		got_bytes = true;
+		_raw.append(buf, actual);
 		for (ssize_t i = 0; i < actual; ++i) {
 			read_one(buf[i]);
 		}
@@ -37,17 +49,22 @@ bool Console::Log::read(int fd)
 
 void Console::Log::read_one(char ch)
 {
+	std::string &tail = _lines.back();
 	switch (ch) {
 		case '\n': {
 			 _lines.emplace_back(std::string());
 		} break;
 		case '\t': {
 			do {
-				_lines.back().push_back(' ');
-			} while (_lines.back().size() & 3);
+				tail.push_back(' ');
+			} while (tail.size() & 3);
 		} break;
 		default: if (isprint(ch)) {
-			_lines.back().push_back(ch);
+			if (tail.size() >= _width) {
+				_lines.emplace_back(std::string(1, ch));
+			} else {
+				tail.push_back(ch);
+			}
 		} break;
 	}
 }

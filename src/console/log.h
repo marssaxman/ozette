@@ -27,7 +27,9 @@ namespace Console {
 class Log
 {
 public:
-	Log(std::string command): _command(command), _lines(1) {}
+	Log(std::string command, unsigned width):
+		_command(command), _width(width), _lines(1) {}
+	void layout(unsigned width);
 	bool read(int fd);
 	bool empty() const { return _lines.empty(); }
 	size_t size() const { return _lines.size(); }
@@ -36,6 +38,8 @@ public:
 private:
 	void read_one(char ch);
 	std::string _command;
+	unsigned _width;
+	std::string _raw;
 	std::vector<std::string> _lines;
 };
 } // namespace Console

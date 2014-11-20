@@ -113,6 +113,7 @@ void Console::View::paint_into(WINDOW *view, bool active)
 	if (!_log.get()) return;
 	wmove(view, 0, 0);
 	getmaxyx(view, _height, _width);
+	_log->layout(_width);
 	for (int row = 0; row < _height; ++row) {
 		wmove(view, row, 0);
 		size_t i = row + _scrollpos;
@@ -149,7 +150,7 @@ void Console::View::exec(std::string title, std::string exe, const std::vector<s
 		set_nonblocking(_rwepipe[1]);
 		set_nonblocking(_rwepipe[2]);
 	}
-	_log.reset(new Log(title));
+	_log.reset(new Log(title, _width));
 }
 
 void Console::View::close_subproc()
