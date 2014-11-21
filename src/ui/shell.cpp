@@ -75,14 +75,21 @@ bool UI::Shell::process(int ch)
 	// the focus window. All other keypresses are delegated to
 	// the focus window.
 	switch (ch) {
-		case Control::LeftArrow: {
+		// It would be nice if we could use control-left-arrow for some
+		// purposes and control-shift-left-arrow for others, but we can't
+		// reliably distinguish between these codes because some terminals
+		// (terminal.app for example) send the shifted codes for left and right
+		// whether or not the user is pressing the shift key.
+		case Control::LeftArrow:
+		case Control::ShiftLeftArrow: {
 			if (_focus > 0) {
 				set_focus(_focus - 1);
 			} else {
 				set_focus(_tabs.size() - 1);
 			}
 		} break;
-		case Control::RightArrow: {
+		case Control::RightArrow:
+		case Control::ShiftRightArrow: {
 			size_t next = _focus + 1;
 			if (next >= _tabs.size()) {
 				next = 0;
