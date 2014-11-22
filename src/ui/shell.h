@@ -32,9 +32,9 @@ public:
 	~Shell();
 	bool process(int ch);
 	enum class Position {
-		Left,
-		Any,
-		Right
+		Primary,
+		Secondary,
+		Any
 	};
 	Window *open_window(std::unique_ptr<View> &&view, Position pos = Position::Any);
 	void close_window(Window *window);

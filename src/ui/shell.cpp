@@ -133,9 +133,9 @@ UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view, Position pos)
 	Window *win = new Window(_app, std::move(view));
 	size_t index;
 	switch (pos) {
-		case Position::Left: index = 0; break;
+		case Position::Primary:
+		case Position::Secondary: index = 0; break;
 		case Position::Any: index = _focus + 1; break;
-		case Position::Right: index = _tabs.size(); break;
 	}
 	_tabs.emplace(_tabs.begin() + index, win);
 	relayout();

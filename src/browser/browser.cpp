@@ -36,7 +36,7 @@ void Browser::open(std::string path, UI::Shell &shell)
 		shell.make_active(_instance->_window);
 	} else {
 		std::unique_ptr<UI::View> view(new Browser(path));
-		UI::Shell::Position pos = UI::Shell::Position::Left;
+		UI::Shell::Position pos = UI::Shell::Position::Primary;
 		_instance->_window = shell.open_window(std::move(view), pos);
 	}
 }
