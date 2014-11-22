@@ -28,7 +28,7 @@ namespace UI {
 class Shell
 {
 public:
-	Shell(App &app);
+	Shell(Controller &app);
 	~Shell();
 	bool process(int ch);
 	enum class Position {
@@ -51,7 +51,7 @@ protected:
 	// close the window with this index
 	void close_window(size_t index);
 private:
-	App &_app;
+	Controller &_app;
 	int _width = 0;
 	int _height = 0;
 	std::vector<std::unique_ptr<Window>> _tabs;

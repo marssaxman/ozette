@@ -20,14 +20,14 @@
 #ifndef APP_LINDI_H
 #define APP_LINDI_H
 
-#include "app.h"
+#include "controller.h"
 #include "shell.h"
 #include "browser.h"
 #include <string>
 #include <vector>
 #include <map>
 
-class Lindi : public App
+class Lindi : public Controller
 {
 public:
 	Lindi();

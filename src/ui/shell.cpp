@@ -22,7 +22,7 @@
 #include <assert.h>
 #include <list>
 
-UI::Shell::Shell(App &app):
+UI::Shell::Shell(Controller &app):
 	_app(app)
 {
 	// Set up ncurses.

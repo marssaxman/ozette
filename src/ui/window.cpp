@@ -23,7 +23,7 @@
 #include <assert.h>
 #include <cstring>
 
-UI::Window::Window(App &app, std::unique_ptr<View> &&view):
+UI::Window::Window(Controller &app, std::unique_ptr<View> &&view):
 	_app(app),
 	_view(std::move(view)),
 	_framewin(newwin(0, 0, 0, 0)),

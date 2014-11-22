@@ -17,17 +17,17 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef APP_APP_H
-#define APP_APP_H
+#ifndef APP_CONTROLLER_H
+#define APP_CONTROLLER_H
 
 #include <string>
 #include <vector>
 
 // Abstract interface for centralized application actions.
-class App
+class Controller
 {
 public:
-	virtual ~App() = default;
+	virtual ~Controller() = default;
 	virtual std::string current_dir() const = 0;
 	virtual std::string display_path(std::string path) const = 0;
 	virtual void edit_file(std::string path) = 0;
@@ -40,4 +40,4 @@ public:
 	virtual void exec(std::string title, std::string exe, const std::vector<std::string> &argv) = 0;
 };
 
-#endif //APP_APP_H
+#endif //APP_CONTROLLER_H

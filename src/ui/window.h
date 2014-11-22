@@ -25,14 +25,14 @@
 #include <memory>
 #include <vector>
 #include "view.h"
-#include "app.h"
+#include "controller.h"
 #include "helpbar.h"
 
 namespace UI {
 class Window : public Frame
 {
 public:
-	Window(App &app, std::unique_ptr<View> &&controller);
+	Window(Controller &app, std::unique_ptr<View> &&view);
 	~Window();
 	void layout(int xpos, int width);
 	void set_focus();
@@ -43,7 +43,7 @@ public:
 	virtual void show_dialog(std::unique_ptr<View> &&dialog) override;
 protected:
 	virtual void repaint() override { _dirty_content = true; }
-	virtual App &app() override { return _app; }
+	virtual Controller &app() override { return _app; }
 	virtual void set_title(std::string text) override;
 	virtual void set_status(std::string text) override;
 	virtual void show_result(std::string message) override;
@@ -61,7 +61,7 @@ protected:
 	void paint_right_frame(int height, int width);
 	void paint_taskbar(int height, int width);
 private:
-	App &_app;
+	Controller &_app;
 	std::unique_ptr<View> _view;
 	// The frame represents the outer dimensions of the window and
 	// contains all the UI chrome.

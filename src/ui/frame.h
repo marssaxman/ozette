@@ -22,7 +22,7 @@
 
 #include <string>
 #include <memory>
-#include "app.h"
+#include "controller.h"
 #include "control.h"
 
 namespace UI {
@@ -34,7 +34,7 @@ class View;
 class Frame {
 public:
 	virtual ~Frame() = default;
-	virtual App &app() = 0;
+	virtual Controller &app() = 0;
 	// The window content should be redrawn.
 	virtual void repaint() = 0;
 	// Change the title text, status text, or help text for the
