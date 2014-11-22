@@ -48,7 +48,7 @@ void DirTree::scan()
 		_type = Type::Directory;
 		if (_mtime != st.st_mtime) {
 			_items.clear();
-			_scanned = false;
+			_iterated = false;
 		}
 	} else if (S_ISREG(st.st_mode)) {
 		_type = Type::File;

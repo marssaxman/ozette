@@ -396,6 +396,7 @@ void Browser::edit_file(UI::Frame &ctx)
 
 size_t Browser::insert_rows(size_t index, unsigned indent, DirTree *entry)
 {
+	entry->scan();
 	for (auto &item: entry->items()) {
 		bool expand = _expanded_items.count(item.path()) > 0;
 		row_t display = {indent, expand, &item};
