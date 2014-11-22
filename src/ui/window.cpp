@@ -35,6 +35,7 @@ UI::Window::Window(Controller &app, std::unique_ptr<View> &&view):
 
 UI::Window::~Window()
 {
+	_view->deactivate(*this);
 	del_panel(_framepanel);
 	delwin(_framewin);
 }
