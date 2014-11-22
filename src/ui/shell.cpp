@@ -199,12 +199,21 @@ void UI::Shell::layout()
 	_columnWidth = std::min(kWindowWidth, _width);
 	if(_tabs.empty()) return;
 	size_t ubound = _tabs.size() - 1;
-	int right_edge = _width - _columnWidth;
-	_spacing = (ubound > 0) ? right_edge / ubound : 0;
+	std::vector<int> xpos(_tabs.size());
+	if (_tabs.size() * _columnWidth <= _width) {
+		for (unsigned i = 0; i <= ubound; ++i) {
+			xpos[i] = i * _columnWidth;
+		}
+	} else {
+		int right_edge = _width - _columnWidth;
+		_spacing = (ubound > 0) ? right_edge / ubound : 0;
+		for (unsigned i = 0; i <= ubound; ++i) {
+			int offset = (ubound - i) * _spacing;
+			xpos[i] = (i > 0)? right_edge - offset: 0;
+		}
+	}
 	for (unsigned i = 0; i <= ubound; ++i) {
-		int offset = (ubound - i) * _spacing;
-		int xpos = (i > 0) ? right_edge - offset : 0;
-		_tabs[i]->layout(xpos, _columnWidth);
+		_tabs[i]->layout(xpos[i], _columnWidth);
 	}
 }
 
