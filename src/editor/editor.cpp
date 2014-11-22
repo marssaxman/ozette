@@ -115,6 +115,7 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case KEY_BTAB: key_btab(ctx); break;	// shift-tab
 		default: {
 			if (isprint(ch)) key_insert(ch);
+			else ctx.show_result("Unknown control: " + std::to_string(ch));
 		} break;
 	}
 	postprocess(ctx);
