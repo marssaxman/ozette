@@ -22,6 +22,11 @@
 #include <assert.h>
 #include <list>
 
+
+// we are not heathens;the holy terminal size is 80 columns. ever has it been
+// and ever shall it be, world without end, amen.
+static const int kWindowWidth = 80;
+
 UI::Shell::Shell(Controller &app):
 	_app(app)
 {
@@ -104,7 +109,7 @@ bool UI::Shell::process(int ch)
 			}
 		} break;
 		case KEY_RESIZE: {
-			relayout();
+			layout();
 		} break;
 		default: {
 			send_to_focus(ch);
@@ -138,7 +143,7 @@ UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view, Position pos)
 		case Position::Any: index = _focus + 1; break;
 	}
 	_tabs.emplace(_tabs.begin() + index, win);
-	relayout();
+	layout();
 	set_focus(index);
 	return win;
 }
@@ -184,14 +189,14 @@ void UI::Shell::set_focus(size_t index)
 	_tabs[_focus]->bring_forward(0);
 }
 
-void UI::Shell::relayout()
+void UI::Shell::layout()
 {
 	// The leftmost window owns column zero and covers no more than 80
 	// characters' width.
 	// Divide any remaining space among any remaining windows and stagger
 	// each remaining window proportionally across the screen.
 	getmaxyx(stdscr, _height, _width);
-	_columnWidth = std::min(80, _width);
+	_columnWidth = std::min(kWindowWidth, _width);
 	if(_tabs.empty()) return;
 	size_t ubound = _tabs.size() - 1;
 	int right_edge = _width - _columnWidth;
@@ -213,7 +218,7 @@ void UI::Shell::send_to_focus(int ch)
 	}
 	if (more) return;
 	close_window(_focus);
-	relayout();
+	layout();
 }
 
 void UI::Shell::close_window(size_t index)
@@ -238,5 +243,5 @@ void UI::Shell::close_window(size_t index)
 	if (index < _focus) {
 		_focus--;
 	}
-	relayout();
+	layout();
 }

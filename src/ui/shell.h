@@ -44,8 +44,8 @@ protected:
 	void reap();
 	// change the focus to a specific window
 	void set_focus(size_t index);
-	// reposition all the windows after create/remove/resize
-	void relayout();
+	// position all the windows after create/remove/resize
+	void layout();
 	// send this char to the focus window
 	void send_to_focus(int ch);
 	// close the window with this index
