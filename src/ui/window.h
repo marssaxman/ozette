@@ -37,7 +37,12 @@ public:
 	void layout(int xpos, int width);
 	void set_focus();
 	void clear_focus();
-	void bring_forward(int focus_relative);
+	enum class FocusRelative {
+		Left,
+		Equal,
+		Right
+	};
+	void bring_forward(FocusRelative rel);
 	bool process(int ch);
 	bool poll();
 	virtual void show_dialog(std::unique_ptr<View> &&dialog) override;

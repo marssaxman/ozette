@@ -176,12 +176,12 @@ void UI::Shell::set_focus(size_t index)
 	// are stacked in descending order. We raise the
 	// focus window last.
 	for (size_t i = 0; i < _focus; ++i) {
-		_tabs[i]->bring_forward(-1);
+		_tabs[i]->bring_forward(Window::FocusRelative::Left);
 	}
 	for (size_t i = _tabs.size() - 1; i > _focus; --i) {
-		_tabs[i]->bring_forward(1);
+		_tabs[i]->bring_forward(Window::FocusRelative::Right);
 	}
-	_tabs[_focus]->bring_forward(0);
+	_tabs[_focus]->bring_forward(Window::FocusRelative::Equal);
 }
 
 void UI::Shell::relayout()

@@ -107,12 +107,12 @@ void UI::Window::clear_focus()
 	paint();
 }
 
-void UI::Window::bring_forward(int focus_relative)
+void UI::Window::bring_forward(FocusRelative rel)
 {
 	top_panel(_framepanel);
 	_view->bring_forward();
 	if (_dialog) _dialog->bring_forward();
-	bool swap_titlebar = focus_relative > 0;
+	bool swap_titlebar = rel == FocusRelative::Right;
 	if (swap_titlebar != _swap_titlebar) {
 		_swap_titlebar = swap_titlebar;
 		_dirty_chrome = true;
