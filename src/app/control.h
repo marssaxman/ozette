@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef CONTROL_H
-#define CONTROL_H
+#ifndef APP_CONTROL_H
+#define APP_CONTROL_H
 
 #include <stddef.h>
 
@@ -78,4 +78,4 @@ enum {
 };
 } // namespace Control
 
-#endif	//CONTROL_H
+#endif	//APP_CONTROL_H

@@ -5,4 +5,4 @@ obj/
 lindi
 
 # help.cpp is generated from the HELP file
-src/help.cpp
+src/app/help.cpp

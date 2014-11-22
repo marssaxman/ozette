@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef APP_H
-#define APP_H
+#ifndef APP_APP_H
+#define APP_APP_H
 
 #include <string>
 #include <vector>
@@ -40,4 +40,4 @@ public:
 	virtual void exec(std::string title, std::string exe, const std::vector<std::string> &argv) = 0;
 };
 
-#endif	//APP_H
+#endif //APP_APP_H

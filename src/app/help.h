@@ -17,10 +17,10 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef HELP_H
-#define HELP_H
+#ifndef APP_HELP_H
+#define APP_HELP_H
 
 extern const unsigned char HELP[];
 extern unsigned int HELP_len;
 
-#endif //HELP_H
+#endif //APP_HELP_H

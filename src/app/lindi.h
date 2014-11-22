@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef LINDI_H
-#define LINDI_H
+#ifndef APP_LINDI_H
+#define APP_LINDI_H
 
 #include "app.h"
 #include "shell.h"
@@ -64,4 +64,4 @@ private:
 	std::vector<std::string> _recent_dirs;
 };
 
-#endif	//LINDI_H
+#endif //APP_LINDI_H
