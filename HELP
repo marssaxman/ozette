@@ -50,3 +50,13 @@ Editor commands:
     ^F - Find - move the cursor to the next occurrence of some string
     ^L - To Line - move the cursor to the beginning of the specified line
     ^S - Save - write the contents of the buffer back to disk
+
+
+== Shell console
+
+The console displays output logged from commands executed against the current
+directory. These may be built-in commands like Find or shell commands invoked
+with Execute.
+
+Console commands:
+	^K - Kill - terminate the running command
