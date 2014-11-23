@@ -29,21 +29,22 @@ extern const unsigned kTabWidth;
 class Line
 {
 public:
-	virtual ~Line() = default;
+	Line(std::string text): _text(text) {}
 	// Unformatted bytes
-	virtual std::string text() const = 0;
+	std::string text() const { return _text; }
 	// Number of bytes present
-	virtual size_t size() const;
+	size_t size() const { return _text.size(); }
 	// Expected total width of rendered text
-	virtual unsigned width();
+	unsigned width() const;
 	// Get display column for some char offset
-	virtual column_t column(offset_t loc);
+	column_t column(offset_t loc) const;
 	// Get char offset for some display column
-	virtual offset_t offset(column_t h);
+	offset_t offset(column_t h) const;
 	// Render characters from location in buffer
-	virtual void paint(WINDOW *view, column_t hoff, unsigned width);
+	void paint(WINDOW *view, column_t hoff, unsigned width) const;
 private:
-	void advance(char ch, column_t &h);
+	void advance(char ch, column_t &h) const;
+	std::string _text;
 };
 } // namespace Editor
 

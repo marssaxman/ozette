@@ -90,7 +90,7 @@ private:
 	bool attempt_modify();
 	void clear_modify();
 
-	std::unique_ptr<Line> _blank;
+	Line _blank;
 	std::vector<std::unique_ptr<Line>> _lines;
 	line_t _maxline = 0;	// ubound, not size
 

@@ -21,17 +21,12 @@
 
 const unsigned Editor::kTabWidth = 4;
 
-size_t Editor::Line::size() const
-{
-	return text().size();
-}
-
-unsigned Editor::Line::width()
+unsigned Editor::Line::width() const
 {
 	return column(size());
 }
 
-Editor::column_t Editor::Line::column(offset_t loc)
+Editor::column_t Editor::Line::column(offset_t loc) const
 {
 	column_t out = 0;
 	offset_t pos = 0;
@@ -42,7 +37,7 @@ Editor::column_t Editor::Line::column(offset_t loc)
 	return out;
 }
 
-Editor::offset_t Editor::Line::offset(column_t h)
+Editor::offset_t Editor::Line::offset(column_t h) const
 {
 	offset_t out = 0;
 	column_t pos = 0;
@@ -54,14 +49,14 @@ Editor::offset_t Editor::Line::offset(column_t h)
 	return out;
 }
 
-void Editor::Line::advance(char ch, column_t &h)
+void Editor::Line::advance(char ch, column_t &h) const
 {
 	do {
 		h++;
 	} while (ch == '\t' && h % kTabWidth);
 }
 
-void Editor::Line::paint(WINDOW *dest, column_t hoff, unsigned width)
+void Editor::Line::paint(WINDOW *dest, column_t hoff, unsigned width) const
 {
 	column_t h = 0;
 	width += hoff;

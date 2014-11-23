@@ -23,32 +23,13 @@
 #include <assert.h>
 #include <sys/stat.h>
 
-namespace {
-class BlankLine : public Editor::Line
-{
-public:
-	virtual std::string text() const override { return std::string(); }
-	virtual size_t size() const override { return 0; }
-};
-
-class StrLine : public Editor::Line
-{
-public:
-	StrLine(std::string text): _text(text) {}
-	virtual std::string text() const override { return _text; }
-	virtual size_t size() const override { return _text.size(); }
-private:
-	std::string _text;
-};
-} // namespace
-
 Editor::Document::Document():
-	_blank(new BlankLine)
+	_blank("")
 {
 }
 
 Editor::Document::Document(std::string path):
-	_blank(new BlankLine)
+	_blank("")
 {
 	Read(path);
 }
@@ -180,7 +161,7 @@ Editor::Line &Editor::Document::line(line_t index)
 {
 	// Get the line at the specified index.
 	// If no such line exists, return a blank.
-	return index < _lines.size() ? *_lines[index].get() : *_blank.get();
+	return index < _lines.size() ? *_lines[index].get() : _blank;
 }
 
 std::string Editor::Document::text(const Range &span)
@@ -288,22 +269,22 @@ std::string Editor::Document::substr_to_end(const location_t &loc)
 void Editor::Document::update_line(line_t index, std::string text)
 {
 	if (index < _lines.size()) {
-		_lines[index].reset(new StrLine(text));
+		_lines[index].reset(new Line(text));
 	} else {
-		_lines.emplace_back(new StrLine(text));
+		_lines.emplace_back(new Line(text));
 	}
 }
 
 void Editor::Document::insert_line(line_t index, std::string text)
 {
-	_lines.emplace(_lines.begin() + index, new StrLine(text));
+	_lines.emplace(_lines.begin() + index, new Line(text));
 	_maxline = _lines.size() - 1;
 }
 
 Editor::line_t Editor::Document::append_line(std::string text)
 {
 	line_t index = _lines.size();
-	_lines.emplace_back(new StrLine(text));
+	_lines.emplace_back(new Line(text));
 	_maxline = _lines.size()-1;
 	return index;
 }
