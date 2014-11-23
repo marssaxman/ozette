@@ -46,6 +46,7 @@ public:
 	bool process(int ch);
 	bool poll();
 	virtual void show_dialog(std::unique_ptr<View> &&dialog) override;
+	View::Priority priority() const { return _view->priority(); }
 protected:
 	virtual void repaint() override { _dirty_content = true; }
 	virtual Controller &app() override { return _app; }

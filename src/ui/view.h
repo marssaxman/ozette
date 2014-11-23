@@ -39,6 +39,12 @@ public:
 	virtual bool process(Frame &ctx, int ch) = 0;
 	virtual bool poll(Frame &ctx) { return true; }
 	virtual void set_help(HelpBar::Panel &panel) {}
+	enum class Priority {
+		Primary,
+		Secondary,
+		Any
+	};
+	virtual Priority priority() const { return Priority::Any; }
 protected:
 	virtual void paint_into(WINDOW *view, bool active) = 0;
 private:

@@ -36,6 +36,7 @@ public:
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual bool poll(UI::Frame &ctx) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
+	virtual Priority priority() const { return Priority::Secondary; }
 protected:
 	View() { _instance = this; }
 	~View();

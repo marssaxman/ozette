@@ -31,12 +31,7 @@ public:
 	Shell(Controller &app);
 	~Shell();
 	bool process(int ch);
-	enum class Position {
-		Primary,
-		Secondary,
-		Any
-	};
-	Window *open_window(std::unique_ptr<View> &&view, Position pos = Position::Any);
+	Window *open_window(std::unique_ptr<View> &&view);
 	void close_window(Window *window);
 	void make_active(Window *window);
 	Window *active() const { return _tabs[_focus].get(); }

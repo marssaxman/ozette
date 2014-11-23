@@ -44,8 +44,7 @@ void Console::View::exec(
 		shell.make_active(_instance->_window);
 	} else {
 		std::unique_ptr<UI::View> view(new Console::View());
-		UI::Shell::Position pos = UI::Shell::Position::Secondary;
-		_instance->_window = shell.open_window(std::move(view), pos);
+		_instance->_window = shell.open_window(std::move(view));
 	}
 	_instance->exec(title, exe, argv);
 }

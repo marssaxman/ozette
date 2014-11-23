@@ -36,6 +36,7 @@ public:
 	virtual bool poll(UI::Frame &ctx) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
 	void view(std::string path);
+	virtual Priority priority() const { return Priority::Primary; }
 protected:
 	void check_rebuild(UI::Frame &ctx);
 	virtual void paint_into(WINDOW *view, bool active) override;

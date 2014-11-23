@@ -125,17 +125,23 @@ void UI::Shell::reap()
 	}
 }
 
-UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view, Position pos)
+UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view)
 {
 	// We reserve the top row for the title bar.
 	// Aside from that, new windows fill the terminal rows.
 	// Windows are never wider than 80 columns.
 	Window *win = new Window(_app, std::move(view));
 	size_t index;
-	switch (pos) {
-		case Position::Primary:
-		case Position::Secondary: index = 0; break;
-		case Position::Any: index = _focus + 1; break;
+	switch (win->priority()) {
+		case View::Priority::Primary: index = 0; break;
+		case View::Priority::Secondary: {
+			index = 0;
+			auto super = UI::View::Priority::Primary;
+			while (index < _tabs.size() && _tabs[index]->priority() == super) {
+				index++;
+			}
+		} break;
+		case View::Priority::Any: index = _tabs.size(); break;
 	}
 	_tabs.emplace(_tabs.begin() + index, win);
 	relayout();
