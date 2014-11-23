@@ -64,7 +64,7 @@ void Editor::Document::Write(std::string path)
 {
 	std::ofstream file(path, std::ios::trunc);
 	for (auto &line: _lines) {
-		file << line->text() << std::endl;
+		file << line.text() << std::endl;
 	}
 	file.close();
 	clear_modify();
@@ -161,7 +161,7 @@ Editor::Line &Editor::Document::line(line_t index)
 {
 	// Get the line at the specified index.
 	// If no such line exists, return a blank.
-	return index < _lines.size() ? *_lines[index].get() : _blank;
+	return index < _lines.size() ? _lines[index] : _blank;
 }
 
 std::string Editor::Document::text(const Range &span)
@@ -199,7 +199,7 @@ Editor::location_t Editor::Document::insert(location_t loc, char ch)
 	sanitize(loc);
 	if (!attempt_modify()) return loc;
 	if (loc.line < _lines.size()) {
-		std::string text = _lines[loc.line]->text();
+		std::string text = _lines[loc.line].text();
 		text.insert(loc.offset, 1, ch);
 		update_line(loc.line, text);
 		loc.offset++;
@@ -269,22 +269,22 @@ std::string Editor::Document::substr_to_end(const location_t &loc)
 void Editor::Document::update_line(line_t index, std::string text)
 {
 	if (index < _lines.size()) {
-		_lines[index].reset(new Line(text));
+		_lines[index] = Line(text);
 	} else {
-		_lines.emplace_back(new Line(text));
+		_lines.emplace_back(Line(text));
 	}
 }
 
 void Editor::Document::insert_line(line_t index, std::string text)
 {
-	_lines.emplace(_lines.begin() + index, new Line(text));
+	_lines.emplace(_lines.begin() + index, Line(text));
 	_maxline = _lines.size() - 1;
 }
 
 Editor::line_t Editor::Document::append_line(std::string text)
 {
 	line_t index = _lines.size();
-	_lines.emplace_back(new Line(text));
+	_lines.emplace_back(Line(text));
 	_maxline = _lines.size()-1;
 	return index;
 }
@@ -304,7 +304,8 @@ Editor::location_t Editor::Document::sanitize(const location_t &loc)
 	// Verify that this location refers to a real place.
 	// Fix it if either of its dimensions would be out-of-bounds.
 	line_t index = std::min(loc.line, _lines.size()-1);
-	offset_t offset = _lines.empty()? 0: std::min(loc.offset, _lines[index]->size());
+	offset_t offset = 0;
+	if (!_lines.empty()) offset = std::min(loc.offset, _lines[index].size());
 	return location_t(index, offset);
 }
 

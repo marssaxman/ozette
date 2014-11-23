@@ -91,7 +91,7 @@ private:
 	void clear_modify();
 
 	Line _blank;
-	std::vector<std::unique_ptr<Line>> _lines;
+	std::vector<Line> _lines;
 	line_t _maxline = 0;	// ubound, not size
 
 	// is the user allowed to make changes in this document?
