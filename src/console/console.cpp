@@ -96,7 +96,9 @@ bool Console::View::poll(UI::Frame &ctx)
 
 void Console::View::set_help(UI::HelpBar::Panel &panel)
 {
-	panel.label[0][0] = UI::HelpBar::Label('K', true, "Kill");
+	if (_subpid > 0) {
+		panel.label[0][0] = UI::HelpBar::Label('K', true, "Kill");
+	}
 	panel.label[1][0] = UI::HelpBar::Label('W', true, "Close");
 	panel.label[1][1] = UI::HelpBar::Label('E', true, "Execute");
 	panel.label[1][5] = UI::HelpBar::Label('?', true, "Help");
