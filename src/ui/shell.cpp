@@ -206,7 +206,7 @@ void UI::Shell::layout()
 	if(_tabs.empty()) return;
 	size_t ubound = _tabs.size() - 1;
 	std::vector<int> xpos(_tabs.size());
-	if (_tabs.size() * _columnWidth <= _width) {
+	if ((int)_tabs.size() * _columnWidth <= _width) {
 		for (unsigned i = 0; i <= ubound; ++i) {
 			xpos[i] = i * _columnWidth;
 		}
