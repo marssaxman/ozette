@@ -26,19 +26,20 @@
 #include "line.h"
 
 namespace Editor {
-class Buffer : protected std::vector<Line>
+class Buffer
 {
-	typedef std::vector<Line> inherited;
 public:
-	void clear() { inherited::clear(); }
-	bool empty() const { return inherited::empty(); }
-	size_t size() const { return inherited::size(); }
-	const Line& get(size_t i) const { return inherited::operator[](i); }
+	void clear() { _lines.clear(); }
+	bool empty() const { return _lines.empty(); }
+	size_t size() const { return _lines.size(); }
+	const Line& get(size_t i) const { return _lines[i]; }
 	void update(size_t i, std::string text);
 	void insert(size_t i, std::string text);
 	void append(std::string text);
 	void erase(size_t begin, size_t end);
 	friend std::ostream& operator<< (std::ostream &out, const Buffer &buf);
+private:
+	std::vector<Line> _lines;
 };
 } // namespace Editor
 

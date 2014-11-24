@@ -21,29 +21,29 @@
 
 void Editor::Buffer::update(size_t i, std::string text)
 {
-	inherited::operator[](i) = Line(text);
+	_lines[i] = Line(text);
 }
 
 void Editor::Buffer::insert(size_t i, std::string text)
 {
-	inherited::emplace(inherited::begin() + i, Line(text));
+	_lines.emplace(_lines.begin() + i, Line(text));
 }
 
 void Editor::Buffer::append(std::string text)
 {
-	inherited::emplace_back(Line(text));
+	_lines.emplace_back(Line(text));
 }
 
 void Editor::Buffer::erase(size_t from, size_t end)
 {
-	auto begin = inherited::begin();
-	inherited::erase(begin + from, begin + end);
+	auto begin = _lines.begin();
+	_lines.erase(begin + from, begin + end);
 }
 
 namespace Editor {
 std::ostream &operator<< (std::ostream &out, const Buffer &buffer)
 {
-	for (auto &line: buffer) {
+	for (auto &line: buffer._lines) {
 		out << line.text() << std::endl;
 	}
 	return out;
