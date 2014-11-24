@@ -21,10 +21,10 @@
 #define EDITOR_DOCUMENT_H
 
 #include <string>
-#include <vector>
 #include <memory>
 #include "coordinates.h"
 #include "line.h"
+#include "buffer.h"
 
 // A document breaks a text buffer into lines, then
 // maps those lines onto an infinite plane of equally
@@ -63,9 +63,9 @@ public:
 
 	// Get a reference to a specific line, which may be a blank
 	// if no such line exists.
-	Line &line(line_t index);
+	const Line &line(line_t index) const;
 	// Retrieve the text within the range as a contiguous string.
-	std::string text(const Range &span);
+	std::string text(const Range &span) const;
 
 	// Remove the text within the range.
 	location_t erase(const Range &span);
@@ -78,7 +78,7 @@ public:
 	location_t split(location_t loc);
 
 private:
-	std::string substr_to_end(const location_t &loc);
+	std::string substr_to_end(const location_t &loc) const;
 	std::string substr_from_home(const location_t &loc);
 	void update_line(line_t index, std::string text);
 	void insert_line(line_t index, std::string text);
@@ -91,7 +91,7 @@ private:
 	void clear_modify();
 
 	Line _blank;
-	std::vector<Line> _lines;
+	Buffer _lines;
 	line_t _maxline = 0;	// ubound, not size
 
 	// is the user allowed to make changes in this document?

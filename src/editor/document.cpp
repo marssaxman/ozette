@@ -63,9 +63,7 @@ void Editor::Document::Read(std::string path)
 void Editor::Document::Write(std::string path)
 {
 	std::ofstream file(path, std::ios::trunc);
-	for (auto &line: _lines) {
-		file << line.text() << std::endl;
-	}
+	file << _lines;
 	file.close();
 	clear_modify();
 }
@@ -157,14 +155,14 @@ Editor::location_t Editor::Document::find(std::string needle, location_t loc)
 	return end();
 }
 
-Editor::Line &Editor::Document::line(line_t index)
+const Editor::Line &Editor::Document::line(line_t index) const
 {
 	// Get the line at the specified index.
 	// If no such line exists, return a blank.
-	return index < _lines.size() ? _lines[index] : _blank;
+	return index < _lines.size() ? _lines.get(index) : _blank;
 }
 
-std::string Editor::Document::text(const Range &span)
+std::string Editor::Document::text(const Range &span) const
 {
 	std::stringstream out;
 	location_t loc = span.begin();
@@ -188,8 +186,7 @@ Editor::location_t Editor::Document::erase(const Range &chars)
 	location_t end = sanitize(chars.end());
 	std::string suffix = substr_to_end(end);
 	size_t index = begin.line;
-	auto iter = _lines.begin();
-	_lines.erase(iter + begin.line + 1, iter + end.line + 1);
+	_lines.erase(begin.line + 1, end.line + 1);
 	update_line(index, prefix + suffix);
 	return location_t(index, prefix.size());
 }
@@ -199,7 +196,7 @@ Editor::location_t Editor::Document::insert(location_t loc, char ch)
 	sanitize(loc);
 	if (!attempt_modify()) return loc;
 	if (loc.line < _lines.size()) {
-		std::string text = _lines[loc.line].text();
+		std::string text = _lines.get(loc.line).text();
 		text.insert(loc.offset, 1, ch);
 		update_line(loc.line, text);
 		loc.offset++;
@@ -260,7 +257,7 @@ std::string Editor::Document::substr_from_home(const location_t &loc)
 	return text.substr(0, loc.offset);
 }
 
-std::string Editor::Document::substr_to_end(const location_t &loc)
+std::string Editor::Document::substr_to_end(const location_t &loc) const
 {
 	std::string text = line(loc.line).text();
 	return text.substr(std::min(text.size(), loc.offset), std::string::npos);
@@ -269,22 +266,22 @@ std::string Editor::Document::substr_to_end(const location_t &loc)
 void Editor::Document::update_line(line_t index, std::string text)
 {
 	if (index < _lines.size()) {
-		_lines[index] = Line(text);
+		_lines.update(index, text);
 	} else {
-		_lines.emplace_back(Line(text));
+		_lines.append(text);
 	}
 }
 
 void Editor::Document::insert_line(line_t index, std::string text)
 {
-	_lines.emplace(_lines.begin() + index, Line(text));
+	_lines.insert(index, text);
 	_maxline = _lines.size() - 1;
 }
 
 Editor::line_t Editor::Document::append_line(std::string text)
 {
 	line_t index = _lines.size();
-	_lines.emplace_back(Line(text));
+	_lines.append(text);
 	_maxline = _lines.size()-1;
 	return index;
 }
@@ -305,7 +302,9 @@ Editor::location_t Editor::Document::sanitize(const location_t &loc)
 	// Fix it if either of its dimensions would be out-of-bounds.
 	line_t index = std::min(loc.line, _lines.size()-1);
 	offset_t offset = 0;
-	if (!_lines.empty()) offset = std::min(loc.offset, _lines[index].size());
+	if (!_lines.empty()) {
+		offset = std::min(loc.offset, _lines.get(index).size());
+	}
 	return location_t(index, offset);
 }
 
