@@ -23,6 +23,7 @@
 #include <vector>
 #include <ostream>
 #include <string>
+#include <memory>
 #include "line.h"
 
 namespace Editor {
@@ -39,7 +40,8 @@ public:
 	void erase(size_t begin, size_t end);
 	friend std::ostream& operator<< (std::ostream &out, const Buffer &buf);
 private:
-	std::vector<Line> _lines;
+	std::vector<Line*> _lines;
+	std::vector<std::unique_ptr<Line>> _storage;
 };
 } // namespace Editor
 

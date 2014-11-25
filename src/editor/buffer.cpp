@@ -36,22 +36,25 @@ size_t Editor::Buffer::line_count() const
 
 const Editor::Line &Editor::Buffer::get(size_t i) const
 {
-	return _lines[i];
+	return *_lines[i];
 }
 
 void Editor::Buffer::update(size_t i, std::string text)
 {
-	_lines[i] = Line(text);
+	_storage.emplace_back(new Line(text));
+	_lines[i] = _storage.back().get();
 }
 
 void Editor::Buffer::insert(size_t i, std::string text)
 {
-	_lines.emplace(_lines.begin() + i, Line(text));
+	_storage.emplace_back(new Line(text));
+	_lines.emplace(_lines.begin() + i, _storage.back().get());
 }
 
 void Editor::Buffer::append(std::string text)
 {
-	_lines.emplace_back(Line(text));
+	_storage.emplace_back(new Line(text));
+	_lines.emplace_back(_storage.back().get());
 }
 
 void Editor::Buffer::erase(size_t from, size_t end)
@@ -64,7 +67,7 @@ namespace Editor {
 std::ostream &operator<< (std::ostream &out, const Buffer &buffer)
 {
 	for (auto &line: buffer._lines) {
-		out << line.text() << std::endl;
+		out << line->text() << std::endl;
 	}
 	return out;
 }
