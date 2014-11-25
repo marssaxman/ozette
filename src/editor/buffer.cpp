@@ -19,6 +19,26 @@
 
 #include "buffer.h"
 
+void Editor::Buffer::clear()
+{
+	_lines.clear();
+}
+
+bool Editor::Buffer::empty() const
+{
+	return _lines.empty();
+}
+
+size_t Editor::Buffer::size() const
+{
+	return _lines.size();
+}
+
+const Editor::Line &Editor::Buffer::get(size_t i) const
+{
+	return _lines[i];
+}
+
 void Editor::Buffer::update(size_t i, std::string text)
 {
 	_lines[i] = Line(text);

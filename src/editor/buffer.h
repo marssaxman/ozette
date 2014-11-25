@@ -29,10 +29,10 @@ namespace Editor {
 class Buffer
 {
 public:
-	void clear() { _lines.clear(); }
-	bool empty() const { return _lines.empty(); }
-	size_t size() const { return _lines.size(); }
-	const Line& get(size_t i) const { return _lines[i]; }
+	void clear();
+	bool empty() const;
+	size_t size() const;
+	const Line& get(size_t i) const;
 	void update(size_t i, std::string text);
 	void insert(size_t i, std::string text);
 	void append(std::string text);
