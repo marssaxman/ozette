@@ -29,7 +29,7 @@ bool Editor::Buffer::empty() const
 	return _lines.empty();
 }
 
-size_t Editor::Buffer::size() const
+size_t Editor::Buffer::line_count() const
 {
 	return _lines.size();
 }

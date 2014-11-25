@@ -31,7 +31,7 @@ class Buffer
 public:
 	void clear();
 	bool empty() const;
-	size_t size() const;
+	size_t line_count() const;
 	const Line& get(size_t i) const;
 	void update(size_t i, std::string text);
 	void insert(size_t i, std::string text);
