@@ -41,6 +41,11 @@ public:
 	std::string status() const { return _status; }
 	bool modified() const { return _modified; }
 	bool readonly() const { return _read_only; }
+	void commit(location_t cursor) { _buf->commit(cursor); }
+	bool can_undo() const { return _buf->can_undo(); }
+	location_t undo() { return Buffer::undo(std::move(_buf)); }
+	bool can_redo() const { return _buf->can_redo(); }
+	location_t redo() { return Buffer::redo(std::move(_buf)); }
 
 	// Where are the beginning and end of the document?
 	location_t home();

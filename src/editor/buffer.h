@@ -39,16 +39,17 @@ public:
 	void append(std::string text);
 	void erase(size_t begin, size_t end);
 	friend std::ostream& operator<< (std::ostream &out, const Buffer &buf);
-	void commit();
-	static void undo(std::unique_ptr<Buffer> &&buf);
+	void commit(location_t cursor);
+	static location_t undo(std::unique_ptr<Buffer> &&buf);
 	bool can_undo() const { return _previous.get() != nullptr; }
-	static void redo(std::unique_ptr<Buffer> &&buf);
+	static location_t redo(std::unique_ptr<Buffer> &&buf);
 	bool can_redo() const { return _next.get() != nullptr; }
 private:
 	std::unique_ptr<Buffer> _previous;
 	std::unique_ptr<Buffer> _next;
 	std::vector<Line*> _lines;
 	std::vector<std::unique_ptr<Line>> _storage;
+	location_t _cursor;
 };
 } // namespace Editor
 

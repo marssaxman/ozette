@@ -74,7 +74,7 @@ std::ostream &operator<< (std::ostream &out, const Buffer &buffer)
 }
 } // namespace Editor
 
-void Editor::Buffer::commit()
+void Editor::Buffer::commit(location_t cursor)
 {
 	// An undoable action has completed.
 	// Save the current state as a "previous" object, then reset the current
@@ -84,23 +84,26 @@ void Editor::Buffer::commit()
 	_next.reset(nullptr);
 	std::unique_ptr<Buffer> prevprev = std::move(_previous);
 	_previous.reset(new Buffer);
+	_previous->_cursor = cursor;
 	_previous->_previous = std::move(prevprev);
 	_previous->_storage = std::move(_storage);
 	_previous->_lines = _lines;
 }
 
-void Editor::Buffer::undo(std::unique_ptr<Buffer> &&buf)
+Editor::location_t Editor::Buffer::undo(std::unique_ptr<Buffer> &&buf)
 {
-	if (!buf->_previous.get()) return;
+	if (!buf->_previous.get()) return buf->_cursor;
 	std::unique_ptr<Buffer> temp = std::move(buf);
 	buf = std::move(temp->_previous);
 	buf->_next = std::move(temp);
+	return buf->_cursor;
 }
 
-void Editor::Buffer::redo(std::unique_ptr<Buffer> &&buf)
+Editor::location_t Editor::Buffer::redo(std::unique_ptr<Buffer> &&buf)
 {
-	if (!buf->_next.get()) return;
+	if (!buf->_next.get()) return buf->_cursor;
 	std::unique_ptr<Buffer> temp = std::move(buf);
 	buf = std::move(temp->_next);
 	buf->_previous = std::move(temp);
+	return buf->_cursor;
 }
