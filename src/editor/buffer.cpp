@@ -18,6 +18,7 @@
 //
 
 #include "buffer.h"
+#include <assert.h>
 
 void Editor::Buffer::clear()
 {
@@ -72,3 +73,34 @@ std::ostream &operator<< (std::ostream &out, const Buffer &buffer)
 	return out;
 }
 } // namespace Editor
+
+void Editor::Buffer::commit()
+{
+	// An undoable action has completed.
+	// Save the current state as a "previous" object, then reset the current
+	// object's state.  Transfer ownership of our lines to the new object, and
+	// make sure the new object has the same array of lines we do.
+	assert(!_previous.get());
+	_next.reset(nullptr);
+	std::unique_ptr<Buffer> prevprev = std::move(_previous);
+	_previous.reset(new Buffer);
+	_previous->_previous = std::move(prevprev);
+	_previous->_storage = std::move(_storage);
+	_previous->_lines = _lines;
+}
+
+void Editor::Buffer::undo(std::unique_ptr<Buffer> &&buf)
+{
+	if (!buf->_previous.get()) return;
+	std::unique_ptr<Buffer> temp = std::move(buf);
+	buf = std::move(temp->_previous);
+	buf->_next = std::move(temp);
+}
+
+void Editor::Buffer::redo(std::unique_ptr<Buffer> &&buf)
+{
+	if (!buf->_next.get()) return;
+	std::unique_ptr<Buffer> temp = std::move(buf);
+	buf = std::move(temp->_next);
+	buf->_previous = std::move(temp);
+}
