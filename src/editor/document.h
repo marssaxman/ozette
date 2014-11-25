@@ -91,7 +91,7 @@ private:
 	void clear_modify();
 
 	Line _blank;
-	Buffer _buf;
+	std::unique_ptr<Buffer> _buf;
 	line_t _maxline = 0;	// ubound, not size
 
 	// is the user allowed to make changes in this document?
