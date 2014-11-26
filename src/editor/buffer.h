@@ -45,6 +45,7 @@ public:
 	static location_t redo(std::unique_ptr<Buffer> &&buf);
 	bool can_redo() const { return _next.get() != nullptr; }
 private:
+	void enact_change();
 	std::unique_ptr<Buffer> _previous;
 	std::unique_ptr<Buffer> _next;
 	std::vector<Line*> _lines;
