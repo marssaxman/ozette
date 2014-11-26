@@ -87,10 +87,10 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::Cut: ctl_cut(ctx); break;
 		case Control::Copy: ctl_copy(ctx); break;
 		case Control::Paste: ctl_paste(ctx); break;
-
+		case Control::Undo: ctl_undo(ctx); break;
+		case Control::Redo: ctl_redo(ctx); break;
 		case Control::Close: ctl_close(ctx); break;
 		case Control::Save: ctl_save(ctx); break;
-
 		case Control::ToLine: ctl_toline(ctx); break;
 		case Control::Find: ctl_find(ctx); break;
 
@@ -135,6 +135,12 @@ void Editor::View::set_help(UI::HelpBar::Panel &panel)
 	panel.label[1][0] = Label('W', true, "Close");
 	if (!_doc.readonly()) {
 		panel.label[1][1] = Label('S', true, "Save");
+	}
+	if (_doc.can_undo()) {
+		panel.label[1][3] = Label('Z', true, "Undo");
+	}
+	if (_doc.can_redo()) {
+		panel.label[1][4] = Label('Y', true, "Redo");
 	}
 	panel.label[1][5] = Label('?', true, "Help");
 }
@@ -258,6 +264,18 @@ void Editor::View::ctl_paste(UI::Frame &ctx)
 		_update.forward(oldloc);
 	}
 	_cursor.move_to(newloc);
+	drop_selection();
+}
+
+void Editor::View::ctl_undo(UI::Frame &ctx)
+{
+	_cursor.move_to(_doc.undo());
+	drop_selection();
+}
+
+void Editor::View::ctl_redo(UI::Frame &ctx)
+{
+	_cursor.move_to(_doc.redo());
 	drop_selection();
 }
 
