@@ -40,7 +40,7 @@ public:
 	void erase(size_t begin, size_t end);
 	friend std::ostream& operator<< (std::ostream &out, const Buffer &buf);
 	void commit(location_t cursor);
-	static location_t undo(std::unique_ptr<Buffer> &&buf);
+	static location_t undo(std::unique_ptr<Buffer> &&buf, location_t cursor);
 	bool can_undo() const { return _previous.get() != nullptr; }
 	static location_t redo(std::unique_ptr<Buffer> &&buf);
 	bool can_redo() const { return _next.get() != nullptr; }

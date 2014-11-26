@@ -97,12 +97,13 @@ void Editor::Buffer::commit(location_t cursor)
 	_previous->_lines = _lines;
 }
 
-Editor::location_t Editor::Buffer::undo(std::unique_ptr<Buffer> &&buf)
+Editor::location_t Editor::Buffer::undo(std::unique_ptr<Buffer> &&buf, location_t cursor)
 {
-	if (!buf->_previous.get()) return buf->_cursor;
+	if (!buf->_previous.get()) return cursor;
 	std::unique_ptr<Buffer> temp = std::move(buf);
 	buf = std::move(temp->_previous);
 	buf->_next = std::move(temp);
+	buf->_next->_cursor = cursor;
 	return buf->_cursor;
 }
 

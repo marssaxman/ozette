@@ -270,7 +270,7 @@ void Editor::View::ctl_paste(UI::Frame &ctx)
 
 void Editor::View::ctl_undo(UI::Frame &ctx)
 {
-	_cursor.move_to(_doc.undo());
+	_cursor.move_to(_doc.undo(_cursor.location()));
 	drop_selection();
 	_update.all();
 }

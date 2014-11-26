@@ -43,7 +43,7 @@ public:
 	bool readonly() const { return _read_only; }
 	void commit(location_t cursor) { _buf->commit(cursor); }
 	bool can_undo() const { return _buf->can_undo(); }
-	location_t undo() { return Buffer::undo(std::move(_buf)); }
+	location_t undo(location_t loc) { return Buffer::undo(std::move(_buf), loc); }
 	bool can_redo() const { return _buf->can_redo(); }
 	location_t redo() { return Buffer::redo(std::move(_buf)); }
 
