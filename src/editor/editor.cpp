@@ -57,6 +57,7 @@ void Editor::View::activate(UI::Frame &ctx)
 
 void Editor::View::deactivate(UI::Frame &ctx)
 {
+	_doc.commit(_cursor.location());
 }
 
 void Editor::View::paint_into(WINDOW *dest, bool active)
@@ -271,12 +272,14 @@ void Editor::View::ctl_undo(UI::Frame &ctx)
 {
 	_cursor.move_to(_doc.undo());
 	drop_selection();
+	_update.all();
 }
 
 void Editor::View::ctl_redo(UI::Frame &ctx)
 {
 	_cursor.move_to(_doc.redo());
 	drop_selection();
+	_update.all();
 }
 
 void Editor::View::ctl_close(UI::Frame &ctx)
@@ -428,6 +431,7 @@ void Editor::View::key_end()
 void Editor::View::delete_selection()
 {
 	if (_selection.empty()) return;
+	_doc.commit(_cursor.location());
 	_update.forward(_selection.begin());
 	_cursor.move_to(_doc.erase(_selection));
 	drop_selection();
@@ -485,6 +489,7 @@ void Editor::View::key_btab(UI::Frame &ctx)
 
 void Editor::View::key_enter(UI::Frame &ctx)
 {
+	_doc.commit(_cursor.location());
 	// Split the line at the cursor position, but don't move the cursor.
 	delete_selection();
 	_doc.split(_cursor.location());
@@ -493,6 +498,7 @@ void Editor::View::key_enter(UI::Frame &ctx)
 
 void Editor::View::key_return(UI::Frame &ctx)
 {
+	_doc.commit(_cursor.location());
 	// Split the line at the cursor position and move the cursor to the new line.
 	delete_selection();
 	line_t old_index = _cursor.location().line;
