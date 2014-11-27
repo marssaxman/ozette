@@ -320,11 +320,12 @@ void UI::Window::paint_titlebar_left(int width, std::string text)
 	int titlechars = width - 2;
 	if (_swap_titlebar) titlechars /= 2;
 	wmove(_framewin, 0, left);
-	if (_has_focus) wattron(_framewin, A_REVERSE);
+	bool highlight = _has_focus && !_dialog.get();
+	if (highlight) wattron(_framewin, A_REVERSE);
 	waddch(_framewin, ' ');
 	waddnstr(_framewin, text.c_str(), titlechars);
 	waddch(_framewin, ' ');
-	if (_has_focus) wattroff(_framewin, A_REVERSE);
+	if (highlight) wattroff(_framewin, A_REVERSE);
 }
 
 void UI::Window::paint_titlebar_right(int width, std::string text)
