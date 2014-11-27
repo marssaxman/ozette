@@ -160,6 +160,7 @@ void Lindi::show_browser()
 
 void Lindi::change_directory()
 {
+	show_browser();
 	std::string prompt = "Change Directory";
 	get_config("recent_dirs", _recent_dirs);
 	auto options = _recent_dirs;
@@ -190,6 +191,7 @@ void Lindi::new_file()
 
 void Lindi::open_file()
 {
+	show_browser();
 	std::string prompt = "Open";
 	std::vector<std::string> options;
 	auto commit = [this](UI::Frame &ctx, std::string path)
@@ -220,6 +222,7 @@ void Lindi::show_help()
 
 void Lindi::execute()
 {
+	show_browser();
 	std::string prompt = "exec";
 	auto commit = [this](UI::Frame &ctx, std::string cmd)
 	{
