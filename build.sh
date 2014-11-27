@@ -47,8 +47,9 @@ fi
 
 # Lindi-specific variant of the standard martian build process:
 # generate a C source file representation of the help file.
-xxd -i HELP src/app/help.cpp
-
+if [ ./HELP -nt src/app/help.cpp ] ; then
+	xxd -i HELP src/app/help.cpp
+fi
 
 # Begin!
 
@@ -83,6 +84,9 @@ for dep in $(find $objdir -type f -name "*.d"); do
 			if [ "$checkfile" = "\\" ] ; then
 				continue
 			fi
+			# If the obj file depends on a file which is newer, delete it.
+			# If the obj file depends on a file which does not exist, that is
+			# also a good reason to delete it.
 			if [ $checkfile -nt $objtarget -o ! -e $checkfile ] ; then
 				rm $objtarget
 				break
