@@ -22,7 +22,7 @@
 #include "editor.h"
 #include "console.h"
 #include "control.h"
-#include "dialog.h"
+#include "picker.h"
 #include "help.h"
 #include <unistd.h>
 #include <fstream>
@@ -136,7 +136,7 @@ void Lindi::exec(std::string title, std::string exe, const std::vector<std::stri
 void Lindi::run()
 {
 	if (_editors.empty()) {
-		Browser::open(_current_dir, _shell);
+		Browser::View::open(_current_dir, _shell);
 	}
 	timeout(20);
 	do {
@@ -157,7 +157,7 @@ void Lindi::run()
 
 void Lindi::show_browser()
 {
-	Browser::open(_current_dir, _shell);
+	Browser::View::open(_current_dir, _shell);
 }
 
 void Lindi::change_directory()
@@ -176,11 +176,11 @@ void Lindi::change_directory()
 			return;
 		}
 		_current_dir = path;
-		Browser::change_directory(path);
+		Browser::View::change_directory(path);
 		set_mru(path, _recent_dirs);
 		set_config("recent_dirs", _recent_dirs);
 	};
-	auto dialog = new UI::Dialog::Pick(prompt, options, commit);
+	auto dialog = new Browser::Picker(prompt, options, commit);
 	std::unique_ptr<UI::View> dptr(dialog);
 	_shell.active()->show_dialog(std::move(dptr));
 }
@@ -201,7 +201,7 @@ void Lindi::open_file()
 		if (path.empty()) return;
 		edit_file(path);
 	};
-	auto dialog = new UI::Dialog::Pick(prompt, options, commit);
+	auto dialog = new Browser::Picker(prompt, options, commit);
 	std::unique_ptr<UI::View> dptr(dialog);
 	_shell.active()->show_dialog(std::move(dptr));
 }

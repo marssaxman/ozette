@@ -90,24 +90,6 @@ private:
 	action_t _all = nullptr;
 };
 
-// Picker asks the user to enter a file path.
-class Pick : public Input
-{
-	typedef Input inherited;
-public:
-	Pick(std::string prompt, std::vector<std::string> options, action_t commit);
-	Pick(std::string prompt, std::string value, action_t commit);
-	virtual void layout(int vpos, int hpos, int height, int width) override;
-	virtual bool process(Frame &ctx, int ch) override;
-protected:
-	virtual void paint_into(WINDOW *view, bool active) override;
-private:
-	void arrow_left(Frame &ctx);
-	void arrow_right(Frame &ctx);
-	void arrow_up();
-	void arrow_down();
-};
-
 class Find: public Input
 {
 public:

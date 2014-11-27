@@ -25,7 +25,8 @@
 #include "shell.h"
 #include <set>
 
-class Browser : public UI::View
+namespace Browser {
+class View : public UI::View
 {
 public:
 	static void change_directory(std::string path);
@@ -41,9 +42,9 @@ protected:
 	void check_rebuild(UI::Frame &ctx);
 	virtual void paint_into(WINDOW *view, bool active) override;
 private:
-	Browser(std::string path);
-	~Browser() { _instance = nullptr; }
-	static Browser *_instance;
+	View(std::string path);
+	~View() { _instance = nullptr; }
+	static View *_instance;
 	UI::Window *_window = nullptr;
 	struct row_t {
 		unsigned indent;
@@ -81,5 +82,6 @@ private:
 	std::string _name_filter;
 	time_t _name_filter_time = 0;
 };
+} //namespace Browser
 
 #endif // BROWSER_BROWSER_H
