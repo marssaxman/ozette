@@ -24,21 +24,19 @@
 #include <sys/stat.h>
 
 Editor::Document::Document():
-	_blank(""),
-	_buf(new Buffer)
+	_blank("")
 {
 }
 
 Editor::Document::Document(std::string path):
-	_blank(""),
-	_buf(new Buffer)
+	_blank("")
 {
 	Read(path);
 }
 
 void Editor::Document::Read(std::string path)
 {
-	_buf->clear();
+	_lines.clear();
 	_modified = false;
 	_read_only = false;
 	struct stat sb;
@@ -65,7 +63,9 @@ void Editor::Document::Read(std::string path)
 void Editor::Document::Write(std::string path)
 {
 	std::ofstream file(path, std::ios::trunc);
-	file << *_buf.get();
+	for (auto &line: _lines) {
+		file << line.text() << std::endl; 
+	}
 	file.close();
 	clear_modify();
 }
@@ -73,7 +73,7 @@ void Editor::Document::Write(std::string path)
 void Editor::Document::View(std::string text)
 {
 	// Replace all lines with the contents of this string.
-	_buf->clear();
+	_lines.clear();
 	_maxline = 0;
 	insert(home(), text);
 	_modified = false;
@@ -161,7 +161,7 @@ const Editor::Line &Editor::Document::line(line_t index) const
 {
 	// Get the line at the specified index.
 	// If no such line exists, return a blank.
-	return index < _buf->line_count() ? _buf->get(index) : _blank;
+	return index < _lines.size() ? _lines[index] : _blank;
 }
 
 std::string Editor::Document::text(const Range &span) const
@@ -181,14 +181,15 @@ std::string Editor::Document::text(const Range &span) const
 
 Editor::location_t Editor::Document::erase(const Range &chars)
 {
-	if (_buf->empty()) return home();
+	if (_lines.empty()) return home();
 	if (!attempt_modify()) return chars.begin();
 	location_t begin = sanitize(chars.begin());
 	std::string prefix = substr_from_home(begin);
 	location_t end = sanitize(chars.end());
 	std::string suffix = substr_to_end(end);
 	size_t index = begin.line;
-	_buf->erase(begin.line + 1, end.line + 1);
+	auto beginter = _lines.begin();
+	_lines.erase(beginter + begin.line + 1, beginter + end.line + 1);
 	update_line(index, prefix + suffix);
 	return location_t(index, prefix.size());
 }
@@ -197,8 +198,8 @@ Editor::location_t Editor::Document::insert(location_t loc, char ch)
 {
 	sanitize(loc);
 	if (!attempt_modify()) return loc;
-	if (loc.line < _buf->line_count()) {
-		std::string text = _buf->get(loc.line).text();
+	if (loc.line < _lines.size()) {
+		std::string text = _lines[loc.line].text();
 		text.insert(loc.offset, 1, ch);
 		update_line(loc.line, text);
 		loc.offset++;
@@ -267,25 +268,24 @@ std::string Editor::Document::substr_to_end(const location_t &loc) const
 
 void Editor::Document::update_line(line_t index, std::string text)
 {
-	if (index < _buf->line_count()) {
-		_buf->update(index, text);
+	if (index < _lines.size()) {
+		_lines[index] = Line(text);
 	} else {
-		_buf->append(text);
+		_lines.emplace_back(text);
 	}
 }
 
 void Editor::Document::insert_line(line_t index, std::string text)
 {
-	_buf->insert(index, text);
-	_maxline = _buf->line_count() - 1;
+	_lines.emplace(_lines.begin() + index, text);
+	_maxline = _lines.size() - 1;
 }
 
 Editor::line_t Editor::Document::append_line(std::string text)
-{
-	line_t index = _buf->line_count();
-	_buf->append(text);
-	_maxline = _buf->line_count()-1;
-	return index;
+{	
+	_maxline = _lines.size();
+	_lines.emplace_back(text);
+	return _maxline;
 }
 
 void Editor::Document::append_to_line(line_t index, std::string suffix)
@@ -302,10 +302,10 @@ Editor::location_t Editor::Document::sanitize(const location_t &loc)
 {
 	// Verify that this location refers to a real place.
 	// Fix it if either of its dimensions would be out-of-bounds.
-	line_t index = std::min(loc.line, _buf->line_count()-1);
+	line_t index = std::min(loc.line, _lines.size()-1);
 	offset_t offset = 0;
-	if (!_buf->empty()) {
-		offset = std::min(loc.offset, _buf->get(index).size());
+	if (!_lines.empty()) {
+		offset = std::min(loc.offset, _lines[index].size());
 	}
 	return location_t(index, offset);
 }

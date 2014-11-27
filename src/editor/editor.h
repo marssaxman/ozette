@@ -49,8 +49,6 @@ private:
 	void ctl_cut(UI::Frame &ctx);
 	void ctl_copy(UI::Frame &ctx);
 	void ctl_paste(UI::Frame &ctx);
-	void ctl_undo(UI::Frame &ctx);
-	void ctl_redo(UI::Frame &ctx);
 	void ctl_close(UI::Frame &ctx);
 	void ctl_save(UI::Frame &ctx);
 	void ctl_toline(UI::Frame &ctx);

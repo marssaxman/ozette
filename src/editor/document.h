@@ -22,9 +22,9 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 #include "coordinates.h"
 #include "line.h"
-#include "buffer.h"
 
 // A document breaks a text buffer into lines, then
 // maps those lines onto an infinite plane of equally
@@ -41,11 +41,6 @@ public:
 	std::string status() const { return _status; }
 	bool modified() const { return _modified; }
 	bool readonly() const { return _read_only; }
-	void commit(location_t cursor) { _buf->commit(cursor); }
-	bool can_undo() const { return _buf->can_undo(); }
-	location_t undo(location_t loc) { return Buffer::undo(std::move(_buf), loc); }
-	bool can_redo() const { return _buf->can_redo(); }
-	location_t redo() { return Buffer::redo(std::move(_buf)); }
 
 	// Where are the beginning and end of the document?
 	location_t home();
@@ -96,7 +91,7 @@ private:
 	void clear_modify();
 
 	Line _blank;
-	std::unique_ptr<Buffer> _buf;
+	std::vector<Line> _lines;
 	line_t _maxline = 0;	// ubound, not size
 
 	// is the user allowed to make changes in this document?
