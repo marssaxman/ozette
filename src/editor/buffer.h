@@ -50,7 +50,6 @@ private:
 	std::vector<Line*> _lines;
 	std::vector<std::unique_ptr<Line>> _storage;
 	location_t _cursor;
-	bool _changed = false;
 };
 } // namespace Editor
 
