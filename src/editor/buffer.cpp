@@ -24,7 +24,7 @@ void Editor::Buffer::clear()
 {
 	if (_lines.empty()) return;
 	_lines.clear();
-	enact_change();
+	_changed = true;
 }
 
 bool Editor::Buffer::empty() const
@@ -46,21 +46,21 @@ void Editor::Buffer::update(size_t i, std::string text)
 {
 	_storage.emplace_back(new Line(text));
 	_lines[i] = _storage.back().get();
-	enact_change();
+	_changed = true;
 }
 
 void Editor::Buffer::insert(size_t i, std::string text)
 {
 	_storage.emplace_back(new Line(text));
 	_lines.emplace(_lines.begin() + i, _storage.back().get());
-	enact_change();
+	_changed = true;
 }
 
 void Editor::Buffer::append(std::string text)
 {
 	_storage.emplace_back(new Line(text));
 	_lines.emplace_back(_storage.back().get());
-	enact_change();
+	_changed = true;
 }
 
 void Editor::Buffer::erase(size_t from, size_t end)
@@ -68,7 +68,7 @@ void Editor::Buffer::erase(size_t from, size_t end)
 	if (from == end) return;
 	auto begin = _lines.begin();
 	_lines.erase(begin + from, begin + end);
-	enact_change();
+	_changed = true;
 }
 
 namespace Editor {
@@ -114,13 +114,4 @@ Editor::location_t Editor::Buffer::redo(std::unique_ptr<Buffer> &&buf)
 	buf = std::move(temp->_next);
 	buf->_previous = std::move(temp);
 	return buf->_cursor;
-}
-
-void Editor::Buffer::enact_change()
-{
-	if (_changed) return;
-	_changed = true;
-	if (!_previous.get()) {
-		_previous.reset(new Buffer);
-	}
 }
