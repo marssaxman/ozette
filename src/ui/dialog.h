@@ -42,7 +42,6 @@ public:
 	virtual void set_help(HelpBar::Panel &panel) override;
 protected:
 	virtual void paint_into(WINDOW *view, bool active) override;
-	virtual unsigned extra_height() const { return 0; }
 private:
 	std::string _prompt;
 };
@@ -98,9 +97,9 @@ class Pick : public Input
 public:
 	Pick(std::string prompt, std::vector<std::string> options, action_t commit);
 	Pick(std::string prompt, std::string value, action_t commit);
+	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(Frame &ctx, int ch) override;
 protected:
-	virtual unsigned extra_height() const override { return _options.size(); }
 	virtual void paint_into(WINDOW *view, bool active) override;
 private:
 	void arrow_left(Frame &ctx);

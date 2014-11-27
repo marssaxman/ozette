@@ -28,7 +28,7 @@ UI::Dialog::Base::Base(std::string prompt):
 
 void UI::Dialog::Base::layout(int vpos, int hpos, int height, int width)
 {
-	int content_height = 1 + extra_height();
+	int content_height = 1;
 	int new_height = std::min(content_height, height / 2);
 	int new_vpos = vpos + height - new_height;
 	inherited::layout(new_vpos, hpos, new_height, width);
@@ -229,7 +229,8 @@ void UI::Dialog::Confirmation::set_help(HelpBar::Panel &panel)
 	}
 }
 
-UI::Dialog::Pick::Pick(std::string prompt, std::vector<std::string> options, action_t commit):
+UI::Dialog::Pick::Pick(
+		std::string prompt, std::vector<std::string> options, action_t commit):
 	Input(prompt, commit)
 {
 	_options = options;
@@ -245,6 +246,11 @@ UI::Dialog::Pick::Pick(std::string prompt, std::string value, action_t commit):
 {
 	_value = value;
 	_cursor_pos = _value.size();
+}
+
+void UI::Dialog::Pick::layout(int vpos, int hpos, int height, int width)
+{
+	UI::View::layout(vpos, hpos, 1 + _options.size(), width);
 }
 
 bool UI::Dialog::Pick::process(Frame &ctx, int ch)
