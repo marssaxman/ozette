@@ -40,7 +40,6 @@ Lindi::Lindi():
 	} else {
 		_current_dir = _home_dir;
 	}
-	Browser::open(_current_dir, _shell);
 }
 
 std::string Lindi::current_dir() const
@@ -136,6 +135,9 @@ void Lindi::exec(std::string title, std::string exe, const std::vector<std::stri
 
 void Lindi::run()
 {
+	if (_editors.empty()) {
+		Browser::open(_current_dir, _shell);
+	}
 	timeout(20);
 	do {
 		update_panels();
