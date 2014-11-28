@@ -20,7 +20,6 @@
 #include "editor.h"
 #include "control.h"
 #include "dialog.h"
-#include "picker.h"
 #include <assert.h>
 #include <sys/stat.h>
 #include <cctype>
@@ -559,7 +558,7 @@ void Editor::View::save(UI::Frame &ctx, std::string path)
 		std::unique_ptr<UI::View> dptr(dialog);
 		ctx.show_dialog(std::move(dptr));
 	};
-	auto dialog = new Browser::Picker(prompt, path, commit);
+	auto dialog = new UI::Dialog::Save(prompt, path, commit);
 	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
 }

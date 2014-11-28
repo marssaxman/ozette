@@ -52,10 +52,10 @@ class Input : public Base
 	typedef Base inherited;
 public:
 	typedef std::function<void(Frame&, std::string)> action_t;
+	Input(std::string prompt, action_t commit);
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual bool poll(UI::Frame &ctx) override;
 protected:
-	Input(std::string prompt, action_t commit);
 	virtual void paint_into(WINDOW *view, bool active) override;
 	void select_suggestion(size_t i);
 	void select_field();
@@ -106,6 +106,17 @@ class Command: public Input
 {
 public:
 	Command(std::string prompt, action_t commit): Input(prompt, commit) {}
+};
+
+class Save: public Input
+{
+public:
+	Save(std::string prompt, std::string path, action_t commit):
+		Input(prompt, commit)
+	{
+		_value = path;
+		_cursor_pos = path.size();
+	}
 };
 
 } // namespace Dialog
