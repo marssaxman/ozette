@@ -16,3 +16,24 @@ My focus for future development will be on more integrated, IDE-like features:
 integration with git/svn, a better console capable of running gdb/lldb, and
 syntax awareness for editor highlighting and identifier search.
 
+====
+
+Build it:
+
+	make
+
+Install it in /usr/bin/:
+
+	sudo make install
+
+Open the browser in the current directory:
+
+	lindi
+	
+Edit a specific file or files, with no browser:
+
+	lindi foo bar baz
+	
+
+
+
