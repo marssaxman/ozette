@@ -91,6 +91,8 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::Save: ctl_save(ctx); break;
 		case Control::ToLine: ctl_toline(ctx); break;
 		case Control::Find: ctl_find(ctx); break;
+		case Control::Undo: ctl_undo(ctx); break;
+		case Control::Redo: ctl_redo(ctx); break;
 
 		case KEY_DOWN: key_down(false); break;
 		case KEY_UP: key_up(false); break;
@@ -341,6 +343,22 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 	auto dialog = new UI::Dialog::Find(prompt, commit);
 	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
+}
+
+void Editor::View::ctl_undo(UI::Frame &ctx)
+{
+	Range alterange = _doc.undo();
+	_update.range(alterange);
+	_cursor.move_to(alterange.end());
+	ctx.repaint();
+}
+
+void Editor::View::ctl_redo(UI::Frame &ctx)
+{
+	Range alterange = _doc.redo();
+	_update.range(alterange);
+	_cursor.move_to(alterange.end());
+	ctx.repaint();
 }
 
 void Editor::View::key_up(bool extend)

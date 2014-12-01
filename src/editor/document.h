@@ -25,6 +25,7 @@
 #include <vector>
 #include "coordinates.h"
 #include "line.h"
+#include "undo.h"
 
 // A document breaks a text buffer into lines, then
 // maps those lines onto an infinite plane of equally
@@ -41,6 +42,8 @@ public:
 	std::string status() const { return _status; }
 	bool modified() const { return _modified; }
 	bool readonly() const { return _read_only; }
+	Range undo() { return _edits.undo(*this); }
+	Range redo() { return _edits.redo(*this); }
 
 	// Where are the beginning and end of the document?
 	location_t home();
@@ -102,6 +105,8 @@ private:
 	time_t _last_mtime;
 	// what is our user-friendly summary of the file state?
 	std::string _status;
+	// record of all the edits made to this document
+	Undo _edits;
 };
 } // namespace Editor
 
