@@ -31,7 +31,6 @@ void Editor::Undo::clear()
 
 void Editor::Undo::erase(const Range &loc, std::string text)
 {
-	return;
 	// If we have not inserted any text, and this erase follows the previous
 	// erase, we will coalesce them into a single erase operation.
 	if (_insertloc.empty() && loc.begin() == _removeloc.end()) {
@@ -77,18 +76,39 @@ void Editor::Undo::split(location_t loc)
 
 Editor::Range Editor::Undo::undo(Document &doc)
 {
+	// Save all of the current action state. We are about to reverse the
+	// action and apply the anti-changes to the document.
+	auto insertloc = _insertloc;
+	auto removeloc = _removeloc;
+	auto removetext = _removetext;
+	auto previous = std::move(_previous);
+	auto next = std::move(_next);
+	clear();
 	Range out;
-	if (!_insertloc.empty()) {
-		out.reset(doc.erase(_insertloc));
+	if (!insertloc.empty()) {
+		out.reset(doc.erase(insertloc));
 	}
-/*	if (!_removetext.empty()) {
-		doc.insert(_removeloc.begin(), _removetext);
+	if (!removetext.empty()) {
+		doc.insert(removeloc.begin(), removetext);
 		if (out.empty()) {
-			out = _removeloc;
+			out = removeloc;
 		} else {
 		}
 	}
-*/	return out;
+	// The document will have updated us with state representing the redo
+	// action we just executed.
+	std::unique_ptr<Undo> redo(new Undo);
+	redo->_insertloc = _insertloc;
+	redo->_removeloc = _removeloc;
+	redo->_removetext = _removetext;
+	clear();
+	if (next) {
+		_insertloc = next->_insertloc;
+		_removeloc = next->_removeloc;
+		_removetext = next->_removetext;
+		_next = std::move(next->_next);
+	}
+	return out;
 }
 
 Editor::Range Editor::Undo::redo(Document &doc)
