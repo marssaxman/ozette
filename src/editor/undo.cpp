@@ -79,8 +79,7 @@ Editor::Range Editor::Undo::undo(Document &doc)
 {
 	Range out;
 	if (!_insertloc.empty()) {
-		doc.erase(_insertloc);
-		out = _insertloc;
+		out.reset(doc.erase(_insertloc));
 	}
 /*	if (!_removetext.empty()) {
 		doc.insert(_removeloc.begin(), _removetext);

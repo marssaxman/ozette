@@ -350,7 +350,9 @@ void Editor::View::ctl_undo(UI::Frame &ctx)
 	Range alterange = _doc.undo();
 	_update.range(alterange);
 	_cursor.move_to(alterange.end());
-	ctx.repaint();
+	_anchor = _cursor.location();
+	_selection.reset(_anchor);
+	postprocess(ctx);
 }
 
 void Editor::View::ctl_redo(UI::Frame &ctx)
@@ -358,7 +360,9 @@ void Editor::View::ctl_redo(UI::Frame &ctx)
 	Range alterange = _doc.redo();
 	_update.range(alterange);
 	_cursor.move_to(alterange.end());
-	ctx.repaint();
+	_anchor = _cursor.location();
+	_selection.reset(_anchor);
+	postprocess(ctx);
 }
 
 void Editor::View::key_up(bool extend)
