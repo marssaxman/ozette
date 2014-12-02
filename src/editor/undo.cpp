@@ -34,14 +34,14 @@ void Editor::Undo::erase(const Range &loc, std::string text)
 	// If we have not inserted any text, and this erase follows the previous
 	// erase, we will coalesce them into a single erase operation.
 	if (_insertloc.empty() && loc.begin() == _removeloc.end()) {
-		_removeloc.extend(_removeloc.begin(), loc.end());
+		_removeloc.extend(loc.end());
 		_removetext = _removetext + text;
 		return;
 	}
 	// If we have not inserted any text, and this erase precedes the previous
 	// erase, we will coalesce them.
 	if (_insertloc.empty() && loc.end() == _removeloc.begin()) {
-		_removeloc.extend(loc.begin(), _removeloc.end());
+		_removeloc.extend(loc.begin());
 		_removetext = text + _removetext;
 		return;
 	}
@@ -61,7 +61,7 @@ void Editor::Undo::insert(Range loc)
 	// insert directly follows the previous insert, coalesce them. Otherwise,
 	// push the previous edit and begin anew.
 	if (_insertloc.end() == loc.begin()) {
-		loc.extend(_insertloc.begin(), loc.end());
+		loc.extend(_insertloc.begin());
 	} else if (!_insertloc.empty()) {
 		//push();
 		clear();
@@ -97,10 +97,7 @@ Editor::Range Editor::Undo::undo(Document &doc)
 	}
 	// The document will have updated us with state representing the redo
 	// action we just executed.
-	std::unique_ptr<Undo> redo(new Undo);
-	redo->_insertloc = _insertloc;
-	redo->_removeloc = _removeloc;
-	redo->_removetext = _removetext;
+	std::unique_ptr<Undo> redo(new Undo(*this));
 	clear();
 	if (next) {
 		_insertloc = next->_insertloc;
@@ -117,12 +114,16 @@ Editor::Range Editor::Undo::redo(Document &doc)
 	return out;
 }
 
+Editor::Undo::Undo(const Undo &other):
+	_removeloc(other._removeloc),
+	_removetext(other._removetext),
+	_insertloc(other._insertloc)
+{
+}
+
 void Editor::Undo::push()
 {
-	std::unique_ptr<Undo> temp(new Undo);
-	temp->_removeloc = _removeloc;
-	temp->_removetext = _removetext;
-	temp->_insertloc = _insertloc;
+	std::unique_ptr<Undo> temp(new Undo(*this));
 	temp->_next = std::move(_next);
 	clear();
 	_next = std::move(temp);

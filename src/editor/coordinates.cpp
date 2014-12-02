@@ -51,8 +51,14 @@ void Editor::Range::reset(const location_t &loc)
 	_end = loc;
 }
 
-void Editor::Range::extend(const location_t &a, const location_t &b)
+void Editor::Range::reset(const location_t &a, const location_t &b)
 {
 	_begin = (a < b) ? a : b;
 	_end = (a > b) ? a : b;
+}
+
+void Editor::Range::extend(const location_t &loc)
+{
+	_begin = (_begin < loc)? _begin: loc;
+	_end = (_end > loc)? _end: loc;
 }

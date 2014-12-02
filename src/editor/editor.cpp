@@ -458,7 +458,7 @@ void Editor::View::key_tab(UI::Frame &ctx)
 		}
 		_anchor = _doc.home(begin);
 		_cursor.move_to(_doc.end(end));
-		_selection.extend(_anchor, _cursor.location());
+		_selection.reset(_anchor, _cursor.location());
 		_update.range(_selection);
 	}
 }
@@ -481,7 +481,7 @@ void Editor::View::key_btab(UI::Frame &ctx)
 	}
 	_anchor = _doc.home(begin);
 	_cursor.move_to(_doc.end(end));
-	_selection.extend(_anchor, _cursor.location());
+	_selection.reset(_anchor, _cursor.location());
 	_update.range(_selection);
 }
 
@@ -534,7 +534,7 @@ void Editor::View::adjust_selection(bool extend)
 		// The cursor has moved in range-selection mode.
 		// Leave the anchor where it is, then extend the
 		// selection to include the new cursor point.
-		_selection.extend(_anchor, _cursor.location());
+		_selection.reset(_anchor, _cursor.location());
 	} else {
 		// The cursor moved but did not extend the selection.
 		drop_selection();

@@ -29,6 +29,8 @@ class Document;
 class Undo
 {
 public:
+	Undo() {}
+	Undo(const Undo &other);
 	void clear();
 	void erase(const Range &loc, std::string text);
 	void insert(Range text);

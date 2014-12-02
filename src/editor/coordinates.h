@@ -49,7 +49,8 @@ public:
 	bool empty() const;
 	bool multiline() const;
 	void reset(const location_t &loc);
-	void extend(const location_t &a, const location_t &b);
+	void reset(const location_t &a, const location_t &b);
+	void extend(const location_t &loc);
 private:
 	location_t _begin;
 	location_t _end;
