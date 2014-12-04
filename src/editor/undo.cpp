@@ -63,8 +63,7 @@ void Editor::Undo::insert(Range loc)
 	if (_insertloc.end() == loc.begin()) {
 		loc.extend(_insertloc.begin());
 	} else if (!_insertloc.empty()) {
-		//push();
-		clear();
+		push();
 	}
 	_insertloc = loc;
 }
@@ -93,6 +92,7 @@ Editor::Range Editor::Undo::undo(Document &doc)
 		if (out.empty()) {
 			out = removeloc;
 		} else {
+			out.extend(removeloc);
 		}
 	}
 	// The document will have updated us with state representing the redo
@@ -129,3 +129,10 @@ void Editor::Undo::push()
 	_next = std::move(temp);
 }
 
+bool Editor::Undo::empty() const
+{
+	if (!_removeloc.empty()) return false;
+	if (!_removetext.empty()) return false;
+	if (!_insertloc.empty()) return false;
+	return true;
+}

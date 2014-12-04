@@ -51,6 +51,7 @@ public:
 	void reset(const location_t &loc);
 	void reset(const location_t &a, const location_t &b);
 	void extend(const location_t &loc);
+	void extend(const Range &loc);
 private:
 	location_t _begin;
 	location_t _end;

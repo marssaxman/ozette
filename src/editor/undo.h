@@ -39,6 +39,7 @@ public:
 	Range redo(Document &doc);
 private:
 	void push();
+	bool empty() const;
 	Range _removeloc;
 	std::string _removetext;
 	Range _insertloc;
