@@ -17,35 +17,43 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef EDITOR_UNDO_H
-#define EDITOR_UNDO_H
+#ifndef EDITOR_CHANGELIST_H
+#define EDITOR_CHANGELIST_H
 
 #include <string>
-#include <memory>
+#include <stack>
 #include "coordinates.h"
+#include "update.h"
 
 namespace Editor {
 class Document;
-class Undo
+class ChangeList
 {
 public:
-	Undo() {}
-	Undo(const Undo &other);
+	// Forget about all of the changes
 	void clear();
+	// Record a change that has been made
 	void erase(const Range &loc, std::string text);
-	void insert(Range text);
+	void insert(const Range &loc);
 	void split(location_t loc);
-	Range undo(Document &doc);
-	Range redo(Document &doc);
+	// Roll back the last change, or re-apply the most recently undone change.
+	Range undo(Document &doc, Update &update);
+	Range redo(Document &doc, Update &update);
 private:
-	void push();
-	bool empty() const;
-	Range _removeloc;
-	std::string _removetext;
-	Range _insertloc;
-	std::unique_ptr<Undo> _previous;
-	std::unique_ptr<Undo> _next;
+	struct change_t
+	{
+		Range rollback(Document &doc);
+		bool erase = false;
+		Range eraseloc;
+		std::string erasetext;
+		bool insert = false;
+		Range insertloc;
+		bool split = false;
+		location_t splitloc;
+	};
+	std::stack<change_t> _done;
+	std::stack<change_t> _undone;
 };
 } // namespace Editor
 
-#endif //EDITOR_UNDO_H
+#endif //EDITOR_CHANGELIST_H

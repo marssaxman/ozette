@@ -65,7 +65,11 @@ void Editor::Range::extend(const location_t &loc)
 
 void Editor::Range::extend(const Range &loc)
 {
-	extend(loc.begin());
-	extend(loc.end());
+	if (empty()) {
+		*this = loc;
+	} else {
+		extend(loc.begin());
+		extend(loc.end());
+	}
 }
 
