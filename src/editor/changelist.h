@@ -37,12 +37,13 @@ public:
 	void insert(const Range &loc);
 	void split(location_t loc);
 	// Roll back the last change, or re-apply the most recently undone change.
-	Range undo(Document &doc, Update &update);
-	Range redo(Document &doc, Update &update);
+	// Return value is the new cursor position.
+	location_t undo(Document &doc, Update &update);
+	location_t redo(Document &doc, Update &update);
 private:
 	struct change_t
 	{
-		Range rollback(Document &doc);
+		location_t rollback(Document &doc, Update &update);
 		bool erase = false;
 		Range eraseloc;
 		std::string erasetext;

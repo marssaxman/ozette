@@ -42,8 +42,8 @@ public:
 	std::string status() const { return _status; }
 	bool modified() const { return _modified; }
 	bool readonly() const { return _read_only; }
-	Range undo(Update &update) { return _edits.undo(*this, update); }
-	Range redo(Update &update) { return _edits.redo(*this, update); }
+	location_t undo(Update &update) { return _edits.undo(*this, update); }
+	location_t redo(Update &update) { return _edits.redo(*this, update); }
 
 	// Where are the beginning and end of the document?
 	location_t home();

@@ -54,13 +54,13 @@ void Editor::ChangeList::split(location_t loc)
 	_done.push(temp);
 }
 
-Editor::Range Editor::ChangeList::undo(Document &doc, Update &update)
+Editor::location_t Editor::ChangeList::undo(Document &doc, Update &update)
 {
-	if (_done.empty()) return Range();
+	if (_done.empty()) return location_t();
 	// Remove the last change from the done list, then reverse its effect.
 	change_t temp = _done.top();
 	_done.pop();
-	Range out = temp.rollback(doc);
+	location_t out = temp.rollback(doc, update);
 	// Reversing the effect of the last change is a new change, which will go
 	// onto the undo stack. That's great but this is really the inverse of a
 	// change, so we will pop it off the "done" stack and put it onto the
@@ -69,45 +69,45 @@ Editor::Range Editor::ChangeList::undo(Document &doc, Update &update)
 	// have multilevel undo.
 	_undone.push(_done.top());
 	_done.pop();
-	update.range(out);
 	return out;
 }
 
-Editor::Range Editor::ChangeList::redo(Document &doc, Update &update)
+Editor::location_t Editor::ChangeList::redo(Document &doc, Update &update)
 {
-	if (_undone.empty()) return Range();
+	if (_undone.empty()) return location_t();
 	// Remove the most recent change from the undone list, then reverse its
 	// effect. This will re-implement whatever the original change was, which
 	// will push a new action onto the _done list, effectively transferring the
 	// change from the "undone" list to the "done" list.
 	change_t temp = _undone.top();
 	_undone.pop();
-	Range out = temp.rollback(doc);
-	update.range(out);
-	return out;
+	return temp.rollback(doc, update);
 }
 
-Editor::Range Editor::ChangeList::change_t::rollback(Document &doc)
+Editor::location_t Editor::ChangeList::change_t::rollback(Document &doc, Update &update)
 {
-	Range out;
+	location_t out;
 	if (split) {
 		// We inserted a linebreak at the splitloc. Delete it.
 		Range span(splitloc, doc.next(splitloc));
 		doc.erase(span);
-		out.extend(span);
+		update.range(span);
+		out = splitloc;
 	}
 	if (insert) {
 		// We inserted some text, which now occupies the range specified by
 		// insertloc. Delete that text.
 		doc.erase(insertloc);
-		out.extend(insertloc);
+		update.range(insertloc);
+		out = insertloc.begin();
 	}
 	if (erase) {
 		// We erased some text, which was at the range specified by eraseloc,
 		// and which we have saved as erasetext. Re-insert it at the beginning
 		// of the eraseloc.
 		doc.insert(eraseloc.begin(), erasetext);
-		out.extend(eraseloc);
+		update.range(eraseloc);
+		out = eraseloc.end();
 	}
 	return out;
 }
