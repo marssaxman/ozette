@@ -40,9 +40,13 @@ public:
 	// Return value is the new cursor position.
 	location_t undo(Document &doc, Update &update);
 	location_t redo(Document &doc, Update &update);
+	// If we have undone some actions, forget them, because we are committing
+	// to the current state and beginning a new edit.
+	void commit();
 private:
 	struct change_t
 	{
+		bool committed = false;
 		location_t rollback(Document &doc, Update &update);
 		bool erase = false;
 		Range eraseloc;

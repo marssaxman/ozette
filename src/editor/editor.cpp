@@ -57,6 +57,7 @@ void Editor::View::activate(UI::Frame &ctx)
 
 void Editor::View::deactivate(UI::Frame &ctx)
 {
+	_doc.commit();
 }
 
 void Editor::View::paint_into(WINDOW *dest, bool active)
@@ -239,6 +240,7 @@ void Editor::View::ctl_cut(UI::Frame &ctx)
 {
 	ctl_copy(ctx);
 	delete_selection();
+	_doc.commit();
 }
 
 void Editor::View::ctl_copy(UI::Frame &ctx)
@@ -259,6 +261,7 @@ void Editor::View::ctl_paste(UI::Frame &ctx)
 	}
 	_cursor.move_to(newloc);
 	drop_selection();
+	_doc.commit();
 }
 
 void Editor::View::ctl_close(UI::Frame &ctx)
@@ -289,6 +292,7 @@ void Editor::View::ctl_close(UI::Frame &ctx)
 void Editor::View::ctl_save(UI::Frame &ctx)
 {
 	save(ctx, _targetpath);
+	_doc.commit();
 }
 
 void Editor::View::ctl_toline(UI::Frame &ctx)

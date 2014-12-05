@@ -44,6 +44,7 @@ public:
 	bool readonly() const { return _read_only; }
 	location_t undo(Update &update) { return _edits.undo(*this, update); }
 	location_t redo(Update &update) { return _edits.redo(*this, update); }
+	void commit() { _edits.commit(); }
 
 	// Where are the beginning and end of the document?
 	location_t home();

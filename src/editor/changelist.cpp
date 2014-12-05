@@ -29,6 +29,7 @@ void Editor::ChangeList::clear()
 
 void Editor::ChangeList::erase(const Range &loc, std::string text)
 {
+	while(!_undone.empty()) _undone.pop();
 	assert(!loc.empty());
 	change_t temp;
 	temp.erase = true;
@@ -39,6 +40,7 @@ void Editor::ChangeList::erase(const Range &loc, std::string text)
 
 void Editor::ChangeList::insert(const Range &loc)
 {
+	while(!_undone.empty()) _undone.pop();
 	assert(!loc.empty());
 	change_t temp;
 	temp.insert = true;
@@ -48,6 +50,7 @@ void Editor::ChangeList::insert(const Range &loc)
 
 void Editor::ChangeList::split(location_t loc)
 {
+	while(!_undone.empty()) _undone.pop();
 	change_t temp;
 	temp.split = true;
 	temp.splitloc = loc;
@@ -57,6 +60,7 @@ void Editor::ChangeList::split(location_t loc)
 Editor::location_t Editor::ChangeList::undo(Document &doc, Update &update)
 {
 	if (_done.empty()) return location_t();
+	std::stack<change_t> undone = std::move(_undone);
 	// Remove the last change from the done list, then reverse its effect.
 	change_t temp = _done.top();
 	_done.pop();
@@ -67,6 +71,7 @@ Editor::location_t Editor::ChangeList::undo(Document &doc, Update &update)
 	// "undone" stack, so that the next undo will apply to the previous "done"
 	// action. We can undo the undo by invoking "redo". This is how we get to
 	// have multilevel undo.
+	_undone = std::move(undone);
 	_undone.push(_done.top());
 	_done.pop();
 	return out;
@@ -81,7 +86,17 @@ Editor::location_t Editor::ChangeList::redo(Document &doc, Update &update)
 	// change from the "undone" list to the "done" list.
 	change_t temp = _undone.top();
 	_undone.pop();
-	return temp.rollback(doc, update);
+	std::stack<change_t> undone = std::move(_undone);
+	location_t out = temp.rollback(doc, update);
+	_undone = std::move(undone);
+	return out;
+}
+
+void Editor::ChangeList::commit()
+{
+	while (!_undone.empty()) _undone.pop();
+	if (_done.empty()) return;
+	_done.top().committed = true;
 }
 
 Editor::location_t Editor::ChangeList::change_t::rollback(Document &doc, Update &update)
