@@ -31,6 +31,7 @@ void Editor::ChangeList::erase(const Range &loc, std::string text)
 {
 	while(!_undone.empty()) _undone.pop();
 	assert(!loc.empty());
+	if (combine_erase(loc, text)) return;
 	change_t temp;
 	temp.erase = true;
 	temp.eraseloc = loc;
@@ -42,6 +43,7 @@ void Editor::ChangeList::insert(const Range &loc)
 {
 	while(!_undone.empty()) _undone.pop();
 	assert(!loc.empty());
+	if (combine_insert(loc)) return;
 	change_t temp;
 	temp.insert = true;
 	temp.insertloc = loc;
@@ -51,6 +53,7 @@ void Editor::ChangeList::insert(const Range &loc)
 void Editor::ChangeList::split(location_t loc)
 {
 	while(!_undone.empty()) _undone.pop();
+	if (combine_split(loc)) return;
 	change_t temp;
 	temp.split = true;
 	temp.splitloc = loc;
@@ -97,6 +100,69 @@ void Editor::ChangeList::commit()
 	while (!_undone.empty()) _undone.pop();
 	if (_done.empty()) return;
 	_done.top().committed = true;
+}
+
+bool Editor::ChangeList::combine_erase(const Range &loc, std::string text)
+{
+	if (_done.empty()) return false;
+	auto &top = _done.top();
+	if (top.committed) return false;
+	if (top.split) return false;
+	if (top.insert) return false;
+	if (top.erase) {
+		// This change already includes an erase. Can we combine this erase
+		// with the previous one? This works if the new range immediately
+		// precedes or succeeds the existing range.
+		if (loc.begin() == top.eraseloc.end()) {
+			top.erasetext = top.erasetext + text;
+			top.eraseloc.extend(loc.end());
+			return true;
+		}
+		if (loc.end() == top.eraseloc.begin()) {
+			top.erasetext = text + top.erasetext;
+			top.eraseloc.extend(loc.begin());
+			return true;
+		}
+		return false;
+	}
+	top.erase = true;
+	top.eraseloc = loc;
+	top.erasetext = text;
+	return true;
+}
+
+bool Editor::ChangeList::combine_insert(const Range &loc)
+{
+	if (_done.empty()) return false;
+	auto &top = _done.top();
+	if (top.committed) return false;
+	if (top.split) return false;
+	if (top.insert) {
+		// The topmost change already includes an insert. If this insert
+		// immediately follows the previous one, we can combine them; otherwise
+		// they must be recorded as separate edits.
+		if (loc.begin() == top.insertloc.end()) {
+			top.insertloc.extend(loc.end());
+			return true;
+		}
+		return false;
+	}
+	top.insert = true;
+	top.insertloc = loc;
+	return true;
+}
+
+bool Editor::ChangeList::combine_split(location_t loc)
+{
+	// Try to combine this split with the topmost change. If we cannot combine,
+	// return false so the caller knows it's time for a new change record.
+	if (_done.empty()) return false;
+	auto &top = _done.top();
+	if (top.committed) return false;
+	if (top.split) return false;
+	top.split = true;
+	top.splitloc = loc;
+	return true;
 }
 
 Editor::location_t Editor::ChangeList::change_t::rollback(Document &doc, Update &update)

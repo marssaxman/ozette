@@ -44,6 +44,9 @@ public:
 	// to the current state and beginning a new edit.
 	void commit();
 private:
+	bool combine_erase(const Range &loc, std::string text);
+	bool combine_insert(const Range &loc);
+	bool combine_split(location_t loc);
 	struct change_t
 	{
 		bool committed = false;
