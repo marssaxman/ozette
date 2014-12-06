@@ -42,6 +42,8 @@ public:
 	std::string status() const { return _status; }
 	bool modified() const { return _modified; }
 	bool readonly() const { return _read_only; }
+	bool can_undo() const { return _edits.can_undo(); }
+	bool can_redo() const { return _edits.can_redo(); }
 	location_t undo(Update &update) { return _edits.undo(*this, update); }
 	location_t redo(Update &update) { return _edits.redo(*this, update); }
 	void commit() { _edits.commit(); }

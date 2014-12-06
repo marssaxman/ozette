@@ -50,6 +50,8 @@ Editor commands:
     ^F - Find - move the cursor to the next occurrence of some string
     ^L - To Line - move the cursor to the beginning of the specified line
     ^S - Save - write the contents of the buffer back to disk
+    ^Z - Undo - roll back the last change to the document
+    ^Y - Redo - reapply the last change which was rolled back
 
 
 == Shell console

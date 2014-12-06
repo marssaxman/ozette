@@ -137,6 +137,12 @@ void Editor::View::set_help(UI::HelpBar::Panel &panel)
 	if (!_doc.readonly()) {
 		panel.label[1][1] = Label('S', true, "Save");
 	}
+	if (_doc.can_redo()) {
+		panel.label[1][3] = Label('Y', true, "Redo");
+	}
+	if (_doc.can_undo()) {
+		panel.label[1][4] = Label('Z', true, "Undo");
+	}
 	panel.label[1][5] = Label('?', true, "Help");
 }
 

@@ -43,6 +43,9 @@ public:
 	// If we have undone some actions, forget them, because we are committing
 	// to the current state and beginning a new edit.
 	void commit();
+	// Can we currently undo or redo an action?
+	bool can_undo() const { return !_done.empty(); }
+	bool can_redo() const { return !_undone.empty(); }
 private:
 	bool combine_erase(const Range &loc, std::string text);
 	bool combine_insert(const Range &loc);
