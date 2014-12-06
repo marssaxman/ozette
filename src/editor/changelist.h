@@ -49,7 +49,6 @@ private:
 	bool combine_split(location_t loc);
 	struct change_t
 	{
-		bool committed = false;
 		location_t rollback(Document &doc, Update &update);
 		bool erase = false;
 		Range eraseloc;
@@ -61,6 +60,7 @@ private:
 	};
 	std::stack<change_t> _done;
 	std::stack<change_t> _undone;
+	bool _committed = false;
 };
 } // namespace Editor
 

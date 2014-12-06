@@ -25,6 +25,7 @@ void Editor::ChangeList::clear()
 {
 	while (!_done.empty()) _done.pop();
 	while (!_undone.empty()) _undone.pop();
+	_committed = false;
 }
 
 void Editor::ChangeList::erase(const Range &loc, std::string text)
@@ -37,6 +38,7 @@ void Editor::ChangeList::erase(const Range &loc, std::string text)
 	temp.eraseloc = loc;
 	temp.erasetext = text;
 	_done.push(temp);
+	_committed = false;
 }
 
 void Editor::ChangeList::insert(const Range &loc)
@@ -48,6 +50,7 @@ void Editor::ChangeList::insert(const Range &loc)
 	temp.insert = true;
 	temp.insertloc = loc;
 	_done.push(temp);
+	_committed = false;
 }
 
 void Editor::ChangeList::split(location_t loc)
@@ -58,6 +61,7 @@ void Editor::ChangeList::split(location_t loc)
 	temp.split = true;
 	temp.splitloc = loc;
 	_done.push(temp);
+	_committed = false;
 }
 
 Editor::location_t Editor::ChangeList::undo(Document &doc, Update &update)
@@ -77,6 +81,7 @@ Editor::location_t Editor::ChangeList::undo(Document &doc, Update &update)
 	_undone = std::move(undone);
 	_undone.push(_done.top());
 	_done.pop();
+	_committed = true;
 	return out;
 }
 
@@ -92,6 +97,7 @@ Editor::location_t Editor::ChangeList::redo(Document &doc, Update &update)
 	std::stack<change_t> undone = std::move(_undone);
 	location_t out = temp.rollback(doc, update);
 	_undone = std::move(undone);
+	_committed = true;
 	return out;
 }
 
@@ -99,14 +105,14 @@ void Editor::ChangeList::commit()
 {
 	while (!_undone.empty()) _undone.pop();
 	if (_done.empty()) return;
-	_done.top().committed = true;
+	_committed = true;
 }
 
 bool Editor::ChangeList::combine_erase(const Range &loc, std::string text)
 {
 	if (_done.empty()) return false;
 	auto &top = _done.top();
-	if (top.committed) return false;
+	if (_committed) return false;
 	if (top.split) return false;
 	if (top.insert) return false;
 	if (top.erase) {
@@ -135,7 +141,7 @@ bool Editor::ChangeList::combine_insert(const Range &loc)
 {
 	if (_done.empty()) return false;
 	auto &top = _done.top();
-	if (top.committed) return false;
+	if (_committed) return false;
 	if (top.split) return false;
 	if (top.insert) {
 		// The topmost change already includes an insert. If this insert
@@ -158,7 +164,7 @@ bool Editor::ChangeList::combine_split(location_t loc)
 	// return false so the caller knows it's time for a new change record.
 	if (_done.empty()) return false;
 	auto &top = _done.top();
-	if (top.committed) return false;
+	if (_committed) return false;
 	if (top.split) return false;
 	top.split = true;
 	top.splitloc = loc;
