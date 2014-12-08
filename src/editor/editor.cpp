@@ -454,11 +454,12 @@ void Editor::View::key_tab(UI::Frame &ctx)
 	if (_selection.empty()) {
 		key_insert('\t');
 	} else {
-		// indent all lines touched by the selection one more tab
-		// then extend the selection to encompass all of those lines,
-		// because that's what VS does and I like it that way.
+		// indent all lines touched by the selection one more tab then extend
+		// the selection to encompass all of those lines, because that's what
+		// VS does and I like it that way.
 		line_t begin = _selection.begin().line;
 		line_t end = _selection.end().line;
+		if (end > begin && 0 == _selection.end().offset) end--;
 		for (line_t index = begin; index <= end; ++index) {
 			_doc.insert(_doc.home(index), '\t');
 		}
@@ -477,6 +478,7 @@ void Editor::View::key_btab(UI::Frame &ctx)
 	// extend the selection to encompass all of those lines.
 	line_t begin = _selection.begin().line;
 	line_t end = _selection.end().line;
+	if (end > begin && 0 == _selection.end().offset) end--;
 	for (line_t index = begin; index <= end; ++index) {
 		std::string text = _doc.line(index).text();
 		if (text.empty()) continue;
