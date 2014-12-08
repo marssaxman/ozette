@@ -25,17 +25,15 @@
 namespace Control {
 enum {
 	// Dedicated keys for editor manipulation
+	Backspace = 0x08, // BS ^H
 	Tab = 0x09, // HT ^I
 	Enter = 0x0A, //LF ^J
 	Return = 0x0D, //CR ^M
 	Escape = 0x1B, // ESC ^[
-	Backspace = 0x7F, // DEL
 	LeftArrow = 0x21C,
 	RightArrow = 0x22B,
 	UpArrow = 0x231,
 	DownArrow = 0x208,
-	ShiftLeftArrow = 0x21D,
-	ShiftRightArrow = 0x22C,
 
 	// Clipboard & editing functions
 	Cut = 0x18, //CAN ^X
@@ -67,7 +65,6 @@ enum {
 	SOH = 0x01, // ! A a
 	STX = 0x02, // " B b
 	BEL = 0x07, // ` G g
-	BS = 0x08, // ( H h
 	DLE = 0x10, // 0 P p
 	DC2 = 0x12, // 2 R r
 	DC4 = 0x14, // 4 T t

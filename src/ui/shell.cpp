@@ -85,16 +85,15 @@ bool UI::Shell::process(int ch)
 		// reliably distinguish between these codes because some terminals
 		// (terminal.app for example) send the shifted codes for left and right
 		// whether or not the user is pressing the shift key.
-		case Control::LeftArrow:
-		case Control::ShiftLeftArrow: {
+		case 0x224:
+		case Control::LeftArrow: {
 			if (_focus > 0) {
 				set_focus(_focus - 1);
 			} else {
 				set_focus(_tabs.size() - 1);
 			}
 		} break;
-		case Control::RightArrow:
-		case Control::ShiftRightArrow: {
+		case Control::RightArrow: {
 			size_t next = _focus + 1;
 			if (next >= _tabs.size()) {
 				next = 0;

@@ -238,20 +238,22 @@ void Lindi::execute()
 int Lindi::fix_control_quirks(int ch)
 {
 	// Terminals are weird and control keys are complicated.
-
 	switch (ch) {
+
+	// When the user presses the backspace key, some terminals send us
+	// ASCII BS, others send ASCII DEL, and others send something that
+	// ncurses interprets as KEY_BACKSPACE. We will stick with ASCII BS.
 	case KEY_BACKSPACE:
-	// ncurses defines KEY_BACKSPACE, but the actual backspace key
-	// produces 0x7F, good old ASCII DEL. That's fine, but the way
-	// you get KEY_BACKSPACE is by pressing ctrl-H. This makes a
-	// certain amount of sense as ^H corresponds to 0x08 aka the
-	// ASCII BS code... but it's an unhelpful bit of help as there
-	// is no other situation I can find where ncurses will send us
-	// 0x08. (The forward-delete key comes in as KEY_DC.) It is
-	// much more convenient for us to keep all the control keys in
-	// their traditional places, so we will change KEY_BACKSPACE back
-	// to 0x08, with the understanding that it always means ctrl-H.
-	return 0x08;
+	case 0x7F: return Control::Backspace;
+
+	// Different terminals send us different codes for control-left and
+	// control-right arrow. Some terminals send us a different code for
+	// control-left and control-right arrow when the shift key is held
+	// down, while others don't distinguish.
+	case 0x21D:
+	case 0x220: return Control::LeftArrow;
+	case 0x22C:
+	case 0x22F: return Control::RightArrow;
 
 	default:
 	return ch;
