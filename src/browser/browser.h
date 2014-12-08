@@ -65,6 +65,7 @@ private:
 	void key_char(UI::Frame &ctx, char ch);
 	void clear_filter(UI::Frame &ctx);
 	bool matches_filter(size_t index);
+	bool matches_filter(std::string name);
 	void set_title(UI::Frame &ctx);
 	void build_list();
 	void toggle(UI::Frame &ctx);

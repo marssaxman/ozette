@@ -175,15 +175,28 @@ void Browser::View::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 	waddnstr(view, display.expanded? "- ": (isdir? "+ ": "  "), rowchars);
 	rowchars -= 2;
 	std::string name = display.entry->name();
-	if (name.substr(0, _name_filter.size()) == _name_filter) {
-		wattron(view, A_UNDERLINE);
-		waddnstr(view, _name_filter.c_str(), rowchars - 1);
-		rowchars -= _name_filter.size();
-		wattroff(view, A_UNDERLINE);
-		name = name.substr(_name_filter.size());
+	if (matches_filter(name)) {
+		// draw the name out character by character, underlining the chars which
+		// match the current selection filter.
+		auto filteriter = _name_filter.begin();
+		for (char ch: name) {
+			if (--rowchars <= 1) break;
+			bool is_filter = false;
+			if (filteriter != _name_filter.end()) {
+				if (*filteriter == ch) {
+					++filteriter;
+					is_filter = true;
+				}
+			}
+			if (is_filter) wattron(view, A_UNDERLINE);
+			waddch(view, ch);
+			if (is_filter) wattroff(view, A_UNDERLINE);
+		}
+	} else {
+		// draw the name out the simple quick way
+		waddnstr(view, name.c_str(), rowchars - 1);
+		rowchars -= std::min(rowchars, (int)name.size());
 	}
-	waddnstr(view, name.c_str(), rowchars - 1);
-	rowchars -= std::min(rowchars, (int)name.size());
 	waddnstr(view, isdir? "/": " ", rowchars);
 	rowchars--;
 	// The rest of the status info only applies to files.
@@ -351,8 +364,19 @@ void Browser::View::clear_filter(UI::Frame &ctx)
 bool Browser::View::matches_filter(size_t index)
 {
 	if (index >= _list.size()) return false;
-	std::string name = _list[index].entry->name();
-	return name.substr(0, _name_filter.size()) == _name_filter;
+	return matches_filter(_list[index].entry->name());
+}
+
+bool Browser::View::matches_filter(std::string name)
+{
+	size_t search = 0;
+	for (char ch: _name_filter) {
+		if (search == name.size()) return false;
+		search = name.find_first_of(ch, search);
+		if (search == std::string::npos) return false;
+		++search;
+	}
+	return true;
 }
 
 void Browser::View::build_list()
