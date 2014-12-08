@@ -57,11 +57,10 @@ public:
 	virtual bool poll(UI::Frame &ctx) override;
 protected:
 	virtual void paint_into(WINDOW *view, bool active) override;
-	void select_suggestion(size_t i);
-	void select_field();
-	std::vector<std::string> _options;
-	bool _suggestion_selected = false;
-	size_t _sugg_item = 0;
+	virtual void select_field();
+	void set_value(std::string val);
+	void repaint() { _repaint = true; }
+	virtual bool field_selected() const { return true; }
 	action_t _commit = nullptr;
 	std::string _value;
 	unsigned _cursor_pos = 0;
@@ -71,7 +70,6 @@ private:
 	void delete_prev();
 	void delete_next();
 	void key_insert(int ch);
-	void set_value(std::string val);
 	bool _repaint = true;
 };
 

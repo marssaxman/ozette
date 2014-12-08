@@ -176,20 +176,9 @@ void UI::Dialog::Input::key_insert(int ch)
 	_repaint = true;
 }
 
-void UI::Dialog::Input::select_suggestion(size_t i)
-{
-	if (i >= _options.size()) return;
-	if (_suggestion_selected && _sugg_item == i) return;
-	_suggestion_selected = true;
-	_sugg_item = i;
-	_repaint = true;
-	set_value(_options[i]);
-}
-
 void UI::Dialog::Input::select_field()
 {
-	if (!_suggestion_selected) return;
-	_suggestion_selected = false;
+	if (field_selected()) return;
 	_cursor_pos = _value.size();
 	_repaint = true;
 }

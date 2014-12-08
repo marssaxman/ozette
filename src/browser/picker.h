@@ -39,7 +39,13 @@ public:
 	virtual bool process(UI::Frame &ctx, int ch) override;
 protected:
 	virtual void paint_into(WINDOW *view, bool active) override;
+	virtual void select_field();
+	virtual bool field_selected() const override;
+	std::vector<std::string> _options;
+	bool _suggestion_selected = false;
+	size_t _sugg_item = 0;
 private:
+	void select_suggestion(size_t i);
 	void arrow_left(UI::Frame &ctx);
 	void arrow_right(UI::Frame &ctx);
 	void arrow_up();

@@ -117,6 +117,27 @@ void Browser::Picker::paint_into(WINDOW *view, bool active)
 	wattroff(view, A_REVERSE);
 }
 
+void Browser::Picker::select_field()
+{
+	inherited::select_field();
+	_suggestion_selected = false;
+}
+
+bool Browser::Picker::field_selected() const
+{
+	return !_suggestion_selected;
+}
+
+void Browser::Picker::select_suggestion(size_t i)
+{
+	if (i >= _options.size()) return;
+	if (_suggestion_selected && _sugg_item == i) return;
+	_suggestion_selected = true;
+	_sugg_item = i;
+	repaint();
+	set_value(_options[i]);
+}
+
 void Browser::Picker::arrow_left(UI::Frame &ctx)
 {
 	if (_suggestion_selected) {
