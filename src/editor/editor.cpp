@@ -560,31 +560,33 @@ void Editor::View::save(UI::Frame &ctx, std::string path)
 			ctx.show_result("Cancelled");
 			return;
 		}
-		// If they confirmed the existing name, we can write it out.
-		if (path == _targetpath || _targetpath.empty()) {
+		auto do_yes = [this, path](UI::Frame &ctx)
+		{
+			if (path.empty()) return;
 			_doc.Write(path);
+			if (_targetpath != path) {
+				ctx.app().rename_file(_targetpath, path);
+				_targetpath = path;
+				ctx.set_title(path);
+			}
 			ctx.set_status(_doc.status());
 			std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
 			stat += (_doc.maxline() > 1) ? " lines" : " line";
 			ctx.show_result(stat);
-			return;
-		}
-		// This is a different path than the file used to have.
-		// Ask the user to confirm that they meant to change it.
-		auto yes_action = [this, path](UI::Frame &ctx)
-		{
-			if (path.empty()) return;
-			_doc.Write(path);
-			ctx.app().rename_file(_targetpath, path);
-			_targetpath = path;
-			ctx.set_title(path);
 		};
-		auto no_action = [this, path](UI::Frame &ctx)
+		auto do_no = [this, path](UI::Frame &ctx)
 		{
 			save(ctx, path);
 		};
+		// If the file name entered at the prompt is the same as the existing
+		// name, just save the file. Otherwise, ask the user to confirm that
+		// they meant to change the path string.
+		if (path == _targetpath || _targetpath.empty()) {
+			do_yes(ctx);
+			return;
+		}
 		std::string prompt = "Save file under a different name?";
-		auto dialog = new UI::Dialog::Confirmation(prompt, yes_action, no_action);
+		auto dialog = new UI::Dialog::Confirmation(prompt, do_yes, do_no);
 		std::unique_ptr<UI::View> dptr(dialog);
 		ctx.show_dialog(std::move(dptr));
 	};
