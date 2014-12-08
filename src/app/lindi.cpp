@@ -254,6 +254,7 @@ int Lindi::fix_control_quirks(int ch)
 	case 0x220: return Control::LeftArrow;
 	case 0x22C:
 	case 0x22F: return Control::RightArrow;
+	case 0x20C: return Control::DownArrow;
 
 	default:
 	return ch;
