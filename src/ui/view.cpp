@@ -58,3 +58,27 @@ void UI::View::paint(bool active)
 	curs_set(0);
 	paint_into(_window, active);
 }
+
+void UI::View::overlay_result(std::string message)
+{
+	int cury, curx;
+	getyx(_window, cury, curx);
+	int numchars = message.size();
+	int labelwidth = 2 + numchars + 2;
+	int winheight, winwidth;
+	getmaxyx(_window, winheight, winwidth);
+	if (labelwidth > winwidth) {
+		labelwidth = winwidth;
+		numchars = labelwidth - 4;
+	}
+	int voff = winheight - 1;
+	int hoff = (winwidth - labelwidth) / 2;
+	wmove(_window, voff, hoff);
+	wattron(_window, A_REVERSE);
+	waddstr(_window, "[ ");
+	waddnstr(_window, message.c_str(), numchars);
+	waddstr(_window, " ]");
+	wattroff(_window, A_REVERSE);
+	wmove(_window, cury, curx);
+}
+

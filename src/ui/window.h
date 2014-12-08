@@ -76,9 +76,8 @@ private:
 	// There may be a dialog box overlaid on the content window, if the
 	// user is currently engaged in some process which requires input.
 	std::unique_ptr<View> _dialog;
-	// There may be an ephemeral result box overlaid on the content window.
-	WINDOW *_resultwin = nullptr;
-	PANEL *_resultpanel = nullptr;
+	// There may be an ephemeral result blurb overlaid on the content window.
+	std::string _result_text;
 	// Are we the active window? This changes the way we draw our chrome.
 	bool _has_focus = false;
 	// What are the dimensional attributes we worked out during layout?

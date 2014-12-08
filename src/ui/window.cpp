@@ -100,6 +100,7 @@ void UI::Window::set_focus()
 void UI::Window::clear_focus()
 {
 	_view->deactivate(*this);
+	clear_result();
 	_has_focus = false;
 	_dirty_chrome = true;
 	_dirty_content = true;
@@ -123,6 +124,7 @@ void UI::Window::bring_forward(FocusRelative rel)
 bool UI::Window::process(int ch)
 {
 	clear_result();
+	bool more = true;
 	if (_dialog) {
 		// A dialog may invoke actions which may result in its own replacement.
 		// We will temporarily move it into a local variable while it has
@@ -142,16 +144,16 @@ bool UI::Window::process(int ch)
 			_view->activate(*this);
 			_dirty_content = true;
 		}
-		paint();
-		return true;
+	} else {
+		more = _view->process(*this, ch);
 	}
-	bool out = _view->process(*this, ch);
 	paint();
-	return out;
+	return more;
 }
 
 bool UI::Window::poll()
 {
+	bool more = true;
 	if (_dialog) {
 		std::unique_ptr<View> temp(std::move(_dialog));
 		if (temp->poll(*this)) {
@@ -160,12 +162,11 @@ bool UI::Window::poll()
 		} else {
 			_view->activate(*this);
 		}
-		paint();
-		return true;
+	} else {
+		more = _view->poll(*this);
 	}
-	bool out = _view->poll(*this);
 	paint();
-	return out;
+	return more;
 }
 
 void UI::Window::set_title(std::string text)
@@ -193,34 +194,15 @@ void UI::Window::show_dialog(std::unique_ptr<View> &&host)
 
 void UI::Window::show_result(std::string message)
 {
-	clear_result();
-	int numchars = message.size();
-	int labelwidth = 2 + numchars + 2;
-	int voff, hoff, height, width;
-	calculate_content(voff, hoff, height, width);
-	if (labelwidth > width) {
-		labelwidth = width;
-		numchars = labelwidth - 4;
-	}
-	voff += height - 1;
-	hoff += (width - labelwidth) / 2;
-	_resultwin = newwin(1, labelwidth, voff, hoff);
-	_resultpanel = new_panel(_resultwin);
-	wmove(_resultwin, 0, 0);
-	wattron(_resultwin, A_REVERSE);
-	waddstr(_resultwin, "[ ");
-	waddnstr(_resultwin, message.c_str(), numchars);
-	waddstr(_resultwin, " ]");
-	curs_set(0);
+	_result_text = message;
+	_dirty_content = true;
 }
 
 void UI::Window::clear_result()
 {
-	if (!_resultwin) return;
-	del_panel(_resultpanel);
-	delwin(_resultwin);
-	_resultpanel = nullptr;
-	_resultwin = nullptr;
+	if (_result_text.empty()) return;
+	_result_text.clear();
+	_view->clear_overlay();
 	_dirty_content = true;
 }
 
@@ -281,8 +263,15 @@ void UI::Window::paint()
 
 void UI::Window::paint_content()
 {
-	_view->paint(_has_focus && !_dialog.get() && !_resultwin);
-	if (_dialog) _dialog->paint(_has_focus);
+	if (_dialog) {
+		_view->paint(false);
+		_dialog->paint(_has_focus);
+	} else {
+		_view->paint(_has_focus);
+		if (!_result_text.empty()) {
+			_view->overlay_result(_result_text);
+		}
+	}
 	_dirty_content = false;
 }
 

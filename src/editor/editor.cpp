@@ -81,6 +81,11 @@ void Editor::View::paint_into(WINDOW *dest, bool active)
 	_update.reset();
 }
 
+void Editor::View::clear_overlay()
+{
+	_update.all();
+}
+
 bool Editor::View::process(UI::Frame &ctx, int ch)
 {
 	if (ERR == ch) return true;

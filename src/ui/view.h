@@ -34,6 +34,8 @@ public:
 	virtual void layout(int v, int h, int height, int width);
 	void bring_forward();
 	virtual void paint(bool active);
+	void overlay_result(std::string result);
+	virtual void clear_overlay() {}
 	virtual void activate(Frame &ctx) {}
 	virtual void deactivate(Frame &ctx) {}
 	virtual bool process(Frame &ctx, int ch) = 0;

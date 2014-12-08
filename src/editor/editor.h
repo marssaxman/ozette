@@ -38,6 +38,7 @@ public:
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
 protected:
 	virtual void paint_into(WINDOW *view, bool active) override;
+	virtual void clear_overlay() override;
 private:
 	void postprocess(UI::Frame &ctx);
 	void paint_line(WINDOW *view, row_t v, bool active);
