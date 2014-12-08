@@ -56,6 +56,7 @@ private:
 	void ctl_find(UI::Frame &ctx);
 	void ctl_undo(UI::Frame &ctx);
 	void ctl_redo(UI::Frame &ctx);
+	void ctl_open_next(UI::Frame &ctx);
 
 	// Navigation keystrokes move the cursor around the document.
 	void key_up(bool extend);

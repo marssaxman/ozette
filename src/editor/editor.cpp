@@ -22,6 +22,7 @@
 #include "dialog.h"
 #include <assert.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include <cctype>
 
 Editor::View::View():
@@ -99,6 +100,7 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::Find: ctl_find(ctx); break;
 		case Control::Undo: ctl_undo(ctx); break;
 		case Control::Redo: ctl_redo(ctx); break;
+		case Control::DownArrow: ctl_open_next(ctx); break;
 
 		case KEY_DOWN: key_down(false); break;
 		case KEY_UP: key_up(false); break;
@@ -374,6 +376,47 @@ void Editor::View::ctl_redo(UI::Frame &ctx)
 	_anchor = _cursor.location();
 	_selection.reset(_anchor);
 	postprocess(ctx);
+}
+
+void Editor::View::ctl_open_next(UI::Frame &ctx)
+{
+	// If there is more than one file with the same base name as this one,
+	// open the next one, wrapping around after the last. For example, "open
+	// next" when editing "foo.c" would open "foo.h", and vice versa.
+	std::string dirpath;
+	std::string filename;
+	size_t slashpos = _targetpath.find_last_of('/');
+	if (slashpos != std::string::npos) {
+		// Split the file name off from the directory path.
+		dirpath = _targetpath.substr(0, slashpos);
+		filename = _targetpath.substr(slashpos + 1);
+	} else {
+		// If the path is a bare file name, assume the current working dir.
+		dirpath = ".";
+		filename = _targetpath;
+	}
+	if (filename.empty()) return;
+	// Chop off the file name's extension, but keep the dot so we can tell that
+	// "footy.c" should not come after "foo.h".
+	size_t dotpos = filename.find_last_of('.');
+	std::string basename = filename.substr(0, dotpos + 1);
+	// Enumerate the files in the target directory, matching each one against
+	// the base name, looking for the next one after the one we're editing.
+	DIR *pdir = opendir(dirpath.c_str());
+	if (!pdir) return;
+	std::string match;
+	bool found_current = false;
+	while (dirent *entry = readdir(pdir)) {
+		if (entry->d_name[0] == '.') continue;
+		std::string entry_name = std::string(entry->d_name);
+		if (entry_name.substr(0, basename.size()) != basename) continue;
+		if (match.empty() || found_current) match = entry_name;
+		if (found_current) break;
+		found_current = entry_name == filename;
+	}
+	closedir(pdir);
+	if (match.empty()) return;
+	ctx.app().edit_file(dirpath + "/" + match);
 }
 
 void Editor::View::key_up(bool extend)
