@@ -26,7 +26,7 @@ Config::All::All(std::string confdir, std::string workingdir):
 {
 }
 
-void Config::All::change_dir(std::string workingdir)
+void Config::All::change_directory(std::string workingdir)
 {
 	_dir.reset(new INIReader(workingdir + "/.lindi/config"));
 }

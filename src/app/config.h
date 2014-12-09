@@ -22,8 +22,8 @@
 
 #include <string>
 #include <memory>
+#include "INIReader.h"
 
-class INIReader;
 namespace Config {
 
 // Configuration settings which apply in all contexts.
@@ -31,7 +31,7 @@ class All
 {
 public:
 	All(std::string confdir, std::string workingdir);
-	void change_dir(std::string workingdir);
+	void change_directory(std::string workingdir);
 	std::string get(std::string key, std::string def_val) const;
 	int get_int(std::string key, int def_val) const;
 	bool get_bool(std::string key, bool def_val) const;

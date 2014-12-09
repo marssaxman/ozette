@@ -32,7 +32,7 @@ Lindi::Lindi():
 	_shell(*this),
 	_home_dir(getenv("HOME")),
 	_config_dir(_home_dir + "/.lindi"),
-	_user_config(_config_dir + "/config")
+	_config(_config_dir, ".")
 {
 	char *cwd = getcwd(NULL, 0);
 	if (cwd) {
@@ -41,7 +41,7 @@ Lindi::Lindi():
 	} else {
 		_current_dir = _home_dir;
 	}
-	_dir_config.reset(new INIReader(_current_dir + "/.lindi/config"));
+	_config.change_directory(_current_dir);
 }
 
 std::string Lindi::current_dir() const
@@ -130,14 +130,9 @@ void Lindi::cache_write(std::string name, const std::vector<std::string> &lines)
 	file.close();
 }
 
-INIReader &Lindi::user_config()
+Config::All &Lindi::config()
 {
-	return _user_config;
-}
-
-INIReader &Lindi::dir_config()
-{
-	return *_dir_config.get();
+	return _config;
 }
 
 void Lindi::exec(std::string title, std::string exe, const std::vector<std::string> &argv)
@@ -188,7 +183,7 @@ void Lindi::change_directory()
 			return;
 		}
 		_current_dir = path;
-		_dir_config.reset(new INIReader(_current_dir + "/.lindi/config"));
+		_config.change_directory(path);
 		Browser::View::change_directory(path);
 		set_mru(path, _recent_dirs);
 		cache_write("recent_dirs", _recent_dirs);
