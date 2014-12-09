@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef EDITOR_LINE_H
-#define EDITOR_LINE_H
+#ifndef EDITOR_DISPLAYLINE_H
+#define EDITOR_DISPLAYLINE_H
 
 #include <string>
 #include <ncurses.h>
@@ -26,10 +26,10 @@
 
 namespace Editor {
 extern const unsigned kTabWidth;
-class Line
+class DisplayLine
 {
 public:
-	Line(std::string text): _text(text) {}
+	DisplayLine(std::string text): _text(text) {}
 	// Unformatted bytes
 	std::string text() const { return _text; }
 	// Number of bytes present
@@ -48,4 +48,4 @@ private:
 };
 } // namespace Editor
 
-#endif // EDITOR_LINE_H
+#endif // EDITOR_DISPLAYLINE_H

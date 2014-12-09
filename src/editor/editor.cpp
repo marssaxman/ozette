@@ -167,7 +167,7 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, bool active)
 	size_t index = v + _scroll.v;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)v, 0);
-	Line line = _doc.line(index);
+	DisplayLine line = _doc.display(index);
 	line.paint(dest, _scroll.h, _width);
 	if (!active) return;
 	if (_selection.empty()) return;
@@ -528,7 +528,7 @@ void Editor::View::key_btab(UI::Frame &ctx)
 	line_t end = _selection.end().line;
 	if (end > begin && 0 == _selection.end().offset) end--;
 	for (line_t index = begin; index <= end; ++index) {
-		std::string text = _doc.line(index).text();
+		std::string text = _doc.line(index);
 		if (text.empty()) continue;
 		if (text.front() != '\t') continue;
 		location_t pretab = _doc.home(index);
@@ -556,7 +556,7 @@ void Editor::View::key_return(UI::Frame &ctx)
 	line_t old_index = _cursor.location().line;
 	_cursor.move_to(_doc.split(_cursor.location()));
 	// Add whatever string of whitespace characters begins the previous line.
-	for (char ch: _doc.line(old_index).text()) {
+	for (char ch: _doc.line(old_index)) {
 		if (!isspace(ch)) break;
 		key_insert(ch);
 	}

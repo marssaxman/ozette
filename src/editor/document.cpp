@@ -100,7 +100,7 @@ Editor::location_t Editor::Document::home(line_t index)
 Editor::location_t Editor::Document::end(line_t index)
 {
 	if (index > _maxline) index = _maxline;
-	location_t loc = {index, line(index).size()};
+	location_t loc = {index, _lines[index].size()};
 	return loc;
 }
 
@@ -109,7 +109,7 @@ Editor::position_t Editor::Document::position(const location_t &loc)
 	// Compute the screen position for this document location.
 	position_t out;
 	out.v = std::min(_maxline, loc.line);
-	out.h = line(loc.line).column(loc.offset);
+	out.h = display(loc.line).column(loc.offset);
 	return out;
 }
 
@@ -119,13 +119,13 @@ Editor::location_t Editor::Document::location(const position_t &loc)
 	// given screen position.
 	location_t out;
 	out.line = loc.v;
-	out.offset = line(out.line).offset(loc.h);
+	out.offset = display(out.line).offset(loc.h);
 	return out;
 }
 
 Editor::location_t Editor::Document::next(location_t loc)
 {
-	if (loc.offset < line(loc.line).size()) {
+	if (loc.offset < _lines[loc.line].size()) {
 		loc.offset++;
 	} else if (loc.line < _maxline) {
 		loc.offset = 0;
@@ -140,7 +140,7 @@ Editor::location_t Editor::Document::prev(location_t loc)
 		loc.offset--;
 	} else if (loc.line > 0) {
 		loc.line--;
-		loc.offset = line(loc.line).size();
+		loc.offset = _lines[loc.line].size();
 	}
 	return loc;
 }
@@ -148,7 +148,7 @@ Editor::location_t Editor::Document::prev(location_t loc)
 Editor::location_t Editor::Document::find(std::string needle, location_t loc)
 {
 	do {
-		loc.offset = line(loc.line).text().find(needle, loc.offset);
+		loc.offset = _lines[loc.line].find(needle, loc.offset);
 		if (loc.offset != std::string::npos) {
 			return loc;
 		}
@@ -157,11 +157,14 @@ Editor::location_t Editor::Document::find(std::string needle, location_t loc)
 	return end();
 }
 
-Editor::Line Editor::Document::line(line_t index) const
+const std::string &Editor::Document::line(line_t index) const
 {
-	// Get the line at the specified index.
-	// If no such line exists, return a blank.
-	return Line(index < _lines.size() ? _lines[index] : "");
+	return index < _lines.size()? _lines[index]: _blank;
+}
+
+Editor::DisplayLine Editor::Document::display(line_t index) const
+{
+	return DisplayLine(line(index));
 }
 
 std::string Editor::Document::text(const Range &span) const
@@ -172,7 +175,7 @@ std::string Editor::Document::text(const Range &span) const
 	std::string chunk = substr_to_end(loc);
 	while (loc.line < end.line) {
 		out << chunk << '\n';
-		chunk = line(++loc.line).text();
+		chunk = _lines[++loc.line];
 		loc.offset = 0;
 	}
 	out << chunk.substr(0, end.offset - loc.offset);
@@ -241,7 +244,7 @@ Editor::location_t Editor::Document::insert(location_t begin, std::string text)
 	}
 
 	append_to_line(loc.line, text.substr(startoff, endoff));
-	loc.offset = line(loc.line).size();
+	loc.offset = _lines[loc.line].size();
 	append_to_line(loc.line, suffix);
 	_edits.insert(Range(begin, loc));
 	return loc;
@@ -252,7 +255,7 @@ Editor::location_t Editor::Document::split(location_t loc)
 	if (!attempt_modify()) return loc;
 	sanitize(loc);
 	_edits.split(loc);
-	std::string text = line(loc.line).text();
+	std::string text = _lines[loc.line];
 	update_line(loc.line, text.substr(0, loc.offset));
 	loc.line++;
 	insert_line(loc.line, text.substr(loc.offset, std::string::npos));
@@ -262,13 +265,12 @@ Editor::location_t Editor::Document::split(location_t loc)
 
 std::string Editor::Document::substr_from_home(const location_t &loc)
 {
-	std::string text = line(loc.line).text();
-	return text.substr(0, loc.offset);
+	return _lines[loc.line].substr(0, loc.offset);
 }
 
 std::string Editor::Document::substr_to_end(const location_t &loc) const
 {
-	std::string text = line(loc.line).text();
+	std::string text = _lines[loc.line];
 	return text.substr(std::min(text.size(), loc.offset), std::string::npos);
 }
 
@@ -296,12 +298,12 @@ Editor::line_t Editor::Document::append_line(std::string text)
 
 void Editor::Document::append_to_line(line_t index, std::string suffix)
 {
-	update_line(index, line(index).text() + suffix);
+	update_line(index, _lines[index] + suffix);
 }
 
 void Editor::Document::push_to_line(line_t index, std::string prefix)
 {
-	update_line(index, prefix + line(index).text());
+	update_line(index, prefix + _lines[index]);
 }
 
 Editor::location_t Editor::Document::sanitize(const location_t &loc)

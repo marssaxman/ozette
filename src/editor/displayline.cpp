@@ -17,16 +17,16 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "line.h"
+#include "displayline.h"
 
 const unsigned Editor::kTabWidth = 4;
 
-unsigned Editor::Line::width() const
+unsigned Editor::DisplayLine::width() const
 {
 	return column(size());
 }
 
-Editor::column_t Editor::Line::column(offset_t loc) const
+Editor::column_t Editor::DisplayLine::column(offset_t loc) const
 {
 	column_t out = 0;
 	offset_t pos = 0;
@@ -37,7 +37,7 @@ Editor::column_t Editor::Line::column(offset_t loc) const
 	return out;
 }
 
-Editor::offset_t Editor::Line::offset(column_t h) const
+Editor::offset_t Editor::DisplayLine::offset(column_t h) const
 {
 	offset_t out = 0;
 	column_t pos = 0;
@@ -49,29 +49,29 @@ Editor::offset_t Editor::Line::offset(column_t h) const
 	return out;
 }
 
-void Editor::Line::advance(char ch, column_t &h) const
+void Editor::DisplayLine::advance(char ch, column_t &h) const
 {
 	do {
 		h++;
 	} while (ch == '\t' && h % kTabWidth);
 }
 
-void Editor::Line::paint(WINDOW *dest, column_t hoff, unsigned width) const
+void Editor::DisplayLine::paint(WINDOW *d, column_t hoff, unsigned width) const
 {
 	column_t h = 0;
 	width += hoff;
 	for (char ch: text()) {
 		if (h == width) break;
 		if (ch != '\t') {
-			if (h >= hoff) waddch(dest, ch);
+			if (h >= hoff) waddch(d, ch);
 			h++;
 		} else do {
-			if (h >= hoff) waddch(dest, ' ');
+			if (h >= hoff) waddch(d, ' ');
 			h++;
 		} while (h < width && 0 != h % kTabWidth);
 	}
 	if (h < width) {
-		wclrtoeol(dest);
+		wclrtoeol(d);
 	}
 }
 

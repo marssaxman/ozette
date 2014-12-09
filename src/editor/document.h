@@ -24,7 +24,7 @@
 #include <memory>
 #include <vector>
 #include "coordinates.h"
-#include "line.h"
+#include "displayline.h"
 #include "changelist.h"
 
 // A document breaks a text buffer into lines, then
@@ -67,9 +67,10 @@ public:
 	// Where is the next occurrence of the specified string?
 	location_t find(std::string text, location_t begin);
 
-	// Get a reference to a specific line, which may be a blank
-	// if no such line exists.
-	Line line(line_t index) const;
+	// Get the raw text of the indexed source line.
+	const std::string &line(line_t index) const;
+	// Get a display version of the indexed source line.
+	DisplayLine display(line_t index) const;
 	// Retrieve the text within the range as a contiguous string.
 	std::string text(const Range &span) const;
 
@@ -96,6 +97,7 @@ private:
 	bool attempt_modify();
 	void clear_modify();
 
+	std::string _blank;
 	std::vector<std::string> _lines;
 	line_t _maxline = 0;	// ubound, not size
 
