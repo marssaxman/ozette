@@ -31,7 +31,8 @@
 Lindi::Lindi():
 	_shell(*this),
 	_home_dir(getenv("HOME")),
-	_config_dir(_home_dir + "/.lindi")
+	_config_dir(_home_dir + "/.lindi"),
+	_user_config(_config_dir + "/config")
 {
 	char *cwd = getcwd(NULL, 0);
 	if (cwd) {
@@ -40,6 +41,7 @@ Lindi::Lindi():
 	} else {
 		_current_dir = _home_dir;
 	}
+	_dir_config.reset(new INIReader(_current_dir + "/.lindi/config"));
 }
 
 std::string Lindi::current_dir() const
@@ -103,7 +105,7 @@ std::string Lindi::get_clipboard()
 	return _clipboard;
 }
 
-void Lindi::get_config(std::string name, std::vector<std::string> &lines)
+void Lindi::cache_read(std::string name, std::vector<std::string> &lines)
 {
 	lines.clear();
 	std::string str;
@@ -114,9 +116,9 @@ void Lindi::get_config(std::string name, std::vector<std::string> &lines)
 	file.close();
 }
 
-void Lindi::set_config(std::string name, const std::vector<std::string> &lines)
+void Lindi::cache_write(std::string name, const std::vector<std::string> &lines)
 {
-	// if the lindi prefs directory doesn't exist yet, create it
+	// if the lindi directory doesn't exist yet, create it
 	struct stat st;
 	if (stat(_config_dir.c_str(), &st)) {
 		mkdir(_config_dir.c_str(), S_IRWXU);
@@ -126,6 +128,16 @@ void Lindi::set_config(std::string name, const std::vector<std::string> &lines)
 		file << line << std::endl;
 	}
 	file.close();
+}
+
+INIReader &Lindi::user_config()
+{
+	return _user_config;
+}
+
+INIReader &Lindi::dir_config()
+{
+	return *_dir_config.get();
 }
 
 void Lindi::exec(std::string title, std::string exe, const std::vector<std::string> &argv)
@@ -164,7 +176,7 @@ void Lindi::change_directory()
 {
 	show_browser();
 	std::string prompt = "Change Directory";
-	get_config("recent_dirs", _recent_dirs);
+	cache_read("recent_dirs", _recent_dirs);
 	auto options = _recent_dirs;
 	set_mru(_current_dir, options);
 	auto commit = [this](UI::Frame &ctx, std::string path)
@@ -176,9 +188,10 @@ void Lindi::change_directory()
 			return;
 		}
 		_current_dir = path;
+		_dir_config.reset(new INIReader(_current_dir + "/.lindi/config"));
 		Browser::View::change_directory(path);
 		set_mru(path, _recent_dirs);
-		set_config("recent_dirs", _recent_dirs);
+		cache_write("recent_dirs", _recent_dirs);
 	};
 	auto dialog = new Browser::Picker(prompt, options, commit);
 	std::unique_ptr<UI::View> dptr(dialog);
@@ -194,16 +207,7 @@ void Lindi::new_file()
 void Lindi::open_file()
 {
 	show_browser();
-	std::string prompt = "Open";
-	std::vector<std::string> options;
-	auto commit = [this](UI::Frame &ctx, std::string path)
-	{
-		if (path.empty()) return;
-		edit_file(path);
-	};
-	auto dialog = new Browser::Picker(prompt, options, commit);
-	std::unique_ptr<UI::View> dptr(dialog);
-	_shell.active()->show_dialog(std::move(dptr));
+	_done |= _shell.process(Control::Open);
 }
 
 void Lindi::show_help()

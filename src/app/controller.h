@@ -22,6 +22,7 @@
 
 #include <string>
 #include <vector>
+#include "INIReader.h"
 
 // Abstract interface for centralized application actions.
 class Controller
@@ -35,8 +36,10 @@ public:
 	virtual void close_file(std::string path) = 0;
 	virtual void set_clipboard(std::string text) = 0;
 	virtual std::string get_clipboard() = 0;
-	virtual void get_config(std::string name, std::vector<std::string> &lines) = 0;
-	virtual void set_config(std::string name, const std::vector<std::string> &lines) = 0;
+	virtual void cache_read(std::string name, std::vector<std::string> &lines) = 0;
+	virtual void cache_write(std::string name, const std::vector<std::string> &lines) = 0;
+	virtual INIReader &user_config() = 0;
+	virtual INIReader &dir_config() = 0;
 	virtual void exec(std::string title, std::string exe, const std::vector<std::string> &argv) = 0;
 };
 

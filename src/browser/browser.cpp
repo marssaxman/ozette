@@ -20,6 +20,7 @@
 #include "browser.h"
 #include "control.h"
 #include "dialog.h"
+#include "picker.h"
 #include <cctype>
 
 Browser::View *Browser::View::_instance;
@@ -51,7 +52,7 @@ void Browser::View::activate(UI::Frame &ctx)
 	ctx.set_title(_tree.path());
 	if (_expanded_items.empty()) {
 		std::vector<std::string> paths;
-		ctx.app().get_config(kExpansionStateKey, paths);
+		ctx.app().cache_read(kExpansionStateKey, paths);
 		for (auto &path: paths) {
 			_expanded_items.insert(path);
 		}
@@ -67,7 +68,7 @@ void Browser::View::deactivate(UI::Frame &ctx)
 	for (auto &line: _expanded_items) {
 		paths.push_back(line);
 	}
-	ctx.app().set_config(kExpansionStateKey, paths);
+	ctx.app().cache_write(kExpansionStateKey, paths);
 }
 
 void Browser::View::check_rebuild(UI::Frame &ctx)
@@ -112,6 +113,7 @@ bool Browser::View::process(UI::Frame &ctx, int ch)
 	check_rebuild(ctx);
 	switch (ch) {
 		case Control::Find: ctl_find(ctx); break;
+		case Control::Open: ctl_open(ctx); break;
 		case Control::Return: key_return(ctx); break;
 		case Control::Close: return false; break;
 		case Control::Escape: clear_filter(ctx); break;
@@ -244,6 +246,20 @@ void Browser::View::ctl_find(UI::Frame &ctx)
 		ctx.app().exec("find: " + text, "grep", args);
 	};
 	auto dialog = new UI::Dialog::Find(prompt, action);
+	std::unique_ptr<UI::View> dptr(dialog);
+	ctx.show_dialog(std::move(dptr));
+}
+
+void Browser::View::ctl_open(UI::Frame &ctx)
+{
+	std::string prompt = "Open";
+	std::vector<std::string> options;
+	auto commit = [this](UI::Frame &ctx, std::string path)
+	{
+		if (path.empty()) return;
+		ctx.app().edit_file(path);
+	};
+	auto dialog = new Picker(prompt, options, commit);
 	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
 }
