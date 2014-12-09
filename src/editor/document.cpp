@@ -23,13 +23,11 @@
 #include <assert.h>
 #include <sys/stat.h>
 
-Editor::Document::Document():
-	_blank("")
+Editor::Document::Document()
 {
 }
 
-Editor::Document::Document(std::string path):
-	_blank("")
+Editor::Document::Document(std::string path)
 {
 	Read(path);
 }
@@ -65,7 +63,7 @@ void Editor::Document::Write(std::string path)
 {
 	std::ofstream file(path, std::ios::trunc);
 	for (auto &line: _lines) {
-		file << line.text() << std::endl; 
+		file << line << std::endl; 
 	}
 	file.close();
 	clear_modify();
@@ -159,11 +157,11 @@ Editor::location_t Editor::Document::find(std::string needle, location_t loc)
 	return end();
 }
 
-const Editor::Line &Editor::Document::line(line_t index) const
+Editor::Line Editor::Document::line(line_t index) const
 {
 	// Get the line at the specified index.
 	// If no such line exists, return a blank.
-	return index < _lines.size() ? _lines[index] : _blank;
+	return Line(index < _lines.size() ? _lines[index] : "");
 }
 
 std::string Editor::Document::text(const Range &span) const
@@ -203,7 +201,7 @@ Editor::location_t Editor::Document::insert(location_t begin, char ch)
 	sanitize(loc);
 	if (!attempt_modify()) return loc;
 	if (loc.line < _lines.size()) {
-		std::string text = _lines[loc.line].text();
+		std::string text = _lines[loc.line];
 		text.insert(loc.offset, 1, ch);
 		update_line(loc.line, text);
 		loc.offset++;
@@ -277,7 +275,7 @@ std::string Editor::Document::substr_to_end(const location_t &loc) const
 void Editor::Document::update_line(line_t index, std::string text)
 {
 	if (index < _lines.size()) {
-		_lines[index] = Line(text);
+		_lines[index] = text;
 	} else {
 		_lines.emplace_back(text);
 	}

@@ -69,7 +69,7 @@ public:
 
 	// Get a reference to a specific line, which may be a blank
 	// if no such line exists.
-	const Line &line(line_t index) const;
+	Line line(line_t index) const;
 	// Retrieve the text within the range as a contiguous string.
 	std::string text(const Range &span) const;
 
@@ -96,8 +96,7 @@ private:
 	bool attempt_modify();
 	void clear_modify();
 
-	Line _blank;
-	std::vector<Line> _lines;
+	std::vector<std::string> _lines;
 	line_t _maxline = 0;	// ubound, not size
 
 	// is the user allowed to make changes in this document?

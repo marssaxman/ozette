@@ -167,7 +167,7 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, bool active)
 	size_t index = v + _scroll.v;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)v, 0);
-	auto &line = _doc.line(index);
+	Line line = _doc.line(index);
 	line.paint(dest, _scroll.h, _width);
 	if (!active) return;
 	if (_selection.empty()) return;
