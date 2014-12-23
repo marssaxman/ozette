@@ -85,7 +85,7 @@ Config::Typed::Typed(const All &source, std::string filepath):
 {
 	size_t dotpos = filepath.find_last_of('.');
 	if (dotpos != std::string::npos) {
-		_type = filepath.substr(dotpos);
+		_type = filepath.substr(dotpos+1);
 	}
 }
 
