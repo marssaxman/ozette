@@ -38,7 +38,7 @@ public:
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
 protected:
-	virtual void paint_into(WINDOW *view, bool active) override;
+	virtual void paint_into(WINDOW *view, State state) override;
 	virtual void clear_overlay() override;
 private:
 	void postprocess(UI::Frame &ctx);
@@ -103,7 +103,7 @@ private:
 	std::string _find_text;
 
 	// Update status: must we perform a full repaint?
-	bool _last_active = false;
+	State _last_state = State::Inactive;
 	WINDOW *_last_dest = nullptr;
 	// What are the width and height of the viewrect?
 	column_t _width = 0;

@@ -42,7 +42,7 @@ protected:
 	~View();
 	static View *_instance;
 	UI::Window *_window = nullptr;
-	virtual void paint_into(WINDOW *view, bool active) override;
+	virtual void paint_into(WINDOW *view, State state) override;
 private:
 	void exec(std::string title, std::string exe, const std::vector<std::string> &argv);
 	void close_subproc();

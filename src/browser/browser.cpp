@@ -80,7 +80,7 @@ void Browser::View::check_rebuild(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-void Browser::View::paint_into(WINDOW *view, bool active)
+void Browser::View::paint_into(WINDOW *view, State state)
 {
 	int width;
 	getmaxyx(view, _height, width);
@@ -102,7 +102,7 @@ void Browser::View::paint_into(WINDOW *view, bool active)
 		} else {
 			wclrtoeol(view);
 		}
-		if (active && i == 1+_selection) {
+		if (state == State::Focused && i == 1+_selection) {
 			mvwchgat(view, row, 0, width, A_REVERSE, 0, NULL);
 		}
 	}

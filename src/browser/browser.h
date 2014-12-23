@@ -40,7 +40,7 @@ public:
 	virtual Priority priority() const { return Priority::Primary; }
 protected:
 	void check_rebuild(UI::Frame &ctx);
-	virtual void paint_into(WINDOW *view, bool active) override;
+	virtual void paint_into(WINDOW *view, State state) override;
 private:
 	View(std::string path);
 	~View() { _instance = nullptr; }

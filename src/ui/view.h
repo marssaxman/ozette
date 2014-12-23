@@ -53,7 +53,7 @@ public:
 	};
 	virtual Priority priority() const { return Priority::Any; }
 protected:
-	virtual void paint_into(WINDOW *view, bool active) = 0;
+	virtual void paint_into(WINDOW *view, State state) = 0;
 private:
 	WINDOW *_window = nullptr;
 	PANEL *_panel = nullptr;

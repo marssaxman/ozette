@@ -21,19 +21,26 @@
 #include <ncurses.h>
 
 namespace {
-short sContentActive = 0;
-short sContentInactive = 0;
-short sChromeActive = 0;
-short sChromeInactive = 0;
-}
-short UI::Colors::content(bool active)
+// these are attribute values, not color pair indexes
+int sContent = A_NORMAL;
+int sChrome = A_NORMAL;
+int sDialog = A_NORMAL;
+int sInactive = A_DIM;
+} // namespace
+
+int UI::Colors::content(bool active)
 {
-	return active? sContentActive: sContentInactive;
+	return active? sContent: sInactive;
 }
 
-short UI::Colors::chrome(bool active)
+int UI::Colors::chrome(bool active)
 {
-	return active? sChromeActive: sChromeInactive;
+	return active? sChrome: sInactive;
+}
+
+int UI::Colors::dialog(bool active)
+{
+	return A_REVERSE | (active? sDialog: sInactive);
 }
 
 void UI::Colors::init()
@@ -48,12 +55,11 @@ void UI::Colors::init()
 	// I guess we just have to specify colors uniquely for this app, instead of
 	// trying to adapt to the user's terminal settings, which seems... bad.
 	use_default_colors();
-	init_pair(1, COLOR_YELLOW, -1);
-	init_pair(2, COLOR_WHITE, -1);
+	init_pair(1, COLOR_WHITE, -1);
 
-	sContentActive = 0;
-	sContentInactive = 2;
-	sChromeActive = 1;
-	sChromeInactive = 2;
+	sContent = COLOR_PAIR(0);
+	sChrome = COLOR_PAIR(0);
+	sDialog = COLOR_PAIR(0);
+	sInactive = COLOR_PAIR(1);
 }
 

@@ -49,10 +49,10 @@ bool UI::Dialog::Base::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-void UI::Dialog::Base::paint_into(WINDOW *view, bool active)
+void UI::Dialog::Base::paint_into(WINDOW *view, State state)
 {
 	// Everything drawn in a dialog is reversed by default.
-	wattron(view, A_REVERSE | COLOR_PAIR(Colors::chrome(active)));
+	wattron(view, Colors::dialog(state != State::Inactive));
 	// Fill the dialog window.
 	wmove(view, 0, 0);
 	int height, width;
@@ -109,9 +109,9 @@ bool UI::Dialog::Input::poll(Frame &ctx)
 	return inherited::poll(ctx);
 }
 
-void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
+void UI::Dialog::Input::paint_into(WINDOW *view, State state)
 {
-	inherited::paint_into(view, active);
+	inherited::paint_into(view, state);
 	waddstr(view, ": ");
 	int height, width;
 	getmaxyx(view, height, width);
@@ -128,7 +128,7 @@ void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
 	// Put the cursor where it ought to be. Make it visible, if that
 	// would be appropriate for our activation state.
 	wmove(view, 0, value_hpos + _cursor_pos);
-	bool cursor = active && field_selected();
+	bool cursor = (state == State::Focused) && field_selected();
 	curs_set(cursor? 1: 0);
 }
 

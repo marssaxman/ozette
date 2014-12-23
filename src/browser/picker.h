@@ -38,7 +38,7 @@ public:
 	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 protected:
-	virtual void paint_into(WINDOW *view, bool active) override;
+	virtual void paint_into(WINDOW *view, State state) override;
 	virtual void select_field();
 	virtual bool field_selected() const override;
 	std::vector<std::string> _options;

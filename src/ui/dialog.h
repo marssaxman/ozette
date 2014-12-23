@@ -41,7 +41,7 @@ public:
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(HelpBar::Panel &panel) override;
 protected:
-	virtual void paint_into(WINDOW *view, bool active) override;
+	virtual void paint_into(WINDOW *view, State state) override;
 private:
 	std::string _prompt;
 };
@@ -56,7 +56,7 @@ public:
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual bool poll(UI::Frame &ctx) override;
 protected:
-	virtual void paint_into(WINDOW *view, bool active) override;
+	virtual void paint_into(WINDOW *view, State state) override;
 	virtual void select_field();
 	void set_value(std::string val);
 	void repaint() { _repaint = true; }

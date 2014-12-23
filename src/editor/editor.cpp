@@ -62,22 +62,23 @@ void Editor::View::deactivate(UI::Frame &ctx)
 	_doc.commit();
 }
 
-void Editor::View::paint_into(WINDOW *dest, bool active)
+void Editor::View::paint_into(WINDOW *dest, State state)
 {
 	update_dimensions(dest);
-	if (active != _last_active || dest != _last_dest) {
+	if (state != _last_state || dest != _last_dest) {
 		_update.all();
-		_last_active = active;
+		_last_state = state;
 		_last_dest = dest;
 	}
+	bool focus = state == State::Focused;
 	for (unsigned i = 0; i < _height; ++i) {
-		paint_line(dest, i, active);
+		paint_line(dest, i, focus);
 	}
 	position_t curs = _cursor.position();
 	curs.h -= std::min(curs.h, _scroll.h);
 	curs.v -= std::min(curs.v, _scroll.v);
 	wmove(dest, curs.v, curs.h);
-	bool show_cursor = active && _selection.empty();
+	bool show_cursor = focus && _selection.empty();
 	show_cursor &= !_doc.readonly();
 	curs_set(show_cursor ? 1 : 0);
 	_update.reset();

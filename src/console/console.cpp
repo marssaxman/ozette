@@ -109,7 +109,7 @@ Console::View::~View()
 	close_subproc();
 }
 
-void Console::View::paint_into(WINDOW *view, bool active)
+void Console::View::paint_into(WINDOW *view, State state)
 {
 	if (!_log.get()) return;
 	wmove(view, 0, 0);

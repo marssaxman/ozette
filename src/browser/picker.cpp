@@ -65,9 +65,9 @@ bool Browser::Picker::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-void Browser::Picker::paint_into(WINDOW *view, bool active)
+void Browser::Picker::paint_into(WINDOW *view, State state)
 {
-	inherited::paint_into(view, active);
+	inherited::paint_into(view, state);
 	int height, width;
 	getmaxyx(view, height, width);
 	int old_ypos, old_xpos;

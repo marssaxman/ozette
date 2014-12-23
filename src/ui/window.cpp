@@ -264,24 +264,23 @@ void UI::Window::paint()
 
 void UI::Window::paint_content()
 {
-	auto focused = _has_focus? View::State::Focused: View::State::Inactive;
-	auto active = _has_focus? View::State::Active: View::State::Inactive;
+	View::State state = _has_focus? View::State::Focused: View::State::Inactive;
 	if (_dialog) {
-		_view->paint(active);
-		_dialog->paint(focused);
+		_dialog->paint(state);
+		state = _has_focus? View::State::Active: View::State::Inactive;
+	}
+	if (_result_text.empty()) {
+		_view->paint(state);
 	} else {
-		_view->paint(focused);
-		if (!_result_text.empty()) {
-			_view->overlay_result(_result_text, active);
-		}
+		_view->paint(_has_focus? View::State::Active: View::State::Inactive);
+		_view->overlay_result(_result_text, state);
 	}
 	_dirty_content = false;
 }
 
 void UI::Window::paint_chrome()
 {
-	auto color = COLOR_PAIR(Colors::chrome(_has_focus && !_dialog));
-	wattrset(_framewin, color);
+	wattrset(_framewin, Colors::chrome(_has_focus && !_dialog));
 	int height, width;
 	getmaxyx(_framewin, height, width);
 	paint_titlebar(width);
@@ -290,7 +289,7 @@ void UI::Window::paint_chrome()
 	if (_taskbar_height) {
 		// The task bar is still active when a dialog is open, because it shows
 		// context-specific information.
-		wattrset(_framewin, COLOR_PAIR(Colors::chrome(_has_focus)));
+		wattrset(_framewin, Colors::chrome(_has_focus));
 		paint_taskbar(height, width);
 	}
 	_dirty_chrome = false;

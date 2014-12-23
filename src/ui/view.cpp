@@ -57,9 +57,8 @@ void UI::View::paint(State state)
 {
 	wmove(_window, 0, 0);
 	curs_set(0);
-	short color = Colors::content(state != State::Inactive);
-	wattrset(_window, COLOR_PAIR(color));
-	paint_into(_window, state == State::Focused);
+	wattrset(_window, Colors::content(state != State::Inactive));
+	paint_into(_window, state);
 	wstandend(_window);
 }
 
@@ -78,7 +77,7 @@ void UI::View::overlay_result(std::string message, State state)
 	int voff = winheight - 1;
 	int hoff = (winwidth - labelwidth) / 2;
 	wmove(_window, voff, hoff);
-	auto color = COLOR_PAIR(Colors::chrome(state != State::Inactive));
+	auto color = Colors::chrome(state != State::Inactive);
 	wattron(_window, A_REVERSE | color);
 	waddstr(_window, "[ ");
 	waddnstr(_window, message.c_str(), numchars);

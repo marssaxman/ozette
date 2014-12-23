@@ -28,9 +28,11 @@ namespace Colors {
 void init();
 
 // text drawn in the body of a window
-short content(bool active);
+int content(bool active);
 // UI elements, which may change appearance when they have the focus
-short chrome(bool active);
+int chrome(bool active);
+// dialog boxes floating above a window
+int dialog(bool active);
 
 } // namespace Colors
 } // namespace UI
