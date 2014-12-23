@@ -81,9 +81,12 @@ bool Config::All::get_bool(std::string group, std::string key, bool val) const
 }
 
 Config::Typed::Typed(const All &source, std::string filepath):
-	_source(source),
-	_type(filepath.substr(filepath.find_last_of('.')))
+	_source(source)
 {
+	size_t dotpos = filepath.find_last_of('.');
+	if (dotpos != std::string::npos) {
+		_type = filepath.substr(dotpos);
+	}
 }
 
 std::string Config::Typed::get(std::string key, std::string val) const
