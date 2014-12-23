@@ -49,7 +49,7 @@ Browser::View::View(std::string path):
 
 void Browser::View::activate(UI::Frame &ctx)
 {
-	ctx.set_title(_tree.path());
+	set_title(ctx);
 	if (_expanded_items.empty()) {
 		std::vector<std::string> paths;
 		ctx.app().cache_read(kExpansionStateKey, paths);
@@ -75,7 +75,7 @@ void Browser::View::check_rebuild(UI::Frame &ctx)
 {
 	if (!_rebuild_list) return;
 	build_list();
-	ctx.set_title(_tree.path());
+	set_title(ctx);
 	_rebuild_list = false;
 	ctx.repaint();
 }
@@ -393,6 +393,11 @@ bool Browser::View::matches_filter(std::string name)
 		++search;
 	}
 	return true;
+}
+
+void Browser::View::set_title(UI::Frame &ctx)
+{
+	ctx.set_title(ctx.app().display_path(_tree.path()));
 }
 
 void Browser::View::build_list()
