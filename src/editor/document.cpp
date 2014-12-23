@@ -53,7 +53,10 @@ Editor::Document::Document(std::string path, const ::Config::All &config):
 
 	std::string str;
 	std::ifstream file(path);
-	while (std::getline(file, str)) {
+	// We will read every file using LF as delimiter. When reading a Windows
+	// formatted text file, we will then strip the trailing CR.
+	while (std::getline(file, str, '\x0A')) {
+		if (str.back() == '\x0D') str.pop_back();
 		_maxline = append_line(str);
 	}
 }
