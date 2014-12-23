@@ -266,8 +266,9 @@ void Editor::View::ctl_copy(UI::Frame &ctx)
 
 void Editor::View::ctl_paste(UI::Frame &ctx)
 {
-	delete_selection();
 	std::string clip = ctx.app().get_clipboard();
+	if (clip.empty()) return;
+	delete_selection();
 	location_t oldloc = _cursor.location();
 	location_t newloc = _doc.insert(oldloc, clip);
 	if (oldloc.line != newloc.line) {
