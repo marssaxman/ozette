@@ -171,7 +171,17 @@ void Lindi::change_directory()
 {
 	show_browser();
 	std::string prompt = "Change Directory";
+	// Get the cached list of directories we have opened. Strip out any dirs
+	// which no longer exist, then make a temporary copy of the list in which
+	// the current directory is most recent.
 	cache_read("recent_dirs", _recent_dirs);
+	for (size_t i = _recent_dirs.size(); i-- > 0;) {
+		std::string path = _recent_dirs[i];
+		struct stat st;
+		if (stat(path.c_str(), &st)) {
+			_recent_dirs.erase(_recent_dirs.begin() + i);
+		}
+	}
 	auto options = _recent_dirs;
 	set_mru(_current_dir, options);
 	auto commit = [this](UI::Frame &ctx, std::string path)
