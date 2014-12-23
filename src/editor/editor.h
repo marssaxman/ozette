@@ -24,13 +24,14 @@
 #include "document.h"
 #include "update.h"
 #include "cursor.h"
+#include "config.h"
 
 namespace Editor {
 class View : public UI::View
 {
 public:
-	View();
-	View(std::string targetpath);
+	View(const ::Config::All &config);
+	View(std::string targetpath, const ::Config::All &config);
 	View(std::string title, Document &&doc);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;

@@ -23,15 +23,17 @@
 #include <string>
 #include <ncurses.h>
 #include "coordinates.h"
+#include "settings.h"
 
 namespace Editor {
 extern const unsigned kTabWidth;
 class DisplayLine
 {
 public:
-	DisplayLine(std::string text): _text(text) {}
+	DisplayLine(const std::string &text, const Settings &settings):
+		_text(text), _settings(settings) {}
 	// Unformatted bytes
-	std::string text() const { return _text; }
+	const std::string &text() const { return _text; }
 	// Number of bytes present
 	size_t size() const { return _text.size(); }
 	// Expected total width of rendered text
@@ -44,7 +46,8 @@ public:
 	void paint(WINDOW *view, column_t hoff, unsigned width) const;
 private:
 	void advance(char ch, column_t &h) const;
-	std::string _text;
+	const std::string &_text;
+	const Settings &_settings;
 };
 } // namespace Editor
 

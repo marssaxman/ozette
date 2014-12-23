@@ -1,4 +1,4 @@
-  //
+//
 // lindi
 // Copyright (C) 2014 Mars J. Saxman
 //
@@ -23,16 +23,15 @@
 #include <assert.h>
 #include <sys/stat.h>
 
-Editor::Document::Document()
+Editor::Document::Document(const ::Config::All &config):
+	_config_all(config),
+	_config(new ::Config::Typed(_config_all, ""))
 {
 }
 
-Editor::Document::Document(std::string path)
-{
-	Read(path);
-}
-
-void Editor::Document::Read(std::string path)
+Editor::Document::Document(std::string path, const ::Config::All &config):
+	_config_all(config),
+	_config(new ::Config::Typed(_config_all, path))
 {
 	_lines.clear();
 	_edits.clear();
@@ -61,6 +60,7 @@ void Editor::Document::Read(std::string path)
 
 void Editor::Document::Write(std::string path)
 {
+	_config.reset(new ::Config::Typed(_config_all, path));
 	std::ofstream file(path, std::ios::trunc);
 	for (auto &line: _lines) {
 		file << line << std::endl; 
@@ -164,7 +164,7 @@ const std::string &Editor::Document::line(line_t index) const
 
 Editor::DisplayLine Editor::Document::display(line_t index) const
 {
-	return DisplayLine(line(index));
+	return DisplayLine(line(index), *_config.get());
 }
 
 std::string Editor::Document::text(const Range &span) const

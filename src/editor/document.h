@@ -26,6 +26,7 @@
 #include "coordinates.h"
 #include "displayline.h"
 #include "changelist.h"
+#include "settings.h"
 
 // A document breaks a text buffer into lines, then
 // maps those lines onto an infinite plane of equally
@@ -34,9 +35,8 @@ namespace Editor {
 class Document
 {
 public:
-	Document();
-	Document(std::string path);
-	void Read(std::string path);
+	Document(const Config::All &config);
+	Document(std::string path, const Config::All &config);
 	void Write(std::string path);
 	void View(std::string text);
 	std::string status() const { return _status; }
@@ -96,6 +96,11 @@ private:
 	location_t sanitize(const location_t &loc);
 	bool attempt_modify();
 	void clear_modify();
+
+	// Non-contextual config interface
+	const Config::All &_config_all;
+	// Config instance for the specific document being edited.
+	std::unique_ptr<Config::Typed> _config;
 
 	std::string _blank;
 	std::vector<std::string> _lines;

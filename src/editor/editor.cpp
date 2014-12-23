@@ -25,15 +25,16 @@
 #include <dirent.h>
 #include <cctype>
 
-Editor::View::View():
+Editor::View::View(const ::Config::All &config):
+	_doc(config),
 	_cursor(_doc, _update)
 {
 	// new blank buffer
 }
 
-Editor::View::View(std::string targetpath):
+Editor::View::View(std::string targetpath, const ::Config::All &config):
 	_targetpath(targetpath),
-	_doc(targetpath),
+	_doc(targetpath, config),
 	_cursor(_doc, _update)
 {
 }
@@ -203,9 +204,9 @@ void Editor::View::reveal_cursor()
 		_update.all();
 	}
 	// Try to keep the view scrolled left if possible, but if that would put the
-	// cursor offscreen, scroll right by the cursor position plus one tab width.
+	// cursor offscreen, scroll right by the cursor position plus a few extra.
 	if (_cursor.position().h >= _width) {
-		column_t newh = _cursor.position().h + Editor::kTabWidth - _width;
+		column_t newh = _cursor.position().h + 4 - _width;
 		if (newh != _scroll.h) {
 			_scroll.h = newh;
 			_update.all();
