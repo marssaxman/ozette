@@ -73,6 +73,7 @@ void Editor::Document::View(std::string text)
 {
 	// Replace all lines with the contents of this string.
 	_lines.clear();
+	_lines.emplace_back("");
 	_edits.clear();
 	_maxline = 0;
 	insert(home(), text);
