@@ -19,6 +19,7 @@
 
 #include "shell.h"
 #include "control.h"
+#include "colors.h"
 #include <algorithm>
 #include <assert.h>
 #include <cstring>
@@ -263,13 +264,15 @@ void UI::Window::paint()
 
 void UI::Window::paint_content()
 {
+	auto focused = _has_focus? View::State::Focused: View::State::Inactive;
+	auto active = _has_focus? View::State::Active: View::State::Inactive;
 	if (_dialog) {
-		_view->paint(false);
-		_dialog->paint(_has_focus);
+		_view->paint(active);
+		_dialog->paint(focused);
 	} else {
-		_view->paint(_has_focus);
+		_view->paint(focused);
 		if (!_result_text.empty()) {
-			_view->overlay_result(_result_text);
+			_view->overlay_result(_result_text, active);
 		}
 	}
 	_dirty_content = false;
@@ -277,13 +280,21 @@ void UI::Window::paint_content()
 
 void UI::Window::paint_chrome()
 {
+	auto color = COLOR_PAIR(Colors::chrome(_has_focus && !_dialog));
+	wattrset(_framewin, color);
 	int height, width;
 	getmaxyx(_framewin, height, width);
 	paint_titlebar(width);
 	if (_lframe) paint_left_frame(height, width);
 	if (_rframe) paint_right_frame(height, width);
-	if (_taskbar_height) paint_taskbar(height, width);
+	if (_taskbar_height) {
+		// The task bar is still active when a dialog is open, because it shows
+		// context-specific information.
+		wattrset(_framewin, COLOR_PAIR(Colors::chrome(_has_focus)));
+		paint_taskbar(height, width);
+	}
 	_dirty_chrome = false;
+	wstandend(_framewin);
 }
 
 void UI::Window::paint_titlebar(int width)

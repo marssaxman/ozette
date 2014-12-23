@@ -33,8 +33,13 @@ public:
 	virtual ~View();
 	virtual void layout(int v, int h, int height, int width);
 	void bring_forward();
-	virtual void paint(bool active);
-	void overlay_result(std::string result);
+	enum class State {
+		Inactive,
+		Active,
+		Focused
+	};
+	virtual void paint(State state);
+	void overlay_result(std::string result, State state);
 	virtual void clear_overlay() {}
 	virtual void activate(Frame &ctx) {}
 	virtual void deactivate(Frame &ctx) {}

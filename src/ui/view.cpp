@@ -18,6 +18,7 @@
 //
 
 #include "view.h"
+#include "colors.h"
 
 UI::View::View():
 	_window(newwin(0, 0, 0, 0)),
@@ -52,14 +53,17 @@ void UI::View::bring_forward()
 	top_panel(_panel);
 }
 
-void UI::View::paint(bool active)
+void UI::View::paint(State state)
 {
 	wmove(_window, 0, 0);
 	curs_set(0);
-	paint_into(_window, active);
+	short color = Colors::content(state != State::Inactive);
+	wattrset(_window, COLOR_PAIR(color));
+	paint_into(_window, state == State::Focused);
+	wstandend(_window);
 }
 
-void UI::View::overlay_result(std::string message)
+void UI::View::overlay_result(std::string message, State state)
 {
 	int cury, curx;
 	getyx(_window, cury, curx);
@@ -74,11 +78,12 @@ void UI::View::overlay_result(std::string message)
 	int voff = winheight - 1;
 	int hoff = (winwidth - labelwidth) / 2;
 	wmove(_window, voff, hoff);
-	wattron(_window, A_REVERSE);
+	auto color = COLOR_PAIR(Colors::chrome(state != State::Inactive));
+	wattron(_window, A_REVERSE | color);
 	waddstr(_window, "[ ");
 	waddnstr(_window, message.c_str(), numchars);
 	waddstr(_window, " ]");
-	wattroff(_window, A_REVERSE);
+	wattroff(_window, A_REVERSE | color);
 	wmove(_window, cury, curx);
 }
 

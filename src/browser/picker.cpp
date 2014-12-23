@@ -67,12 +67,11 @@ bool Browser::Picker::process(UI::Frame &ctx, int ch)
 
 void Browser::Picker::paint_into(WINDOW *view, bool active)
 {
-	inherited::paint_into(view, active && !_suggestion_selected);
+	inherited::paint_into(view, active);
 	int height, width;
 	getmaxyx(view, height, width);
 	int old_ypos, old_xpos;
 	getyx(view, old_ypos, old_xpos);
-	wattron(view, A_REVERSE);
 
 	// Draw each suggested value on its own line.
 	int sugg_vpos = old_ypos + 1;
@@ -112,9 +111,7 @@ void Browser::Picker::paint_into(WINDOW *view, bool active)
 		}
 		mvwaddstr(view, vpos, width - 2, "  ");
 	}
-
 	wmove(view, old_ypos, old_xpos);
-	wattroff(view, A_REVERSE);
 }
 
 void Browser::Picker::select_field()

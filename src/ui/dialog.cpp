@@ -19,6 +19,7 @@
 
 #include "dialog.h"
 #include "frame.h"
+#include "colors.h"
 #include <assert.h>
 
 UI::Dialog::Base::Base(std::string prompt):
@@ -51,7 +52,7 @@ bool UI::Dialog::Base::process(UI::Frame &ctx, int ch)
 void UI::Dialog::Base::paint_into(WINDOW *view, bool active)
 {
 	// Everything drawn in a dialog is reversed by default.
-	wattron(view, A_REVERSE);
+	wattron(view, A_REVERSE | COLOR_PAIR(Colors::chrome(active)));
 	// Fill the dialog window.
 	wmove(view, 0, 0);
 	int height, width;
@@ -59,7 +60,6 @@ void UI::Dialog::Base::paint_into(WINDOW *view, bool active)
 	(void)height; // unused
 	whline(view, ' ', width);
 	waddnstr(view, _prompt.c_str(), width);
-	wattroff(view, A_REVERSE);
 }
 
 void UI::Dialog::Base::set_help(HelpBar::Panel &panel)
@@ -112,8 +112,6 @@ bool UI::Dialog::Input::poll(Frame &ctx)
 void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
 {
 	inherited::paint_into(view, active);
-
-	wattron(view, A_REVERSE);
 	waddstr(view, ": ");
 	int height, width;
 	getmaxyx(view, height, width);
@@ -127,13 +125,11 @@ void UI::Dialog::Input::paint_into(WINDOW *view, bool active)
 	(void)end_vpos; // unused
 	whline(view, ' ', width - end_hpos);
 
-	// We're done being all reversed and stuff.
-	wattroff(view, A_REVERSE);
-
 	// Put the cursor where it ought to be. Make it visible, if that
 	// would be appropriate for our activation state.
 	wmove(view, 0, value_hpos + _cursor_pos);
-	curs_set(active? 1: 0);
+	bool cursor = active && field_selected();
+	curs_set(cursor? 1: 0);
 }
 
 void UI::Dialog::Input::arrow_left()

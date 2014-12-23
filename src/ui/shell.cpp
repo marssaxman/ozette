@@ -18,10 +18,11 @@
 //
 
 #include "shell.h"
+#include "colors.h"
 #include <algorithm>
 #include <assert.h>
 #include <list>
-
+#include <unistd.h>
 
 // we are not heathens;the holy terminal size is 80 columns. ever has it been
 // and ever shall it be, world without end, amen.
@@ -32,6 +33,8 @@ UI::Shell::Shell(Controller &app):
 {
 	// Set up ncurses.
 	initscr();
+	// We want color, if available.
+	Colors::init();
 	// Don't automatically echo characters back to the
 	// screen; we will draw things ourselves when we want
 	// them to appear.
