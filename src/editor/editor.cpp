@@ -99,6 +99,7 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::Save: ctl_save(ctx); break;
 		case Control::ToLine: ctl_toline(ctx); break;
 		case Control::Find: ctl_find(ctx); break;
+		case Control::FindNext: ctl_find_next(ctx); break;
 		case Control::Undo: ctl_undo(ctx); break;
 		case Control::Redo: ctl_redo(ctx); break;
 		case Control::DownArrow: ctl_open_next(ctx); break;
@@ -343,25 +344,31 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 		if (!value.empty()) {
 			_find_text = value;
 		}
-		location_t loc = _doc.next(_cursor.location());
-		auto next = _doc.find(_find_text, loc);
-		if (next == _doc.end()) {
-			next = _doc.find(_find_text, _doc.home());
-			if (next == _doc.end()) {
-				ctx.show_result("Not found");
-				next = _cursor.location();
-			} else if (next == _cursor.location()) {
-				ctx.show_result("This is the only occurrence");
-			} else {
-				ctx.show_result("Search wrapped");
-			}
-		}
-		_cursor.move_to(next);
-		postprocess(ctx);
+		ctl_find_next(ctx);
 	};
 	auto dialog = new UI::Dialog::Find(prompt, commit);
 	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
+}
+
+void Editor::View::ctl_find_next(UI::Frame &ctx)
+{
+	if (_find_text.empty()) return;
+	location_t loc = _doc.next(_cursor.location());
+	auto next = _doc.find(_find_text, loc);
+	if (next == _doc.end()) {
+		next = _doc.find(_find_text, _doc.home());
+		if (next == _doc.end()) {
+			ctx.show_result("Not found");
+			next = _cursor.location();
+		} else if (next == _cursor.location()) {
+			ctx.show_result("This is the only occurrence");
+		} else {
+			ctx.show_result("Search wrapped");
+		}
+	}
+	_cursor.move_to(next);
+	postprocess(ctx);
 }
 
 void Editor::View::ctl_undo(UI::Frame &ctx)

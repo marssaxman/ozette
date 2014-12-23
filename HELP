@@ -49,6 +49,7 @@ Editor commands:
     ^C - Copy - place selected text on the clipboard
     ^V - Paste - insert clipboard text at cursor location
     ^F - Find - move the cursor to the next occurrence of some string
+	^G - Find Next - find next occurrence of previously found string
     ^L - To Line - move the cursor to the beginning of the specified line
     ^S - Save - write the contents of the buffer back to disk
     ^Z - Undo - roll back the last change to the document

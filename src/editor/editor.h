@@ -55,6 +55,7 @@ private:
 	void ctl_save(UI::Frame &ctx);
 	void ctl_toline(UI::Frame &ctx);
 	void ctl_find(UI::Frame &ctx);
+	void ctl_find_next(UI::Frame &ctx);
 	void ctl_undo(UI::Frame &ctx);
 	void ctl_redo(UI::Frame &ctx);
 	void ctl_open_next(UI::Frame &ctx);

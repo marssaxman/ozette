@@ -50,6 +50,7 @@ enum {
 
 	// Navigation
 	Find = 0x06, //ACK ^F
+	FindNext = 0x07, // BEL ^G
 	ToLine = 0x0C, //FF ^L
 
 	// Console
@@ -64,7 +65,6 @@ enum {
 	// Unused ASCII control codes
 	SOH = 0x01, // ! A a
 	STX = 0x02, // " B b
-	BEL = 0x07, // ` G g
 	DLE = 0x10, // 0 P p
 	DC2 = 0x12, // 2 R r
 	DC4 = 0x14, // 4 T t
