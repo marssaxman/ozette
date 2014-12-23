@@ -171,7 +171,9 @@ void Lindi::change_directory()
 	std::string prompt = "Change Directory";
 	// Get the cached list of directories we have opened. Strip out any dirs
 	// which no longer exist, then make a temporary copy of the list in which
-	// the current directory is most recent.
+	// the current directory is most recent. Format the paths in the display
+	// list using the tilde ~ in place of the home dir prefix, since that reads
+	// better, though we store full paths in the cache.
 	cache_read("recent_dirs", _recent_dirs);
 	for (size_t i = _recent_dirs.size(); i-- > 0;) {
 		std::string path = _recent_dirs[i];
@@ -182,6 +184,11 @@ void Lindi::change_directory()
 	}
 	auto options = _recent_dirs;
 	set_mru(_current_dir, options);
+	for (auto &path: options) {
+		if (path.substr(0, _home_dir.size()) == _home_dir) {
+			path = "~" + path.substr(_home_dir.size());
+		}
+	}
 	auto commit = [this](UI::Frame &ctx, std::string path)
 	{
 		path = canonical_abspath(path);
