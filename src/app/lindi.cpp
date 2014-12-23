@@ -142,9 +142,7 @@ void Lindi::exec(std::string title, std::string exe, const std::vector<std::stri
 
 void Lindi::run()
 {
-	if (_editors.empty()) {
-		Browser::View::open(_current_dir, _shell);
-	}
+	if (_editors.empty()) show_browser();
 	timeout(20);
 	do {
 		update_panels();
@@ -186,6 +184,7 @@ void Lindi::change_directory()
 	set_mru(_current_dir, options);
 	auto commit = [this](UI::Frame &ctx, std::string path)
 	{
+		path = canonical_abspath(path);
 		int result = chdir(path.c_str());
 		if (0 != result) {
 			int code = errno;
