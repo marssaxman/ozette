@@ -368,22 +368,21 @@ void Editor::View::ctl_find_next(UI::Frame &ctx)
 		}
 	}
 	_cursor.move_to(next);
+	drop_selection();
 	postprocess(ctx);
 }
 
 void Editor::View::ctl_undo(UI::Frame &ctx)
 {
 	_cursor.move_to(_doc.undo(_update));
-	_anchor = _cursor.location();
-	_selection.reset(_anchor);
+	drop_selection();
 	postprocess(ctx);
 }
 
 void Editor::View::ctl_redo(UI::Frame &ctx)
 {
 	_cursor.move_to(_doc.redo(_update));
-	_anchor = _cursor.location();
-	_selection.reset(_anchor);
+	drop_selection();
 	postprocess(ctx);
 }
 
