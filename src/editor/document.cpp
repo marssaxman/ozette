@@ -226,13 +226,13 @@ Editor::location_t Editor::Document::insert(location_t begin, std::string text)
 	sanitize(loc);
 	if (!attempt_modify()) return loc;
 
-	std::string suffix;	
+	std::string suffix;
 	if (loc.line < _lines.size()) {
 		// Split this line apart around the insertion point. We will insert
 		// the new text in between these halves. We will temporarily delete
 		// the suffix from its line, since we're likely to be appending more
 		// text for a while, but we'll append the suffix back on at the end.
-		std::string suffix = substr_to_end(loc);
+		suffix = substr_to_end(loc);
 		update_line(loc.line, substr_from_home(loc));
 	} else {
 		loc.line = append_line(std::string());
