@@ -56,8 +56,14 @@ Regex::Matches Regex::find_all(const std::string &text) const
 
 Grammar::Grammar():
 	_identifier("\\<\\w+\\>"),
-	_keyword("\\<(const|using|namespace|return|if|while|do|for|auto|unsigned|"
-		"switch|case|default)\\>"),
+	_keyword("\\<("
+		"void|bool|int|short|long|signed|unsigned|char|float|double|const"
+		"|enum|struct|class|union|typedef|extern|static|inline|register"
+		"|public|protected|private|this|friend|virtual|mutable|volatile"
+		"|template|typename|using|namespace|try|throw|catch|operator"
+		"|if|while|do|for|else|switch|case|default"
+		"|new|delete|goto|continue|break|return"
+		")\\>"),
 	_string("\\\"(.*)[^\\\\]\\\""),
 	_comment("//(.*)$"),
 	_trailing_space("[[:space:]]+$")
