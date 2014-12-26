@@ -23,15 +23,15 @@
 #include <assert.h>
 #include <sys/stat.h>
 
-Editor::Document::Document(const ::Config::All &config):
+Editor::Document::Document(const Config::All &config):
 	_config_all(config),
-	_config(new ::Config::Typed(_config_all, ""))
+	_config(new Config::Typed(_config_all, ""))
 {
 }
 
-Editor::Document::Document(std::string path, const ::Config::All &config):
+Editor::Document::Document(std::string path, const Config::All &config):
 	_config_all(config),
-	_config(new ::Config::Typed(_config_all, path))
+	_config(new Config::Typed(_config_all, path))
 {
 	_lines.clear();
 	_edits.clear();
@@ -168,7 +168,7 @@ const std::string &Editor::Document::line(line_t index) const
 
 Editor::DisplayLine Editor::Document::display(line_t index) const
 {
-	return DisplayLine(line(index), *_config.get());
+	return DisplayLine(line(index), *_config.get(), _syntax);
 }
 
 std::string Editor::Document::text(const Range &span) const

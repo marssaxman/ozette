@@ -22,16 +22,20 @@
 
 #include <string>
 #include <ncurses.h>
+#include <vector>
 #include "coordinates.h"
 #include "settings.h"
+#include "syntax.h"
 
 namespace Editor {
 extern const unsigned kTabWidth;
 class DisplayLine
 {
 public:
-	DisplayLine(const std::string &text, const Settings &settings):
-		_text(text), _settings(settings) {}
+	DisplayLine(
+			const std::string &text,
+			const Settings &settings,
+			const Grammar &syntax);
 	// Unformatted bytes
 	const std::string &text() const { return _text; }
 	// Number of bytes present
@@ -43,11 +47,13 @@ public:
 	// Get char offset for some display column
 	offset_t offset(column_t h) const;
 	// Render characters from location in buffer
-	void paint(WINDOW *view, column_t hoff, unsigned width) const;
+	void paint(WINDOW *view, column_t hoff, unsigned width, bool active) const;
 private:
 	void advance(char ch, column_t &h) const;
 	const std::string &_text;
+	std::vector<int> _style;
 	const Settings &_settings;
+	const Grammar &_syntax;
 };
 } // namespace Editor
 

@@ -42,7 +42,7 @@ protected:
 	virtual void clear_overlay() override;
 private:
 	void postprocess(UI::Frame &ctx);
-	void paint_line(WINDOW *view, row_t v, bool active);
+	void paint_line(WINDOW *view, row_t v, State state);
 	void reveal_cursor();
 	void update_dimensions(WINDOW *view);
 	void set_status(UI::Frame &ctx);

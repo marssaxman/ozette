@@ -27,12 +27,17 @@ namespace Colors {
 
 void init();
 
-// text drawn in the body of a window
+// colors for UI elements
 int content(bool active);
-// UI elements, which may change appearance when they have the focus
 int chrome(bool active);
-// dialog boxes floating above a window
 int dialog(bool active);
+
+// colors for syntax elements within an editor
+int identifier();
+int keyword();
+int string();
+int comment();
+int trailing_space();
 
 } // namespace Colors
 } // namespace UI

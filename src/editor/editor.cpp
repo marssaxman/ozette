@@ -25,14 +25,14 @@
 #include <dirent.h>
 #include <cctype>
 
-Editor::View::View(const ::Config::All &config):
+Editor::View::View(const Config::All &config):
 	_doc(config),
 	_cursor(_doc, _update)
 {
 	// new blank buffer
 }
 
-Editor::View::View(std::string targetpath, const ::Config::All &config):
+Editor::View::View(std::string targetpath, const Config::All &config):
 	_targetpath(targetpath),
 	_doc(targetpath, config),
 	_cursor(_doc, _update)
@@ -70,15 +70,14 @@ void Editor::View::paint_into(WINDOW *dest, State state)
 		_last_state = state;
 		_last_dest = dest;
 	}
-	bool focus = state == State::Focused;
 	for (unsigned i = 0; i < _height; ++i) {
-		paint_line(dest, i, focus);
+		paint_line(dest, i, state);
 	}
 	position_t curs = _cursor.position();
 	curs.h -= std::min(curs.h, _scroll.h);
 	curs.v -= std::min(curs.v, _scroll.v);
 	wmove(dest, curs.v, curs.h);
-	bool show_cursor = focus && _selection.empty();
+	bool show_cursor = (state == State::Focused) && _selection.empty();
 	show_cursor &= !_doc.readonly();
 	curs_set(show_cursor ? 1 : 0);
 	_update.reset();
@@ -165,14 +164,14 @@ void Editor::View::postprocess(UI::Frame &ctx)
 	}
 }
 
-void Editor::View::paint_line(WINDOW *dest, row_t v, bool active)
+void Editor::View::paint_line(WINDOW *dest, row_t v, State state)
 {
 	size_t index = v + _scroll.v;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)v, 0);
 	DisplayLine line = _doc.display(index);
-	line.paint(dest, _scroll.h, _width);
-	if (!active) return;
+	line.paint(dest, _scroll.h, _width, state != State::Inactive);
+	if (state != State::Focused) return;
 	if (_selection.empty()) return;
 	column_t selbegin = 0;
 	unsigned selcount = 0;

@@ -18,8 +18,26 @@
 //
 
 #include "displayline.h"
+#include "colors.h"
 
 const unsigned Editor::kTabWidth = 4;
+
+Editor::DisplayLine::DisplayLine(
+		const std::string &text,
+		const Settings &settings,
+		const Grammar &syntax):
+	_text(text),
+	_style(text.size()),
+	_settings(settings),
+	_syntax(syntax)
+{
+	for (auto &token: _syntax.parse(text)) {
+		for (size_t i = token.begin; i < token.end; ++i) {
+			_style[i] = token.style();
+		}
+	}
+}
+
 
 unsigned Editor::DisplayLine::width() const
 {
@@ -56,12 +74,17 @@ void Editor::DisplayLine::advance(char ch, column_t &h) const
 	} while (ch == '\t' && h % kTabWidth);
 }
 
-void Editor::DisplayLine::paint(WINDOW *d, column_t hoff, unsigned width) const
+void Editor::DisplayLine::paint(
+		WINDOW *d, column_t hoff, unsigned width, bool active) const
 {
 	column_t h = 0;
 	width += hoff;
+	size_t i = 0;
 	for (char ch: text()) {
 		if (h == width) break;
+		if (active) {
+			wattrset(d, _style[i++]);
+		}
 		if (ch != '\t') {
 			if (h >= hoff) waddch(d, ch);
 			h++;
@@ -70,6 +93,7 @@ void Editor::DisplayLine::paint(WINDOW *d, column_t hoff, unsigned width) const
 			h++;
 		} while (h < width && 0 != h % kTabWidth);
 	}
+	wattrset(d, UI::Colors::content(active));
 	if (h < width) {
 		wclrtoeol(d);
 	}

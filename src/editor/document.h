@@ -99,8 +99,10 @@ private:
 
 	// Non-contextual config interface
 	const Config::All &_config_all;
-	// Config instance for the specific document being edited.
+	// Config instance for the specific document being edited
 	std::unique_ptr<Config::Typed> _config;
+	// Syntax for this document's file type
+	Grammar _syntax;
 
 	std::string _blank;
 	std::vector<std::string> _lines;

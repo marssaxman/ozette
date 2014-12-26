@@ -26,6 +26,12 @@ int sContent = A_NORMAL;
 int sChrome = A_NORMAL;
 int sDialog = A_NORMAL;
 int sInactive = A_DIM;
+
+int sIdentifier = A_NORMAL;
+int sKeyword = A_DIM;
+int sString = A_BOLD;
+int sComment = A_NORMAL;
+int sTrailingSpace = A_REVERSE;
 } // namespace
 
 int UI::Colors::content(bool active)
@@ -43,6 +49,12 @@ int UI::Colors::dialog(bool active)
 	return A_REVERSE | (active? sDialog: sInactive);
 }
 
+int UI::Colors::identifier() { return sIdentifier; }
+int UI::Colors::keyword() { return sKeyword; }
+int UI::Colors::string() { return sString; }
+int UI::Colors::comment() { return sComment; }
+int UI::Colors::trailing_space() { return sTrailingSpace; }
+
 void UI::Colors::init()
 {
 	// Tell ncurses we want to use color if the terminal supports it.
@@ -56,10 +68,16 @@ void UI::Colors::init()
 	// trying to adapt to the user's terminal settings, which seems... bad.
 	use_default_colors();
 	init_pair(1, COLOR_WHITE, -1);
+	init_pair(2, COLOR_YELLOW, -1);
+	init_pair(3, COLOR_CYAN, -1);
 
 	sContent = COLOR_PAIR(0);
 	sChrome = COLOR_PAIR(0);
 	sDialog = COLOR_PAIR(0);
 	sInactive = COLOR_PAIR(1);
+
+	sKeyword |= COLOR_PAIR(3);
+	sString |= COLOR_PAIR(2);
+	sComment = COLOR_PAIR(2);
 }
 
