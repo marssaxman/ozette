@@ -55,7 +55,7 @@ Regex::Matches Regex::find_all(const std::string &text) const
 }
 
 Grammar::Grammar():
-	_identifier("\\<[\\w]+\\>"),
+	_identifier("\\<\\w+\\>"),
 	_keyword("\\<(const|using|namespace|return|if|while|do|for|auto|unsigned|"
 		"switch|case|default)\\>"),
 	_string("\\\"(.*)[^\\\\]\\\""),
@@ -66,22 +66,38 @@ Grammar::Grammar():
 
 Grammar::Tokens Grammar::parse(const std::string &text) const
 {
+	struct prod_t {
+		Token::Type type;
+		const Regex &re;
+	};
+	const size_t kProdcount = 5;
+	prod_t prods[kProdcount] = {
+		{Token::Type::Keyword, _keyword},
+		{Token::Type::Identifier, _identifier},
+		{Token::Type::String, _string},
+		{Token::Type::Comment, _comment},
+		{Token::Type::TrailingSpace, _trailing_space}
+	};
 	Tokens out;
-	auto spaces = tokenize(
-			_trailing_space.find_all(text), Token::Type::TrailingSpace);
-	out.insert(out.end(), spaces.begin(), spaces.end());
-
-	auto comments = tokenize(_comment.find_all(text), Token::Type::Comment);
-	out.insert(out.end(), comments.begin(), comments.end());
-
-	auto strs = tokenize(_string.find_all(text), Token::Type::String);
-	out.insert(out.end(), strs.begin(), strs.end());
-
-	auto keys = tokenize(_keyword.find_all(text), Token::Type::Keyword);
-	out.insert(out.end(), keys.begin(), keys.end());
-
-	auto idents = tokenize(_identifier.find_all(text), Token::Type::Identifier);
-	out.insert(out.end(), idents.begin(), idents.end());
+	size_t pos = 0;
+	while (pos != std::string::npos) {
+		Regex::Match found_pos;
+		Token::Type found_type;
+		for (unsigned i = 0; i < kProdcount; ++i) {
+			auto &prod = prods[i];
+			auto match = prod.re.find(text, pos);
+			if (match.empty()) continue;
+			if (found_pos.empty() || match.begin < found_pos.begin) {
+				found_pos = match;
+				found_type = prod.type;
+			}
+		}
+		if (!found_pos.empty()) {
+			Token tk = {found_pos.begin, found_pos.end, found_type};
+			out.push_back(tk);
+		}
+		pos = found_pos.end;
+	}
 	return out;
 }
 
