@@ -76,8 +76,8 @@ void UI::Colors::init()
 	sDialog = COLOR_PAIR(0);
 	sInactive = COLOR_PAIR(1);
 
-	sKeyword |= COLOR_PAIR(3);
+	sKeyword |= COLOR_PAIR(2);
 	sString |= COLOR_PAIR(2);
-	sComment = COLOR_PAIR(2);
+	sComment = COLOR_PAIR(3);
 }
 
