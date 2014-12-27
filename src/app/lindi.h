@@ -40,7 +40,7 @@ public:
 	virtual std::string get_clipboard() override;
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) override;
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) override;
-	virtual Config::All &config() override;
+	virtual Config &config() override;
 	virtual void exec(std::string title, std::string exe, const std::vector<std::string> &argv) override;
 
 	void run();
@@ -59,7 +59,7 @@ private:
 	std::string _home_dir;
 	std::string _current_dir;
 	std::string _config_dir;
-	Config::All _config;
+	Config _config;
 	std::map<std::string, UI::Window*> _editors;
 	std::string _clipboard;
 	bool _done = false;

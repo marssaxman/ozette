@@ -132,7 +132,7 @@ void Lindi::cache_write(std::string name, const std::vector<std::string> &lines)
 	file.close();
 }
 
-Config::All &Lindi::config()
+Config &Lindi::config()
 {
 	return _config;
 }

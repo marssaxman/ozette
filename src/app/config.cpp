@@ -20,33 +20,33 @@
 #include "config.h"
 #include "INIReader.h"
 
-Config::All::All(std::string confdir, std::string workingdir):
+Config::Config(std::string confdir, std::string workingdir):
 	_user(new INIReader(confdir + "/config")),
 	_dir(new INIReader(workingdir + "/.lindi/config"))
 {
 }
 
-void Config::All::change_directory(std::string workingdir)
+void Config::change_directory(std::string workingdir)
 {
 	_dir.reset(new INIReader(workingdir + "/.lindi/config"));
 }
 
-std::string Config::All::get(std::string key, std::string val) const
+std::string Config::get(std::string key, std::string val) const
 {
 	return get("", key, val);
 }
 
-int Config::All::get_int(std::string key, int val) const
+int Config::get_int(std::string key, int val) const
 {
 	return get_int("", key, val);
 }
 
-bool Config::All::get_bool(std::string key, bool val) const
+bool Config::get_bool(std::string key, bool val) const
 {
 	return get_bool("", key, val);
 }
 
-std::string Config::All::get(
+std::string Config::get(
 		std::string group, std::string key, std::string val) const
 {
 	if (!_user->ParseError()) {
@@ -58,7 +58,7 @@ std::string Config::All::get(
 	return val;
 }
 
-int Config::All::get_int(std::string group, std::string key, int val) const
+int Config::get_int(std::string group, std::string key, int val) const
 {
 	if (!_user->ParseError()) {
 		val = (int)_user->GetInteger(group, key, (long)val);
@@ -69,7 +69,7 @@ int Config::All::get_int(std::string group, std::string key, int val) const
 	return val;
 }
 
-bool Config::All::get_bool(std::string group, std::string key, bool val) const
+bool Config::get_bool(std::string group, std::string key, bool val) const
 {
 	if (!_user->ParseError()) {
 		val = _user->GetBoolean(group, key, val);
@@ -78,32 +78,5 @@ bool Config::All::get_bool(std::string group, std::string key, bool val) const
 		val = _dir->GetBoolean(group, key, val);
 	}
 	return val;
-}
-
-Config::Typed::Typed(const All &source, std::string filepath):
-	_source(source)
-{
-	size_t dotpos = filepath.find_last_of('.');
-	if (dotpos != std::string::npos) {
-		_type = filepath.substr(dotpos+1);
-	}
-}
-
-std::string Config::Typed::get(std::string key, std::string val) const
-{
-	val = _source.get(key, val);
-	return _source.get(_type, key, val);
-}
-
-int Config::Typed::get_int(std::string key, int val) const
-{
-	val = _source.get_int(key, val);
-	return _source.get_int(_type, key, val);
-}
-
-bool Config::Typed::get_bool(std::string key, bool val) const
-{
-	val = _source.get_bool(key, val);
-	return _source.get_bool(_type, key, val);
 }
 

@@ -30,8 +30,8 @@ namespace Editor {
 class View : public UI::View
 {
 public:
-	View(const ::Config::All &config);
-	View(std::string targetpath, const ::Config::All &config);
+	View(const Config &config);
+	View(std::string targetpath, const Config &config);
 	View(std::string title, Document &&doc);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;

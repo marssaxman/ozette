@@ -17,20 +17,17 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef APP_CONFIG_H
+#define APP_CONFIG_H
 
 #include <string>
 #include <memory>
 #include "INIReader.h"
 
-namespace Config {
-
-// Configuration settings which apply in all contexts.
-class All
+class Config
 {
 public:
-	All(std::string confdir, std::string workingdir);
+	Config(std::string confdir, std::string workingdir);
 	void change_directory(std::string workingdir);
 	std::string get(std::string key, std::string def_val) const;
 	int get_int(std::string key, int def_val) const;
@@ -43,18 +40,4 @@ private:
 	std::unique_ptr<INIReader> _dir;
 };
 
-// Configurations which may be specific to a certain file's type.
-class Typed
-{
-public:
-	Typed(const All &source, std::string filepath);
-	std::string get(std::string key, std::string def_val) const;
-	int get_int(std::string key, int def_val) const;
-	bool get_bool(std::string key, bool def_val) const;
-private:
-	const All &_source;
-	std::string _type;
-};
-} // namespace Config
-
-#endif //CONFIG_H
+#endif //APP_CONFIG_H

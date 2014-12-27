@@ -25,14 +25,14 @@
 #include <dirent.h>
 #include <cctype>
 
-Editor::View::View(const Config::All &config):
+Editor::View::View(const Config &config):
 	_doc(config),
 	_cursor(_doc, _update)
 {
 	// new blank buffer
 }
 
-Editor::View::View(std::string targetpath, const Config::All &config):
+Editor::View::View(std::string targetpath, const Config &config):
 	_targetpath(targetpath),
 	_doc(targetpath, config),
 	_cursor(_doc, _update)

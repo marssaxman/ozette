@@ -26,7 +26,7 @@ namespace Editor {
 class Settings {
 public:
 	Settings() {}
-	Settings(Config::Typed &config);
+	Settings(const Config &config);
 	unsigned indent_width() const { return _indent_width; }
 private:
 	unsigned _indent_width = 4; // range 1..16

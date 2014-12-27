@@ -28,15 +28,14 @@
 #include "changelist.h"
 #include "settings.h"
 
-// A document breaks a text buffer into lines, then
-// maps those lines onto an infinite plane of equally
-// sized character cells.
+// A document breaks a text buffer into lines, then maps those lines onto an
+// infinite plane of equally sized character cells.
 namespace Editor {
 class Document
 {
 public:
-	Document(const Config::All &config);
-	Document(std::string path, const Config::All &config);
+	Document(const Config &config);
+	Document(std::string path, const Config &config);
 	void Write(std::string path);
 	void View(std::string text);
 	std::string status() const { return _status; }
@@ -97,10 +96,8 @@ private:
 	bool attempt_modify();
 	void clear_modify();
 
-	// Non-contextual config interface
-	const Config::All &_config_all;
-	// Config instance for the specific document being edited
-	std::unique_ptr<Config::Typed> _config;
+	// Editor settings for the current working directory
+	Settings _settings;
 	// Syntax for this document's file type
 	Grammar _syntax;
 

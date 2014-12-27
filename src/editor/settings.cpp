@@ -20,7 +20,7 @@
 #include "settings.h"
 #include <assert.h>
 
-Editor::Settings::Settings(Config::Typed &config)
+Editor::Settings::Settings(const Config &config)
 {
 	long new_indent_width = config.get_int("indent-width", _indent_width);
 	if (new_indent_width < 1) new_indent_width = 1;
