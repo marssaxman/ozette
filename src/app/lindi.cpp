@@ -220,7 +220,16 @@ void Lindi::new_file()
 void Lindi::open_file()
 {
 	show_browser();
-	_done |= _shell.process(Control::Open);
+	std::string prompt = "Open";
+	std::vector<std::string> options;
+	auto commit = [this](UI::Frame &ctx, std::string path)
+	{
+		if (path.empty()) return;
+		ctx.app().edit_file(path);
+	};
+	auto dialog = new Browser::Picker(prompt, options, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
+	_shell.active()->show_dialog(std::move(dptr));
 }
 
 void Lindi::show_help()

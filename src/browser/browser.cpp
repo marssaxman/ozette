@@ -113,7 +113,6 @@ bool Browser::View::process(UI::Frame &ctx, int ch)
 	check_rebuild(ctx);
 	switch (ch) {
 		case Control::Find: ctl_find(ctx); break;
-		case Control::Open: ctl_open(ctx); break;
 		case Control::Return: key_return(ctx); break;
 		case Control::Close: return false; break;
 		case Control::Escape: clear_filter(ctx); break;
@@ -246,20 +245,6 @@ void Browser::View::ctl_find(UI::Frame &ctx)
 		ctx.app().exec("find: " + text, "grep", args);
 	};
 	auto dialog = new UI::Dialog::Find(prompt, action);
-	std::unique_ptr<UI::View> dptr(dialog);
-	ctx.show_dialog(std::move(dptr));
-}
-
-void Browser::View::ctl_open(UI::Frame &ctx)
-{
-	std::string prompt = "Open";
-	std::vector<std::string> options;
-	auto commit = [this](UI::Frame &ctx, std::string path)
-	{
-		if (path.empty()) return;
-		ctx.app().edit_file(path);
-	};
-	auto dialog = new Picker(prompt, options, commit);
 	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
 }
