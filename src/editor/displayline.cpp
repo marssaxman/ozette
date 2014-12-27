@@ -25,7 +25,7 @@ const unsigned Editor::kTabWidth = 4;
 Editor::DisplayLine::DisplayLine(
 		const std::string &text,
 		const Settings &settings,
-		const Grammar &syntax):
+		const Syntax::Grammar &syntax):
 	_text(text),
 	_style(text.size()),
 	_settings(settings),

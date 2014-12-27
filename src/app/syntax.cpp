@@ -20,7 +20,7 @@
 #include "syntax.h"
 #include "colors.h"
 
-using namespace Editor;
+using namespace Syntax;
 
 Regex::Regex(std::string pattern)
 {

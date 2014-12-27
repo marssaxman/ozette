@@ -35,7 +35,7 @@ public:
 	DisplayLine(
 			const std::string &text,
 			const Settings &settings,
-			const Grammar &syntax);
+			const Syntax::Grammar &syntax);
 	// Unformatted bytes
 	const std::string &text() const { return _text; }
 	// Number of bytes present
@@ -53,7 +53,7 @@ private:
 	const std::string &_text;
 	std::vector<int> _style;
 	const Settings &_settings;
-	const Grammar &_syntax;
+	const Syntax::Grammar &_syntax;
 };
 } // namespace Editor
 

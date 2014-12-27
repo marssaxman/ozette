@@ -17,14 +17,14 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef EDITOR_SYNTAX_H
-#define EDITOR_SYNTAX_H
+#ifndef APP_SYNTAX_H
+#define APP_SYNTAX_H
 
 #include <regex.h>
 #include <string>
 #include <list>
 
-namespace Editor {
+namespace Syntax {
 class Regex {
 public:
 	Regex(std::string pattern);
@@ -68,7 +68,7 @@ private:
 	Regex _trailing_space;
 };
 
-} // namespace Editor
+} // namespace Syntax
 
-#endif //EDITOR_SYNTAX_H
+#endif //APP_SYNTAX_H
 
