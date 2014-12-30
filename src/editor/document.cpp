@@ -263,7 +263,7 @@ Editor::location_t Editor::Document::split(location_t loc)
 	if (!attempt_modify()) return loc;
 	sanitize(loc);
 	_edits.split(loc);
-	std::string text = _lines[loc.line];
+	std::string text = line(loc.line);
 	update_line(loc.line, text.substr(0, loc.offset));
 	loc.line++;
 	insert_line(loc.line, text.substr(loc.offset, std::string::npos));
