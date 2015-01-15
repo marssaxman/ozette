@@ -134,9 +134,6 @@ void UI::Shell::reap()
 
 UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view)
 {
-	// We reserve the top row for the title bar.
-	// Aside from that, new windows fill the terminal rows.
-	// Windows are never wider than 80 columns.
 	Window *win = new Window(_app, std::move(view));
 	size_t index;
 	switch (win->priority()) {
@@ -208,11 +205,17 @@ void UI::Shell::layout()
 	if(_tabs.empty()) return;
 	size_t ubound = _tabs.size() - 1;
 	std::vector<int> xpos(_tabs.size());
-	if ((int)_tabs.size() * _columnWidth <= _width) {
+	auto generousWidth = _columnWidth + 1;
+	if ((int)_tabs.size() * generousWidth <= _width) {
+		// We have plenty of space for all of the columns, so give each one
+		// enough room that the window frames don't overlap neighbors' content
+		// areas.
 		for (unsigned i = 0; i <= ubound; ++i) {
-			xpos[i] = i * _columnWidth;
+			xpos[i] = i * generousWidth;
 		}
 	} else {
+		// We don't have enough room for all of the windows, so we will overlap
+		// them evenly across the available space.
 		int right_edge = _width - _columnWidth;
 		_spacing = (ubound > 0) ? right_edge / ubound : 0;
 		for (unsigned i = 0; i <= ubound; ++i) {
