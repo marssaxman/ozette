@@ -22,6 +22,7 @@
 #include "dialog.h"
 #include "picker.h"
 #include <cctype>
+#include <climits>
 
 Browser::View *Browser::View::_instance;
 static std::string kExpansionStateKey = "expanded_dirs";
@@ -346,11 +347,19 @@ void Browser::View::key_char(UI::Frame &ctx, char ch)
 	size_t start = _name_filter.empty()? 0: _selection;
 	_name_filter.push_back(ch);
 	_name_filter_time = time(NULL);
+	// Find the best match for the new filter - the name which matches the
+	// filter and requires the fewest gaps to do so.
+	unsigned bestlead = UINT_MAX;
+	unsigned besttotal = UINT_MAX;
 	for (size_t i = start; i < _list.size(); ++i) {
-		if (matches_filter(i)) {
-			_selection = i;
-			break;
-		}
+		unsigned leadskip = 0;	// how many skipped leading chars?
+		unsigned totalskips = 0; // how many times do we skip something?
+		if (!scan_filter(i, leadskip, totalskips)) continue;
+		if (leadskip > bestlead) continue;
+		if (leadskip == bestlead && totalskips >= besttotal) continue;
+		bestlead = leadskip;
+		besttotal = totalskips;
+		_selection = i;
 	}
 	ctx.repaint();
 }
@@ -376,6 +385,27 @@ bool Browser::View::matches_filter(std::string name)
 		search = name.find_first_of(ch, search);
 		if (search == std::string::npos) return false;
 		++search;
+	}
+	return true;
+}
+
+bool Browser::View::scan_filter(
+		size_t index, unsigned &leadskip, unsigned &totalskips)
+{
+	if (index >= _list.size()) return false;
+	std::string name = _list[index].entry->name();
+	size_t prev_search = 0;
+	for (char ch: _name_filter) {
+		if (prev_search == name.size()) return false;
+		size_t next_search = name.find_first_of(ch, prev_search);
+		if (next_search == std::string::npos) return false;
+		if (next_search > prev_search) {
+			totalskips++;
+			if (prev_search == 0) {
+				leadskip = next_search;
+			}
+		}
+		prev_search = next_search + 1;
 	}
 	return true;
 }

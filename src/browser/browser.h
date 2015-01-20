@@ -66,6 +66,7 @@ private:
 	void clear_filter(UI::Frame &ctx);
 	bool matches_filter(size_t index);
 	bool matches_filter(std::string name);
+	bool scan_filter(size_t index, unsigned &leadskip, unsigned &totalskips);
 	void set_title(UI::Frame &ctx);
 	void build_list();
 	void toggle(UI::Frame &ctx);
