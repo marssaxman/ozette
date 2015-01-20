@@ -59,8 +59,10 @@ void Browser::View::activate(UI::Frame &ctx)
 		}
 		if (!paths.empty()) _rebuild_list = true;
 	}
-
-	if (_rebuild_list) ctx.repaint();
+	_list.clear();
+	_tree = DirTree(_tree.path());
+	_rebuild_list = true;
+	check_rebuild(ctx);
 }
 
 void Browser::View::deactivate(UI::Frame &ctx)
