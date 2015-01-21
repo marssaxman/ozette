@@ -51,6 +51,7 @@ private:
 	void open_file();
 	void show_help();
 	void execute();
+	void build();
 	int fix_control_quirks(int ch);
 	static void set_mru(std::string path, std::vector<std::string> &mru);
 	std::string canonical_abspath(std::string path);

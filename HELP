@@ -26,6 +26,7 @@ Browser commands:
     ^D - Directory - change the current working directory
     ^E - Execute - run some command and log output to the console
     ^F - Find - search for text across all files in the directory
+	F5 - Make - build the project
 
 
 == Text editor
@@ -39,10 +40,10 @@ Backspace or Delete will remove the selected text.
 
 Page up and page down move the cursor to the last line of the previous page or
 the first line of the next page. Home and end move the cursor to the beginning
-or end of the current line. 
+or end of the current line.
 
 Cut, Copy, and Paste apply to a single clipboard which is shared across all
-editors. 
+editors.
 
 Editor commands:
     ^X - Cut - place selected text on the clipboard, then delete

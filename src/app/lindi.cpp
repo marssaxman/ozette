@@ -157,6 +157,7 @@ void Lindi::run()
 			case Control::Directory: change_directory(); break;
 			case Control::Help: show_help(); break;
 			case Control::Execute: execute(); break;
+			case KEY_F(5): build(); break;
 			default: _done |= !_shell.process(ch);
 		}
 	} while (!_done);
@@ -259,6 +260,11 @@ void Lindi::execute()
 	auto dialog = new UI::Dialog::Command(prompt, commit);
 	std::unique_ptr<UI::View> dptr(dialog);
 	_shell.active()->show_dialog(std::move(dptr));
+}
+
+void Lindi::build()
+{
+	Console::View::exec("make", _shell);
 }
 
 int Lindi::fix_control_quirks(int ch)
