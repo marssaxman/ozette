@@ -151,6 +151,7 @@ void Console::View::exec(std::string title, std::string exe, const std::vector<s
 		set_nonblocking(_rwepipe[1]);
 		set_nonblocking(_rwepipe[2]);
 	}
+	_scrollpos = 0;
 	_log.reset(new Log(title, _width));
 }
 
