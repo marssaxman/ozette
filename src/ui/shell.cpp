@@ -148,6 +148,9 @@ UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view)
 		case View::Priority::Any: index = _tabs.size(); break;
 	}
 	_tabs.emplace(_tabs.begin() + index, win);
+	if (_focus >= index) {
+		_focus++;
+	}
 	layout();
 	set_focus(index);
 	return win;
