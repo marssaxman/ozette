@@ -511,7 +511,13 @@ void Editor::View::key_insert(char ch)
 void Editor::View::key_tab(UI::Frame &ctx)
 {
 	if (_selection.empty()) {
-		key_insert('\t');
+		// move the cursor forward to the next tab stop, using either a tab
+		// character or a series of spaces, as the user requires
+		if (_settings.indent_with_tabs()) {
+			key_insert('\t');
+		} else do {
+			key_insert(' ');
+		} while (0 != _cursor.location().offset % kTabWidth);
 	} else {
 		// indent all lines touched by the selection one more tab then extend
 		// the selection to encompass all of those lines, because that's what
@@ -519,8 +525,13 @@ void Editor::View::key_tab(UI::Frame &ctx)
 		line_t begin = _selection.begin().line;
 		line_t end = _selection.end().line;
 		if (end > begin && 0 == _selection.end().offset) end--;
+		std::string indent_spaces(kTabWidth, ' ');
 		for (line_t index = begin; index <= end; ++index) {
-			_doc.insert(_doc.home(index), '\t');
+			if (_settings.indent_with_tabs()) {
+				_doc.insert(_doc.home(index), '\t');
+			} else {
+				_doc.insert(_doc.home(index), indent_spaces);
+			}
 		}
 		_anchor = _doc.home(begin);
 		_cursor.move_to(_doc.end(end));
