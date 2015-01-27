@@ -1,6 +1,6 @@
 //
 // lindi
-// Copyright (C) 2014 Mars J. Saxman
+// Copyright (C) 2014-2015 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,9 +27,9 @@ class Settings {
 public:
 	Settings() {}
 	Settings(const Config &config);
-	unsigned indent_width() const { return _indent_width; }
+	bool indent_with_tabs() const { return _indent_with_tabs; }
 private:
-	unsigned _indent_width = 4; // range 1..16
+	bool _indent_with_tabs = true;
 };
 } // namespace Editor
 

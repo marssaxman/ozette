@@ -1,6 +1,6 @@
 //
 // lindi
-// Copyright (C) 2014 Mars J. Saxman
+// Copyright (C) 2014-2015 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,9 +22,6 @@
 
 Editor::Settings::Settings(const Config &config)
 {
-	long new_indent_width = config.get_int("indent-width", _indent_width);
-	if (new_indent_width < 1) new_indent_width = 1;
-	if (new_indent_width > 16) new_indent_width = 16;
-	_indent_width = static_cast<unsigned>(new_indent_width);
+	_indent_with_tabs = config.get_bool("indent-with-tabs", _indent_with_tabs);
 }
 
