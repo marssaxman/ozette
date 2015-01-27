@@ -27,7 +27,8 @@
 
 Editor::View::View(const Config &config):
 	_doc(config),
-	_cursor(_doc, _update)
+	_cursor(_doc, _update),
+	_settings(config)
 {
 	// new blank buffer
 }
@@ -35,14 +36,16 @@ Editor::View::View(const Config &config):
 Editor::View::View(std::string targetpath, const Config &config):
 	_targetpath(targetpath),
 	_doc(targetpath, config),
-	_cursor(_doc, _update)
+	_cursor(_doc, _update),
+	_settings(config)
 {
 }
 
-Editor::View::View(std::string title, Document &&doc):
+Editor::View::View(std::string title, Document &&doc, const Config &config):
 	_targetpath(title),
 	_doc(std::move(doc)),
-	_cursor(_doc, _update)
+	_cursor(_doc, _update),
+	_settings(config)
 {
 }
 
