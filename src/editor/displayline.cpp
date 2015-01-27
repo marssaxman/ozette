@@ -85,11 +85,13 @@ void Editor::DisplayLine::paint(
 		if (active) {
 			wattrset(d, _style[i++]);
 		}
+		unsigned tabch = ACS_BULLET;
 		if (ch != '\t') {
 			if (h >= hoff) waddch(d, ch);
 			h++;
 		} else do {
-			if (h >= hoff) waddch(d, ' ');
+			if (h >= hoff) waddch(d, tabch);
+			tabch = ' ';
 			h++;
 		} while (h < width && 0 != h % kTabWidth);
 	}
