@@ -544,18 +544,29 @@ void Editor::View::key_btab(UI::Frame &ctx)
 {
 	// Shift-tab unindents the selection, if present, or simply the current
 	// line if there is no selection.
-	// Remove the leftmost tab character from all of the selected lines, then
-	// extend the selection to encompass all of those lines.
+	// Remove the leftmost tab character or indent-sized sequence of spaces
+	// from each of the selected lines, then extend the selection to encompass
+	// all of those lines.
+	std::string spaceindent(' ', kTabWidth);
 	line_t begin = _selection.begin().line;
 	line_t end = _selection.end().line;
 	if (end > begin && 0 == _selection.end().offset) end--;
 	for (line_t index = begin; index <= end; ++index) {
 		std::string text = _doc.line(index);
 		if (text.empty()) continue;
-		if (text.front() != '\t') continue;
 		location_t pretab = _doc.home(index);
-		location_t posttab = _doc.next(pretab);
-		_doc.erase(Range(pretab, posttab));
+		location_t posttab = pretab;
+		if ('\t' == text.front()) {
+			posttab = _doc.next(pretab);
+		} else for (auto ch: text) {
+			if (' ' != ch) break;
+			if (posttab.offset >= kTabWidth) break;
+			posttab.offset++;
+		}
+		Range indent(pretab, posttab);
+		if (!indent.empty()) {
+			_doc.erase(indent);
+		}
 	}
 	_anchor = _doc.home(begin);
 	_cursor.move_to(_doc.end(end));
