@@ -284,8 +284,12 @@ void UI::Window::paint_chrome()
 	int height, width;
 	getmaxyx(_framewin, height, width);
 	paint_titlebar(width);
-	if (_lframe) paint_left_frame(height, width);
-	if (_rframe) paint_right_frame(height, width);
+	if (_lframe) {
+		mvwvline(_framewin, 1, 0, ACS_VLINE, height - 1);
+	}
+	if (_rframe) {
+		mvwvline(_framewin, 1, width-1, ACS_VLINE, height-1);
+	}
 	if (_taskbar_height) {
 		// The task bar is still active when a dialog is open, because it shows
 		// context-specific information.
@@ -306,49 +310,41 @@ void UI::Window::paint_titlebar(int width)
 	if (_rframe) {
 		mvwaddch(_framewin, 0, width-1, ACS_URCORNER);
 	}
-	paint_titlebar_left(width, _swap_titlebar? _status: _title);
-	paint_titlebar_right(width, _swap_titlebar? _title: _status);
-}
+	std::string left_text = _swap_titlebar? _status: _title;
+	std::string right_text = _swap_titlebar? _title: _status;
 
-void UI::Window::paint_titlebar_left(int width, std::string text)
-{
-	if (text.empty()) return;
 	int left = _lframe ? 2 : 1;
 	int right = width - (_rframe ? 2 : 1);
 	width = right - left;
+	// If we don't have enough space to display the title and the status,
+	// truncate the longer of the two until they both fit, starting at the
+	// beginning of the string and preserving the end. Add two to each string
+	// length to account for the padding on either side.
 	int titlechars = width - 2;
-	if (_swap_titlebar) titlechars /= 2;
-	wmove(_framewin, 0, left);
-	bool highlight = _has_focus && !_dialog.get();
-	if (highlight) wattron(_framewin, A_REVERSE);
-	waddch(_framewin, ' ');
-	waddnstr(_framewin, text.c_str(), titlechars);
-	waddch(_framewin, ' ');
-	if (highlight) wattroff(_framewin, A_REVERSE);
-}
-
-void UI::Window::paint_titlebar_right(int width, std::string text)
-{
-	if (text.empty()) return;
-	int left = _lframe ? 2 : 1;
-	int right = width - (_rframe ? 2 : 1);
-	width = right - left;
-	int titlechars = width - 2;
-	if (!_swap_titlebar) titlechars /= 2;
-	int chars = std::min((int)text.size(), titlechars);
-	mvwaddch(_framewin, 0, right - chars - 2, ' ');
-	waddnstr(_framewin, text.c_str(), chars);
-	waddch(_framewin, ' ');
-}
-
-void UI::Window::paint_left_frame(int height, int width)
-{
-	mvwvline(_framewin, 1, 0, ACS_VLINE, height - 1);
-}
-
-void UI::Window::paint_right_frame(int height, int width)
-{
-	mvwvline(_framewin, 1, width-1, ACS_VLINE, height-1);
+	int desired_width = left_text.size() + 2 + right_text.size();
+	if (desired_width > titlechars) {
+		size_t surplus = static_cast<size_t>(desired_width - titlechars);
+		if (left_text.size() > right_text.size()) {
+			left_text = ltrunc(left_text, surplus);
+		} else {
+			right_text = ltrunc(right_text, surplus);
+		}
+	}
+	if (!left_text.empty()) {
+		wmove(_framewin, 0, left);
+		bool highlight = _has_focus && !_dialog.get();
+		if (highlight) wattron(_framewin, A_REVERSE);
+		waddch(_framewin, ' ');
+		waddnstr(_framewin, left_text.c_str(), titlechars);
+		waddch(_framewin, ' ');
+		if (highlight) wattroff(_framewin, A_REVERSE);
+	}
+	if (!right_text.empty()) {
+		int chars = std::min((int)right_text.size(), titlechars);
+		mvwaddch(_framewin, 0, right - chars - 2, ' ');
+		waddnstr(_framewin, right_text.c_str(), chars);
+		waddch(_framewin, ' ');
+	}
 }
 
 void UI::Window::paint_taskbar(int height, int width)
@@ -393,3 +389,9 @@ void UI::Window::paint_taskbar(int height, int width)
 		waddch(_framewin, ' ');
 	}
 }
+
+std::string UI::Window::ltrunc(const std::string &text, size_t surplus)
+{
+	return (text.size() > surplus)? text.substr(surplus): "";
+}
+
