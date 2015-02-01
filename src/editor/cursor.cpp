@@ -50,11 +50,9 @@ void Editor::Cursor::up()
 
 void Editor::Cursor::down()
 {
-	// Move down the screen by the specified number of rows,
-	// stopping when we are on the maximum row. Do not move
-	// the column. If the cursor was already positioned on
-	// the maximum row, move the cursor right to the end of
-	// the line.
+	// Move to the next row down the screen, stopping at the maximum row. 
+	// Do not move the column. If the cursor was already positioned on the
+	// maximum row, move the cursor right to the end of the line.
 	begin_move();
 	if (_position.v < _doc.maxline()) {
 		_position.v++;
@@ -67,12 +65,34 @@ void Editor::Cursor::down()
 
 void Editor::Cursor::left()
 {
+	// Move left by one character. This may wrap us around to the end of the
+	// previous line. If we are now positioned on a space character which is
+	// not aligned to a tab stop, and the previous character is also a space,
+	// move left again. Thus we move across indentations identically whether
+	// they are composed of tab or space characters.
+	location_t begin = _location;
 	move_to(_doc.prev(_location));
+	while (_position.h % kTabWidth) {
+		location_t pprev = _doc.prev(_location);
+		if ("  " != _doc.text(Range(pprev, begin))) return;
+		begin = _location;
+		move_to(pprev);
+	}
 }
 
 void Editor::Cursor::right()
 {
+	// Move right by one character. This may wrap around to the beginning of
+	// the next line. If the target character was a space, keep moving until
+	// we reach a non-space character or we reach tab-stop alignment.
+	location_t begin = _location;
 	move_to(_doc.next(_location));
+	while (_position.h % kTabWidth) {
+		location_t next = _doc.next(_location);
+		if ("  " != _doc.text(Range(begin, next))) return;
+		begin = _location;
+		move_to(next);
+	}
 }
 
 void Editor::Cursor::home()

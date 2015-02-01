@@ -27,7 +27,8 @@
 
 Editor::View::View(const Config &config):
 	_doc(config),
-	_cursor(_doc, _update)
+	_cursor(_doc, _update),
+	_settings(config)
 {
 	// new blank buffer
 }
@@ -35,14 +36,16 @@ Editor::View::View(const Config &config):
 Editor::View::View(std::string targetpath, const Config &config):
 	_targetpath(targetpath),
 	_doc(targetpath, config),
-	_cursor(_doc, _update)
+	_cursor(_doc, _update),
+	_settings(config)
 {
 }
 
-Editor::View::View(std::string title, Document &&doc):
+Editor::View::View(std::string title, Document &&doc, const Config &config):
 	_targetpath(title),
 	_doc(std::move(doc)),
-	_cursor(_doc, _update)
+	_cursor(_doc, _update),
+	_settings(config)
 {
 }
 
@@ -508,7 +511,13 @@ void Editor::View::key_insert(char ch)
 void Editor::View::key_tab(UI::Frame &ctx)
 {
 	if (_selection.empty()) {
-		key_insert('\t');
+		// move the cursor forward to the next tab stop, using either a tab
+		// character or a series of spaces, as the user requires
+		if (_settings.indent_with_tabs()) {
+			key_insert('\t');
+		} else do {
+			key_insert(' ');
+		} while (0 != _cursor.location().offset % kTabWidth);
 	} else {
 		// indent all lines touched by the selection one more tab then extend
 		// the selection to encompass all of those lines, because that's what
@@ -516,8 +525,13 @@ void Editor::View::key_tab(UI::Frame &ctx)
 		line_t begin = _selection.begin().line;
 		line_t end = _selection.end().line;
 		if (end > begin && 0 == _selection.end().offset) end--;
+		std::string indent_spaces(kTabWidth, ' ');
 		for (line_t index = begin; index <= end; ++index) {
-			_doc.insert(_doc.home(index), '\t');
+			if (_settings.indent_with_tabs()) {
+				_doc.insert(_doc.home(index), '\t');
+			} else {
+				_doc.insert(_doc.home(index), indent_spaces);
+			}
 		}
 		_anchor = _doc.home(begin);
 		_cursor.move_to(_doc.end(end));
@@ -530,18 +544,29 @@ void Editor::View::key_btab(UI::Frame &ctx)
 {
 	// Shift-tab unindents the selection, if present, or simply the current
 	// line if there is no selection.
-	// Remove the leftmost tab character from all of the selected lines, then
-	// extend the selection to encompass all of those lines.
+	// Remove the leftmost tab character or indent-sized sequence of spaces
+	// from each of the selected lines, then extend the selection to encompass
+	// all of those lines.
+	std::string spaceindent(' ', kTabWidth);
 	line_t begin = _selection.begin().line;
 	line_t end = _selection.end().line;
 	if (end > begin && 0 == _selection.end().offset) end--;
 	for (line_t index = begin; index <= end; ++index) {
 		std::string text = _doc.line(index);
 		if (text.empty()) continue;
-		if (text.front() != '\t') continue;
 		location_t pretab = _doc.home(index);
-		location_t posttab = _doc.next(pretab);
-		_doc.erase(Range(pretab, posttab));
+		location_t posttab = pretab;
+		if ('\t' == text.front()) {
+			posttab = _doc.next(pretab);
+		} else for (auto ch: text) {
+			if (' ' != ch) break;
+			if (posttab.offset >= kTabWidth) break;
+			posttab.offset++;
+		}
+		Range indent(pretab, posttab);
+		if (!indent.empty()) {
+			_doc.erase(indent);
+		}
 	}
 	_anchor = _doc.home(begin);
 	_cursor.move_to(_doc.end(end));

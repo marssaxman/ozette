@@ -245,8 +245,9 @@ void Lindi::show_help()
 	std::string helptext((const char*)HELP, HELP_len);
 	Editor::Document doc(_config);
 	doc.View(helptext);
-	std::unique_ptr<UI::View> ed(new Editor::View(help_key, std::move(doc)));
-	_editors[abs_help] = _shell.open_window(std::move(ed));
+	auto ed = new Editor::View(help_key, std::move(doc), _config);
+	std::unique_ptr<UI::View> edptr(ed);
+	_editors[abs_help] = _shell.open_window(std::move(edptr));
 }
 
 void Lindi::execute()

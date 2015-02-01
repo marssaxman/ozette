@@ -61,12 +61,9 @@ protected:
 	void paint_content();
 	void paint_chrome();
 	void paint_titlebar(int width);
-	void paint_titlebar_left(int width, std::string text);
-	void paint_titlebar_right(int width, std::string text);
-	void paint_left_frame(int height, int width);
-	void paint_right_frame(int height, int width);
 	void paint_taskbar(int height, int width);
 private:
+	static std::string ltrunc(const std::string &text, size_t surplus);
 	Controller &_app;
 	std::unique_ptr<View> _view;
 	// The frame represents the outer dimensions of the window and

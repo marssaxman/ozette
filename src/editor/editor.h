@@ -32,7 +32,7 @@ class View : public UI::View
 public:
 	View(const Config &config);
 	View(std::string targetpath, const Config &config);
-	View(std::string title, Document &&doc);
+	View(std::string title, Document &&doc, const Config &config);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
@@ -101,6 +101,7 @@ private:
 	location_t _anchor;
 	Range _selection;
 	std::string _find_text;
+	Settings _settings;
 
 	// Update status: must we perform a full repaint?
 	State _last_state = State::Inactive;
