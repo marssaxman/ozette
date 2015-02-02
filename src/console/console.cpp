@@ -26,6 +26,36 @@
 #include <sys/wait.h>
 #include "popenRWE.h"
 
+static void set_nonblocking(int fd)
+{
+	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
+}
+
+void Console::Subproc::open(const char *exe, const char **argv)
+{
+	_pid = popenRWE(_rwepipe, exe, argv);
+	if (_pid > 0) {
+		set_nonblocking(_rwepipe[0]);
+		set_nonblocking(_rwepipe[1]);
+		set_nonblocking(_rwepipe[2]);
+	}
+}
+
+void Console::Subproc::poll()
+{
+	if (waitpid(_pid, nullptr, WNOHANG) == _pid) {
+		close();
+	}
+}
+
+void Console::Subproc::close()
+{
+	if (0 >= _pid) return;
+	kill(_pid, SIGTERM);
+	pcloseRWE(_pid, _rwepipe);
+	_pid = 0;
+}
+
 Console::View *Console::View::_instance;
 
 void Console::View::exec(std::string cmd, UI::Shell &shell)
@@ -73,13 +103,10 @@ bool Console::View::process(UI::Frame &ctx, int ch)
 bool Console::View::poll(UI::Frame &ctx)
 {
 	// We only need to poll if we have an active subprocess.
-	if (_subpid <= 0) return true;
+	if (!_proc.running()) return true;
 	bool follow_edge = _scrollpos == maxscroll();
-	//int sub_stdin = _rwepipe[0];
-	int sub_stdout = _rwepipe[1];
-	int sub_stderr = _rwepipe[2];
-	bool dirty = _log->read(sub_stdout);
-	dirty |= _log->read(sub_stderr);
+	bool dirty = _log->read(_proc.out_fd());
+	dirty |= _log->read(_proc.err_fd());
 	if (follow_edge && _scrollpos != maxscroll()) {
 		_scrollpos = maxscroll();
 		dirty = true;
@@ -87,16 +114,14 @@ bool Console::View::poll(UI::Frame &ctx)
 	if (dirty) {
 		ctx.repaint();
 	}
-	if (waitpid(_subpid, nullptr, WNOHANG) == _subpid) {
-		close_subproc();
-	}
+	_proc.poll();
 	set_title(ctx);
 	return true;
 }
 
 void Console::View::set_help(UI::HelpBar::Panel &panel)
 {
-	if (_subpid > 0) {
+	if (_proc.running()) {
 		panel.label[0][0] = UI::HelpBar::Label('K', true, "Kill");
 	}
 	panel.label[1][0] = UI::HelpBar::Label('W', true, "Close");
@@ -106,7 +131,7 @@ void Console::View::set_help(UI::HelpBar::Panel &panel)
 Console::View::~View()
 {
 	_instance = nullptr;
-	close_subproc();
+	_proc.close();
 }
 
 void Console::View::paint_into(WINDOW *view, State state)
@@ -126,14 +151,9 @@ void Console::View::paint_into(WINDOW *view, State state)
 	}
 }
 
-static void set_nonblocking(int fd)
-{
-	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
-}
-
 void Console::View::exec(std::string title, std::string exe, const std::vector<std::string> &args)
 {
-	close_subproc();
+	_proc.close();
 	// Convert this vector into an old-style C array of chars.
 	// Allocate one extra slot at the beginning for the exe name,
 	// and one extra at the end to serve as terminator.
@@ -144,29 +164,15 @@ void Console::View::exec(std::string title, std::string exe, const std::vector<s
 		argv[i++] = arg.c_str();
 	}
 	argv[i] = nullptr;
-	_subpid = popenRWE(_rwepipe, exe.c_str(), argv);
+	_proc.open(exe.c_str(), argv);
 	delete[] argv;
-	if (_subpid > 0) {
-		set_nonblocking(_rwepipe[0]);
-		set_nonblocking(_rwepipe[1]);
-		set_nonblocking(_rwepipe[2]);
-	}
 	_scrollpos = 0;
 	_log.reset(new Log(title, _width));
 }
 
-void Console::View::close_subproc()
-{
-	if (0 >= _subpid) return;
-	kill(_subpid, SIGTERM);
-	pcloseRWE(_subpid, _rwepipe);
-	_subpid = 0;
-}
-
 void Console::View::ctl_kill(UI::Frame &ctx)
 {
-	if (0 == _subpid) return;
-	close_subproc();
+	_proc.close();
 	ctx.repaint();
 }
 
@@ -190,7 +196,7 @@ void Console::View::set_title(UI::Frame &ctx)
 {
 	std::string title = (_log.get())? _log->command(): "Console";
 	ctx.set_title(title);
-	ctx.set_status(_subpid != 0? "running": "");
+	ctx.set_status(_proc.running()? "running": "");
 }
 
 unsigned Console::View::maxscroll() const

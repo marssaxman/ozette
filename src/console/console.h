@@ -26,6 +26,22 @@
 #include <memory>
 
 namespace Console {
+class Subproc
+{
+public:
+	bool running() const { return _pid > 0; }
+	void open(const char *exe, const char **argv);
+	void poll();
+	void close();
+	// stdin/stdout/stderr from the subprocess' point of view
+	int in_fd() const { return _rwepipe[0]; }
+	int out_fd() const { return _rwepipe[1]; }
+	int err_fd() const { return _rwepipe[2]; }
+	int _rwepipe[3] = {0,0,0};
+private:
+	int _pid = 0;
+};
+
 class View : public UI::View
 {
 public:
@@ -45,14 +61,12 @@ protected:
 	virtual void paint_into(WINDOW *view, State state) override;
 private:
 	void exec(std::string title, std::string exe, const std::vector<std::string> &argv);
-	void close_subproc();
 	void ctl_kill(UI::Frame &ctx);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
 	void set_title(UI::Frame &ctx);
 	unsigned maxscroll() const;
-	int _subpid = 0;
-	int _rwepipe[3] = {0,0,0};
+	Subproc _proc;
 	std::unique_ptr<Log> _log;
 	unsigned _scrollpos = 0;
 	int _height = 0;
