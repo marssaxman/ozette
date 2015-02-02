@@ -1,6 +1,6 @@
 //
 // lindi
-// Copyright (C) 2014 Mars J. Saxman
+// Copyright (C) 2014-2015 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,41 +20,6 @@
 #include "console.h"
 #include "control.h"
 #include "dialog.h"
-#include <cctype>
-#include <fcntl.h>
-#include <signal.h>
-#include <sys/wait.h>
-#include "popenRWE.h"
-
-static void set_nonblocking(int fd)
-{
-	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
-}
-
-void Console::Subproc::open(const char *exe, const char **argv)
-{
-	_pid = popenRWE(_rwepipe, exe, argv);
-	if (_pid > 0) {
-		set_nonblocking(_rwepipe[0]);
-		set_nonblocking(_rwepipe[1]);
-		set_nonblocking(_rwepipe[2]);
-	}
-}
-
-void Console::Subproc::poll()
-{
-	if (waitpid(_pid, nullptr, WNOHANG) == _pid) {
-		close();
-	}
-}
-
-void Console::Subproc::close()
-{
-	if (0 >= _pid) return;
-	kill(_pid, SIGTERM);
-	pcloseRWE(_pid, _rwepipe);
-	_pid = 0;
-}
 
 Console::View *Console::View::_instance;
 

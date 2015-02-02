@@ -1,6 +1,6 @@
 //
 // lindi
-// Copyright (C) 2014 Mars J. Saxman
+// Copyright (C) 2014-2015 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,25 +23,10 @@
 #include "view.h"
 #include "shell.h"
 #include "log.h"
+#include "subproc.h"
 #include <memory>
 
 namespace Console {
-class Subproc
-{
-public:
-	bool running() const { return _pid > 0; }
-	void open(const char *exe, const char **argv);
-	void poll();
-	void close();
-	// stdin/stdout/stderr from the subprocess' point of view
-	int in_fd() const { return _rwepipe[0]; }
-	int out_fd() const { return _rwepipe[1]; }
-	int err_fd() const { return _rwepipe[2]; }
-	int _rwepipe[3] = {0,0,0};
-private:
-	int _pid = 0;
-};
-
 class View : public UI::View
 {
 public:
