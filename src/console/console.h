@@ -39,7 +39,7 @@ public:
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
 	virtual Priority priority() const { return Priority::Secondary; }
 protected:
-	View() { _instance = this; }
+	View();
 	~View();
 	static View *_instance;
 	UI::Window *_window = nullptr;
@@ -51,7 +51,7 @@ private:
 	void key_down(UI::Frame &ctx);
 	void set_title(UI::Frame &ctx);
 	unsigned maxscroll() const;
-	Subproc _proc;
+	std::unique_ptr<Subproc> _proc;
 	std::unique_ptr<Log> _log;
 	unsigned _scrollpos = 0;
 	int _height = 0;

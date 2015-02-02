@@ -68,10 +68,10 @@ bool Console::View::process(UI::Frame &ctx, int ch)
 bool Console::View::poll(UI::Frame &ctx)
 {
 	// We only need to poll if we have an active subprocess.
-	if (!_proc.running()) return true;
+	if (!_proc->running()) return true;
 	bool follow_edge = _scrollpos == maxscroll();
-	bool dirty = _log->read(_proc.out_fd());
-	dirty |= _log->read(_proc.err_fd());
+	bool dirty = _log->read(_proc->out_fd());
+	dirty |= _log->read(_proc->err_fd());
 	if (follow_edge && _scrollpos != maxscroll()) {
 		_scrollpos = maxscroll();
 		dirty = true;
@@ -79,18 +79,24 @@ bool Console::View::poll(UI::Frame &ctx)
 	if (dirty) {
 		ctx.repaint();
 	}
-	_proc.poll();
+	_proc->poll();
 	set_title(ctx);
 	return true;
 }
 
 void Console::View::set_help(UI::HelpBar::Panel &panel)
 {
-	if (_proc.running()) {
+	if (_proc->running()) {
 		panel.label[0][0] = UI::HelpBar::Label('K', true, "Kill");
 	}
 	panel.label[1][0] = UI::HelpBar::Label('W', true, "Close");
 	panel.label[1][5] = UI::HelpBar::Label('?', true, "Help");
+}
+
+Console::View::View():
+	_proc(new Subproc)
+{
+	_instance = this;
 }
 
 Console::View::~View()
@@ -117,7 +123,7 @@ void Console::View::paint_into(WINDOW *view, State state)
 
 void Console::View::exec(std::string title, std::string exe, const std::vector<std::string> &args)
 {
-	_proc.close();
+	_proc->close();
 	// Convert this vector into an old-style C array of chars.
 	// Allocate one extra slot at the beginning for the exe name,
 	// and one extra at the end to serve as terminator.
@@ -128,7 +134,7 @@ void Console::View::exec(std::string title, std::string exe, const std::vector<s
 		argv[i++] = arg.c_str();
 	}
 	argv[i] = nullptr;
-	_proc.open(exe.c_str(), argv);
+	_proc->open(exe.c_str(), argv);
 	delete[] argv;
 	_scrollpos = 0;
 	_log.reset(new Log(title, _width));
@@ -136,7 +142,7 @@ void Console::View::exec(std::string title, std::string exe, const std::vector<s
 
 void Console::View::ctl_kill(UI::Frame &ctx)
 {
-	_proc.close();
+	_proc->close();
 	ctx.repaint();
 }
 
@@ -160,7 +166,7 @@ void Console::View::set_title(UI::Frame &ctx)
 {
 	std::string title = (_log.get())? _log->command(): "Console";
 	ctx.set_title(title);
-	ctx.set_status(_proc.running()? "running": "");
+	ctx.set_status(_proc->running()? "running": "");
 }
 
 unsigned Console::View::maxscroll() const
