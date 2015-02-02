@@ -24,16 +24,15 @@ namespace Console {
 class Subproc
 {
 public:
+	Subproc(const char *exe, const char **argv);
 	~Subproc() { close(); }
-	bool running() const { return _pid > 0; }
-	void open(const char *exe, const char **argv);
-	void poll();
-	void close();
+	bool poll();
 	// stdin/stdout/stderr from the subprocess' point of view
 	int in_fd() const { return _rwepipe[0]; }
 	int out_fd() const { return _rwepipe[1]; }
 	int err_fd() const { return _rwepipe[2]; }
 private:
+	void close();
 	int _rwepipe[3] = {0,0,0};
 	int _pid = 0;
 };

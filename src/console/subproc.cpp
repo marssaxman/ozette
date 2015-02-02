@@ -29,7 +29,7 @@ static void set_nonblocking(int fd)
 	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
 }
 
-void Console::Subproc::open(const char *exe, const char **argv)
+Console::Subproc::Subproc(const char *exe, const char **argv)
 {
 	_pid = popenRWE(_rwepipe, exe, argv);
 	if (_pid > 0) {
@@ -39,11 +39,12 @@ void Console::Subproc::open(const char *exe, const char **argv)
 	}
 }
 
-void Console::Subproc::poll()
+bool Console::Subproc::poll()
 {
 	if (waitpid(_pid, nullptr, WNOHANG) == _pid) {
 		close();
 	}
+	return _pid > 0;
 }
 
 void Console::Subproc::close()
