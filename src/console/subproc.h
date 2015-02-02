@@ -24,6 +24,7 @@ namespace Console {
 class Subproc
 {
 public:
+	~Subproc() { close(); }
 	bool running() const { return _pid > 0; }
 	void open(const char *exe, const char **argv);
 	void poll();

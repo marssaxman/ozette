@@ -96,7 +96,6 @@ void Console::View::set_help(UI::HelpBar::Panel &panel)
 Console::View::~View()
 {
 	_instance = nullptr;
-	_proc.close();
 }
 
 void Console::View::paint_into(WINDOW *view, State state)
