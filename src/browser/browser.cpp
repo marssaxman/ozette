@@ -236,16 +236,10 @@ void Browser::View::ctl_find(UI::Frame &ctx)
 	std::string prompt = "Find";
 	auto action = [this](UI::Frame &ctx, std::string text)
 	{
-		std::vector<std::string> args = {"-H", "-n", "-I", text};
-		auto receiver = [&ctx, &args](DirTree &item)
-		{
-			if (item.is_file()) {
-				args.push_back(ctx.app().display_path(item.path()));
-			}
-			return true;
-		};
-		_tree.recurse(receiver);
-		ctx.app().exec("find: " + text, "grep", args);
+		std::string find = "find " + _tree.path() + " -type f ";
+		std::string grep = "grep -H -n -I " + text;
+		std::string cmd = find + " | xargs " + grep;
+		ctx.app().exec("find: " + text, cmd);
 	};
 	auto dialog = new UI::Dialog::Find(prompt, action);
 	std::unique_ptr<UI::View> dptr(dialog);

@@ -39,7 +39,13 @@ public:
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) = 0;
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) = 0;
 	virtual Config &config() = 0;
-	virtual void exec(std::string title, std::string exe, const std::vector<std::string> &argv) = 0;
+	virtual void exec(
+			std::string title,
+			std::string exe,
+			const std::vector<std::string> &argv) = 0;
+	virtual void exec(
+			std::string title,
+			std::string command) = 0;
 };
 
 #endif //APP_CONTROLLER_H

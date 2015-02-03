@@ -142,6 +142,12 @@ void Lindi::exec(std::string title, std::string exe, const std::vector<std::stri
 	Console::View::exec(title, exe, argv, _shell);
 }
 
+void Lindi::exec(std::string title, std::string command)
+{
+	std::vector<std::string> argv = {"-c", command};
+	Console::View::exec(title, "sh", argv, _shell);
+}
+
 void Lindi::run()
 {
 	if (_editors.empty()) show_browser();

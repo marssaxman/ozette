@@ -41,7 +41,13 @@ public:
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) override;
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) override;
 	virtual Config &config() override;
-	virtual void exec(std::string title, std::string exe, const std::vector<std::string> &argv) override;
+	virtual void exec(
+			std::string title,
+			std::string exe,
+			const std::vector<std::string> &argv) override;
+	virtual void exec(
+			std::string title,
+			std::string command) override;
 
 	void run();
 private:
