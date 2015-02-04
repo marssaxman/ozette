@@ -44,7 +44,6 @@ public:
 	Type type() { initcheck(); return _type; }
 	time_t mtime() { initcheck(); return _mtime; }
 	std::vector<DirTree> &items();
-	void recurse(std::function<bool(DirTree&)> delegate);
 private:
 	void initcheck() { if (!_scanned) scan(); }
 	void iterate();
