@@ -48,6 +48,7 @@ public:
 	virtual void exec(
 			std::string title,
 			std::string command) override;
+	void exec(std::string command) { exec(command, command); }
 
 	void run();
 private:

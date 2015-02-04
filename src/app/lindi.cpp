@@ -137,7 +137,10 @@ Config &Lindi::config()
 	return _config;
 }
 
-void Lindi::exec(std::string title, std::string exe, const std::vector<std::string> &argv)
+void Lindi::exec(
+		std::string title,
+		std::string exe,
+		const std::vector<std::string> &argv)
 {
 	Console::View::exec(title, exe, argv, _shell);
 }
@@ -262,7 +265,7 @@ void Lindi::execute()
 	std::string prompt = "exec";
 	auto commit = [this](UI::Frame &ctx, std::string cmd)
 	{
-		Console::View::exec(cmd, _shell);
+		exec(cmd);
 	};
 	auto dialog = new UI::Dialog::Command(prompt, commit);
 	std::unique_ptr<UI::View> dptr(dialog);
@@ -271,7 +274,7 @@ void Lindi::execute()
 
 void Lindi::build()
 {
-	Console::View::exec("make", _shell);
+	exec("make");
 }
 
 int Lindi::fix_control_quirks(int ch)

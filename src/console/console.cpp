@@ -23,12 +23,6 @@
 
 Console::View *Console::View::_instance;
 
-void Console::View::exec(std::string cmd, UI::Shell &shell)
-{
-	std::vector<std::string> args = {"-c", cmd};
-	exec(cmd, "sh", args, shell);
-}
-
 void Console::View::exec(
 		std::string title,
 		std::string exe,
