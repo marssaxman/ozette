@@ -126,7 +126,6 @@ bool Browser::View::process(UI::Frame &ctx, int ch)
 		case KEY_NPAGE: key_page_down(ctx); break;
 		case KEY_RIGHT: key_right(ctx); break;
 		case KEY_LEFT: key_left(ctx); break;
-		case Control::Escape: clear_filter(ctx); break;
 		case ' ': key_space(ctx); break;
 		default: {
 			if(isprint(ch)) key_char(ctx, ch);
