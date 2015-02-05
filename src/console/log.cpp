@@ -61,7 +61,7 @@ void Console::Log::read_one(char ch)
 		} break;
 		default: if (isprint(ch)) {
 			if (tail.size() >= _width) {
-				_lines.emplace_back(std::string(1, ch));
+				_lines.emplace_back("    " + std::string(1, ch));
 			} else {
 				tail.push_back(ch);
 			}
