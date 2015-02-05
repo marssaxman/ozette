@@ -271,7 +271,8 @@ void Lindi::execute()
 
 void Lindi::build()
 {
-	Console::View::exec("make", _shell);
+	std::string command = _config.get("build-command", "make");
+	Console::View::exec(command, _shell);
 }
 
 int Lindi::fix_control_quirks(int ch)
