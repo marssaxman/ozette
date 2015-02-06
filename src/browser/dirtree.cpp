@@ -66,22 +66,6 @@ std::vector<DirTree> &DirTree::items()
 	return _items;
 }
 
-void DirTree::recurse(std::function<bool(DirTree&)> delegate)
-{
-	std::queue<DirTree*> search;
-	search.push(this);
-	while (!search.empty()) {
-		DirTree *dir = search.front();
-		search.pop();
-		for (auto &item: dir->items()) {
-			if (!delegate(item)) return;
-			if (item.is_directory()) {
-				search.push(&item);
-			}
-		}
-	}
-}
-
 static bool entry_order(const DirTree &a, const DirTree &b)
 {
 	return a.casefold_name() < b.casefold_name();

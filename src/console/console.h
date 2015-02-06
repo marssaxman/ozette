@@ -30,7 +30,6 @@ namespace Console {
 class View : public UI::View
 {
 public:
-	static void exec(std::string cmd, UI::Shell &shell);
 	static void exec(std::string title, std::string exe, const std::vector<std::string> &argv, UI::Shell &shell);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
