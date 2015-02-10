@@ -36,6 +36,7 @@ void Browser::View::open(std::string path, UI::Shell &shell)
 {
 	if (_instance) {
 		shell.make_active(_instance->_window);
+		_instance->view(path);
 	} else {
 		std::unique_ptr<UI::View> view(new Browser::View(path));
 		_instance->_window = shell.open_window(std::move(view));
@@ -161,11 +162,10 @@ void Browser::View::set_help(UI::HelpBar::Panel &panel)
 
 void Browser::View::view(std::string path)
 {
-	if (path != _tree.path()) {
-		_list.clear();
-		_tree = DirTree(path);
-		_rebuild_list = true;
-	}
+	if (path == _tree.path()) return;
+	_list.clear();
+	_tree = DirTree(path);
+	_rebuild_list = true;
 }
 
 void Browser::View::paint_row(WINDOW *view, int vpos, row_t &display, int width)
