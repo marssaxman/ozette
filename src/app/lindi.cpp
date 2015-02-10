@@ -275,7 +275,9 @@ void Lindi::execute()
 void Lindi::build()
 {
 	// Save all open editors. Execute the build command for this directory.
-	
+	for (auto &edit_pair: _editors) {
+		edit_pair.second->process(Control::Save);
+	}
 	std::string command = _config.get("build-command", "make");
 	exec(command);
 }
