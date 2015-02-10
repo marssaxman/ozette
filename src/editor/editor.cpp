@@ -100,6 +100,7 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::Paste: ctl_paste(ctx); break;
 		case Control::Close: ctl_close(ctx); break;
 		case Control::Save: ctl_save(ctx); break;
+		case Control::SaveAs: ctl_save_as(ctx); break;
 		case Control::ToLine: ctl_toline(ctx); break;
 		case Control::Find: ctl_find(ctx); break;
 		case Control::FindNext: ctl_find_next(ctx); break;
@@ -146,9 +147,10 @@ void Editor::View::set_help(UI::HelpBar::Panel &panel)
 	panel.label[0][4] = Label('L', true, "To Line");
 	panel.label[0][5] = Label('F', true, "Find");
 	panel.label[1][0] = Label('W', true, "Close");
-	if (!_doc.readonly()) {
+	if (_doc.modified()) {
 		panel.label[1][1] = Label('S', true, "Save");
 	}
+	panel.label[1][2] = Label('A', true, "Save As");
 	if (_doc.can_redo()) {
 		panel.label[1][3] = Label('Y', true, "Redo");
 	}
@@ -291,7 +293,8 @@ void Editor::View::ctl_close(UI::Frame &ctx)
 		return;
 	}
 	// ask the user if they want to save first
-	std::string prompt = "You have modified this file. Save changes before closing?";
+	std::string prompt = "You have modified this file.";
+	prompt += " Save changes before closing?";
 	auto yes_action = [this](UI::Frame &ctx)
 	{
 		// save the file
@@ -310,8 +313,36 @@ void Editor::View::ctl_close(UI::Frame &ctx)
 
 void Editor::View::ctl_save(UI::Frame &ctx)
 {
+	if (!_doc.modified()) return;
+	if (_targetpath.empty()) {
+		ctl_save_as(ctx);
+		return;
+	}
 	save(ctx, _targetpath);
+}
+
+void Editor::View::ctl_save_as(UI::Frame &ctx)
+{
+	if (_doc.readonly()) return;
 	_doc.commit();
+	std::string prompt = "Save As";
+	auto commit = [this](UI::Frame &ctx, std::string path)
+	{
+		// Clearing out the path name is the same as cancelling.
+		if (path.empty()) {
+			ctx.show_result("Cancelled");
+			return;
+		}
+		// Write the file to disk at its new location.
+		save(ctx, path);
+		// Update the editor to point at the new path.
+		ctx.app().rename_file(_targetpath, path);
+		_targetpath = path;
+		ctx.set_title(path);
+	};
+	auto dialog = new UI::Dialog::Save(prompt, _targetpath, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
+	ctx.show_dialog(std::move(dptr));
 }
 
 void Editor::View::ctl_toline(UI::Frame &ctx)
@@ -630,49 +661,12 @@ void Editor::View::adjust_selection(bool extend)
 	}
 }
 
-void Editor::View::save(UI::Frame &ctx, std::string path)
+void Editor::View::save(UI::Frame &ctx, std::string dest)
 {
-	if (_doc.readonly()) return;
-	std::string prompt = "Save File";
-	auto commit = [this](UI::Frame &ctx, std::string path)
-	{
-		// Clearing out the path name is the same as cancelling.
-		if (path.empty()) {
-			ctx.show_result("Cancelled");
-			return;
-		}
-		auto do_yes = [this, path](UI::Frame &ctx)
-		{
-			if (path.empty()) return;
-			_doc.Write(path);
-			if (_targetpath != path) {
-				ctx.app().rename_file(_targetpath, path);
-				_targetpath = path;
-				ctx.set_title(path);
-			}
-			ctx.set_status(_doc.status());
-			std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
-			stat += (_doc.maxline() > 1) ? " lines" : " line";
-			ctx.show_result(stat);
-		};
-		auto do_no = [this, path](UI::Frame &ctx)
-		{
-			save(ctx, path);
-		};
-		// If the file name entered at the prompt is the same as the existing
-		// name, just save the file. Otherwise, ask the user to confirm that
-		// they meant to change the path string.
-		if (path == _targetpath || _targetpath.empty()) {
-			do_yes(ctx);
-			return;
-		}
-		std::string prompt = "Save file under a different name?";
-		auto dialog = new UI::Dialog::Confirmation(prompt, do_yes, do_no);
-		std::unique_ptr<UI::View> dptr(dialog);
-		ctx.show_dialog(std::move(dptr));
-	};
-	auto dialog = new UI::Dialog::Save(prompt, path, commit);
-	std::unique_ptr<UI::View> dptr(dialog);
-	ctx.show_dialog(std::move(dptr));
+	_doc.commit();
+	_doc.Write(dest);
+	ctx.set_status(_doc.status());
+	std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
+	stat += (_doc.maxline() > 1) ? " lines" : " line";
+	ctx.show_result(stat);
 }
-

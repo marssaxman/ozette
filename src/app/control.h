@@ -47,6 +47,7 @@ enum {
 	Close = 0x17, //ETB ^W
 	NewFile = 0x0E, // SO ^N
 	Save = 0x13, //DC3 ^S
+	SaveAs = 0x01, //SOH ^A
 
 	// Navigation
 	Find = 0x06, //ACK ^F
@@ -63,7 +64,6 @@ enum {
 	Execute = 0x05, //ENQ ^E
 
 	// Unused ASCII control codes
-	SOH = 0x01, // ! A a
 	STX = 0x02, // " B b
 	DLE = 0x10, // 0 P p
 	DC2 = 0x12, // 2 R r

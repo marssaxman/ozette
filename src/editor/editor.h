@@ -53,6 +53,7 @@ private:
 	void ctl_paste(UI::Frame &ctx);
 	void ctl_close(UI::Frame &ctx);
 	void ctl_save(UI::Frame &ctx);
+	void ctl_save_as(UI::Frame &ctx);
 	void ctl_toline(UI::Frame &ctx);
 	void ctl_find(UI::Frame &ctx);
 	void ctl_find_next(UI::Frame &ctx);

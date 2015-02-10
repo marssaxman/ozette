@@ -53,6 +53,7 @@ Editor commands:
 	^G - Find Next - find next occurrence of previously found string
     ^L - To Line - move the cursor to the beginning of the specified line
     ^S - Save - write the contents of the buffer back to disk
+	^A - Save As - write the buffer to disk under a new name/location
     ^Z - Undo - roll back the last change to the document
     ^Y - Redo - reapply the last change which was rolled back
 
