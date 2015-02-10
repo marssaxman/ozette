@@ -88,7 +88,6 @@ bool UI::Shell::process(int ch)
 		// reliably distinguish between these codes because some terminals
 		// (terminal.app for example) send the shifted codes for left and right
 		// whether or not the user is pressing the shift key.
-		case 0x224:
 		case Control::LeftArrow: {
 			if (_focus > 0) {
 				set_focus(_focus - 1);
