@@ -299,8 +299,10 @@ int Lindi::fix_control_quirks(int ch)
 	// down, while others don't distinguish.
 	case 0x21D:
 	case 0x224:
+	case 0x221:
 	case 0x220: return Control::LeftArrow;
 	case 0x22C:
+	case 0x230:
 	case 0x22F: return Control::RightArrow;
 	case 0x20C: return Control::DownArrow;
 
