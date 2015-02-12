@@ -135,12 +135,6 @@ bool Browser::View::process(UI::Frame &ctx, int ch)
 bool Browser::View::poll(UI::Frame &ctx)
 {
 	check_rebuild(ctx);
-	if (!_name_filter.empty()) {
-		if (_name_filter_time + 2 <= time(NULL)) {
-			_name_filter.clear();
-			ctx.repaint();
-		}
-	}
 	return true;
 }
 
@@ -330,7 +324,6 @@ void Browser::View::key_tab(UI::Frame &ctx)
 		}
 	}
 	_name_filter = prefix;
-	_name_filter_time = time(NULL);
 	build_list(ctx);
 }
 
@@ -338,7 +331,6 @@ void Browser::View::key_char(UI::Frame &ctx, char ch)
 {
 	size_t start = _name_filter.empty()? 0: _selection;
 	_name_filter.push_back(ch);
-	_name_filter_time = time(NULL);
 	// Find the best match for the new filter - the name which matches the
 	// filter and requires the fewest gaps to do so.
 	unsigned bestlead = UINT_MAX;
@@ -473,11 +465,33 @@ size_t Browser::View::insert_rows(size_t index, unsigned indent, DirTree *entry)
 {
 	entry->scan();
 	for (auto &item: entry->items()) {
-		bool expand = _expanded_items.count(item.path()) > 0;
-		row_t display = {indent, expand, &item};
-		_list.insert(_list.begin() + index++, display);
-		if (expand) {
-			index = insert_rows(index, indent + 1, &item);
+		// We do almost completely different things depending on whether we
+		// are in name-filter open mode or normal navigation mode.
+		if (_name_filter.empty()) {
+			// In normal navigation mode, we show all items in this directory.
+			// If one of the items is on the expanded_items list, we recurse
+			// and add its sub-items underneath this one, at one greater level
+			// of indentation.
+			bool expand = _expanded_items.count(item.path()) > 0;
+			row_t display = {indent, expand, &item};
+			_list.insert(_list.begin() + index++, display);
+			if (expand) {
+				 index = insert_rows(index, indent + 1, &item);
+			}
+		} else {
+			// In name-filter open mode, we show all the items which match the
+			// filter, ignoring the expanded_items state, and we only show
+			// directory names which contain at least one matching entry.
+			row_t display = {indent, true, &item};
+			_list.insert(_list.begin() + index, display);
+			size_t new_index = insert_rows(index + 1, indent + 1, &item);
+			// Keep this item if it matches the name filter or if one of its
+			// sub-items does; otherwise, delete it.
+			if (new_index > index + 1 || matches_filter(item.name())) {
+				index = new_index;
+			} else {
+				_list.erase(_list.begin() + index);
+			}
 		}
 	}
 	return index;
