@@ -72,6 +72,10 @@ void Browser::View::deactivate(UI::Frame &ctx)
 		paths.push_back(line);
 	}
 	ctx.app().cache_write(kExpansionStateKey, paths);
+	if (!_name_filter.empty()) {
+		_name_filter.clear();
+		_rebuild_list = true;
+	}
 }
 
 void Browser::View::check_rebuild(UI::Frame &ctx)
@@ -155,6 +159,7 @@ void Browser::View::view(std::string path)
 	if (path == _tree.path()) return;
 	_list.clear();
 	_tree = DirTree(path);
+	_name_filter.clear();
 	_rebuild_list = true;
 }
 
@@ -345,7 +350,7 @@ void Browser::View::key_char(UI::Frame &ctx, char ch)
 		besttotal = totalskips;
 		_selection = i;
 	}
-	build_list(ctx);
+	_rebuild_list = true;
 }
 
 void Browser::View::clear_filter(UI::Frame &ctx)
@@ -431,6 +436,7 @@ void Browser::View::build_list(UI::Frame &ctx)
 	}
 	_rebuild_list = false;
 	set_title(ctx);
+	ctx.set_status(_name_filter);
 	ctx.repaint();
 }
 
