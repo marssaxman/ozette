@@ -121,6 +121,7 @@ bool Browser::View::process(UI::Frame &ctx, int ch)
 		case Control::Close: return false; break;
 		case Control::Escape: clear_filter(ctx); break;
 		case Control::Tab: key_tab(ctx); break;
+		case Control::Backspace: key_backspace(ctx); break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
 		case KEY_PPAGE: key_page_up(ctx); break;
@@ -330,6 +331,13 @@ void Browser::View::key_tab(UI::Frame &ctx)
 	}
 	_name_filter = prefix;
 	build_list(ctx);
+}
+
+void Browser::View::key_backspace(UI::Frame &ctx)
+{
+	if (_name_filter.empty()) return;
+	_name_filter.pop_back();
+	_rebuild_list = true;
 }
 
 void Browser::View::key_char(UI::Frame &ctx, char ch)
