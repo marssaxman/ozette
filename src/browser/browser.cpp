@@ -62,8 +62,7 @@ void Browser::View::activate(UI::Frame &ctx)
 	}
 	_list.clear();
 	_tree = DirTree(_tree.path());
-	_rebuild_list = true;
-	check_rebuild(ctx);
+	build_list(ctx);
 }
 
 void Browser::View::deactivate(UI::Frame &ctx)
@@ -78,10 +77,7 @@ void Browser::View::deactivate(UI::Frame &ctx)
 void Browser::View::check_rebuild(UI::Frame &ctx)
 {
 	if (!_rebuild_list) return;
-	build_list();
-	set_title(ctx);
-	_rebuild_list = false;
-	ctx.repaint();
+	build_list(ctx);
 }
 
 void Browser::View::paint_into(WINDOW *view, State state)
@@ -335,7 +331,7 @@ void Browser::View::key_tab(UI::Frame &ctx)
 	}
 	_name_filter = prefix;
 	_name_filter_time = time(NULL);
-	ctx.repaint();
+	build_list(ctx);
 }
 
 void Browser::View::key_char(UI::Frame &ctx, char ch)
@@ -357,14 +353,14 @@ void Browser::View::key_char(UI::Frame &ctx, char ch)
 		besttotal = totalskips;
 		_selection = i;
 	}
-	ctx.repaint();
+	build_list(ctx);
 }
 
 void Browser::View::clear_filter(UI::Frame &ctx)
 {
 	if (_name_filter.empty()) return;
 	_name_filter.clear();
-	ctx.repaint();
+	build_list(ctx);
 }
 
 bool Browser::View::matches_filter(size_t index)
@@ -411,15 +407,39 @@ void Browser::View::set_title(UI::Frame &ctx)
 	ctx.set_title(ctx.app().display_path(_tree.path()));
 }
 
-void Browser::View::build_list()
+void Browser::View::build_list(UI::Frame &ctx)
 {
+	// Save the path to the currently selected item so that we can maintain the
+	// selection after the rebuild, assuming that item continues to exist.
+	std::string sel_path;
+	if (_selection < _list.size()) {
+		sel_path = _list[_selection].entry->path();
+	}
+	// Regenerate the contents of the list.
 	_list.clear();
 	insert_rows(0, 0, &_tree);
 	if (_list.empty()) {
 		row_t display = {0, 0, &_tree};
 		_list.insert(_list.begin(), display);
 	}
+	// Adjust the selection so that it points at the new representation of the
+	// same item, if possible.
 	_selection = std::min(_selection, _list.size());
+	if (_list.empty()) return;
+	if (_list[_selection].entry->path() != sel_path) {
+		// The previously selected item is no longer selected. Go search for it
+		// and try to re-select it. We can do this in a stupid inefficient way
+		// for now because it is not likely to happen very often.
+		for (size_t i = 0; i < _list.size(); ++i) {
+			if (_list[i].entry->path() == sel_path) {
+				_selection = i;
+				break;
+			}
+		}
+	}
+	_rebuild_list = false;
+	set_title(ctx);
+	ctx.repaint();
 }
 
 void Browser::View::toggle(UI::Frame &ctx)
