@@ -1,6 +1,6 @@
 //
 // lindi
-// Copyright (C) 2014 Mars J. Saxman
+// Copyright (C) 2014-2015 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -114,7 +114,6 @@ void Browser::View::paint_into(WINDOW *view, State state)
 
 bool Browser::View::process(UI::Frame &ctx, int ch)
 {
-	check_rebuild(ctx);
 	switch (ch) {
 		case Control::Find: ctl_find(ctx); break;
 		case Control::Return: key_return(ctx); break;
@@ -254,7 +253,6 @@ void Browser::View::key_return(UI::Frame &ctx)
 void Browser::View::key_up(UI::Frame &ctx)
 {
 	// Move to previous line in the listbox.
-	clear_filter(ctx);
 	if (0 == _selection) return;
 	_selection--;
 	ctx.repaint();
@@ -262,7 +260,6 @@ void Browser::View::key_up(UI::Frame &ctx)
 
 void Browser::View::key_down(UI::Frame &ctx)
 {
-	clear_filter(ctx);
 	// Move to next line in the listbox.
 	if (_selection + 1 == _list.size()) return;
 	_selection++;
@@ -272,7 +269,6 @@ void Browser::View::key_down(UI::Frame &ctx)
 void Browser::View::key_page_up(UI::Frame &ctx)
 {
 	// Move to last line of previous page.
-	clear_filter(ctx);
 	_selection = _scrollpos > 0? _scrollpos-1: 0;
 	ctx.repaint();
 }
@@ -287,6 +283,7 @@ void Browser::View::key_page_down(UI::Frame &ctx)
 void Browser::View::key_left(UI::Frame &ctx)
 {
 	// Move to previous match for filename filter.
+	if (_name_filter.empty()) return;
 	if (_selection == 0) return;
 	for (size_t i = _selection; i > 0; --i) {
 		if (matches_filter(i-1)) {
@@ -300,6 +297,7 @@ void Browser::View::key_left(UI::Frame &ctx)
 void Browser::View::key_right(UI::Frame &ctx)
 {
 	// Move to next match for filename filter.
+	if (_name_filter.empty()) return;
 	for (size_t i = _selection + 1; i < _list.size(); ++i) {
 		if (matches_filter(i)) {
 			_selection = i;
