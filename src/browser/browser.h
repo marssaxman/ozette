@@ -69,7 +69,7 @@ private:
 	bool matches_filter(std::string name);
 	bool scan_filter(size_t index, unsigned &leadskip, unsigned &totalskips);
 	void set_title(UI::Frame &ctx);
-	void build_list(UI::Frame &ctx);
+	void build_list();
 	void toggle(UI::Frame &ctx);
 	void edit_file(UI::Frame &ctx);
 	size_t insert_rows(size_t index, unsigned indent, DirTree *entry);
