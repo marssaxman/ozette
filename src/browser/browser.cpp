@@ -23,6 +23,7 @@
 #include "picker.h"
 #include <cctype>
 #include <climits>
+#include <assert.h>
 
 Browser::View *Browser::View::_instance;
 static std::string kExpansionStateKey = "expanded_dirs";
@@ -175,7 +176,7 @@ void Browser::View::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 	waddnstr(view, display.expanded? "- ": (isdir? "+ ": "  "), rowchars);
 	rowchars -= 2;
 	std::string name = display.entry->name();
-	if (matches_filter(name)) {
+	if (matches_filter(display.entry)) {
 		// draw the name out character by character, underlining the chars which
 		// match the current selection filter.
 		auto filteriter = _name_filter.begin();
@@ -374,11 +375,13 @@ void Browser::View::clear_filter(UI::Frame &ctx)
 bool Browser::View::matches_filter(size_t index)
 {
 	if (index >= _list.size()) return false;
-	return matches_filter(_list[index].entry->name());
+	return matches_filter(_list[index].entry);
 }
 
-bool Browser::View::matches_filter(std::string name)
+bool Browser::View::matches_filter(DirTree *entry)
 {
+	assert(entry);
+	std::string name = entry->name();
 	size_t search = 0;
 	for (char ch: _name_filter) {
 		if (search == name.size()) return false;
