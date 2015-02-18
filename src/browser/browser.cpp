@@ -161,7 +161,7 @@ void Browser::View::view(std::string path)
 	if (path == _tree.path()) return;
 	_list.clear();
 	_tree = DirTree(path);
-	_name_filter.clear();
+	_path_filter.clear();
 	_rebuild_list = true;
 }
 
@@ -285,7 +285,7 @@ void Browser::View::key_page_down(UI::Frame &ctx)
 void Browser::View::key_left(UI::Frame &ctx)
 {
 	// Move to previous match for filename filter.
-	if (_name_filter.empty()) return;
+	if (_path_filter.empty()) return;
 	if (_selection == 0) return;
 	for (size_t i = _selection; i > 0; --i) {
 		if (matches_filter(i-1)) {
@@ -299,7 +299,7 @@ void Browser::View::key_left(UI::Frame &ctx)
 void Browser::View::key_right(UI::Frame &ctx)
 {
 	// Move to next match for filename filter.
-	if (_name_filter.empty()) return;
+	if (_path_filter.empty()) return;
 	for (size_t i = _selection + 1; i < _list.size(); ++i) {
 		if (matches_filter(i)) {
 			_selection = i;
@@ -318,7 +318,7 @@ void Browser::View::key_tab(UI::Frame &ctx)
 {
 	// If there is a name filter, collect all the names which match,
 	// then extend the name filter to the common prefix of all names
-	if (_name_filter.empty()) return;
+	if (_path_filter.empty()) return;
 	std::string prefix;
 	for (size_t i = 0; i < _list.size(); ++i) {
 		if (!matches_filter(i)) continue;
@@ -329,23 +329,21 @@ void Browser::View::key_tab(UI::Frame &ctx)
 			prefix.pop_back();
 		}
 	}
-	_name_filter = prefix;
-	ctx.set_status(_name_filter);
-	ctx.repaint();
+	_path_filter = prefix;
+	update_filter(ctx);
 }
 
 void Browser::View::key_backspace(UI::Frame &ctx)
 {
-	if (_name_filter.empty()) return;
-	_name_filter.pop_back();
-	ctx.set_status(_name_filter);
-	_rebuild_list = true;
+	if (_path_filter.empty()) return;
+	_path_filter.pop_back();
+	update_filter(ctx);
 }
 
 void Browser::View::key_char(UI::Frame &ctx, char ch)
 {
-	size_t start = _name_filter.empty()? 0: _selection;
-	_name_filter.push_back(ch);
+	size_t start = _path_filter.empty()? 0: _selection;
+	_path_filter.push_back(ch);
 	// Find the best match for the new filter - the name which matches the
 	// filter and requires the fewest gaps to do so.
 	unsigned bestlead = UINT_MAX;
@@ -360,16 +358,26 @@ void Browser::View::key_char(UI::Frame &ctx, char ch)
 		besttotal = totalskips;
 		_selection = i;
 	}
-	ctx.set_status(_name_filter);
+	update_filter(ctx);
+}
+
+void Browser::View::update_filter(UI::Frame &ctx)
+{
+	size_t lastslash = _path_filter.find_last_of('/');
+	if (lastslash != std::string::npos) {
+		_name_filter = _path_filter.substr(lastslash + 1);
+	} else {
+		_name_filter = _path_filter;
+	}
+	ctx.set_status(_path_filter);
 	ctx.repaint();
 }
 
 void Browser::View::clear_filter(UI::Frame &ctx)
 {
-	if (_name_filter.empty()) return;
-	_name_filter.clear();
-	ctx.set_status(_name_filter);
-	ctx.repaint();
+	if (_path_filter.empty()) return;
+	_path_filter.clear();
+	update_filter(ctx);
 }
 
 bool Browser::View::matches_filter(size_t index)
@@ -381,11 +389,11 @@ bool Browser::View::matches_filter(size_t index)
 bool Browser::View::matches_filter(DirTree *entry)
 {
 	assert(entry);
-	std::string name = entry->name();
+	std::string path = entry->path();
 	size_t search = 0;
-	for (char ch: _name_filter) {
-		if (search == name.size()) return false;
-		search = name.find_first_of(ch, search);
+	for (char ch: _path_filter) {
+		if (search == path.size()) return false;
+		search = path.find_first_of(ch, search);
 		if (search == std::string::npos) return false;
 		++search;
 	}
@@ -396,11 +404,11 @@ bool Browser::View::scan_filter(
 		size_t index, unsigned &leadskip, unsigned &totalskips)
 {
 	if (index >= _list.size()) return false;
-	std::string name = _list[index].entry->name();
+	std::string path = _list[index].entry->path();
 	size_t prev_search = 0;
-	for (char ch: _name_filter) {
-		if (prev_search == name.size()) return false;
-		size_t next_search = name.find_first_of(ch, prev_search);
+	for (char ch: _path_filter) {
+		if (prev_search == path.size()) return false;
+		size_t next_search = path.find_first_of(ch, prev_search);
 		if (next_search == std::string::npos) return false;
 		if (next_search > prev_search) {
 			totalskips++;

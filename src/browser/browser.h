@@ -64,6 +64,7 @@ private:
 	void key_tab(UI::Frame &ctx);
 	void key_backspace(UI::Frame &ctx);
 	void key_char(UI::Frame &ctx, char ch);
+	void update_filter(UI::Frame &ctx);
 	void clear_filter(UI::Frame &ctx);
 	bool matches_filter(size_t index);
 	bool matches_filter(DirTree *entry);
@@ -82,6 +83,9 @@ private:
 	size_t _scrollpos = 0;
 	int _height = 0;
 	bool _rebuild_list = true;
+	// After making changes to _path_filter, call update_filter().
+	std::string _path_filter;
+	// update_filter() will split the name component from the path filter.
 	std::string _name_filter;
 };
 } //namespace Browser
