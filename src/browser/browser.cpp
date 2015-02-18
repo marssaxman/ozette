@@ -73,10 +73,7 @@ void Browser::View::deactivate(UI::Frame &ctx)
 		paths.push_back(line);
 	}
 	ctx.app().cache_write(kExpansionStateKey, paths);
-	if (!_name_filter.empty()) {
-		_name_filter.clear();
-		_rebuild_list = true;
-	}
+	clear_filter(ctx);
 }
 
 void Browser::View::check_rebuild(UI::Frame &ctx)
@@ -143,12 +140,6 @@ bool Browser::View::process(UI::Frame &ctx, int ch)
 bool Browser::View::poll(UI::Frame &ctx)
 {
 	check_rebuild(ctx);
-	if (!_name_filter.empty()) {
-		if (_name_filter_time + 2 <= time(NULL)) {
-			_name_filter.clear();
-			ctx.repaint();
-		}
-	}
 	return true;
 }
 
@@ -338,7 +329,7 @@ void Browser::View::key_tab(UI::Frame &ctx)
 		}
 	}
 	_name_filter = prefix;
-	_name_filter_time = time(NULL);
+	ctx.set_status(_name_filter);
 	ctx.repaint();
 }
 
@@ -346,6 +337,7 @@ void Browser::View::key_backspace(UI::Frame &ctx)
 {
 	if (_name_filter.empty()) return;
 	_name_filter.pop_back();
+	ctx.set_status(_name_filter);
 	_rebuild_list = true;
 }
 
@@ -353,7 +345,6 @@ void Browser::View::key_char(UI::Frame &ctx, char ch)
 {
 	size_t start = _name_filter.empty()? 0: _selection;
 	_name_filter.push_back(ch);
-	_name_filter_time = time(NULL);
 	// Find the best match for the new filter - the name which matches the
 	// filter and requires the fewest gaps to do so.
 	unsigned bestlead = UINT_MAX;
@@ -368,6 +359,7 @@ void Browser::View::key_char(UI::Frame &ctx, char ch)
 		besttotal = totalskips;
 		_selection = i;
 	}
+	ctx.set_status(_name_filter);
 	ctx.repaint();
 }
 
@@ -375,6 +367,7 @@ void Browser::View::clear_filter(UI::Frame &ctx)
 {
 	if (_name_filter.empty()) return;
 	_name_filter.clear();
+	ctx.set_status(_name_filter);
 	ctx.repaint();
 }
 

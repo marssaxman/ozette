@@ -83,7 +83,6 @@ private:
 	int _height = 0;
 	bool _rebuild_list = true;
 	std::string _name_filter;
-	time_t _name_filter_time = 0;
 };
 } //namespace Browser
 
