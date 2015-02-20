@@ -39,7 +39,8 @@ void Browser::View::open(std::string path, UI::Shell &shell)
 		shell.make_active(_instance->_window);
 		_instance->view(path);
 	} else {
-		std::unique_ptr<UI::View> view(new Browser::View(path));
+		_instance = new Browser::View(path);
+		std::unique_ptr<UI::View> view(_instance);
 		_instance->_window = shell.open_window(std::move(view));
 	}
 }
@@ -47,7 +48,7 @@ void Browser::View::open(std::string path, UI::Shell &shell)
 Browser::View::View(std::string path):
 	_tree(path)
 {
-	_instance = this;
+	assert(_instance == nullptr);
 }
 
 void Browser::View::activate(UI::Frame &ctx)
