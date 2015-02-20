@@ -23,10 +23,12 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include "popenRWE.h"
+#include <assert.h>
 
 static void set_nonblocking(int fd)
 {
-	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
+	int err = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
+	assert(0 == err);
 }
 
 Console::Subproc::Subproc(const char *exe, const char **argv)

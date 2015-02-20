@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <fstream>
 #include <sys/stat.h>
+#include <assert.h>
 
 Lindi::Lindi():
 	_shell(*this),
@@ -123,7 +124,8 @@ void Lindi::cache_write(std::string name, const std::vector<std::string> &lines)
 	// if the lindi directory doesn't exist yet, create it
 	struct stat st;
 	if (stat(_config_dir.c_str(), &st)) {
-		mkdir(_config_dir.c_str(), S_IRWXU);
+		int err = mkdir(_config_dir.c_str(), S_IRWXU);
+		assert(0 == err);
 	}
 	std::ofstream file(_config_dir + "/" + name, std::ios::trunc);
 	for (auto &line: lines) {
