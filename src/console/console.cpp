@@ -20,6 +20,7 @@
 #include "console.h"
 #include "control.h"
 #include "dialog.h"
+#include <assert.h>
 
 Console::View *Console::View::_instance;
 
@@ -32,7 +33,8 @@ void Console::View::exec(
 	if (_instance) {
 		shell.make_active(_instance->_window);
 	} else {
-		std::unique_ptr<UI::View> view(new Console::View());
+		_instance = new Console::View;
+		std::unique_ptr<UI::View> view(_instance);
 		_instance->_window = shell.open_window(std::move(view));
 	}
 	_instance->exec(title, exe, argv);
@@ -91,7 +93,7 @@ void Console::View::set_help(UI::HelpBar::Panel &panel)
 
 Console::View::View()
 {
-	_instance = this;
+	assert(_instance == nullptr);
 }
 
 Console::View::~View()
