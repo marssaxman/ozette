@@ -26,7 +26,7 @@ Console::View *Console::View::_instance;
 
 void Console::View::exec(
 		std::string title,
-		std::string exe,
+		const std::string &exe,
 		const std::vector<std::string> &argv,
 		UI::Shell &shell)
 {
@@ -118,7 +118,10 @@ void Console::View::paint_into(WINDOW *view, State state)
 	}
 }
 
-void Console::View::exec(std::string title, std::string exe, const std::vector<std::string> &args)
+void Console::View::exec(
+		std::string title,
+		const std::string &exe,
+		const std::vector<std::string> &args)
 {
 	// Convert this vector into an old-style C array of chars.
 	// Allocate one extra slot at the beginning for the exe name,

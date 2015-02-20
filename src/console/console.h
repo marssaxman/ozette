@@ -30,7 +30,11 @@ namespace Console {
 class View : public UI::View
 {
 public:
-	static void exec(std::string title, std::string exe, const std::vector<std::string> &argv, UI::Shell &shell);
+	static void exec(
+			std::string title,
+			const std::string &exe,
+			const std::vector<std::string> &argv,
+			UI::Shell &shell);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
@@ -44,7 +48,10 @@ protected:
 	UI::Window *_window = nullptr;
 	virtual void paint_into(WINDOW *view, State state) override;
 private:
-	void exec(std::string title, std::string exe, const std::vector<std::string> &argv);
+	void exec(
+			std::string title,
+			const std::string &exe,
+			const std::vector<std::string> &argv);
 	void ctl_kill(UI::Frame &ctx);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
