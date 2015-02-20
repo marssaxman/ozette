@@ -46,7 +46,6 @@ Editor::Document::Document(std::string path, const Config &config):
 		_read_only = true;
 	} else {
 		_status.clear();
-		_last_mtime = sb.st_mtime;
 	}
 
 	std::string str;

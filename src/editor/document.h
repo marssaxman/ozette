@@ -109,8 +109,6 @@ private:
 	bool _read_only = false;
 	// has the document been edited since it was last read?
 	bool _modified = false;
-	// what was the mtime when we last read the file in?
-	time_t _last_mtime;
 	// what is our user-friendly summary of the file state?
 	std::string _status;
 	// record of all the edits made to this document
