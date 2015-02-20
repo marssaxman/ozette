@@ -175,7 +175,7 @@ void UI::Shell::close_window(Window *window)
 
 void UI::Shell::set_focus(size_t index)
 {
-	assert(index >= 0 && index < _tabs.size());
+	assert(index < _tabs.size());
 	if (_focus < _tabs.size()) {
 		_tabs[_focus]->clear_focus();
 	}
