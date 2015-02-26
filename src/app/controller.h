@@ -1,6 +1,6 @@
 //
-// lindi
-// Copyright (C) 2014 Mars J. Saxman
+// ozette
+// Copyright (C) 2014-2015 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -49,3 +49,4 @@ public:
 };
 
 #endif //APP_CONTROLLER_H
+

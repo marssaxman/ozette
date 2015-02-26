@@ -1,6 +1,6 @@
 //
-// lindi
-// Copyright (C) 2014 Mars J. Saxman
+// ozette
+// Copyright (C) 2014-2015 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,11 +17,11 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "lindi.h"
+#include "ozette.h"
 #include <signal.h>
 #include <stdlib.h>
 
-static std::unique_ptr<Lindi> s_app;
+static std::unique_ptr<Ozette> s_app;
 
 static void handle_sigint(int)
 {
@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 {
 	(void)signal(SIGINT, handle_sigint);
 	(void)signal(SIGPIPE, SIG_IGN);
-	s_app.reset(new Lindi);
+	s_app.reset(new Ozette);
 	for (int i = 1; i < argc; ++i) {
 		s_app->edit_file(argv[i]);
 	}

@@ -2,9 +2,9 @@
 #
 # Installer script
 #
-# We expect that Lindi has already been built successfully.
+# We expect that Ozette has already been built successfully.
 
-cp lindi /usr/bin/lindi
-which lindi
+cp ozette /usr/bin/ozette
+which ozette
 
 

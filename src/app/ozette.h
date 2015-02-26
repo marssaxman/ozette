@@ -1,6 +1,6 @@
 //
-// lindi
-// Copyright (C) 2014 Mars J. Saxman
+// ozette
+// Copyright (C) 2014-2015 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef APP_LINDI_H
-#define APP_LINDI_H
+#ifndef APP_OZETTE_H
+#define APP_OZETTE_H
 
 #include "controller.h"
 #include "shell.h"
@@ -27,10 +27,10 @@
 #include <vector>
 #include <map>
 
-class Lindi : public Controller
+class Ozette : public Controller
 {
 public:
-	Lindi();
+	Ozette();
 	virtual std::string current_dir() const override;
 	virtual std::string display_path(std::string path) const override;
 	virtual void edit_file(std::string path) override;
@@ -74,4 +74,5 @@ private:
 	std::vector<std::string> _recent_dirs;
 };
 
-#endif //APP_LINDI_H
+#endif //APP_OZETTE_H
+

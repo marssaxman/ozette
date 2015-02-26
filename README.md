@@ -1,13 +1,13 @@
-Lindi is an editing shell for software development. It combines a directory
+Ozette is an editing shell for software development. It combines a directory
 browser, a text file editor, and a command console within a tabbed window
 interface modelled on pico/nano, using a control-key scheme based on familiar
 desktop application conventions.
 
-Lindi is an opinionated tool designed around the way I like to write code, and
+Ozette is an opinionated tool designed around the way I like to write code, and
 universal usefulness is not a goal. I am releasing it in case there are other
 people with a similar development style who might happen to like it.
 
-Lindi is not intended to compete with complex, sophisticated editors like vi or
+Ozette is not intended to compete with complex, sophisticated editors like vi or
 emacs, because I spend a lot more time thinking about code than writing it and
 have never felt like complex editors were worth the bother. Its editor is very
 simple but it offers everything I actually use.
@@ -28,12 +28,12 @@ Install it in /usr/bin/:
 
 Open the browser in the current directory:
 
-	lindi
-	
+	ozette
+
 Edit a specific file or files, with no browser:
 
-	lindi foo bar baz
-	
+	ozette foo bar baz
+
 
 
 

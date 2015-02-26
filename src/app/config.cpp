@@ -1,6 +1,6 @@
 //
-// lindi
-// Copyright (C) 2014 Mars J. Saxman
+// ozette
+// Copyright (C) 2014-2015 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,13 +22,13 @@
 
 Config::Config(std::string confdir, std::string workingdir):
 	_user(new INIReader(confdir + "/config")),
-	_dir(new INIReader(workingdir + "/.lindi/config"))
+	_dir(new INIReader(workingdir + "/.ozette/config"))
 {
 }
 
 void Config::change_directory(std::string workingdir)
 {
-	_dir.reset(new INIReader(workingdir + "/.lindi/config"));
+	_dir.reset(new INIReader(workingdir + "/.ozette/config"));
 }
 
 std::string Config::get(std::string key, std::string val) const

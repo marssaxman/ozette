@@ -4,16 +4,13 @@
 # another is that if there happens to be a directory with the name of a target,
 # make will refuse to build that target, claiming that it is up to date. grrr.
 
-COMPILERDIRS=./compiler-src ../compiler
-RUNTIMEDIRS=./runtime-src ../runtime
+all: ozette-executable
 
-all: lindi-executable
-
-lindi-executable:
-	@./build.sh lindi ./obj ./src
+ozette-executable:
+	@./build.sh ozette ./obj ./src
 
 clean:
-	@rm -f lindi ./obj/*
+	@rm -f ozette ./obj/*
 
 install:
 	@./install.sh

@@ -1,5 +1,5 @@
 //
-// lindi
+// ozette
 // Copyright (C) 2014-2015 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "lindi.h"
+#include "ozette.h"
 #include "browser.h"
 #include "editor.h"
 #include "console.h"
@@ -29,10 +29,10 @@
 #include <sys/stat.h>
 #include <assert.h>
 
-Lindi::Lindi():
+Ozette::Ozette():
 	_shell(*this),
 	_home_dir(getenv("HOME")),
-	_config_dir(_home_dir + "/.lindi"),
+	_config_dir(_home_dir + "/.ozette"),
 	_config(_config_dir, ".")
 {
 	char *cwd = getcwd(NULL, 0);
@@ -45,12 +45,12 @@ Lindi::Lindi():
 	_config.change_directory(_current_dir);
 }
 
-std::string Lindi::current_dir() const
+std::string Ozette::current_dir() const
 {
 	return _current_dir;
 }
 
-std::string Lindi::display_path(std::string path) const
+std::string Ozette::display_path(std::string path) const
 {
 	size_t cwdsize = _current_dir.size();
 	if (path.size() > cwdsize && path.substr(0, cwdsize) == _current_dir) {
@@ -63,7 +63,7 @@ std::string Lindi::display_path(std::string path) const
 	return path;
 }
 
-void Lindi::edit_file(std::string path)
+void Ozette::edit_file(std::string path)
 {
 	// If we already have this file open, bring it forward.
 	path = canonical_abspath(path);
@@ -78,7 +78,7 @@ void Lindi::edit_file(std::string path)
 	_editors[path] = win;
 }
 
-void Lindi::rename_file(std::string from, std::string to)
+void Ozette::rename_file(std::string from, std::string to)
 {
 	// Somebody has moved or renamed a file. If there is an editor
 	// open for it, update our editor map.
@@ -89,7 +89,7 @@ void Lindi::rename_file(std::string from, std::string to)
 	_editors[canonical_abspath(to)] = window;
 }
 
-void Lindi::close_file(std::string path)
+void Ozette::close_file(std::string path)
 {
 	auto iter = _editors.find(canonical_abspath(path));
 	if (iter != _editors.end()) {
@@ -98,17 +98,17 @@ void Lindi::close_file(std::string path)
 	}
 }
 
-void Lindi::set_clipboard(std::string text)
+void Ozette::set_clipboard(std::string text)
 {
 	_clipboard = text;
 }
 
-std::string Lindi::get_clipboard()
+std::string Ozette::get_clipboard()
 {
 	return _clipboard;
 }
 
-void Lindi::cache_read(std::string name, std::vector<std::string> &lines)
+void Ozette::cache_read(std::string name, std::vector<std::string> &lines)
 {
 	lines.clear();
 	std::string str;
@@ -119,9 +119,9 @@ void Lindi::cache_read(std::string name, std::vector<std::string> &lines)
 	file.close();
 }
 
-void Lindi::cache_write(std::string name, const std::vector<std::string> &lines)
+void Ozette::cache_write(std::string name, const std::vector<std::string> &lines)
 {
-	// if the lindi directory doesn't exist yet, create it
+	// if the ozette directory doesn't exist yet, create it
 	struct stat st;
 	if (stat(_config_dir.c_str(), &st)) {
 		int err = mkdir(_config_dir.c_str(), S_IRWXU);
@@ -134,12 +134,12 @@ void Lindi::cache_write(std::string name, const std::vector<std::string> &lines)
 	file.close();
 }
 
-Config &Lindi::config()
+Config &Ozette::config()
 {
 	return _config;
 }
 
-void Lindi::exec(
+void Ozette::exec(
 		std::string title,
 		std::string exe,
 		const std::vector<std::string> &argv)
@@ -147,13 +147,13 @@ void Lindi::exec(
 	Console::View::exec(title, exe, argv, _shell);
 }
 
-void Lindi::exec(std::string title, std::string command)
+void Ozette::exec(std::string title, std::string command)
 {
 	std::vector<std::string> argv = {"-c", command};
 	Console::View::exec(title, "sh", argv, _shell);
 }
 
-void Lindi::run()
+void Ozette::run()
 {
 	if (_editors.empty()) show_browser();
 	timeout(20);
@@ -174,12 +174,12 @@ void Lindi::run()
 	} while (!_done);
 }
 
-void Lindi::show_browser()
+void Ozette::show_browser()
 {
 	Browser::View::open(_current_dir, _shell);
 }
 
-void Lindi::change_directory()
+void Ozette::change_directory()
 {
 	show_browser();
 	std::string prompt = "Change Directory";
@@ -223,13 +223,13 @@ void Lindi::change_directory()
 	_shell.active()->show_dialog(std::move(dptr));
 }
 
-void Lindi::new_file()
+void Ozette::new_file()
 {
 	std::unique_ptr<UI::View> ed(new Editor::View(_config));
 	_editors[canonical_abspath("")] = _shell.open_window(std::move(ed));
 }
 
-void Lindi::open_file()
+void Ozette::open_file()
 {
 	show_browser();
 	std::string prompt = "Open";
@@ -244,7 +244,7 @@ void Lindi::open_file()
 	_shell.active()->show_dialog(std::move(dptr));
 }
 
-void Lindi::show_help()
+void Ozette::show_help()
 {
 	static const std::string help_key = " Help ";
 	static const std::string abs_help = canonical_abspath(help_key);
@@ -261,7 +261,7 @@ void Lindi::show_help()
 	_editors[abs_help] = _shell.open_window(std::move(edptr));
 }
 
-void Lindi::execute()
+void Ozette::execute()
 {
 	show_browser();
 	std::string prompt = "exec";
@@ -274,7 +274,7 @@ void Lindi::execute()
 	_shell.active()->show_dialog(std::move(dptr));
 }
 
-void Lindi::build()
+void Ozette::build()
 {
 	// Save all open editors. Execute the build command for this directory.
 	for (auto &edit_pair: _editors) {
@@ -284,7 +284,7 @@ void Lindi::build()
 	exec(command);
 }
 
-int Lindi::fix_control_quirks(int ch)
+int Ozette::fix_control_quirks(int ch)
 {
 	// Terminals are weird and control keys are complicated.
 	switch (ch) {
@@ -313,7 +313,7 @@ int Lindi::fix_control_quirks(int ch)
 	}
 }
 
-void Lindi::set_mru(std::string path, std::vector<std::string> &mru)
+void Ozette::set_mru(std::string path, std::vector<std::string> &mru)
 {
 	// make this item the front of the list
 	// if there are other instances, remove them
@@ -327,7 +327,7 @@ void Lindi::set_mru(std::string path, std::vector<std::string> &mru)
 	}
 }
 
-std::string Lindi::canonical_abspath(std::string path)
+std::string Ozette::canonical_abspath(std::string path)
 {
 	// Canonicalize this path and expand it as necessary to produce
 	// a full path relative to the filesystem root.

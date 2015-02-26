@@ -1,5 +1,5 @@
 
-Lindi is an editing shell for software development. It combines a directory
+Ozette is an editing shell for software development. It combines a directory
 browser, a text file editor, and a command console within a tabbed window
 interface modelled on pico/nano. The control keys are based on those typically
 used in desktop applications, however, and not on unix shell conventions.
@@ -66,3 +66,4 @@ with Execute.
 
 Console commands:
 	^K - Kill - terminate the running command
+

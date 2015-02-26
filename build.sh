@@ -45,7 +45,7 @@ else
 fi
 
 
-# Lindi-specific variant of the standard martian build process:
+# Ozette-specific variant of the standard martian build process:
 # generate a C source file representation of the help file.
 if [ ./HELP -nt src/app/help.cpp ] ; then
 	xxd -i HELP src/app/help.cpp

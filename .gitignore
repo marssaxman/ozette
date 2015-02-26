@@ -1,8 +1,8 @@
 # compiled .o files live under obj
 obj/
 
-# lindi is the linked executable
-lindi
+# ozette is the linked executable
+ozette
 
 # help.cpp is generated from the HELP file
 src/app/help.cpp
