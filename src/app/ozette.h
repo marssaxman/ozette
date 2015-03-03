@@ -41,14 +41,7 @@ public:
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) override;
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) override;
 	virtual Config &config() override;
-	virtual void exec(
-			std::string title,
-			std::string exe,
-			const std::vector<std::string> &argv) override;
-	virtual void exec(
-			std::string title,
-			std::string command) override;
-	void exec(std::string command) { exec(command, command); }
+	void find(std::string regex) override;
 
 	void run();
 private:
@@ -62,6 +55,7 @@ private:
 	int fix_control_quirks(int ch);
 	static void set_mru(std::string path, std::vector<std::string> &mru);
 	std::string canonical_abspath(std::string path);
+	void exec(std::string command);
 
 	UI::Shell _shell;
 	std::string _home_dir;

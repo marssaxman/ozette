@@ -34,18 +34,12 @@ public:
 	virtual void edit_file(std::string path) = 0;
 	virtual void rename_file(std::string from, std::string to) = 0;
 	virtual void close_file(std::string path) = 0;
+	virtual void find(std::string text) = 0;
 	virtual void set_clipboard(std::string text) = 0;
 	virtual std::string get_clipboard() = 0;
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) = 0;
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) = 0;
 	virtual Config &config() = 0;
-	virtual void exec(
-			std::string title,
-			std::string exe,
-			const std::vector<std::string> &argv) = 0;
-	virtual void exec(
-			std::string title,
-			std::string command) = 0;
 };
 
 #endif //APP_CONTROLLER_H

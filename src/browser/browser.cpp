@@ -234,10 +234,7 @@ void Browser::View::ctl_find(UI::Frame &ctx)
 	std::string prompt = "Find";
 	auto action = [this](UI::Frame &ctx, std::string text)
 	{
-		std::string find = "find " + _tree.path() + " -type f -print0";
-		std::string grep = "grep -H -n -I \"" + text + "\"";
-		std::string cmd = find + " | xargs -0 " + grep;
-		ctx.app().exec("find: " + text, cmd);
+		ctx.app().find(text);
 	};
 	auto dialog = new UI::Dialog::Find(prompt, action);
 	std::unique_ptr<UI::View> dptr(dialog);

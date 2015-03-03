@@ -139,18 +139,19 @@ Config &Ozette::config()
 	return _config;
 }
 
-void Ozette::exec(
-		std::string title,
-		std::string exe,
-		const std::vector<std::string> &argv)
-{
-	Console::View::exec(title, exe, argv, _shell);
-}
-
-void Ozette::exec(std::string title, std::string command)
+void Ozette::exec(std::string command)
 {
 	std::vector<std::string> argv = {"-c", command};
-	Console::View::exec(title, "sh", argv, _shell);
+	Console::View::exec(command, "sh", argv, _shell);
+}
+
+void Ozette::find(std::string text)
+{
+	std::string find = "find " + _current_dir + " -type f -print0";
+	std::string grep = "grep -H -n -I \"" + text + "\"";
+	std::string command = find + " | xargs -0 " + grep;
+	std::vector<std::string> argv = {"-c", command};
+	Console::View::exec("find: " + text, "sh", argv, _shell);
 }
 
 void Ozette::run()
