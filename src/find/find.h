@@ -53,6 +53,7 @@ private:
 	std::unique_ptr<Console::Subproc> _proc;
 	std::unique_ptr<Console::Log> _log;
 	unsigned _scrollpos = 0;
+	size_t _selection = 0;
 	int _height = 0;
 	int _width = 0;
 };

@@ -21,6 +21,7 @@
 #include "control.h"
 #include "dialog.h"
 #include <assert.h>
+#include <algorithm>
 
 Find::View *Find::View::_instance;
 
@@ -103,6 +104,14 @@ void Find::View::paint_into(WINDOW *view, State state)
 	wmove(view, 0, 0);
 	getmaxyx(view, _height, _width);
 	_log->layout(_width);
+
+	// adjust scrolling as necessary to keep the cursor visible
+	size_t max_visible_row = _scrollpos + _height - 2;
+	if (_selection < _scrollpos || _selection > max_visible_row) {
+		size_t halfpage = (size_t)_height/2;
+		_scrollpos = _selection - std::min(halfpage, _selection);
+	}
+
 	for (int row = 0; row < _height; ++row) {
 		wmove(view, row, 0);
 		size_t i = row + _scrollpos;
@@ -111,6 +120,9 @@ void Find::View::paint_into(WINDOW *view, State state)
 			waddnstr(view, (*_log)[i-1].c_str(), _width);
 		}
 		wclrtoeol(view);
+		if (state == State::Focused && i == 1+_selection) {
+			mvwchgat(view, row, 0, _width, A_REVERSE, 0, NULL);
+		}
 	}
 }
 
@@ -123,6 +135,7 @@ void Find::View::exec(std::string regex)
 	const char *argv[1 + 2 + 1] = {"sh", "-c", command.c_str(), nullptr};
 	std::string title = "find: " + regex;
 	_proc.reset(new Console::Subproc(argv[0], argv));
+	_selection = 0;
 	_scrollpos = 0;
 	_log.reset(new Console::Log(title, _width));
 }
@@ -137,16 +150,16 @@ void Find::View::ctl_kill(UI::Frame &ctx)
 
 void Find::View::key_down(UI::Frame &ctx)
 {
-	if (_scrollpos < maxscroll()) {
-		_scrollpos++;
+	if (_selection < _log->size()) {
+		_selection++;
 		ctx.repaint();
 	}
 }
 
 void Find::View::key_up(UI::Frame &ctx)
 {
-	if (_scrollpos > 0) {
-		_scrollpos--;
+	if (_selection > 0) {
+		_selection--;
 		ctx.repaint();
 	}
 }
