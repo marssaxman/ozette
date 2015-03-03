@@ -148,11 +148,7 @@ void Ozette::exec(std::string command)
 
 void Ozette::find(std::string text)
 {
-	std::string find = "find " + _current_dir + " -type f -print0";
-	std::string grep = "grep -H -n -I \"" + text + "\"";
-	std::string command = find + " | xargs -0 " + grep;
-	std::vector<std::string> argv = {"-c", command};
-	Find::View::exec("find: " + text, "sh", argv, _shell);
+	Find::View::exec(text, _shell);
 }
 
 void Ozette::run()

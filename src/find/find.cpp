@@ -24,11 +24,7 @@
 
 Find::View *Find::View::_instance;
 
-void Find::View::exec(
-		std::string title,
-		const std::string &exe,
-		const std::vector<std::string> &argv,
-		UI::Shell &shell)
+void Find::View::exec(std::string regex, UI::Shell &shell)
 {
 	if (_instance) {
 		shell.make_active(_instance->_window);
@@ -37,7 +33,7 @@ void Find::View::exec(
 		std::unique_ptr<UI::View> view(_instance);
 		_instance->_window = shell.open_window(std::move(view));
 	}
-	_instance->exec(title, exe, argv);
+	_instance->exec(regex);
 }
 
 void Find::View::activate(UI::Frame &ctx)
@@ -118,23 +114,15 @@ void Find::View::paint_into(WINDOW *view, State state)
 	}
 }
 
-void Find::View::exec(
-		std::string title,
-		const std::string &exe,
-		const std::vector<std::string> &args)
+void Find::View::exec(std::string regex)
 {
-	// Convert this vector into an old-style C array of chars.
-	// Allocate one extra slot at the beginning for the exe name,
-	// and one extra at the end to serve as terminator.
-	const char **argv = new const char*[1+args.size()+1];
-	unsigned i = 0;
-	argv[i++] = exe.c_str();
-	for (auto &arg: args) {
-		argv[i++] = arg.c_str();
-	}
-	argv[i] = nullptr;
-	_proc.reset(new Console::Subproc(exe.c_str(), argv));
-	delete[] argv;
+	// Set up for the old console exec code.
+	std::string find = "find . -type f -print0";
+	std::string grep = "grep -H -n -I \"" + regex + "\"";
+	std::string command = find + " | xargs -0 " + grep;
+	const char *argv[1 + 2 + 1] = {"sh", "-c", command.c_str(), nullptr};
+	std::string title = "find: " + regex;
+	_proc.reset(new Console::Subproc(argv[0], argv));
 	_scrollpos = 0;
 	_log.reset(new Console::Log(title, _width));
 }
