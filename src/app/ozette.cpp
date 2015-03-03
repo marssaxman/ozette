@@ -21,6 +21,7 @@
 #include "browser.h"
 #include "editor.h"
 #include "console.h"
+#include "find.h"
 #include "control.h"
 #include "picker.h"
 #include "help.h"
@@ -151,7 +152,7 @@ void Ozette::find(std::string text)
 	std::string grep = "grep -H -n -I \"" + text + "\"";
 	std::string command = find + " | xargs -0 " + grep;
 	std::vector<std::string> argv = {"-c", command};
-	Console::View::exec("find: " + text, "sh", argv, _shell);
+	Find::View::exec("find: " + text, "sh", argv, _shell);
 }
 
 void Ozette::run()
