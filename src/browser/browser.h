@@ -72,6 +72,7 @@ private:
 	void set_title(UI::Frame &ctx);
 	void build_list();
 	void toggle(UI::Frame &ctx);
+	void scope_dir(UI::Frame &ctx);
 	void edit_file(UI::Frame &ctx);
 	size_t insert_rows(size_t index, unsigned indent, DirTree *entry);
 	void remove_rows(size_t index, unsigned indent);

@@ -244,7 +244,7 @@ void Browser::View::ctl_find(UI::Frame &ctx)
 void Browser::View::key_return(UI::Frame &ctx)
 {
 	switch (sel_entry()->type()) {
-		case DirTree::Type::Directory: toggle(ctx); break;
+		case DirTree::Type::Directory: scope_dir(ctx); break;
 		case DirTree::Type::File: edit_file(ctx); break;
 		default: break;
 	}
@@ -452,6 +452,22 @@ void Browser::View::toggle(UI::Frame &ctx)
 		display.expanded = true;
 		insert_rows(_selection + 1, display.indent + 1, entry);
 	}
+	ctx.repaint();
+}
+
+void Browser::View::scope_dir(UI::Frame &ctx)
+{
+	clear_filter(ctx);
+	auto &display = _list[_selection];
+	auto entry = display.entry;
+	if (!entry->is_directory()) return;
+	if (!display.expanded) {
+		_expanded_items.insert(display.entry->path());
+		display.expanded = true;
+		insert_rows(_selection + 1, display.indent + 1, entry);
+	}
+	_path_filter = ctx.app().display_path(entry->path()) + "/";
+	update_filter(ctx);
 	ctx.repaint();
 }
 
