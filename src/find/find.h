@@ -22,7 +22,7 @@
 
 #include "view.h"
 #include "shell.h"
-#include "log.h"
+#include "results.h"
 #include "subproc.h"
 #include <memory>
 
@@ -51,7 +51,7 @@ private:
 	void set_title(UI::Frame &ctx);
 	unsigned maxscroll() const;
 	std::unique_ptr<Console::Subproc> _proc;
-	std::unique_ptr<Console::Log> _log;
+	std::unique_ptr<Find::Results> _results;
 	unsigned _scrollpos = 0;
 	size_t _selection = 0;
 	int _height = 0;

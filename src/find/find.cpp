@@ -63,8 +63,8 @@ bool Find::View::poll(UI::Frame &ctx)
 	// We only need to poll if we have an active subprocess.
 	if (!_proc.get()) return true;
 	bool follow_edge = _scrollpos == maxscroll();
-	bool dirty = _log->read(_proc->out_fd());
-	dirty |= _log->read(_proc->err_fd());
+	bool dirty = _results->read(_proc->out_fd());
+	dirty |= _results->read(_proc->err_fd());
 	if (follow_edge && _scrollpos != maxscroll()) {
 		_scrollpos = maxscroll();
 		dirty = true;
@@ -100,10 +100,10 @@ Find::View::~View()
 
 void Find::View::paint_into(WINDOW *view, State state)
 {
-	if (!_log.get()) return;
+	if (!_results.get()) return;
 	wmove(view, 0, 0);
 	getmaxyx(view, _height, _width);
-	_log->layout(_width);
+	_results->layout(_width);
 
 	// adjust scrolling as necessary to keep the cursor visible
 	size_t max_visible_row = _scrollpos + _height - 2;
@@ -116,8 +116,8 @@ void Find::View::paint_into(WINDOW *view, State state)
 		wmove(view, row, 0);
 		size_t i = row + _scrollpos;
 		// Sub one to create a blank leading line
-		if (i > 0 && i <= _log->size()) {
-			waddnstr(view, (*_log)[i-1].c_str(), _width);
+		if (i > 0 && i <= _results->size()) {
+			waddnstr(view, (*_results)[i-1].c_str(), _width);
 		}
 		wclrtoeol(view);
 		if (state == State::Focused && i == 1+_selection) {
@@ -137,7 +137,7 @@ void Find::View::exec(std::string regex)
 	_proc.reset(new Console::Subproc(argv[0], argv));
 	_selection = 0;
 	_scrollpos = 0;
-	_log.reset(new Console::Log(title, _width));
+	_results.reset(new Find::Results(title, _width));
 }
 
 void Find::View::ctl_kill(UI::Frame &ctx)
@@ -150,7 +150,7 @@ void Find::View::ctl_kill(UI::Frame &ctx)
 
 void Find::View::key_down(UI::Frame &ctx)
 {
-	if (_selection < _log->size()) {
+	if (_selection < _results->size()) {
 		_selection++;
 		ctx.repaint();
 	}
@@ -166,7 +166,7 @@ void Find::View::key_up(UI::Frame &ctx)
 
 void Find::View::set_title(UI::Frame &ctx)
 {
-	std::string title = (_log.get())? _log->command(): "find";
+	std::string title = (_results.get())? _results->command(): "find";
 	ctx.set_title(title);
 	ctx.set_status(_proc.get()? "running": "");
 }
@@ -175,6 +175,6 @@ unsigned Find::View::maxscroll() const
 {
 	// we'll show an extra blank line at the top and the bottom in order to
 	// help the user see when they are at the end of the log
-	int displines = (int)_log->size() + 2;
+	int displines = (int)_results->size() + 2;
 	return (displines > _height)? (displines - _height): 0;
 }
