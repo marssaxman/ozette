@@ -22,6 +22,7 @@
 #include "dialog.h"
 #include <assert.h>
 #include <algorithm>
+#include <unistd.h>
 
 Find::View *Find::View::_instance;
 
@@ -63,8 +64,16 @@ bool Find::View::poll(UI::Frame &ctx)
 	// We only need to poll if we have an active subprocess.
 	if (!_proc.get()) return true;
 	bool follow_edge = _scrollpos == maxscroll();
-	bool dirty = _results->read(_proc->out_fd());
-	dirty |= _results->read(_proc->err_fd());
+	bool got_bytes = false;
+	ssize_t actual = 0;
+	char buf[1024];
+	while ((actual = ::read(_proc->out_fd(), buf, 1024)) > 0) {
+		got_bytes = true;
+		for (ssize_t i = 0; i < actual; ++i) {
+			read_one(buf[i]);
+		}
+	}
+	bool dirty = got_bytes;
 	if (follow_edge && _scrollpos != maxscroll()) {
 		_scrollpos = maxscroll();
 		dirty = true;
@@ -77,6 +86,16 @@ bool Find::View::poll(UI::Frame &ctx)
 	}
 	set_title(ctx);
 	return true;
+}
+
+void Find::View::read_one(char ch)
+{
+	if ('\n' == ch || _results.empty()) {
+		_results.emplace_back(std::string());
+	}
+	if ('\n' != ch) {
+		_results.back().push_back(ch);
+	}
 }
 
 void Find::View::set_help(UI::HelpBar::Panel &panel)
@@ -100,10 +119,8 @@ Find::View::~View()
 
 void Find::View::paint_into(WINDOW *view, State state)
 {
-	if (!_results.get()) return;
 	wmove(view, 0, 0);
 	getmaxyx(view, _height, _width);
-	_results->layout(_width);
 
 	// adjust scrolling as necessary to keep the cursor visible
 	size_t max_visible_row = _scrollpos + _height - 2;
@@ -116,8 +133,8 @@ void Find::View::paint_into(WINDOW *view, State state)
 		wmove(view, row, 0);
 		size_t i = row + _scrollpos;
 		// Sub one to create a blank leading line
-		if (i > 0 && i <= _results->size()) {
-			waddnstr(view, (*_results)[i-1].c_str(), _width);
+		if (i > 0 && i <= _results.size()) {
+			waddnstr(view, _results[i-1].c_str(), _width);
 		}
 		wclrtoeol(view);
 		if (state == State::Focused && i == 1+_selection) {
@@ -133,11 +150,11 @@ void Find::View::exec(std::string regex)
 	std::string grep = "grep -H -n -I \"" + regex + "\"";
 	std::string command = find + " | xargs -0 " + grep;
 	const char *argv[1 + 2 + 1] = {"sh", "-c", command.c_str(), nullptr};
-	std::string title = "find: " + regex;
+	_title = "find: " + regex;
 	_proc.reset(new Console::Subproc(argv[0], argv));
 	_selection = 0;
 	_scrollpos = 0;
-	_results.reset(new Find::Results(title, _width));
+	_results.clear();
 }
 
 void Find::View::ctl_kill(UI::Frame &ctx)
@@ -150,7 +167,7 @@ void Find::View::ctl_kill(UI::Frame &ctx)
 
 void Find::View::key_down(UI::Frame &ctx)
 {
-	if (_selection < _results->size()) {
+	if (_selection < _results.size()) {
 		_selection++;
 		ctx.repaint();
 	}
@@ -166,8 +183,7 @@ void Find::View::key_up(UI::Frame &ctx)
 
 void Find::View::set_title(UI::Frame &ctx)
 {
-	std::string title = (_results.get())? _results->command(): "find";
-	ctx.set_title(title);
+	ctx.set_title(_title);
 	ctx.set_status(_proc.get()? "running": "");
 }
 
@@ -175,6 +191,6 @@ unsigned Find::View::maxscroll() const
 {
 	// we'll show an extra blank line at the top and the bottom in order to
 	// help the user see when they are at the end of the log
-	int displines = (int)_results->size() + 2;
+	int displines = (int)_results.size() + 2;
 	return (displines > _height)? (displines - _height): 0;
 }

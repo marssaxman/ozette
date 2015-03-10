@@ -22,9 +22,8 @@
 
 #include "view.h"
 #include "shell.h"
-#include "results.h"
 #include "subproc.h"
-#include <memory>
+#include <vector>
 
 namespace Find {
 class View : public UI::View
@@ -50,8 +49,10 @@ private:
 	void key_down(UI::Frame &ctx);
 	void set_title(UI::Frame &ctx);
 	unsigned maxscroll() const;
+	void read_one(char ch);
 	std::unique_ptr<Console::Subproc> _proc;
-	std::unique_ptr<Find::Results> _results;
+	std::vector<std::string> _results;
+	std::string _title;
 	unsigned _scrollpos = 0;
 	size_t _selection = 0;
 	int _height = 0;
