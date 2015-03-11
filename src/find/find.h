@@ -23,7 +23,7 @@
 #include "view.h"
 #include "shell.h"
 #include "subproc.h"
-#include <vector>
+#include <set>
 
 namespace Find {
 class View : public UI::View
@@ -43,11 +43,6 @@ protected:
 	UI::Window *_window = nullptr;
 	virtual void paint_into(WINDOW *view, State state) override;
 private:
-	struct line_match_t {
-		long number;
-		std::string text;
-	};
-	typedef std::vector<line_match_t> match_list_t;
 	void read_one(char ch);
 	void exec(std::string regex);
 	void ctl_kill(UI::Frame &ctx);
@@ -58,7 +53,7 @@ private:
 	// connection to the shell running find and grep
 	std::unique_ptr<Console::Subproc> _proc;
 	// structured data representing search results
-	std::map<std::string, match_list_t> _matches;
+	std::set<std::string> _match_files;
 	// array of display lines to be rendered
 	std::vector<std::string> _lines;
 	// linebuf is temporary storage used while reading data from _proc

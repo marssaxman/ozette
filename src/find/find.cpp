@@ -144,16 +144,11 @@ void Find::View::read_one(char ch)
 		// each match returned by grep.
 		_linebuf.resize(3);
 		std::string file = _linebuf[0];
-		line_match_t match = {0, _linebuf[2]};
-		if (!_linebuf[1].empty()) {
-			match.number = std::stol(_linebuf[1]);
-		}
 		// If this is a new file, add a new match group.
-		if (_matches.find(file) == _matches.end()) {
+		if (_match_files.find(file) == _match_files.end()) {
 			_lines.push_back(file + ":");
-			_matches[file] = match_list_t();
+			_match_files.insert(file);
 		}
-		_matches[file].push_back(match);
 		_lines.push_back("    " + _linebuf[1] + ":" + _linebuf[2]);
 		_linebuf.clear();
 	} else if (':' == ch && _linebuf.size() < 3) {
@@ -182,7 +177,7 @@ void Find::View::exec(std::string regex)
 	_proc.reset(new Console::Subproc(argv[0], argv));
 	_selection = 0;
 	_scrollpos = 0;
-	_matches.clear();
+	_match_files.clear();
 	_lines.clear();
 	_linebuf.clear();
 }
