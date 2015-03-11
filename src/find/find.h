@@ -43,15 +43,26 @@ protected:
 	UI::Window *_window = nullptr;
 	virtual void paint_into(WINDOW *view, State state) override;
 private:
+	struct line_match_t {
+		long number;
+		std::string text;
+	};
+	typedef std::vector<line_match_t> match_list_t;
+	void read_one(char ch);
 	void exec(std::string regex);
 	void ctl_kill(UI::Frame &ctx);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
 	void set_title(UI::Frame &ctx);
 	unsigned maxscroll() const;
-	void read_one(char ch);
+	// connection to the shell running find and grep
 	std::unique_ptr<Console::Subproc> _proc;
-	std::vector<std::string> _results;
+	// structured data representing search results
+	std::map<std::string, match_list_t> _matches;
+	// array of display lines to be rendered
+	std::vector<std::string> _lines;
+	// linebuf is temporary storage used while reading data from _proc
+	std::vector<std::string> _linebuf;
 	std::string _title;
 	unsigned _scrollpos = 0;
 	size_t _selection = 0;

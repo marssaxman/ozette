@@ -67,6 +67,8 @@ bool Find::View::poll(UI::Frame &ctx)
 	bool got_bytes = false;
 	ssize_t actual = 0;
 	char buf[1024];
+	// read data from the input in chunks no larger than 1K until there is no
+	// more input to read
 	while ((actual = ::read(_proc->out_fd(), buf, 1024)) > 0) {
 		got_bytes = true;
 		for (ssize_t i = 0; i < actual; ++i) {
@@ -86,16 +88,6 @@ bool Find::View::poll(UI::Frame &ctx)
 	}
 	set_title(ctx);
 	return true;
-}
-
-void Find::View::read_one(char ch)
-{
-	if ('\n' == ch || _results.empty()) {
-		_results.emplace_back(std::string());
-	}
-	if ('\n' != ch) {
-		_results.back().push_back(ch);
-	}
 }
 
 void Find::View::set_help(UI::HelpBar::Panel &panel)
@@ -133,13 +125,49 @@ void Find::View::paint_into(WINDOW *view, State state)
 		wmove(view, row, 0);
 		size_t i = row + _scrollpos;
 		// Sub one to create a blank leading line
-		if (i > 0 && i <= _results.size()) {
-			waddnstr(view, _results[i-1].c_str(), _width);
+		if (i > 0 && i <= _lines.size()) {
+			waddnstr(view, _lines[i-1].c_str(), _width);
 		}
 		wclrtoeol(view);
 		if (state == State::Focused && i == 1+_selection) {
 			mvwchgat(view, row, 0, _width, A_REVERSE, 0, NULL);
 		}
+	}
+}
+
+void Find::View::read_one(char ch)
+{
+	if ('\n' == ch) {
+		// we have just finished processing a line; we should have
+		// between zero and three chunks in our line buffer, which
+		// represent the file path, line number, and match text of
+		// each match returned by grep.
+		_linebuf.resize(3);
+		std::string file = _linebuf[0];
+		line_match_t match = {0, _linebuf[2]};
+		if (!_linebuf[1].empty()) {
+			match.number = std::stol(_linebuf[1]);
+		}
+		// If this is a new file, add a new match group.
+		if (_matches.find(file) == _matches.end()) {
+			_lines.push_back(file + ":");
+			_matches[file] = match_list_t();
+		}
+		_matches[file].push_back(match);
+		_lines.push_back("    " + _linebuf[1] + ":" + _linebuf[2]);
+		_linebuf.clear();
+	} else if (':' == ch && _linebuf.size() < 3) {
+		// as long as there are fewer than three chunks in the linebuf, add a
+		// new one which will accumulate further characters on this line; we
+		// divide the lines into three fields separated by colons, but the last
+		// field is the match text and may include colons as part of its value.
+		_linebuf.push_back(std::string());
+	} else if (isprint(ch)) {
+		// append the char to the last chunk in the linebuf
+		if (_linebuf.empty()) {
+			_linebuf.push_back(std::string());
+		}
+		_linebuf.back().push_back(ch);
 	}
 }
 
@@ -154,7 +182,9 @@ void Find::View::exec(std::string regex)
 	_proc.reset(new Console::Subproc(argv[0], argv));
 	_selection = 0;
 	_scrollpos = 0;
-	_results.clear();
+	_matches.clear();
+	_lines.clear();
+	_linebuf.clear();
 }
 
 void Find::View::ctl_kill(UI::Frame &ctx)
@@ -167,7 +197,7 @@ void Find::View::ctl_kill(UI::Frame &ctx)
 
 void Find::View::key_down(UI::Frame &ctx)
 {
-	if (_selection < _results.size()) {
+	if (_selection < _lines.size()) {
 		_selection++;
 		ctx.repaint();
 	}
@@ -191,6 +221,6 @@ unsigned Find::View::maxscroll() const
 {
 	// we'll show an extra blank line at the top and the bottom in order to
 	// help the user see when they are at the end of the log
-	int displines = (int)_results.size() + 2;
+	int displines = (int)_lines.size() + 2;
 	return (displines > _height)? (displines - _height): 0;
 }
