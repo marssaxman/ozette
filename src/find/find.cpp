@@ -149,7 +149,12 @@ void Find::View::read_one(char ch)
 			_lines.push_back(file + ":");
 			_match_files.insert(file);
 		}
-		_lines.push_back("    " + _linebuf[1] + ":" + _linebuf[2]);
+		std::string linenumber = _linebuf[1] + ":";
+		std::string indent;
+		if (linenumber.size() < 8) {
+			indent.resize(8 - linenumber.size(), ' ');
+		}
+		_lines.push_back(indent + linenumber + _linebuf[2]);
 		_linebuf.clear();
 	} else if (':' == ch && _linebuf.size() < 3) {
 		// as long as there are fewer than three chunks in the linebuf, add a
