@@ -160,6 +160,13 @@ void Editor::View::set_help(UI::HelpBar::Panel &panel)
 	panel.label[1][5] = Label('?', true, "Help");
 }
 
+void Editor::View::jump_to(UI::Frame &ctx, line_t index)
+{
+	_cursor.move_to(_doc.home(index));
+	drop_selection();
+	postprocess(ctx);
+}
+
 void Editor::View::postprocess(UI::Frame &ctx)
 {
 	reveal_cursor();

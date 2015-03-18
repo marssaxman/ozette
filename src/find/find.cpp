@@ -52,6 +52,7 @@ bool Find::View::process(UI::Frame &ctx, int ch)
 	switch (ch) {
 		case Control::Close: return false;
 		case Control::Kill: ctl_kill(ctx); break;
+		case Control::Return: ctl_return(ctx); break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
 	}
@@ -126,7 +127,7 @@ void Find::View::paint_into(WINDOW *view, State state)
 		size_t i = row + _scrollpos;
 		// Sub one to create a blank leading line
 		if (i > 0 && i <= _lines.size()) {
-			waddnstr(view, _lines[i-1].c_str(), _width);
+			waddnstr(view, _lines[i-1].text.c_str(), _width);
 		}
 		wclrtoeol(view);
 		if (state == State::Focused && i == 1+_selection) {
@@ -145,16 +146,23 @@ void Find::View::read_one(char ch)
 		_linebuf.resize(3);
 		std::string file = _linebuf[0];
 		// If this is a new file, add a new match group.
-		if (_match_files.find(file) == _match_files.end()) {
-			_lines.push_back(file + ":");
-			_match_files.insert(file);
+		if (_lines.empty() || _lines.back().path != file) {
+			line temp = {file + ":", file, 0};
+			_lines.push_back(temp);
 		}
 		std::string linenumber = _linebuf[1] + ":";
 		std::string indent;
 		if (linenumber.size() < 8) {
 			indent.resize(8 - linenumber.size(), ' ');
 		}
-		_lines.push_back(indent + linenumber + _linebuf[2]);
+		// Line numbers are printed one-based for human consumption, but the
+		// actual line numbers are of course zero-based. Since we are parsing
+		// the result of some text printed by a tool intended for human use, we
+		// must subtract one to get real line numbers.
+		long index = std::stol(_linebuf[1]) - 1;
+		if (index < 0) index = 0;
+		line temp = {indent + linenumber + _linebuf[2], file, (size_t)index};
+		_lines.push_back(temp);
 		_linebuf.clear();
 	} else if (':' == ch && _linebuf.size() < 3) {
 		// as long as there are fewer than three chunks in the linebuf, add a
@@ -182,7 +190,6 @@ void Find::View::exec(std::string regex)
 	_proc.reset(new Console::Subproc(argv[0], argv));
 	_selection = 0;
 	_scrollpos = 0;
-	_match_files.clear();
 	_lines.clear();
 	_linebuf.clear();
 }
@@ -193,6 +200,13 @@ void Find::View::ctl_kill(UI::Frame &ctx)
 		_proc.reset(nullptr);
 		ctx.repaint();
 	}
+}
+
+void Find::View::ctl_return(UI::Frame &ctx)
+{
+	if (_selection >= _lines.size()) return;
+	auto &line = _lines[_selection];
+	ctx.app().find_in_file(line.path, line.index);
 }
 
 void Find::View::key_down(UI::Frame &ctx)

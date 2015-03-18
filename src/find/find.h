@@ -46,16 +46,20 @@ private:
 	void read_one(char ch);
 	void exec(std::string regex);
 	void ctl_kill(UI::Frame &ctx);
+	void ctl_return(UI::Frame &ctx);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
 	void set_title(UI::Frame &ctx);
 	unsigned maxscroll() const;
+	// parsed search result data
+	struct line {
+		std::string text;
+		std::string path;
+		size_t index;
+	};
+	std::vector<line> _lines;
 	// connection to the shell running find and grep
 	std::unique_ptr<Console::Subproc> _proc;
-	// structured data representing search results
-	std::set<std::string> _match_files;
-	// array of display lines to be rendered
-	std::vector<std::string> _lines;
 	// linebuf is temporary storage used while reading data from _proc
 	std::vector<std::string> _linebuf;
 	std::string _title;

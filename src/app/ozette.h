@@ -23,6 +23,7 @@
 #include "controller.h"
 #include "shell.h"
 #include "browser.h"
+#include "editor.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -36,6 +37,7 @@ public:
 	virtual void edit_file(std::string path) override;
 	virtual void rename_file(std::string from, std::string to) override;
 	virtual void close_file(std::string path) override;
+	virtual void find_in_file(std::string path, Editor::line_t index);
 	virtual void set_clipboard(std::string text) override;
 	virtual std::string get_clipboard() override;
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) override;
@@ -45,6 +47,11 @@ public:
 
 	void run();
 private:
+	struct editor {
+		UI::Window *window;
+		Editor::View *view;
+	};
+
 	void show_browser();
 	void change_directory();
 	void new_file();
@@ -56,13 +63,14 @@ private:
 	static void set_mru(std::string path, std::vector<std::string> &mru);
 	std::string canonical_abspath(std::string path);
 	void exec(std::string command);
+	editor open_editor(std::string path);
 
 	UI::Shell _shell;
 	std::string _home_dir;
 	std::string _current_dir;
 	std::string _config_dir;
 	Config _config;
-	std::map<std::string, UI::Window*> _editors;
+	std::map<std::string, editor> _editors;
 	std::string _clipboard;
 	bool _done = false;
 	std::vector<std::string> _recent_dirs;

@@ -66,17 +66,7 @@ std::string Ozette::display_path(std::string path) const
 
 void Ozette::edit_file(std::string path)
 {
-	// If we already have this file open, bring it forward.
-	path = canonical_abspath(path);
-	auto existing = _editors.find(path);
-	if (existing != _editors.end()) {
-		_shell.make_active(existing->second);
-		return;
-	}
-	// We don't have an editor for this file, so we should create one.
-	std::unique_ptr<UI::View> ed(new Editor::View(path, _config));
-	UI::Window *win = _shell.open_window(std::move(ed));
-	_editors[path] = win;
+	open_editor(path);
 }
 
 void Ozette::rename_file(std::string from, std::string to)
@@ -85,17 +75,27 @@ void Ozette::rename_file(std::string from, std::string to)
 	// open for it, update our editor map.
 	auto existing = _editors.find(canonical_abspath(from));
 	if (existing == _editors.end()) return;
-	auto window = existing->second;
+	auto edrec = existing->second;
 	_editors.erase(existing);
-	_editors[canonical_abspath(to)] = window;
+	_editors[canonical_abspath(to)] = edrec;
 }
 
 void Ozette::close_file(std::string path)
 {
 	auto iter = _editors.find(canonical_abspath(path));
 	if (iter != _editors.end()) {
-		_shell.close_window(iter->second);
+		_shell.close_window(iter->second.window);
 		_editors.erase(iter);
+	}
+}
+
+void Ozette::find_in_file(std::string path, Editor::line_t index)
+{
+	// For now we just jump to the specified line. Someday we will get a search
+	// regex, so we can put the editor into find mode.
+	auto edrec = open_editor(path);
+	if (edrec.view) {
+		edrec.view->jump_to(*edrec.window, index);
 	}
 }
 
@@ -144,6 +144,24 @@ void Ozette::exec(std::string command)
 {
 	std::vector<std::string> argv = {"-c", command};
 	Console::View::exec(command, "sh", argv, _shell);
+}
+
+Ozette::editor Ozette::open_editor(std::string path)
+{
+	// If we already have this file open, bring it forward.
+	path = canonical_abspath(path);
+	auto existing = _editors.find(path);
+	if (existing != _editors.end()) {
+		_shell.make_active(existing->second.window);
+		return existing->second;
+	}
+	// We don't have an editor for this file, so we should create one.
+	editor edrec;
+	edrec.view = new Editor::View(path, _config);
+	std::unique_ptr<UI::View> edptr(edrec.view);
+	edrec.window = _shell.open_window(std::move(edptr));
+	_editors[path] = edrec;
+	return edrec;
 }
 
 void Ozette::find(std::string text)
@@ -223,8 +241,11 @@ void Ozette::change_directory()
 
 void Ozette::new_file()
 {
-	std::unique_ptr<UI::View> ed(new Editor::View(_config));
-	_editors[canonical_abspath("")] = _shell.open_window(std::move(ed));
+	editor edrec;
+	edrec.view = new Editor::View(_config);
+	std::unique_ptr<UI::View> edptr(edrec.view);
+	edrec.window = _shell.open_window(std::move(edptr));
+	_editors[canonical_abspath("")] = edrec;
 }
 
 void Ozette::open_file()
@@ -248,15 +269,17 @@ void Ozette::show_help()
 	static const std::string abs_help = canonical_abspath(help_key);
 	auto existing = _editors.find(abs_help);
 	if (existing != _editors.end()) {
-		_shell.make_active(existing->second);
+		_shell.make_active(existing->second.window);
 		return;
 	}
 	std::string helptext((const char*)HELP, HELP_len);
 	Editor::Document doc(_config);
 	doc.View(helptext);
-	auto ed = new Editor::View(help_key, std::move(doc), _config);
-	std::unique_ptr<UI::View> edptr(ed);
-	_editors[abs_help] = _shell.open_window(std::move(edptr));
+	editor edrec;
+	edrec.view = new Editor::View(help_key, std::move(doc), _config);
+	std::unique_ptr<UI::View> edptr(edrec.view);
+	edrec.window = _shell.open_window(std::move(edptr));
+	_editors[abs_help] = edrec;
 }
 
 void Ozette::execute()
@@ -276,7 +299,7 @@ void Ozette::build()
 {
 	// Save all open editors. Execute the build command for this directory.
 	for (auto &edit_pair: _editors) {
-		edit_pair.second->process(Control::Save);
+		edit_pair.second.window->process(Control::Save);
 	}
 	std::string command = _config.get("build-command", "make");
 	exec(command);
