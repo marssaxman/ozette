@@ -55,6 +55,8 @@ bool Find::View::process(UI::Frame &ctx, int ch)
 		case Control::Return: ctl_return(ctx); break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
+		case KEY_PPAGE: key_page_up(ctx); break;
+		case KEY_NPAGE: key_page_down(ctx); break;
 	}
 	set_title(ctx);
 	return true;
@@ -223,6 +225,19 @@ void Find::View::key_up(UI::Frame &ctx)
 		_selection--;
 		ctx.repaint();
 	}
+}
+
+void Find::View::key_page_down(UI::Frame &ctx)
+{
+	_selection = std::min(_scrollpos + (size_t)_height, _lines.size()-1);
+	ctx.repaint();
+}
+
+void Find::View::key_page_up(UI::Frame &ctx)
+{
+	// Move to last line of previous page.
+	_selection = _scrollpos > 0? _scrollpos-1: 0;
+	ctx.repaint();
 }
 
 void Find::View::set_title(UI::Frame &ctx)
