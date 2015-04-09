@@ -52,7 +52,8 @@ bool Find::View::process(UI::Frame &ctx, int ch)
 	switch (ch) {
 		case Control::Close: return false;
 		case Control::Kill: ctl_kill(ctx); break;
-		case Control::Return: ctl_return(ctx); break;
+		case Control::Find: ctl_find(ctx); break;
+		case Control::Return: key_return(ctx); break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
 		case KEY_PPAGE: key_page_up(ctx); break;
@@ -207,7 +208,19 @@ void Find::View::ctl_kill(UI::Frame &ctx)
 	}
 }
 
-void Find::View::ctl_return(UI::Frame &ctx)
+void Find::View::ctl_find(UI::Frame &ctx)
+{
+	std::string prompt = "Find";
+	auto action = [this](UI::Frame &ctx, std::string text)
+	{
+		ctx.app().find(text);
+	};
+	auto dialog = new UI::Dialog::Find(prompt, action);
+	std::unique_ptr<UI::View> dptr(dialog);
+	ctx.show_dialog(std::move(dptr));
+}
+
+void Find::View::key_return(UI::Frame &ctx)
 {
 	if (_selection >= _lines.size()) return;
 	auto &line = _lines[_selection];

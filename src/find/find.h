@@ -46,7 +46,8 @@ private:
 	void read_one(char ch);
 	void exec(std::string regex);
 	void ctl_kill(UI::Frame &ctx);
-	void ctl_return(UI::Frame &ctx);
+	void ctl_find(UI::Frame &ctx);
+	void key_return(UI::Frame &ctx);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
 	void key_page_up(UI::Frame &ctx);
