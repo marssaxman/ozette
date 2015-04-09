@@ -145,12 +145,14 @@ void Find::View::read_one(char ch)
 		// between zero and three chunks in our line buffer, which
 		// represent the file path, line number, and match text of
 		// each match returned by grep.
+		_match_lines++;
 		_linebuf.resize(3);
 		std::string file = _linebuf[0];
 		// If this is a new file, add a new match group.
 		if (_lines.empty() || _lines.back().path != file) {
 			line temp = {file + ":", file, 0};
 			_lines.push_back(temp);
+			_match_files++;
 		}
 		std::string linenumber = _linebuf[1] + ":";
 		std::string indent;
@@ -183,17 +185,18 @@ void Find::View::read_one(char ch)
 
 void Find::View::exec(std::string regex)
 {
-	// Set up for the old console exec code.
+	_match_files = 0;
+	_match_lines = 0;
+	_selection = 0;
+	_scrollpos = 0;
+	_lines.clear();
+	_linebuf.clear();
 	std::string find = "find . -type f -print0";
 	std::string grep = "grep -H -n -I \"" + regex + "\"";
 	std::string command = find + " | xargs -0 " + grep;
 	const char *argv[1 + 2 + 1] = {"sh", "-c", command.c_str(), nullptr};
 	_title = "find: " + regex;
 	_proc.reset(new Console::Subproc(argv[0], argv));
-	_selection = 0;
-	_scrollpos = 0;
-	_lines.clear();
-	_linebuf.clear();
 }
 
 void Find::View::ctl_kill(UI::Frame &ctx)
@@ -243,7 +246,14 @@ void Find::View::key_page_up(UI::Frame &ctx)
 void Find::View::set_title(UI::Frame &ctx)
 {
 	ctx.set_title(_title);
-	ctx.set_status(_proc.get()? "running": "");
+	std::string status;
+	if (_proc.get()) {
+		status = "running";
+	} else {
+		status = std::to_string(_match_lines) + " matches in ";
+		status += std::to_string(_match_files) + " files";
+	}
+	ctx.set_status(status);
 }
 
 unsigned Find::View::maxscroll() const

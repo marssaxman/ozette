@@ -60,6 +60,8 @@ private:
 		size_t index;
 	};
 	std::vector<line> _lines;
+	unsigned _match_lines = 0;
+	unsigned _match_files = 0;
 	// connection to the shell running find and grep
 	std::unique_ptr<Console::Subproc> _proc;
 	// linebuf is temporary storage used while reading data from _proc
