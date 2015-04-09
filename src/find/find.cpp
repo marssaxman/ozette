@@ -98,6 +98,8 @@ void Find::View::set_help(UI::HelpBar::Panel &panel)
 {
 	if (_proc.get()) {
 		panel.label[0][0] = UI::HelpBar::Label('K', true, "Kill");
+	} else {
+		panel.label[0][5] = UI::HelpBar::Label('F', true, "Find");
 	}
 	panel.label[1][0] = UI::HelpBar::Label('W', true, "Close");
 	panel.label[1][5] = UI::HelpBar::Label('?', true, "Help");
