@@ -22,14 +22,34 @@
 
 using namespace Syntax;
 
-Regex::Regex(std::string pattern)
+Regex::Regex(std::string pattern):
+	_pattern(pattern)
 {
-	_comp_err = regcomp(&_re, pattern.c_str(), REG_EXTENDED);
+	compile();
+}
+
+Regex::Regex(const Regex &other):
+	_pattern(other._pattern)
+{
+	compile();
+}
+
+Regex &Regex::operator=(const Regex &other)
+{
+	regfree(&_re);
+	_pattern = other._pattern;
+	compile();
+	return *this;
 }
 
 Regex::~Regex()
 {
 	regfree(&_re);
+}
+
+void Regex::compile()
+{
+	_comp_err = regcomp(&_re, _pattern.c_str(), REG_EXTENDED);
 }
 
 Regex::Match Regex::find(const std::string &text, size_t offset) const

@@ -27,7 +27,9 @@
 namespace Syntax {
 class Regex {
 public:
-	Regex(std::string pattern);
+	explicit Regex(std::string pattern);
+	Regex(const Regex &);
+	Regex &operator=(const Regex &);
 	~Regex();
 	struct Match {
 		bool empty() const { return begin == end; }
@@ -38,6 +40,8 @@ public:
 	typedef std::list<Match> Matches;
 	Matches find_all(const std::string &text) const;
 private:
+	void compile();
+	std::string _pattern;
 	regex_t _re;
 	int _comp_err = 0;
 };
