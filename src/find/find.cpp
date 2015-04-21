@@ -135,7 +135,7 @@ void Find::View::paint_into(WINDOW *view, State state)
 			waddnstr(view, _lines[i-1].text.c_str(), _width);
 		}
 		wclrtoeol(view);
-		if (state == State::Focused && i == 1+_selection) {
+		if (state == State::Focused && i == 1+_selection && !_lines.empty()) {
 			mvwchgat(view, row, 0, _width, A_REVERSE, 0, NULL);
 		}
 	}
