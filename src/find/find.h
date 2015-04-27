@@ -44,7 +44,7 @@ protected:
 	virtual void paint_into(WINDOW *view, State state) override;
 private:
 	void read_one(char ch);
-	void exec(std::string regex);
+	void exec(std::string regex, UI::Frame &ctx);
 	void ctl_kill(UI::Frame &ctx);
 	void ctl_find(UI::Frame &ctx);
 	void key_return(UI::Frame &ctx);

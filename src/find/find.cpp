@@ -35,7 +35,7 @@ void Find::View::exec(std::string regex, UI::Shell &shell)
 		std::unique_ptr<UI::View> view(_instance);
 		_instance->_window = shell.open_window(std::move(view));
 	}
-	_instance->exec(regex);
+	_instance->exec(regex, *_instance->_window);
 }
 
 void Find::View::activate(UI::Frame &ctx)
@@ -84,11 +84,12 @@ bool Find::View::poll(UI::Frame &ctx)
 		_scrollpos = maxscroll();
 		dirty = true;
 	}
-	if (dirty) {
-		ctx.repaint();
-	}
 	if (!_proc->poll()) {
 		_proc.reset(nullptr);
+		dirty = true;
+	}
+	if (dirty) {
+		ctx.repaint();
 	}
 	set_title(ctx);
 	return true;
@@ -186,7 +187,7 @@ void Find::View::read_one(char ch)
 	}
 }
 
-void Find::View::exec(std::string regex)
+void Find::View::exec(std::string regex, UI::Frame &ctx)
 {
 	_match_files = 0;
 	_match_lines = 0;
@@ -200,6 +201,8 @@ void Find::View::exec(std::string regex)
 	const char *argv[1 + 2 + 1] = {"sh", "-c", command.c_str(), nullptr};
 	_title = "find: " + regex;
 	_proc.reset(new Console::Subproc(argv[0], argv));
+	ctx.repaint();
+	set_title(ctx);
 }
 
 void Find::View::ctl_kill(UI::Frame &ctx)
