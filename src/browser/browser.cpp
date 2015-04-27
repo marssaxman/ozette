@@ -340,13 +340,12 @@ void Browser::View::key_backspace(UI::Frame &ctx)
 
 void Browser::View::key_char(UI::Frame &ctx, char ch)
 {
-	size_t start = _path_filter.empty()? 0: _selection;
 	_path_filter.push_back(ch);
 	// Find the best match for the new filter - the name which matches the
 	// filter and requires the fewest gaps to do so.
 	unsigned bestlead = UINT_MAX;
 	unsigned besttotal = UINT_MAX;
-	for (size_t i = start; i < _list.size(); ++i) {
+	for (size_t i = 0; i < _list.size(); ++i) {
 		unsigned leadskip = 0;	// how many skipped leading chars?
 		unsigned totalskips = 0; // how many times do we skip something?
 		if (!scan_filter(i, leadskip, totalskips)) continue;
