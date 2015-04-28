@@ -42,6 +42,7 @@ public:
 	virtual void set_help(HelpBar::Panel &panel) override;
 protected:
 	virtual void paint_into(WINDOW *view, State state) override;
+	virtual int content_height() const { return 1; }
 private:
 	std::string _prompt;
 };

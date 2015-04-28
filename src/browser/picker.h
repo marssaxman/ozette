@@ -35,10 +35,10 @@ public:
 		inherited::action_t commit);
 	Picker(
 		std::string prompt, std::string value, inherited::action_t commit);
-	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 protected:
 	virtual void paint_into(WINDOW *view, State state) override;
+	virtual int content_height() const override { return 1 + _options.size(); }
 	virtual void select_field();
 	virtual bool field_selected() const override;
 	std::vector<std::string> _options;

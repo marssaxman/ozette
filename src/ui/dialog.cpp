@@ -29,8 +29,7 @@ UI::Dialog::Base::Base(std::string prompt):
 
 void UI::Dialog::Base::layout(int vpos, int hpos, int height, int width)
 {
-	int content_height = 1;
-	int new_height = std::min(content_height, height / 2);
+	int new_height = std::min(content_height(), height / 2);
 	int new_vpos = vpos + height - new_height;
 	inherited::layout(new_vpos, hpos, new_height, width);
 }

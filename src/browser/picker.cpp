@@ -38,11 +38,6 @@ Browser::Picker::Picker(std::string prompt, std::string value, action_t commit):
 	_cursor_pos = _value.size();
 }
 
-void Browser::Picker::layout(int vpos, int hpos, int height, int width)
-{
-	UI::View::layout(vpos, hpos, 1 + _options.size(), width);
-}
-
 bool Browser::Picker::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
