@@ -177,28 +177,8 @@ void Browser::View::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 	waddnstr(view, display.expanded? "- ": (isdir? "+ ": "  "), rowchars);
 	rowchars -= 2;
 	std::string name = display.entry->name();
-	if (matches_filter(display.entry)) {
-		// draw the name out character by character, underlining the chars which
-		// match the current selection filter.
-		auto filteriter = _name_filter.begin();
-		for (char ch: name) {
-			if (--rowchars <= 1) break;
-			bool is_filter = false;
-			if (filteriter != _name_filter.end()) {
-				if (*filteriter == ch) {
-					++filteriter;
-					is_filter = true;
-				}
-			}
-			if (is_filter) wattron(view, A_UNDERLINE);
-			waddch(view, ch);
-			if (is_filter) wattroff(view, A_UNDERLINE);
-		}
-	} else {
-		// draw the name out the simple quick way
-		waddnstr(view, name.c_str(), rowchars - 1);
-		rowchars -= std::min(rowchars, (int)name.size());
-	}
+	waddnstr(view, name.c_str(), rowchars - 1);
+	rowchars -= std::min(rowchars, (int)name.size());
 	waddnstr(view, isdir? "/": " ", rowchars);
 	rowchars--;
 	// The rest of the status info only applies to files.
@@ -380,12 +360,7 @@ void Browser::View::clear_filter(UI::Frame &ctx)
 bool Browser::View::matches_filter(size_t index)
 {
 	if (index >= _list.size()) return false;
-	return matches_filter(_list[index].entry);
-}
-
-bool Browser::View::matches_filter(DirTree *entry)
-{
-	assert(entry);
+	DirTree *entry = _list[index].entry;
 	std::string path = entry->path();
 	size_t search = 0;
 	for (char ch: _path_filter) {

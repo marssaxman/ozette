@@ -67,7 +67,6 @@ private:
 	void update_filter(UI::Frame &ctx);
 	void clear_filter(UI::Frame &ctx);
 	bool matches_filter(size_t index);
-	bool matches_filter(DirTree *entry);
 	bool scan_filter(size_t index, unsigned &leadskip, unsigned &totalskips);
 	void set_title(UI::Frame &ctx);
 	void build_list();
