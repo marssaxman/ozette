@@ -26,6 +26,17 @@
 
 Find::View *Find::View::_instance;
 
+void Find::Dialog::show(UI::Frame &ctx)
+{
+	std::string prompt = "Find";
+	auto action = [](UI::Frame &ctx, std::string text)
+	{
+		ctx.app().find(text);
+	};
+	std::unique_ptr<UI::View> dptr(new Find::Dialog(prompt, action));
+	ctx.show_dialog(std::move(dptr));
+}
+
 void Find::View::exec(std::string regex, UI::Shell &shell)
 {
 	if (_instance) {
@@ -215,14 +226,7 @@ void Find::View::ctl_kill(UI::Frame &ctx)
 
 void Find::View::ctl_find(UI::Frame &ctx)
 {
-	std::string prompt = "Find";
-	auto action = [this](UI::Frame &ctx, std::string text)
-	{
-		ctx.app().find(text);
-	};
-	auto dialog = new UI::Dialog::Find(prompt, action);
-	std::unique_ptr<UI::View> dptr(dialog);
-	ctx.show_dialog(std::move(dptr));
+	Find::Dialog::show(ctx);
 }
 
 void Find::View::key_return(UI::Frame &ctx)

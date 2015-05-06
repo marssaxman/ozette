@@ -328,11 +328,23 @@ void Editor::View::ctl_save(UI::Frame &ctx)
 	save(ctx, _targetpath);
 }
 
+namespace {
+class SaveDialog: public UI::Dialog::Input
+{
+public:
+	SaveDialog(std::string path, action_t commit):
+		Input("Save As", commit)
+	{
+		_value = path;
+		_cursor_pos = path.size();
+	}
+};
+}
+
 void Editor::View::ctl_save_as(UI::Frame &ctx)
 {
 	if (_doc.readonly()) return;
 	_doc.commit();
-	std::string prompt = "Save As";
 	auto commit = [this](UI::Frame &ctx, std::string path)
 	{
 		// Clearing out the path name is the same as cancelling.
@@ -347,10 +359,17 @@ void Editor::View::ctl_save_as(UI::Frame &ctx)
 		_targetpath = path;
 		ctx.set_title(path);
 	};
-	auto dialog = new UI::Dialog::Save(prompt, _targetpath, commit);
-	std::unique_ptr<UI::View> dptr(dialog);
+	std::unique_ptr<UI::View> dptr(new SaveDialog(_targetpath, commit));
 	ctx.show_dialog(std::move(dptr));
 }
+
+namespace {
+class GoLineDialog: public UI::Dialog::Input
+{
+public:
+	GoLineDialog(std::string prompt, action_t commit): Input(prompt, commit) {}
+};
+} // namespace
 
 void Editor::View::ctl_toline(UI::Frame &ctx)
 {
@@ -369,10 +388,20 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 		drop_selection();
 		postprocess(ctx);
 	};
-	auto dialog = new UI::Dialog::GoLine(prompt, commit);
-	std::unique_ptr<UI::View> dptr(dialog);
+	std::unique_ptr<UI::View> dptr(new GoLineDialog(prompt, commit));
 	ctx.show_dialog(std::move(dptr));
 }
+
+namespace {
+class FindDialog: public UI::Dialog::Input
+{
+public:
+	FindDialog(std::string prompt, action_t commit):
+		Input(prompt, commit)
+	{
+	}
+};
+} // namespace
 
 void Editor::View::ctl_find(UI::Frame &ctx)
 {
@@ -387,8 +416,7 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 		}
 		ctl_find_next(ctx);
 	};
-	auto dialog = new UI::Dialog::Find(prompt, commit);
-	std::unique_ptr<UI::View> dptr(dialog);
+	std::unique_ptr<UI::View> dptr(new FindDialog(prompt, commit));
 	ctx.show_dialog(std::move(dptr));
 }
 

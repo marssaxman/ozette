@@ -89,35 +89,6 @@ private:
 	action_t _all = nullptr;
 };
 
-class Find: public Input
-{
-public:
-	Find(std::string prompt, action_t commit): Input(prompt, commit) {}
-};
-
-class GoLine: public Input
-{
-public:
-	GoLine(std::string prompt, action_t commit): Input(prompt, commit) {}
-};
-
-class Command: public Input
-{
-public:
-	Command(std::string prompt, action_t commit): Input(prompt, commit) {}
-};
-
-class Save: public Input
-{
-public:
-	Save(std::string prompt, std::string path, action_t commit):
-		Input(prompt, commit)
-	{
-		_value = path;
-		_cursor_pos = path.size();
-	}
-};
-
 } // namespace Dialog
 } // namespace UI
 

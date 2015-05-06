@@ -21,6 +21,7 @@
 #include "control.h"
 #include "dialog.h"
 #include "picker.h"
+#include "find.h"
 #include <cctype>
 #include <climits>
 #include <assert.h>
@@ -211,14 +212,7 @@ void Browser::View::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 
 void Browser::View::ctl_find(UI::Frame &ctx)
 {
-	std::string prompt = "Find";
-	auto action = [this](UI::Frame &ctx, std::string text)
-	{
-		ctx.app().find(text);
-	};
-	auto dialog = new UI::Dialog::Find(prompt, action);
-	std::unique_ptr<UI::View> dptr(dialog);
-	ctx.show_dialog(std::move(dptr));
+	Find::Dialog::show(ctx);
 }
 
 void Browser::View::key_return(UI::Frame &ctx)

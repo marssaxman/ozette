@@ -23,9 +23,18 @@
 #include "view.h"
 #include "shell.h"
 #include "subproc.h"
+#include "dialog.h"
 #include <set>
 
 namespace Find {
+class Dialog: public UI::Dialog::Input
+{
+public:
+	static void show(UI::Frame &ctx);
+protected:
+	Dialog(std::string prompt, action_t commit): Input(prompt, commit) {}
+};
+
 class View : public UI::View
 {
 public:

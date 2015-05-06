@@ -283,6 +283,14 @@ void Ozette::show_help()
 	_editors[abs_help] = edrec;
 }
 
+namespace {
+class CommandDialog: public UI::Dialog::Input
+{
+public:
+	CommandDialog(std::string prompt, action_t commit): Input(prompt, commit) {}
+};
+}
+
 void Ozette::execute()
 {
 	show_browser();
@@ -291,8 +299,7 @@ void Ozette::execute()
 	{
 		exec(cmd);
 	};
-	auto dialog = new UI::Dialog::Command(prompt, commit);
-	std::unique_ptr<UI::View> dptr(dialog);
+	std::unique_ptr<UI::View> dptr(new CommandDialog(prompt, commit));
 	_shell.active()->show_dialog(std::move(dptr));
 }
 
