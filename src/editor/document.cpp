@@ -194,6 +194,7 @@ Editor::location_t Editor::Document::erase(const Range &chars)
 	size_t index = begin.line;
 	auto beginter = _lines.begin();
 	_lines.erase(beginter + begin.line + 1, beginter + end.line + 1);
+	_maxline = _lines.size() - 1;
 	update_line(index, prefix + suffix);
 	return location_t(index, prefix.size());
 }
