@@ -58,8 +58,6 @@ private:
 	void key_down(UI::Frame &ctx);
 	void key_page_up(UI::Frame &ctx);
 	void key_page_down(UI::Frame &ctx);
-	void key_left(UI::Frame &ctx);
-	void key_right(UI::Frame &ctx);
 	void key_space(UI::Frame &ctx);
 	void key_tab(UI::Frame &ctx);
 	void key_backspace(UI::Frame &ctx);

@@ -129,8 +129,6 @@ bool Browser::View::process(UI::Frame &ctx, int ch)
 		case KEY_DOWN: key_down(ctx); break;
 		case KEY_PPAGE: key_page_up(ctx); break;
 		case KEY_NPAGE: key_page_down(ctx); break;
-		case KEY_RIGHT: key_right(ctx); break;
-		case KEY_LEFT: key_left(ctx); break;
 		case ' ': key_space(ctx); break;
 		default: {
 			if(isprint(ch)) key_char(ctx, ch);
@@ -252,33 +250,6 @@ void Browser::View::key_page_down(UI::Frame &ctx)
 	// Move to first line of next page.
 	_selection = std::min(_scrollpos + _height, _list.size()-1);
 	ctx.repaint();
-}
-
-void Browser::View::key_left(UI::Frame &ctx)
-{
-	// Move to previous match for filename filter.
-	if (_path_filter.empty()) return;
-	if (_selection == 0) return;
-	for (size_t i = _selection; i > 0; --i) {
-		if (matches_filter(i-1)) {
-			_selection = i-1;
-			ctx.repaint();
-			return;
-		}
-	}
-}
-
-void Browser::View::key_right(UI::Frame &ctx)
-{
-	// Move to next match for filename filter.
-	if (_path_filter.empty()) return;
-	for (size_t i = _selection + 1; i < _list.size(); ++i) {
-		if (matches_filter(i)) {
-			_selection = i;
-			ctx.repaint();
-			return;
-		}
-	}
 }
 
 void Browser::View::key_space(UI::Frame &ctx)
