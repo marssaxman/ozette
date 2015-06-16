@@ -286,6 +286,20 @@ void Browser::View::key_backspace(UI::Frame &ctx)
 void Browser::View::key_char(UI::Frame &ctx, char ch)
 {
 	_path_filter.push_back(ch);
+	update_filter(ctx);
+}
+
+void Browser::View::update_filter(UI::Frame &ctx)
+{
+	_name_filter.clear();
+	size_t lastslash = _path_filter.find_last_of('/');
+	if (lastslash != std::string::npos) {
+		_name_filter = _path_filter.substr(lastslash + 1);
+	}
+	if (_name_filter.empty()) {
+		_name_filter = _path_filter;
+	}
+	ctx.set_status(_path_filter);
 	// Find the best match for the new filter - the name which matches the
 	// filter and requires the fewest gaps to do so.
 	unsigned bestlead = UINT_MAX;
@@ -300,18 +314,6 @@ void Browser::View::key_char(UI::Frame &ctx, char ch)
 		besttotal = totalskips;
 		_selection = i;
 	}
-	update_filter(ctx);
-}
-
-void Browser::View::update_filter(UI::Frame &ctx)
-{
-	size_t lastslash = _path_filter.find_last_of('/');
-	if (lastslash != std::string::npos) {
-		_name_filter = _path_filter.substr(lastslash + 1);
-	} else {
-		_name_filter = _path_filter;
-	}
-	ctx.set_status(_path_filter);
 	ctx.repaint();
 }
 
@@ -342,6 +344,9 @@ bool Browser::View::scan_filter(
 {
 	if (index >= _list.size()) return false;
 	std::string path = _list[index].entry->path();
+	if (_list[index].entry->is_directory()) {
+		path.push_back('/');
+	}
 	size_t prev_search = 0;
 	for (char ch: _path_filter) {
 		if (prev_search == path.size()) return false;
@@ -376,27 +381,28 @@ void Browser::View::build_list()
 
 void Browser::View::toggle(UI::Frame &ctx)
 {
-	clear_filter(ctx);
 	auto &display = _list[_selection];
 	auto entry = display.entry;
 	if (!entry->is_directory()) return;
+	std::string path = display.entry->path();
 	if (display.expanded) {
 		// collapse it
-		_expanded_items.erase(display.entry->path());
+		_expanded_items.erase(path);
 		display.expanded = false;
 		remove_rows(_selection + 1, display.indent + 1);
 	} else {
 		// expand it
-		_expanded_items.insert(display.entry->path());
+		_expanded_items.insert(path);
 		display.expanded = true;
 		insert_rows(_selection + 1, display.indent + 1, entry);
+		_path_filter = ctx.app().display_path(path) + "/";
+		update_filter(ctx);
 	}
 	ctx.repaint();
 }
 
 void Browser::View::scope_dir(UI::Frame &ctx)
 {
-	clear_filter(ctx);
 	auto &display = _list[_selection];
 	auto entry = display.entry;
 	if (!entry->is_directory()) return;
@@ -412,8 +418,8 @@ void Browser::View::scope_dir(UI::Frame &ctx)
 
 void Browser::View::edit_file(UI::Frame &ctx)
 {
-	clear_filter(ctx);
 	auto &display = _list[_selection];
+	clear_filter(ctx);
 	ctx.app().edit_file(display.entry->path());
 }
 
