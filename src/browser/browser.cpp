@@ -337,7 +337,11 @@ bool Browser::View::scan_filter(
 		size_t index, unsigned &leadskip, unsigned &totalskips)
 {
 	if (index >= _list.size()) return false;
-	std::string path = _list[index].entry->path();
+	auto &entry = _list[index].entry;
+	std::string path = entry->name();
+	if (_name_filter != _path_filter) {
+		path = entry->path();
+	}
 	if (_list[index].entry->is_directory()) {
 		path.push_back('/');
 	}
