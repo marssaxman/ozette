@@ -129,7 +129,6 @@ bool Browser::View::process(UI::Frame &ctx, int ch)
 		case KEY_DOWN: key_down(ctx); break;
 		case KEY_PPAGE: key_page_up(ctx); break;
 		case KEY_NPAGE: key_page_down(ctx); break;
-		case ' ': key_space(ctx); break;
 		default: {
 			if(isprint(ch)) key_char(ctx, ch);
 			else clear_filter(ctx);
@@ -216,7 +215,7 @@ void Browser::View::ctl_find(UI::Frame &ctx)
 void Browser::View::key_return(UI::Frame &ctx)
 {
 	switch (sel_entry()->type()) {
-		case DirTree::Type::Directory: scope_dir(ctx); break;
+		case DirTree::Type::Directory: toggle(ctx); break;
 		case DirTree::Type::File: edit_file(ctx); break;
 		default: break;
 	}
@@ -250,11 +249,6 @@ void Browser::View::key_page_down(UI::Frame &ctx)
 	// Move to first line of next page.
 	_selection = std::min(_scrollpos + _height, _list.size()-1);
 	ctx.repaint();
-}
-
-void Browser::View::key_space(UI::Frame &ctx)
-{
-	toggle(ctx);
 }
 
 void Browser::View::key_tab(UI::Frame &ctx)
@@ -398,21 +392,6 @@ void Browser::View::toggle(UI::Frame &ctx)
 		_path_filter = ctx.app().display_path(path) + "/";
 		update_filter(ctx);
 	}
-	ctx.repaint();
-}
-
-void Browser::View::scope_dir(UI::Frame &ctx)
-{
-	auto &display = _list[_selection];
-	auto entry = display.entry;
-	if (!entry->is_directory()) return;
-	if (!display.expanded) {
-		_expanded_items.insert(display.entry->path());
-		display.expanded = true;
-		insert_rows(_selection + 1, display.indent + 1, entry);
-	}
-	_path_filter = ctx.app().display_path(entry->path()) + "/";
-	update_filter(ctx);
 	ctx.repaint();
 }
 

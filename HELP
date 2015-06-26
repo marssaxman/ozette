@@ -17,8 +17,8 @@ Global commands:
 
 The browser tab displays a tree view of the current working directory. Use the
 arrow keys to move the selection up or down, or type the name of a file or
-directory to select it. Toggle a subdirectory open or closed with the space bar
-or Enter key. Select a file and press Enter to open it in an editor tab.
+directory to select it. Toggle a subdirectory open or closed with the Enter
+key. Select a file and press Enter to open it in an editor tab.
 
 Browser commands:
     ^O - Open - open a file in an editor window

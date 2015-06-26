@@ -58,7 +58,6 @@ private:
 	void key_down(UI::Frame &ctx);
 	void key_page_up(UI::Frame &ctx);
 	void key_page_down(UI::Frame &ctx);
-	void key_space(UI::Frame &ctx);
 	void key_tab(UI::Frame &ctx);
 	void key_backspace(UI::Frame &ctx);
 	void key_char(UI::Frame &ctx, char ch);
@@ -69,7 +68,6 @@ private:
 	void set_title(UI::Frame &ctx);
 	void build_list();
 	void toggle(UI::Frame &ctx);
-	void scope_dir(UI::Frame &ctx);
 	void edit_file(UI::Frame &ctx);
 	size_t insert_rows(size_t index, unsigned indent, DirTree *entry);
 	void remove_rows(size_t index, unsigned indent);
