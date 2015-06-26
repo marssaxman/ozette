@@ -294,6 +294,7 @@ void Browser::View::update_filter(UI::Frame &ctx)
 		_name_filter = _path_filter;
 	}
 	ctx.set_status(_path_filter);
+	if (_path_filter.empty()) return;
 	// Find the best match for the new filter - the name which matches the
 	// filter and requires the fewest gaps to do so.
 	unsigned bestlead = UINT_MAX;
@@ -388,14 +389,15 @@ void Browser::View::toggle(UI::Frame &ctx)
 		_expanded_items.erase(path);
 		display.expanded = false;
 		remove_rows(_selection + 1, display.indent + 1);
+		_path_filter.clear();
 	} else {
 		// expand it
 		_expanded_items.insert(path);
 		display.expanded = true;
 		insert_rows(_selection + 1, display.indent + 1, entry);
 		_path_filter = ctx.app().display_path(path) + "/";
-		update_filter(ctx);
 	}
+	update_filter(ctx);
 	ctx.repaint();
 }
 
