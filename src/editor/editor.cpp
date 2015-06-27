@@ -336,7 +336,7 @@ public:
 		Input("Save As", commit)
 	{
 		_value = path;
-		_cursor_pos = path.size();
+		move_cursor(path.size());
 	}
 };
 }

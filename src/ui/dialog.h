@@ -62,10 +62,10 @@ protected:
 	void set_value(std::string val);
 	void repaint() { _repaint = true; }
 	virtual bool field_selected() const { return true; }
+	void move_cursor(unsigned pos);
+	unsigned cursor_pos() const { return _cursor_pos; }
 	action_t _commit = nullptr;
 	std::string _value;
-	unsigned _anchor_pos = 0;
-	unsigned _cursor_pos = 0;
 private:
 	void arrow_left();
 	void arrow_right();
@@ -75,6 +75,8 @@ private:
 	void delete_next();
 	void delete_selection();
 	void key_insert(int ch);
+	unsigned _anchor_pos = 0;
+	unsigned _cursor_pos = 0;
 	bool _repaint = true;
 };
 

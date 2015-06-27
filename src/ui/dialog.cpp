@@ -126,16 +126,18 @@ void UI::Dialog::Input::paint_into(WINDOW *view, State state)
 	(void)end_vpos; // unused
 	whline(view, ' ', width - end_hpos);
 
+	bool cursor = (state == State::Focused) && field_selected();
 	if (_anchor_pos == _cursor_pos) {
 		// Put the cursor where it ought to be. Make it visible, if that
 		// would be appropriate for our activation state.
 		wmove(view, 0, value_hpos + _cursor_pos);
-		bool cursor = (state == State::Focused) && field_selected();
 		curs_set(cursor? 1: 0);
 	} else {
-		int selbegin = value_hpos + std::min(_cursor_pos, _anchor_pos);
-		int selcount = std::abs((int)_cursor_pos - (int)_anchor_pos);
-		mvwchgat(view, 0, selbegin, selcount, A_NORMAL, 0, NULL);
+		if (cursor) {
+			int selbegin = value_hpos + std::min(_cursor_pos, _anchor_pos);
+			int selcount = std::abs((int)_cursor_pos - (int)_anchor_pos);
+			mvwchgat(view, 0, selbegin, selcount, A_NORMAL, 0, NULL);
+		}
 		curs_set(0);
 	}
 }
@@ -222,6 +224,14 @@ void UI::Dialog::Input::set_value(std::string val)
 {
 	if (val == _value) return;
 	_value = val;
+	_repaint = true;
+}
+
+void UI::Dialog::Input::move_cursor(unsigned pos)
+{
+	pos = std::min(pos, _value.size());
+	if (pos == _cursor_pos && pos == _anchor_pos) return;
+	_cursor_pos = _anchor_pos = pos;
 	_repaint = true;
 }
 

@@ -35,7 +35,7 @@ Browser::Picker::Picker(std::string prompt, std::string value, action_t commit):
 	Input(prompt, commit)
 {
 	_value = value;
-	_cursor_pos = _value.size();
+	move_cursor(_value.size());
 }
 
 bool Browser::Picker::process(UI::Frame &ctx, int ch)
@@ -134,7 +134,7 @@ void Browser::Picker::arrow_left(UI::Frame &ctx)
 {
 	if (_suggestion_selected) {
 		select_field();
-		_cursor_pos = _value.size();
+		move_cursor(_value.size());
 	} else {
 		inherited::process(ctx, KEY_LEFT);
 	}
@@ -144,8 +144,8 @@ void Browser::Picker::arrow_right(UI::Frame &ctx)
 {
 	if (_suggestion_selected) {
 		select_field();
-		_cursor_pos = 0;
-	} else if (_cursor_pos < _value.size()) {
+		move_cursor(0);
+	} else if (cursor_pos() < _value.size()) {
 		inherited::process(ctx, KEY_RIGHT);
 	}
 }
