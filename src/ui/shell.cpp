@@ -35,37 +35,31 @@ UI::Shell::Shell(Controller &app):
 	initscr();
 	// We want color, if available.
 	Colors::init();
-	// Don't automatically echo characters back to the
-	// screen; we will draw things ourselves when we want
-	// them to appear.
+	// Don't automatically echo characters back to the screen; we will draw
+	// things ourselves when we want them to appear.
 	noecho();
-	// We definitely want to be able to detect the return
-	// key, so disable linefeed detection.
+	// We definitely want to be able to detect the return key, so disable
+	// linefeed detection.
 	nonl();
-	// Don't let the terminal eat control keys; we want
-	// to process them ourselves, in part because we will
-	// be passing them along to subprocesses, and in part
-	// because I have unconventional plans for some of the
+	// Don't let the terminal eat control keys; we want to process them
+	// ourselves, in part because we will be passing them along to subprocesses,
+	// and in part because I have unconventional plans for some of the
 	// traditional terminal control key combinations.
 	raw();
-	// If we print a character at the end of the bottom
-	// line, don't scroll the screen up - leave everything
-	// alone. We will implement our own scrolling.
+	// If we print a character at the end of the bottom line, don't scroll the
+	// screen up - leave everything alone. We will implement our own scrolling.
 	scrollok(stdscr, FALSE);
-	// don't flush the output buffer when the user presses
-	// one of the traditional interrupt keys, since we have
-	// different purposes for them.
+	// don't flush the output buffer when the user presses  one of the
+	// traditional interrupt keys, since we have different purposes for them.
 	intrflush(stdscr, FALSE);
-	// Enable the function keys, so the user can navigate
-	// using the arrow keys.
+	// Enable the function keys, so the user can navigate using the arrow keys.
 	keypad(stdscr, true);
-	// By default, don't show the cursor; editors will
-	// reveal it when active if they choose.
+	// By default, don't show the cursor; editors will reveal it when active if
+	// they choose.
 	curs_set(0);
-	// Reduce the escape delay, since nobody is going to
-	// use this on an old serial line, and it's much more
-	// useful to be able to cancel things with the escape
-	// key than to use it to type control characters.
+	// Reduce the escape delay, since nobody is going to use this on an old
+	// serial line, and it's much more useful to be able to cancel things with
+	// the escape key than to use it to type control characters.
 	set_escdelay(25);
 }
 
@@ -79,9 +73,8 @@ UI::Shell::~Shell()
 
 bool UI::Shell::process(int ch)
 {
-	// The UI handles control-shift-arrow-key presses by changing
-	// the focus window. All other keypresses are delegated to
-	// the focus window.
+	// The UI handles control-shift-arrow-key presses by changing the focus
+	// window. All other keypresses are delegated to the focus window.
 	switch (ch) {
 		// It would be nice if we could use control-left-arrow for some
 		// purposes and control-shift-left-arrow for others, but we can't
@@ -122,10 +115,9 @@ bool UI::Shell::process(int ch)
 
 void UI::Shell::reap()
 {
-	// Closed windows go on the doomed list so they
-	// don't actually get destroyed until the stack has
-	// unwound. Otherwise, a window could request its
-	// immediate destruction.
+	// Closed windows go on the doomed list so they don't actually get
+	// destroyed until the stack has unwound. Otherwise, a window could request
+	// its immediate destruction.
 	while (!_doomed.empty()) {
 		_doomed.pop();
 	}
@@ -181,12 +173,10 @@ void UI::Shell::set_focus(size_t index)
 	}
 	_focus = index;
 	_tabs[_focus]->set_focus();
-	// We want to keep as much of the background
-	// visible as we can. This means we must stack
-	// windows on the left of the focus in ascending
-	// order, while windows to the right of the focus
-	// are stacked in descending order. We raise the
-	// focus window last.
+	// We want to keep as much of the background visible as we can. This means
+	// we must stack windows on the left of the focus in ascending order, while
+	// windows to the right of the focus are stacked in descending order. We
+	// raise the focus window last.
 	for (size_t i = 0; i < _focus; ++i) {
 		_tabs[i]->bring_forward(Window::FocusRelative::Left);
 	}
@@ -199,9 +189,9 @@ void UI::Shell::set_focus(size_t index)
 void UI::Shell::layout()
 {
 	// The leftmost window owns column zero and covers no more than 80
-	// characters' width.
-	// Divide any remaining space among any remaining windows and stagger
-	// each remaining window proportionally across the screen.
+	// characters' width. Divide any remaining space among any remaining
+	// windows and stagger each remaining window proportionally across the
+	// screen.
 	getmaxyx(stdscr, _height, _width);
 	_columnWidth = std::min(kWindowWidth, _width);
 	if(_tabs.empty()) return;
@@ -245,8 +235,8 @@ void UI::Shell::send_to_focus(int ch)
 
 void UI::Shell::close_window(size_t index)
 {
-	// If this window has focus, move focus first.
-	// It will make everything simpler afterward.
+	// If this window has focus, move focus first. It will make everything
+	// simpler afterward.
 	if (_focus == index) {
 		if (index + 1 < _tabs.size()) {
 			set_focus(index + 1);
@@ -254,16 +244,15 @@ void UI::Shell::close_window(size_t index)
 			set_focus(index - 1);
 		}
 	}
-	// Remove the window from the active list, but
-	// don't delete it yet, because one of its
-	// methods might be on our call stack.
+	// Remove the window from the active list, but don't delete it yet, because
+	// one of its methods might be on our call stack.
 	_doomed.emplace(std::move(_tabs[index]));
 	_tabs.erase(_tabs.begin() + index);
-	// If the current focus window's index is greater
-	// than the index we just deleted, change the
-	// index to its new, correct value.
+	// If the current focus window's index is greater than the index we just
+	// deleted, change the index to its new, correct value.
 	if (index < _focus) {
 		_focus--;
 	}
 	layout();
 }
+
