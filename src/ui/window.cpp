@@ -264,16 +264,25 @@ void UI::Window::paint()
 
 void UI::Window::paint_content()
 {
-	View::State state = _has_focus? View::State::Focused: View::State::Inactive;
-	if (_dialog) {
-		_dialog->paint(state);
-		state = _has_focus? View::State::Active: View::State::Inactive;
+	// We must draw the content from back to front: view, result, dialog.
+	View::State content_state = View::State::Focused;
+	if (_dialog || !_result_text.empty()) {
+		content_state = View::State::Active;
 	}
-	if (_result_text.empty()) {
-		_view->paint(state);
-	} else {
-		_view->paint(_has_focus? View::State::Active: View::State::Inactive);
-		_view->overlay_result(_result_text, state);
+	if (!_has_focus) {
+		content_state = View::State::Inactive;
+	}
+	_view->paint(content_state);
+
+	View::State overlay_state = View::State::Focused;
+	if (!_has_focus) {
+		content_state = View::State::Inactive;
+	}
+	if (!_result_text.empty()) {
+		_view->overlay_result(_result_text, overlay_state);
+	}
+	if (_dialog) {
+		_dialog->paint(overlay_state);
 	}
 	_dirty_content = false;
 }
