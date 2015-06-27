@@ -64,12 +64,16 @@ protected:
 	virtual bool field_selected() const { return true; }
 	action_t _commit = nullptr;
 	std::string _value;
+	unsigned _anchor_pos = 0;
 	unsigned _cursor_pos = 0;
 private:
 	void arrow_left();
 	void arrow_right();
+	void select_left();
+	void select_right();
 	void delete_prev();
 	void delete_next();
+	void delete_selection();
 	void key_insert(int ch);
 	bool _repaint = true;
 };

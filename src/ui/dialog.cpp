@@ -84,6 +84,8 @@ bool UI::Dialog::Input::process(UI::Frame &ctx, int ch)
 			return false;
 		case KEY_LEFT: arrow_left(); break;
 		case KEY_RIGHT: arrow_right(); break;
+		case KEY_SLEFT: select_left(); break;
+		case KEY_SRIGHT: select_right(); break;
 		case Control::Backspace: delete_prev(); break;
 		case KEY_DC: delete_next(); break;
 		default:
@@ -124,50 +126,88 @@ void UI::Dialog::Input::paint_into(WINDOW *view, State state)
 	(void)end_vpos; // unused
 	whline(view, ' ', width - end_hpos);
 
-	// Put the cursor where it ought to be. Make it visible, if that
-	// would be appropriate for our activation state.
-	wmove(view, 0, value_hpos + _cursor_pos);
-	bool cursor = (state == State::Focused) && field_selected();
-	curs_set(cursor? 1: 0);
+	if (_anchor_pos == _cursor_pos) {
+		// Put the cursor where it ought to be. Make it visible, if that
+		// would be appropriate for our activation state.
+		wmove(view, 0, value_hpos + _cursor_pos);
+		bool cursor = (state == State::Focused) && field_selected();
+		curs_set(cursor? 1: 0);
+	} else {
+		int selbegin = value_hpos + std::min(_cursor_pos, _anchor_pos);
+		int selcount = std::abs((int)_cursor_pos - (int)_anchor_pos);
+		mvwchgat(view, 0, selbegin, selcount, A_NORMAL, 0, NULL);
+		curs_set(0);
+	}
 }
 
 void UI::Dialog::Input::arrow_left()
 {
-	_cursor_pos -= std::min(_cursor_pos, 1U);
-	_repaint = true;
+	select_left();
+	_anchor_pos = _cursor_pos;
 }
 
 void UI::Dialog::Input::arrow_right()
 {
-	_cursor_pos++;
-	_repaint = true;
+	select_right();
+	_anchor_pos = _cursor_pos;
+}
+
+void UI::Dialog::Input::select_left()
+{
+	select_field();
+	if (_cursor_pos > 0) {
+		_cursor_pos--;
+		_repaint = true;
+	}
+}
+
+void UI::Dialog::Input::select_right()
+{
+	select_field();
+	if (_cursor_pos < _value.size()) {
+		_cursor_pos++;
+		_repaint = true;
+	}
 }
 
 void UI::Dialog::Input::delete_prev()
 {
-	select_field();
-	if (_value.empty()) return;
-	if (_cursor_pos == 0) return;
-	_cursor_pos--;
-	auto deliter = _value.begin() + _cursor_pos;
-	_value.erase(deliter);
-	_repaint = true;
+	if (_cursor_pos == _anchor_pos) {
+		select_left();
+	} else {
+		select_field();
+	}
+	delete_selection();
 }
 
 void UI::Dialog::Input::delete_next()
 {
+	if (_cursor_pos == _anchor_pos) {
+		select_right();
+	} else {
+		select_field();
+	}
+	delete_selection();
+}
+
+void UI::Dialog::Input::delete_selection()
+{
 	select_field();
 	if (_value.empty()) return;
-	if (_cursor_pos >= _value.size()) return;
-	auto deliter = _value.begin() + _cursor_pos;
-	_value.erase(deliter);
+	if (_cursor_pos == _anchor_pos) return;
+	auto begin = std::min(_anchor_pos, _cursor_pos);
+	auto end = std::max(_anchor_pos, _cursor_pos);
+	_value = _value.substr(0, begin) + _value.substr(end);
+	_cursor_pos = begin;
+	_anchor_pos = begin;
 	_repaint = true;
 }
 
 void UI::Dialog::Input::key_insert(int ch)
 {
-	select_field();
+	delete_selection();
 	_value.insert(_cursor_pos++, 1, ch);
+	_anchor_pos = _cursor_pos;
 	_repaint = true;
 }
 
