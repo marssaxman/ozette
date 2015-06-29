@@ -229,7 +229,7 @@ void UI::Dialog::Input::set_value(std::string val)
 
 void UI::Dialog::Input::move_cursor(unsigned pos)
 {
-	pos = std::min(pos, _value.size());
+	pos = std::min(pos, (unsigned)_value.size());
 	if (pos == _cursor_pos && pos == _anchor_pos) return;
 	_cursor_pos = _anchor_pos = pos;
 	_repaint = true;
