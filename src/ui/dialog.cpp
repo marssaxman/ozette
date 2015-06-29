@@ -82,6 +82,9 @@ bool UI::Dialog::Input::process(UI::Frame &ctx, int ch)
 			// inform our host that we are finished
 			if (_commit) _commit(ctx, _value);
 			return false;
+		case Control::Cut: ctl_cut(ctx); break;
+		case Control::Copy: ctl_copy(ctx); break;
+		case Control::Paste: ctl_paste(ctx); break;
 		case KEY_LEFT: arrow_left(); break;
 		case KEY_RIGHT: arrow_right(); break;
 		case KEY_SLEFT: select_left(); break;
@@ -140,6 +143,33 @@ void UI::Dialog::Input::paint_into(WINDOW *view, State state)
 		}
 		curs_set(0);
 	}
+}
+
+void UI::Dialog::Input::ctl_cut(UI::Frame &ctx)
+{
+	ctl_copy(ctx);
+	delete_selection();
+}
+
+void UI::Dialog::Input::ctl_copy(UI::Frame &ctx)
+{
+	// Don't replace the current clipboard contents unless something is
+	// actually selected.
+	if (_anchor_pos == _cursor_pos) {
+		return;
+	}
+	unsigned begin = std::min(_anchor_pos, _cursor_pos);
+	unsigned count = std::max(_anchor_pos - begin, _cursor_pos - begin);
+	ctx.app().set_clipboard(_value.substr(begin, count));
+}
+
+void UI::Dialog::Input::ctl_paste(UI::Frame &ctx)
+{
+	delete_selection();
+	std::string clip = ctx.app().get_clipboard();
+	_value = _value.substr(0, _cursor_pos) + clip + _value.substr(_cursor_pos);
+	_cursor_pos += clip.size();
+	_anchor_pos = _cursor_pos;
 }
 
 void UI::Dialog::Input::arrow_left()

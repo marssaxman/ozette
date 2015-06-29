@@ -67,6 +67,9 @@ protected:
 	action_t _commit = nullptr;
 	std::string _value;
 private:
+	void ctl_cut(UI::Frame &ctx);
+	void ctl_copy(UI::Frame &ctx);
+	void ctl_paste(UI::Frame &ctx);
 	void arrow_left();
 	void arrow_right();
 	void select_left();
