@@ -127,7 +127,9 @@ void Browser::Picker::select_suggestion(size_t i)
 	_suggestion_selected = true;
 	_sugg_item = i;
 	repaint();
-	set_value(_options[i]);
+	std::string value = _options[i];
+	set_value(value);
+	move_cursor(value.size());
 }
 
 void Browser::Picker::arrow_left(UI::Frame &ctx)
