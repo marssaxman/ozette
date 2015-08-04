@@ -61,7 +61,6 @@ void Browser::View::activate(UI::Frame &ctx)
 		for (auto &path: paths) {
 			_expanded_items.insert(path);
 		}
-		if (!paths.empty()) _rebuild_list = true;
 	}
 	_list.clear();
 	_tree = DirTree(_tree.path());
@@ -125,6 +124,8 @@ bool Browser::View::process(UI::Frame &ctx, int ch)
 		case Control::Escape: clear_filter(ctx); break;
 		case Control::Tab: key_tab(ctx); break;
 		case Control::Backspace: key_backspace(ctx); break;
+		case KEY_LEFT: key_left(ctx); break;
+		case KEY_RIGHT: key_right(ctx); break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
 		case KEY_PPAGE: key_page_up(ctx); break;
@@ -219,6 +220,34 @@ void Browser::View::key_return(UI::Frame &ctx)
 		case DirTree::Type::File: edit_file(ctx); break;
 		default: break;
 	}
+}
+
+void Browser::View::key_left(UI::Frame &ctx)
+{
+	clear_filter(ctx);
+	// Expand our view outward, one directory level at a time, until we
+	// reach the current working directory.
+	std::string path = _tree.path();
+	if (path == ctx.app().current_dir()) {
+		return;
+	}
+	size_t lastslash = path.find_last_of('/');
+	if (lastslash != std::string::npos) {
+		path = path.substr(0, lastslash);
+	} else {
+		path += "/..";
+	}
+	view(path);
+}
+
+void Browser::View::key_right(UI::Frame &ctx)
+{
+	clear_filter(ctx);
+	// Change dir inward to the outermost directory containing the selection.
+	std::string trunk = _tree.path();
+	std::string leaf = sel_entry()->path();
+	size_t preslash = leaf.find('/', trunk.size() + 1);
+	view(leaf.substr(0, preslash));
 }
 
 void Browser::View::key_up(UI::Frame &ctx)
@@ -364,7 +393,15 @@ bool Browser::View::scan_filter(
 
 void Browser::View::set_title(UI::Frame &ctx)
 {
-	ctx.set_title(ctx.app().display_path(_tree.path()));
+	// Show the current working directory, annotated with the current
+	// view directory if we have focused in on a subtree.
+	std::string workingdir = ctx.app().current_dir();
+	std::string viewdir = _tree.path();
+	std::string title = ctx.app().display_path(workingdir);
+	if (viewdir != workingdir) {
+		title = ctx.app().display_path(viewdir) + " (" + title + ")";
+	}
+	ctx.set_title(title);
 }
 
 void Browser::View::build_list()

@@ -20,6 +20,10 @@ arrow keys to move the selection up or down, or type the name of a file or
 directory to select it. Toggle a subdirectory open or closed with the Enter
 key. Select a file and press Enter to open it in an editor tab.
 
+Focus in on the current section of the directory tree with the right arrow;
+this moves the view toward the current selection by one directory level. Move
+back out toward the root of the working directory with the left arrow.
+
 Browser commands:
     ^O - Open - open a file in an editor window
     ^N - New - open an editor for a new, nameless file
