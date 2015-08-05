@@ -126,6 +126,8 @@ bool Browser::View::process(UI::Frame &ctx, int ch)
 		case Control::Backspace: key_backspace(ctx); break;
 		case KEY_LEFT: key_left(ctx); break;
 		case KEY_RIGHT: key_right(ctx); break;
+		case Control::AltLeftArrow: key_alt_left(ctx); break;
+		case Control::AltRightArrow: key_alt_right(ctx); break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
 		case KEY_PPAGE: key_page_up(ctx); break;
@@ -225,8 +227,30 @@ void Browser::View::key_return(UI::Frame &ctx)
 void Browser::View::key_left(UI::Frame &ctx)
 {
 	clear_filter(ctx);
-	// Expand our view outward, one directory level at a time, until we
-	// reach the current working directory.
+	std::string path = ctx.app().current_dir();
+	size_t lastslash = path.find_last_of('/');
+	if (lastslash != std::string::npos) {
+		path = path.substr(0, lastslash);
+	} else {
+		path += "/..";
+	}
+	// Change the working dir to the new, wider path.
+	ctx.app().change_dir(path);
+}
+
+void Browser::View::key_right(UI::Frame &ctx)
+{
+	clear_filter(ctx);
+	// Change dir inward to the outermost directory containing the selection.
+	std::string trunk = ctx.app().current_dir();
+	std::string leaf = sel_entry()->path();
+	size_t preslash = leaf.find('/', trunk.size() + 1);
+	ctx.app().change_dir(leaf.substr(0, preslash));
+}
+
+void Browser::View::key_alt_left(UI::Frame &ctx)
+{
+	clear_filter(ctx);
 	std::string path = _tree.path();
 	if (path == ctx.app().current_dir()) {
 		return;
@@ -240,10 +264,9 @@ void Browser::View::key_left(UI::Frame &ctx)
 	view(path);
 }
 
-void Browser::View::key_right(UI::Frame &ctx)
+void Browser::View::key_alt_right(UI::Frame &ctx)
 {
 	clear_filter(ctx);
-	// Change dir inward to the outermost directory containing the selection.
 	std::string trunk = _tree.path();
 	std::string leaf = sel_entry()->path();
 	size_t preslash = leaf.find('/', trunk.size() + 1);

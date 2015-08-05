@@ -51,6 +51,24 @@ std::string Ozette::current_dir() const
 	return _current_dir;
 }
 
+void Ozette::change_dir(std::string path)
+{
+	path = canonical_abspath(path);
+	int result = chdir(path.c_str());
+	if (0 != result) {
+		int code = errno;
+		std::string message = "Can't chdir: errno = " + std::to_string(code);
+		UI::Frame *ctx = _shell.active();
+		ctx->show_result(message);
+		return;
+	}
+	_current_dir = path;
+	_config.change_directory(path);
+	Browser::View::change_directory(path);
+	set_mru(path, _recent_dirs);
+	cache_write("recent_dirs", _recent_dirs);
+}
+
 std::string Ozette::display_path(std::string path) const
 {
 	size_t cwdsize = _current_dir.size();
@@ -221,18 +239,7 @@ void Ozette::change_directory()
 	}
 	auto commit = [this](UI::Frame &ctx, std::string path)
 	{
-		path = canonical_abspath(path);
-		int result = chdir(path.c_str());
-		if (0 != result) {
-			int code = errno;
-			ctx.show_result("Can't chdir: errno = " + std::to_string(code));
-			return;
-		}
-		_current_dir = path;
-		_config.change_directory(path);
-		Browser::View::change_directory(path);
-		set_mru(path, _recent_dirs);
-		cache_write("recent_dirs", _recent_dirs);
+		change_dir(path);
 	};
 	auto dialog = new Browser::Picker(prompt, options, commit);
 	std::unique_ptr<UI::View> dptr(dialog);

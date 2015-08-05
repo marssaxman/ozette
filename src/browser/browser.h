@@ -56,6 +56,8 @@ private:
 	void key_return(UI::Frame &ctx);
 	void key_left(UI::Frame &ctx);
 	void key_right(UI::Frame &ctx);
+	void key_alt_left(UI::Frame &ctx);
+	void key_alt_right(UI::Frame &ctx);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
 	void key_page_up(UI::Frame &ctx);

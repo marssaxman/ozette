@@ -34,6 +34,8 @@ enum {
 	RightArrow = 0x22B,
 	UpArrow = 0x231,
 	DownArrow = 0x208,
+	AltLeftArrow = 0x21E,
+	AltRightArrow = 0x22D,
 
 	// Clipboard & editing functions
 	Cut = 0x18, //CAN ^X
