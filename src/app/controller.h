@@ -22,7 +22,7 @@
 
 #include <string>
 #include <vector>
-#include "config.h"
+#include "app/config.h"
 
 // Abstract interface for centralized application actions.
 class Controller

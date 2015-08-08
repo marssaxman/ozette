@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "displayline.h"
-#include "colors.h"
+#include "editor/displayline.h"
+#include "ui/colors.h"
 
 const unsigned Editor::kTabWidth = 4;
 

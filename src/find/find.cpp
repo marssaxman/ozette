@@ -17,9 +17,9 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "find.h"
-#include "control.h"
-#include "dialog.h"
+#include "find/find.h"
+#include "app/control.h"
+#include "ui/dialog.h"
 #include <assert.h>
 #include <algorithm>
 #include <unistd.h>

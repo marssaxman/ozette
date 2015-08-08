@@ -23,10 +23,10 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include "coordinates.h"
-#include "displayline.h"
-#include "changelist.h"
-#include "settings.h"
+#include "editor/coordinates.h"
+#include "editor/displayline.h"
+#include "editor/changelist.h"
+#include "editor/settings.h"
 
 // A document breaks a text buffer into lines, then maps those lines onto an
 // infinite plane of equally sized character cells.

@@ -17,11 +17,11 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "browser.h"
-#include "control.h"
-#include "dialog.h"
-#include "picker.h"
-#include "find.h"
+#include "browser/browser.h"
+#include "app/control.h"
+#include "ui/dialog.h"
+#include "browser/picker.h"
+#include "find/find.h"
 #include <cctype>
 #include <climits>
 #include <assert.h>

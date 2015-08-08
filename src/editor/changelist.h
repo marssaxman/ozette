@@ -22,8 +22,8 @@
 
 #include <string>
 #include <stack>
-#include "coordinates.h"
-#include "update.h"
+#include "editor/coordinates.h"
+#include "editor/update.h"
 
 namespace Editor {
 class Document;

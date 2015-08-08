@@ -26,8 +26,8 @@
 #include <ncurses.h>
 #include <panel.h>
 #include <vector>
-#include "helpbar.h"
-#include "view.h"
+#include "ui/helpbar.h"
+#include "ui/view.h"
 
 // A dialog is a modal input control.
 namespace UI {

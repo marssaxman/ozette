@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "changelist.h"
-#include "document.h"
+#include "editor/changelist.h"
+#include "editor/document.h"
 #include <assert.h>
 
 void Editor::ChangeList::clear()

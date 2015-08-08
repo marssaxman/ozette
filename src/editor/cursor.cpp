@@ -17,7 +17,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "cursor.h"
+#include "editor/cursor.h"
 #include <climits>
 
 // A cursor is a navigation implement with some semantics

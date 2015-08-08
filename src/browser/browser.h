@@ -20,9 +20,9 @@
 #ifndef BROWSER_BROWSER_H
 #define BROWSER_BROWSER_H
 
-#include "view.h"
-#include "dirtree.h"
-#include "shell.h"
+#include "ui/view.h"
+#include "browser/dirtree.h"
+#include "ui/shell.h"
 #include <set>
 
 namespace Browser {

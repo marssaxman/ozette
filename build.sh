@@ -100,8 +100,8 @@ done
 # might as well do this ahead of time so we can reuse the include arguments
 # for each compilation.
 include=""
-dirs=$(find $rootdirs -type d | grep -v -e "/\.")
-for i in $dirs; do
+#dirs=$(find $rootdirs -type d | grep -v -e "/\.")
+for i in $rootdirs; do
 	include="$include -I$i"
 done
 

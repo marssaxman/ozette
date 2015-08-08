@@ -20,11 +20,11 @@
 #ifndef EDITOR_EDITOR_H
 #define EDITOR_EDITOR_H
 
-#include "view.h"
-#include "document.h"
-#include "update.h"
-#include "cursor.h"
-#include "config.h"
+#include "ui/view.h"
+#include "editor/document.h"
+#include "editor/update.h"
+#include "editor/cursor.h"
+#include "app/config.h"
 
 namespace Editor {
 class View : public UI::View

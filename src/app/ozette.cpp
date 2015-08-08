@@ -17,14 +17,14 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "ozette.h"
-#include "browser.h"
-#include "editor.h"
-#include "console.h"
-#include "find.h"
-#include "control.h"
-#include "picker.h"
-#include "help.h"
+#include "app/ozette.h"
+#include "browser/browser.h"
+#include "editor/editor.h"
+#include "console/console.h"
+#include "find/find.h"
+#include "app/control.h"
+#include "browser/picker.h"
+#include "app/help.h"
 #include <unistd.h>
 #include <fstream>
 #include <sys/stat.h>

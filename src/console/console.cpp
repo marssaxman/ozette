@@ -17,9 +17,9 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "console.h"
-#include "control.h"
-#include "dialog.h"
+#include "console/console.h"
+#include "app/control.h"
+#include "ui/dialog.h"
 #include <assert.h>
 
 Console::View *Console::View::_instance;

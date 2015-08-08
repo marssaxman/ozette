@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "config.h"
-#include "INIReader.h"
+#include "app/config.h"
+#include "inih/INIReader.h"
 
 Config::Config(std::string confdir, std::string workingdir):
 	_user(new INIReader(confdir + "/config")),

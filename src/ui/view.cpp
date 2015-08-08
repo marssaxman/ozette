@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "view.h"
-#include "colors.h"
+#include "ui/view.h"
+#include "ui/colors.h"
 
 UI::View::View():
 	_window(newwin(0, 0, 0, 0)),

@@ -17,12 +17,12 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "subproc.h"
+#include "console/subproc.h"
 #include <cctype>
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/wait.h>
-#include "popenRWE.h"
+#include "console/popenRWE.h"
 #include <assert.h>
 
 static void set_nonblocking(int fd)

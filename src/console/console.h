@@ -20,10 +20,10 @@
 #ifndef CONSOLE_CONSOLE_H
 #define CONSOLE_CONSOLE_H
 
-#include "view.h"
-#include "shell.h"
-#include "log.h"
-#include "subproc.h"
+#include "ui/view.h"
+#include "ui/shell.h"
+#include "console/log.h"
+#include "console/subproc.h"
 #include <memory>
 
 namespace Console {

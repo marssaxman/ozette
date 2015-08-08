@@ -17,7 +17,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "helpbar.h"
+#include "ui/helpbar.h"
 
 UI::HelpBar::Label::Label(char m, bool c, std::string t):
 	mnemonic(m),

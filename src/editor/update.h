@@ -20,7 +20,7 @@
 #ifndef EDITOR_UPDATE_H
 #define EDITOR_UPDATE_H
 
-#include "coordinates.h"
+#include "editor/coordinates.h"
 
 namespace Editor {
 class Update

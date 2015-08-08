@@ -19,7 +19,7 @@
 
 #include <unistd.h>
 #include <stdint.h>
-#include "log.h"
+#include "console/log.h"
 
 void Console::Log::layout(unsigned width)
 {

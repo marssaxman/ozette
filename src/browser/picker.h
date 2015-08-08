@@ -20,7 +20,7 @@
 #ifndef BROWSER_PICKER_H
 #define BROWSER_PICKER_H
 
-#include "dialog.h"
+#include "ui/dialog.h"
 
 namespace Browser {
 // Picker asks the user to enter a file path.

@@ -17,7 +17,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "picker.h"
+#include "browser/picker.h"
 
 Browser::Picker::Picker(
 		std::string prompt, std::vector<std::string> options, action_t commit):

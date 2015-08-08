@@ -22,8 +22,8 @@
 
 #include <ncurses.h>
 #include <panel.h>
-#include "frame.h"
-#include "helpbar.h"
+#include "ui/frame.h"
+#include "ui/helpbar.h"
 
 namespace UI {
 class View

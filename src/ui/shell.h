@@ -20,7 +20,7 @@
 #ifndef UI_SHELL_H
 #define UI_SHELL_H
 
-#include "window.h"
+#include "ui/window.h"
 #include <vector>
 #include <queue>
 

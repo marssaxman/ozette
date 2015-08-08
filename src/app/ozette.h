@@ -20,10 +20,10 @@
 #ifndef APP_OZETTE_H
 #define APP_OZETTE_H
 
-#include "controller.h"
-#include "shell.h"
-#include "browser.h"
-#include "editor.h"
+#include "app/controller.h"
+#include "ui/shell.h"
+#include "browser/browser.h"
+#include "editor/editor.h"
 #include <string>
 #include <vector>
 #include <map>

@@ -20,7 +20,7 @@
 #ifndef EDITOR_SETTINGS_H
 #define EDITOR_SETTINGS_H
 
-#include "config.h"
+#include "app/config.h"
 
 namespace Editor {
 class Settings {

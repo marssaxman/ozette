@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
-#include "ini.h"
-#include "INIReader.h"
+#include "inih/ini.h"
+#include "inih/INIReader.h"
 
 using std::string;
 

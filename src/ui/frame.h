@@ -22,8 +22,8 @@
 
 #include <string>
 #include <memory>
-#include "controller.h"
-#include "control.h"
+#include "app/controller.h"
+#include "app/control.h"
 
 namespace UI {
 class View;

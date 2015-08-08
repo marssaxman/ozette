@@ -20,10 +20,10 @@
 #ifndef FIND_FIND_H
 #define FIND_FIND_H
 
-#include "view.h"
-#include "shell.h"
-#include "subproc.h"
-#include "dialog.h"
+#include "ui/view.h"
+#include "ui/shell.h"
+#include "console/subproc.h"
+#include "ui/dialog.h"
 #include <set>
 
 namespace Find {

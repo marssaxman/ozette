@@ -22,7 +22,7 @@
 
 #include <string>
 #include <memory>
-#include "INIReader.h"
+#include "inih/INIReader.h"
 
 class Config
 {

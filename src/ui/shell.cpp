@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "shell.h"
-#include "colors.h"
+#include "ui/shell.h"
+#include "ui/colors.h"
 #include <algorithm>
 #include <assert.h>
 #include <list>

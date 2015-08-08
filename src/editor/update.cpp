@@ -17,7 +17,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "update.h"
+#include "editor/update.h"
 #include <climits>
 
 void Editor::Update::reset()

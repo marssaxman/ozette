@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "syntax.h"
-#include "colors.h"
+#include "app/syntax.h"
+#include "ui/colors.h"
 
 using namespace Syntax;
 

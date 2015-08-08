@@ -17,7 +17,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "coordinates.h"
+#include "editor/coordinates.h"
 
 std::string Editor::location_t::to_string() const
 {

@@ -17,9 +17,9 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "dialog.h"
-#include "frame.h"
-#include "colors.h"
+#include "ui/dialog.h"
+#include "ui/frame.h"
+#include "ui/colors.h"
 #include <assert.h>
 
 UI::Dialog::Base::Base(std::string prompt):

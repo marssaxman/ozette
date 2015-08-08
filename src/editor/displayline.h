@@ -23,9 +23,9 @@
 #include <string>
 #include <ncurses.h>
 #include <vector>
-#include "coordinates.h"
-#include "settings.h"
-#include "syntax.h"
+#include "editor/coordinates.h"
+#include "editor/settings.h"
+#include "app/syntax.h"
 
 namespace Editor {
 extern const unsigned kTabWidth;

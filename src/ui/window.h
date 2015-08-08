@@ -24,9 +24,9 @@
 #include <panel.h>
 #include <memory>
 #include <vector>
-#include "view.h"
-#include "controller.h"
-#include "helpbar.h"
+#include "ui/view.h"
+#include "app/controller.h"
+#include "ui/helpbar.h"
 
 namespace UI {
 class Window : public Frame
