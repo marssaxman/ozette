@@ -182,9 +182,9 @@ Ozette::editor Ozette::open_editor(std::string path)
 	return edrec;
 }
 
-void Ozette::find(std::string text)
+void Ozette::find(std::string text, std::string tree)
 {
-	Find::View::exec(text, _shell);
+	Find::View::exec(text, tree, _shell);
 }
 
 void Ozette::run()

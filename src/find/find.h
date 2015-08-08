@@ -22,23 +22,19 @@
 
 #include "ui/view.h"
 #include "ui/shell.h"
+#include "ui/form.h"
 #include "console/subproc.h"
-#include "ui/dialog.h"
 #include <set>
 
 namespace Find {
-class Dialog: public UI::Dialog::Input
-{
-public:
-	static void show(UI::Frame &ctx);
-protected:
-	Dialog(std::string prompt, action_t commit): Input(prompt, commit) {}
-};
+namespace Dialog {
+void show(UI::Frame &ctx);
+} // namespace Dialog
 
 class View : public UI::View
 {
 public:
-	static void exec(std::string regex, UI::Shell &shell);
+	static void exec(std::string regex, std::string tree, UI::Shell &shell);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
@@ -53,7 +49,7 @@ protected:
 	virtual void paint_into(WINDOW *view, State state) override;
 private:
 	void read_one(char ch);
-	void exec(std::string regex, UI::Frame &ctx);
+	void exec(std::string regex, std::string tree, UI::Frame &ctx);
 	void ctl_kill(UI::Frame &ctx);
 	void ctl_find(UI::Frame &ctx);
 	void key_return(UI::Frame &ctx);

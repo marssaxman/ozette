@@ -28,16 +28,22 @@ Find::View *Find::View::_instance;
 
 void Find::Dialog::show(UI::Frame &ctx)
 {
+	auto needle = new UI::Input("Search for", "");
+	auto tree = new UI::Input("In directory", "");
+	std::vector<std::unique_ptr<UI::Form::Field>> fields;
+	fields.emplace_back(std::unique_ptr<UI::Form::Field>(needle));
+	fields.emplace_back(std::unique_ptr<UI::Form::Field>(tree));
 	std::string prompt = "Find";
-	auto action = [](UI::Frame &ctx, std::string text)
+	auto action = [needle, tree](UI::Frame &ctx)
 	{
-		ctx.app().find(text);
+		ctx.app().find(needle->value(), tree->value());
 	};
-	std::unique_ptr<UI::View> dptr(new Find::Dialog(prompt, action));
+	auto form = new UI::Form(prompt, std::move(fields), action);
+	std::unique_ptr<UI::View> dptr(form);
 	ctx.show_dialog(std::move(dptr));
 }
 
-void Find::View::exec(std::string regex, UI::Shell &shell)
+void Find::View::exec(std::string regex, std::string tree, UI::Shell &shell)
 {
 	if (_instance) {
 		shell.make_active(_instance->_window);
@@ -46,7 +52,7 @@ void Find::View::exec(std::string regex, UI::Shell &shell)
 		std::unique_ptr<UI::View> view(_instance);
 		_instance->_window = shell.open_window(std::move(view));
 	}
-	_instance->exec(regex, *_instance->_window);
+	_instance->exec(regex, tree, *_instance->_window);
 }
 
 void Find::View::activate(UI::Frame &ctx)
@@ -198,7 +204,7 @@ void Find::View::read_one(char ch)
 	}
 }
 
-void Find::View::exec(std::string regex, UI::Frame &ctx)
+void Find::View::exec(std::string regex, std::string tree, UI::Frame &ctx)
 {
 	_match_files = 0;
 	_match_lines = 0;
@@ -206,7 +212,8 @@ void Find::View::exec(std::string regex, UI::Frame &ctx)
 	_scrollpos = 0;
 	_lines.clear();
 	_linebuf.clear();
-	std::string find = "find . -type f -print0";
+	if (tree.empty()) tree = ".";
+	std::string find = "find " + tree + " -type f -print0";
 	std::string grep = "grep -H -n -I \"" + regex + "\"";
 	std::string command = find + " | xargs -0 " + grep;
 	const char *argv[1 + 2 + 1] = {"sh", "-c", command.c_str(), nullptr};

@@ -44,7 +44,7 @@ public:
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) override;
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) override;
 	virtual Config &config() override;
-	void find(std::string regex) override;
+	void find(std::string regex, std::string tree) override;
 
 	void run();
 private:

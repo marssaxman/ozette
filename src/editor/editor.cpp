@@ -20,6 +20,7 @@
 #include "editor/editor.h"
 #include "app/control.h"
 #include "ui/dialog.h"
+#include "ui/form.h"
 #include <assert.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -127,6 +128,15 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::Backspace: key_backspace(ctx); break;
 		case KEY_DC: key_delete(ctx); break;
 		case KEY_BTAB: key_btab(ctx); break;	// shift-tab
+
+		case 276: {
+			UI::Form::FieldList fields;
+			fields.emplace_back(new UI::Input("Smack", "Bitch Up"));
+			auto dialog = new UI::Form("Bonzer", std::move(fields), nullptr);
+			std::unique_ptr<UI::View> dptr(dialog);
+			ctx.show_dialog(std::move(dptr));
+		} break;
+
 		default: {
 			if (isprint(ch)) key_insert(ch);
 			else ctx.show_result("Unknown control: " + std::to_string(ch));
