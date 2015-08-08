@@ -228,6 +228,9 @@ void Browser::View::key_left(UI::Frame &ctx)
 {
 	clear_filter(ctx);
 	std::string path = ctx.app().current_dir();
+	// Make sure the current directory will still be expanded after the shift.
+	_expanded_items.insert(path);
+	// Find the directory containing the current directory.
 	size_t lastslash = path.find_last_of('/');
 	if (lastslash != std::string::npos) {
 		path = path.substr(0, lastslash);
