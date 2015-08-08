@@ -278,6 +278,7 @@ void Browser::View::key_up(UI::Frame &ctx)
 	// Move to previous line in the listbox.
 	if (0 == _selection) return;
 	_selection--;
+	_selected_path = sel_entry()->path();
 	ctx.repaint();
 }
 
@@ -286,6 +287,7 @@ void Browser::View::key_down(UI::Frame &ctx)
 	// Move to next line in the listbox.
 	if (_selection + 1 == _list.size()) return;
 	_selection++;
+	_selected_path = sel_entry()->path();
 	ctx.repaint();
 }
 
@@ -293,6 +295,7 @@ void Browser::View::key_page_up(UI::Frame &ctx)
 {
 	// Move to last line of previous page.
 	_selection = _scrollpos > 0? _scrollpos-1: 0;
+	_selected_path = sel_entry()->path();
 	ctx.repaint();
 }
 
@@ -300,6 +303,7 @@ void Browser::View::key_page_down(UI::Frame &ctx)
 {
 	// Move to first line of next page.
 	_selection = std::min(_scrollpos + _height, _list.size()-1);
+	_selected_path = sel_entry()->path();
 	ctx.repaint();
 }
 
@@ -360,6 +364,7 @@ void Browser::View::update_filter(UI::Frame &ctx)
 		bestlead = leadskip;
 		besttotal = totalskips;
 		_selection = i;
+		_selected_path = sel_entry()->path();
 	}
 	ctx.repaint();
 }
@@ -435,7 +440,15 @@ void Browser::View::build_list()
 		row_t display = {0, 0, &_tree};
 		_list.insert(_list.begin(), display);
 	}
-	_selection = std::min(_selection, _list.size());
+	// Try to find the item which was previously selected and select it again.
+	_selection = std::min(_selection, _list.size()-1);
+	for (size_t i = 0; i < _list.size(); ++i) {
+		if (_list[i].entry->path() == _selected_path) {
+			_selection = i;
+			break;
+		}
+	}
+	_selected_path = sel_entry()->path();
 }
 
 void Browser::View::toggle(UI::Frame &ctx)

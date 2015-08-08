@@ -79,7 +79,13 @@ private:
 	DirTree _tree;
 	std::vector<row_t> _list;
 	std::set<std::string> _expanded_items;
+	// What is the index of the selected item?
 	size_t _selection = 0;
+	// Every time we change the selection, we must record the current item's
+	// path here, because many places want to know what it is, and we may need
+	// to know what it was after rebuilding the list.
+	std::string _selected_path;
+	// What is the scroll offset?
 	size_t _scrollpos = 0;
 	int _height = 0;
 	bool _rebuild_list = true;
