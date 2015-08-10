@@ -212,7 +212,8 @@ void Browser::View::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 
 void Browser::View::ctl_find(UI::Frame &ctx)
 {
-	Find::Dialog::show(ctx);
+	Find::spec job = {"", _tree.path(), ""};
+	Find::Dialog::show(ctx, job);
 }
 
 void Browser::View::key_return(UI::Frame &ctx)

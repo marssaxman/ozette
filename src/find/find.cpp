@@ -26,24 +26,24 @@
 
 Find::View *Find::View::_instance;
 
-void Find::Dialog::show(UI::Frame &ctx)
+void Find::Dialog::show(UI::Frame &ctx, spec job)
 {
-	auto needle = new UI::Input("Search for", "");
-	auto tree = new UI::Input("In directory", "");
-	std::vector<std::unique_ptr<UI::Form::Field>> fields;
-	fields.emplace_back(std::unique_ptr<UI::Form::Field>(needle));
-	fields.emplace_back(std::unique_ptr<UI::Form::Field>(tree));
-	std::string prompt = "Find";
-	auto action = [needle, tree](UI::Frame &ctx)
+	auto needle = new UI::Input("Find Pattern", job.needle);
+	auto haystack = new UI::Input("In Directory", job.haystack);
+	auto filter = new UI::Input("Files Named", job.filter);
+	UI::Form::FieldList fields;
+	fields.emplace_back(needle);
+	fields.emplace_back(haystack);
+	fields.emplace_back(filter);
+	auto action = [needle, haystack, filter](UI::Frame &ctx)
 	{
-		ctx.app().find(needle->value(), tree->value());
+		spec job = {needle->value(), haystack->value(), filter->value()};
+		ctx.app().find(job.needle, job.haystack, job.filter);
 	};
-	auto form = new UI::Form(prompt, std::move(fields), action);
-	std::unique_ptr<UI::View> dptr(form);
-	ctx.show_dialog(std::move(dptr));
+	UI::Form::show(ctx, std::move(fields), action);
 }
 
-void Find::View::exec(std::string regex, std::string tree, UI::Shell &shell)
+void Find::View::exec(spec job, UI::Shell &shell)
 {
 	if (_instance) {
 		shell.make_active(_instance->_window);
@@ -52,7 +52,7 @@ void Find::View::exec(std::string regex, std::string tree, UI::Shell &shell)
 		std::unique_ptr<UI::View> view(_instance);
 		_instance->_window = shell.open_window(std::move(view));
 	}
-	_instance->exec(regex, tree, *_instance->_window);
+	_instance->exec(job, *_instance->_window);
 }
 
 void Find::View::activate(UI::Frame &ctx)
@@ -204,20 +204,29 @@ void Find::View::read_one(char ch)
 	}
 }
 
-void Find::View::exec(std::string regex, std::string tree, UI::Frame &ctx)
+void Find::View::exec(spec job, UI::Frame &ctx)
 {
+	_job = job;
 	_match_files = 0;
 	_match_lines = 0;
 	_selection = 0;
 	_scrollpos = 0;
 	_lines.clear();
 	_linebuf.clear();
-	if (tree.empty()) tree = ".";
-	std::string find = "find " + tree + " -type f -print0";
-	std::string grep = "grep -H -n -I \"" + regex + "\"";
+	std::string targetdir = job.haystack;
+	if (targetdir.empty()) targetdir = ".";
+	std::string findarg = " -type f";
+	if (!job.filter.empty()) {
+		findarg += " -name " + job.filter;
+	}
+	std::string find = "find " + targetdir + findarg + " -print0";
+	std::string grep = "grep -H -n -I \"" + job.needle + "\"";
 	std::string command = find + " | xargs -0 " + grep;
 	const char *argv[1 + 2 + 1] = {"sh", "-c", command.c_str(), nullptr};
-	_title = "find: " + regex;
+	_title = "find " + job.needle;
+	if (!job.haystack.empty()) {
+		_title += " in " + ctx.app().display_path(job.haystack) + "/";
+	}
 	_proc.reset(new Console::Subproc(argv[0], argv));
 	ctx.repaint();
 	set_title(ctx);
@@ -233,7 +242,7 @@ void Find::View::ctl_kill(UI::Frame &ctx)
 
 void Find::View::ctl_find(UI::Frame &ctx)
 {
-	Find::Dialog::show(ctx);
+	Find::Dialog::show(ctx, _job);
 }
 
 void Find::View::key_return(UI::Frame &ctx)

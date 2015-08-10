@@ -20,8 +20,21 @@
 #include "ui/form.h"
 #include "ui/colors.h"
 
-UI::Form::Form(std::string title, FieldList &&fields, action_t commit):
-	_title(title),
+void UI::Form::show(
+		UI::Frame &ctx, std::unique_ptr<Field> &&field, action_t action)
+{
+	FieldList fields;
+	fields.emplace_back(std::move(field));
+	show(ctx, std::move(fields), action);
+}
+
+void UI::Form::show(UI::Frame &ctx, FieldList &&fields, action_t action)
+{
+	std::unique_ptr<UI::View> dptr(new Form(std::move(fields), action));
+	ctx.show_dialog(std::move(dptr));
+}
+
+UI::Form::Form(FieldList &&fields, action_t commit):
 	_fields(std::move(fields)),
 	_commit(commit)
 {
@@ -29,8 +42,7 @@ UI::Form::Form(std::string title, FieldList &&fields, action_t commit):
 
 void UI::Form::layout(int vpos, int hpos, int height, int width)
 {
-	int content_height = 1 + _fields.size();
-	int new_height = std::min(content_height, height / 2);
+	int new_height = std::min((int)_fields.size(), height / 2);
 	int new_vpos = vpos + height - new_height;
 	inherited::layout(new_vpos, hpos, new_height, width);
 }
@@ -45,7 +57,6 @@ bool UI::Form::process(UI::Frame &ctx, int ch)
 			if (_commit) _commit(ctx);
 			return false;
 		case Control::Escape:	// escape key
-		case Control::Close:	// control-W
 			// the user no longer wants this action
 			// this dialog has no further purpose
 			ctx.show_result("Cancelled");
@@ -54,7 +65,7 @@ bool UI::Form::process(UI::Frame &ctx, int ch)
 		case KEY_DOWN: key_down(ctx); break;
 		default: {
 			if (_selected < _fields.size()) {
-				_fields[_selected]->process(ctx, ch);
+				return _fields[_selected]->process(ctx, ch);
 			}
 		} break;
 	}
@@ -71,28 +82,29 @@ void UI::Form::set_help(HelpBar::Panel &panel)
 
 void UI::Form::paint_into(WINDOW *view, State state)
 {
-	// Draw the title bar across the top. Dialog boxes use a fully reversed
-	// title bar for extra dramatic effect.
-	int width, height;
-	(void)height;
-	getmaxyx(view, height, width);
-	bool highlight = state == State::Focused;
-	if (highlight) wattron(view, A_REVERSE);
-	wmove(view, 0, 0);
-	whline(view, ' ', width);
-	mvwaddnstr(view, 0, 0, _title.c_str(), width);
-	if (highlight) wattroff(view, A_REVERSE);
-
+	wattrset(view, Colors::dialog(state == State::Focused));
 	// Draw each field, below the title bar but above the help text.
+	// Skip the selected field; we will draw it last, so it can set its
+	// cursor / selection range graphics.
 	State normal_state = state;
 	if (normal_state == State::Focused) {
 		normal_state = State::Active;
 	}
-	State selected_state = state;
 	for (size_t i = 0; i < _fields.size(); ++i) {
-		State row_state = (i == _selected)? selected_state: normal_state;
-		_fields[i]->paint(view, i+1, row_state);
+		if (i == _selected) continue;
+		paint_line(view, i, normal_state);
 	}
+	paint_line(view, _selected, state);
+}
+
+void UI::Form::paint_line(WINDOW *view, size_t i, State state)
+{
+	int height, width;
+	getmaxyx(view, height, width);
+	(void)height;
+	wmove(view, i, 0);
+	whline(view, ' ', width);
+	_fields[i]->paint(view, i, state);
 }
 
 void UI::Form::key_up(UI::Frame &ctx)
@@ -109,15 +121,39 @@ void UI::Form::key_down(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-UI::Input::Input(std::string caption, std::string value):
+bool UI::Label::process(UI::Frame &ctx, int ch)
+{
+	switch (toupper(ch)) {
+		case 'Y': return _yes? (_yes(ctx), false): true;
+		case 'N': return _no? (_no(ctx), false): true;
+		default: return true;
+	}
+}
+
+void UI::Label::paint(WINDOW *view, int row, UI::View::State state)
+{
+	int height, width;
+	getmaxyx(view, height, width);
+	(void)height;
+	mvwaddnstr(view, row, 0, _text.c_str(), width);
+}
+
+void UI::Label::set_help(HelpBar::Panel &panel)
+{
+	if (_yes) panel.label[0][0] = HelpBar::Label('Y', false, "Yes");
+	if (_no) panel.label[0][1] = HelpBar::Label('N', false, "No");
+}
+
+UI::Input::Input(std::string caption, std::string value, Completer completer):
 	_caption(caption),
 	_value(value),
 	_cursor_pos(value.size()),
-	_anchor_pos(_cursor_pos)
+	_anchor_pos(_cursor_pos),
+	_completer(completer)
 {
 }
 
-void UI::Input::process(UI::Frame &ctx, int ch)
+bool UI::Input::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
 		case Control::Cut: ctl_cut(ctx); break;
@@ -129,6 +165,7 @@ void UI::Input::process(UI::Frame &ctx, int ch)
 		case KEY_SRIGHT: select_right(ctx); break;
 		case Control::Backspace: delete_prev(ctx); break;
 		case KEY_DC: delete_next(ctx); break;
+		case Control::Tab: tab_complete(ctx); break;
 		default:
 			// we only care about non-control chars now
 			if (ch < 32 || ch > 127) break;
@@ -137,6 +174,7 @@ void UI::Input::process(UI::Frame &ctx, int ch)
 			key_insert(ctx, ch);
 			break;
 	}
+	return true;
 }
 
 void UI::Input::paint(WINDOW *view, int row, UI::View::State state)
@@ -147,10 +185,7 @@ void UI::Input::paint(WINDOW *view, int row, UI::View::State state)
 
 	// Draw the caption, on the left side of the field.
 	wmove(view, row, 0);
-	bool highlight = state == UI::View::State::Focused;
-	if (highlight) wattron(view, A_UNDERLINE);
 	waddnstr(view, _caption.c_str(), width);
-	if (highlight) wattroff(view, A_UNDERLINE);
 	width -= std::min(static_cast<int>(_caption.size()), width);
 
 	// Draw the current value, truncated to fit remaining space.
@@ -183,7 +218,7 @@ void UI::Input::paint(WINDOW *view, int row, UI::View::State state)
 		if (focused) {
 			int selbegin = value_hpos + std::min(_cursor_pos, _anchor_pos);
 			int selcount = std::abs((int)_cursor_pos - (int)_anchor_pos);
-			mvwchgat(view, row, selbegin, selcount, A_REVERSE, 0, NULL);
+			mvwchgat(view, row, selbegin, selcount, A_NORMAL, 0, NULL);
 		}
 		curs_set(0);
 	}
@@ -191,6 +226,9 @@ void UI::Input::paint(WINDOW *view, int row, UI::View::State state)
 
 void UI::Input::set_help(HelpBar::Panel &panel)
 {
+	panel.label[0][0] = HelpBar::Label('X', true, "Cut");
+	panel.label[0][1] = HelpBar::Label('C', true, "Copy");
+	panel.label[0][2] = HelpBar::Label('V', true, "Paste");
 }
 
 void UI::Input::ctl_cut(UI::Frame &ctx)
@@ -273,6 +311,22 @@ void UI::Input::delete_selection(UI::Frame &ctx)
 	_value = _value.substr(0, begin) + _value.substr(end);
 	_cursor_pos = begin;
 	_anchor_pos = begin;
+	ctx.repaint();
+}
+
+void UI::Input::tab_complete(UI::Frame &ctx)
+{
+	// If we have an autocompleter function, give it a chance to extend the
+	// text to the left of the insertion point.
+	if (!_completer) return;
+	size_t searchpos = std::min(_cursor_pos, _anchor_pos);
+	std::string prefix = _value.substr(0, searchpos);
+	std::string postfix = _value.substr(searchpos);
+	std::string extended = _completer(prefix);
+	if (extended == prefix) return;
+	_value = extended + postfix;
+	_cursor_pos = extended.size();
+	_anchor_pos = extended.size();
 	ctx.repaint();
 }
 

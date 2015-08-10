@@ -83,21 +83,6 @@ private:
 	bool _repaint = true;
 };
 
-// Yes/no confirmation dialog, with optional "all".
-class Confirmation : public Base
-{
-	typedef Base inherited;
-public:
-	typedef std::function<void(UI::Frame &ctx)> action_t;
-	Confirmation(std::string prompt, action_t yes, action_t no);
-	virtual bool process(UI::Frame &ctx, int ch) override;
-	virtual void set_help(HelpBar::Panel &panel) override;
-private:
-	action_t _yes;
-	action_t _no;
-	action_t _all = nullptr;
-};
-
 } // namespace Dialog
 } // namespace UI
 

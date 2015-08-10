@@ -182,9 +182,18 @@ Ozette::editor Ozette::open_editor(std::string path)
 	return edrec;
 }
 
-void Ozette::find(std::string text, std::string tree)
+void Ozette::find(std::string text, std::string tree, std::string filter)
 {
-	Find::View::exec(text, tree, _shell);
+	// Make the search results prettier: if we're searching in the working
+	// directory, use "." instead of the literal path.
+	std::string canontree = canonical_abspath(tree);
+	if (canontree == canonical_abspath(_current_dir)) {
+		tree = ".";
+	} else if (canontree == canonical_abspath(_home_dir)) {
+		tree = "~";
+	}
+	Find::spec job = {text, tree, filter};
+	Find::View::exec(job, _shell);
 }
 
 void Ozette::run()
@@ -258,16 +267,7 @@ void Ozette::new_file()
 void Ozette::open_file()
 {
 	show_browser();
-	std::string prompt = "Open";
-	std::vector<std::string> options;
-	auto commit = [this](UI::Frame &ctx, std::string path)
-	{
-		if (path.empty()) return;
-		ctx.app().edit_file(path);
-	};
-	auto dialog = new Browser::Picker(prompt, options, commit);
-	std::unique_ptr<UI::View> dptr(dialog);
-	_shell.active()->show_dialog(std::move(dptr));
+	_shell.active()->process(Control::Open);
 }
 
 void Ozette::show_help()
@@ -290,24 +290,16 @@ void Ozette::show_help()
 	_editors[abs_help] = edrec;
 }
 
-namespace {
-class CommandDialog: public UI::Dialog::Input
-{
-public:
-	CommandDialog(std::string prompt, action_t commit): Input(prompt, commit) {}
-};
-}
-
 void Ozette::execute()
 {
 	show_browser();
-	std::string prompt = "exec";
-	auto commit = [this](UI::Frame &ctx, std::string cmd)
+	auto field = new UI::Input("exec", "");
+	auto commit = [this, field](UI::Frame &ctx)
 	{
-		exec(cmd);
+		exec(field->value());
 	};
-	std::unique_ptr<UI::View> dptr(new CommandDialog(prompt, commit));
-	_shell.active()->show_dialog(std::move(dptr));
+	std::unique_ptr<UI::Form::Field> fptr(field);
+	UI::Form::show(*_shell.active(), std::move(fptr), commit);
 }
 
 void Ozette::build()

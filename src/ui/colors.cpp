@@ -46,7 +46,12 @@ int UI::Colors::chrome(bool active)
 
 int UI::Colors::dialog(bool active)
 {
-	return A_REVERSE | (active? sDialog: sInactive);
+	return active? (A_REVERSE|sDialog): sInactive;
+}
+
+int UI::Colors::result(bool active)
+{
+	return active? (A_REVERSE|sChrome): sInactive;
 }
 
 int UI::Colors::identifier() { return sIdentifier; }

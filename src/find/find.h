@@ -27,14 +27,20 @@
 #include <set>
 
 namespace Find {
+struct spec {
+	std::string needle;
+	std::string haystack;
+	std::string filter;
+};
+
 namespace Dialog {
-void show(UI::Frame &ctx);
+void show(UI::Frame &ctx, spec job);
 } // namespace Dialog
 
 class View : public UI::View
 {
 public:
-	static void exec(std::string regex, std::string tree, UI::Shell &shell);
+	static void exec(spec job, UI::Shell &shell);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
@@ -49,7 +55,7 @@ protected:
 	virtual void paint_into(WINDOW *view, State state) override;
 private:
 	void read_one(char ch);
-	void exec(std::string regex, std::string tree, UI::Frame &ctx);
+	void exec(spec job, UI::Frame &ctx);
 	void ctl_kill(UI::Frame &ctx);
 	void ctl_find(UI::Frame &ctx);
 	void key_return(UI::Frame &ctx);
@@ -65,6 +71,7 @@ private:
 		std::string path;
 		size_t index;
 	};
+	spec _job;
 	std::vector<line> _lines;
 	unsigned _match_lines = 0;
 	unsigned _match_files = 0;

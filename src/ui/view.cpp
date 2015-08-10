@@ -77,12 +77,12 @@ void UI::View::overlay_result(std::string message, State state)
 	int voff = winheight - 1;
 	int hoff = (winwidth - labelwidth) / 2;
 	wmove(_window, voff, hoff);
-	auto color = Colors::chrome(state != State::Inactive);
-	wattron(_window, A_REVERSE | color);
+	auto color = Colors::result(state != State::Inactive);
+	wattron(_window, color);
 	waddstr(_window, "[ ");
 	waddnstr(_window, message.c_str(), numchars);
 	waddstr(_window, " ]");
-	wattroff(_window, A_REVERSE | color);
+	wattroff(_window, color);
 	wmove(_window, cury, curx);
 }
 

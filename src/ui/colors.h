@@ -31,6 +31,7 @@ void init();
 int content(bool active);
 int chrome(bool active);
 int dialog(bool active);
+int result(bool active);
 
 // colors for syntax elements within an editor
 int identifier();

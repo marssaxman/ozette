@@ -126,7 +126,7 @@ bool UI::Window::process(int ch)
 {
 	clear_result();
 	bool more = true;
-	if (_dialog) {
+	if (_dialog && ch != Control::Close) {
 		// A dialog may invoke actions which may result in its own replacement.
 		// We will temporarily move it into a local variable while it has
 		// control, so we don't delete the object while its methods are on the
@@ -276,7 +276,7 @@ void UI::Window::paint_content()
 
 	View::State overlay_state = View::State::Focused;
 	if (!_has_focus) {
-		content_state = View::State::Inactive;
+		overlay_state = View::State::Inactive;
 	}
 	if (!_result_text.empty()) {
 		_view->overlay_result(_result_text, overlay_state);

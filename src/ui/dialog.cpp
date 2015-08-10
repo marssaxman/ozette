@@ -38,7 +38,6 @@ bool UI::Dialog::Base::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
 		case Control::Escape:	// escape key
-		case Control::Close:	// control-W
 			// the user no longer wants this action
 			// this dialog has no further purpose
 			ctx.show_result("Cancelled");
@@ -263,33 +262,5 @@ void UI::Dialog::Input::move_cursor(unsigned pos)
 	if (pos == _cursor_pos && pos == _anchor_pos) return;
 	_cursor_pos = _anchor_pos = pos;
 	_repaint = true;
-}
-
-UI::Dialog::Confirmation::Confirmation(std::string p, action_t y, action_t n):
-	Base(p),
-	_yes(y),
-	_no(n)
-{
-}
-
-bool UI::Dialog::Confirmation::process(UI::Frame &ctx, int ch)
-{
-	switch (toupper(ch)) {
-		case 'Y': _yes(ctx); return false;
-		case 'N': _no(ctx); return false;
-		case 'A': if (_all) { _all(ctx); return false; }
-		default: break;
-	}
-	return inherited::process(ctx, ch);
-}
-
-void UI::Dialog::Confirmation::set_help(HelpBar::Panel &panel)
-{
-	inherited::set_help(panel);
-	panel.label[0][0] = HelpBar::Label('Y', false, "Yes");
-	panel.label[0][1] = HelpBar::Label('N', false, "No");
-	if (_all) {
-		panel.label[0][2] = HelpBar::Label('A', false, "All");
-	}
 }
 

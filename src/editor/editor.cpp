@@ -21,6 +21,7 @@
 #include "app/control.h"
 #include "ui/dialog.h"
 #include "ui/form.h"
+#include "find/find.h"
 #include <assert.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -128,14 +129,6 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::Backspace: key_backspace(ctx); break;
 		case KEY_DC: key_delete(ctx); break;
 		case KEY_BTAB: key_btab(ctx); break;	// shift-tab
-
-		case 276: {
-			UI::Form::FieldList fields;
-			fields.emplace_back(new UI::Input("Smack", "Bitch Up"));
-			auto dialog = new UI::Form("Bonzer", std::move(fields), nullptr);
-			std::unique_ptr<UI::View> dptr(dialog);
-			ctx.show_dialog(std::move(dptr));
-		} break;
 
 		default: {
 			if (isprint(ch)) key_insert(ch);
@@ -312,20 +305,19 @@ void Editor::View::ctl_close(UI::Frame &ctx)
 	// ask the user if they want to save first
 	std::string prompt = "You have modified this file.";
 	prompt += " Save changes before closing?";
-	auto yes_action = [this](UI::Frame &ctx)
+	auto yes = [this](UI::Frame &ctx)
 	{
 		// save the file
 		_doc.Write(_targetpath);
 		ctx.app().close_file(_targetpath);
 	};
-	auto no_action = [this](UI::Frame &ctx)
+	auto no = [this](UI::Frame &ctx)
 	{
 		// just close it
 		ctx.app().close_file(_targetpath);
 	};
-	auto dialog = new UI::Dialog::Confirmation(prompt, yes_action, no_action);
-	std::unique_ptr<UI::View> dptr(dialog);
-	ctx.show_dialog(std::move(dptr));
+	std::unique_ptr<UI::Form::Field> label(new UI::Label(prompt, yes, no));
+	UI::Form::show(ctx, std::move(label));
 }
 
 void Editor::View::ctl_save(UI::Frame &ctx)
@@ -338,26 +330,15 @@ void Editor::View::ctl_save(UI::Frame &ctx)
 	save(ctx, _targetpath);
 }
 
-namespace {
-class SaveDialog: public UI::Dialog::Input
-{
-public:
-	SaveDialog(std::string path, action_t commit):
-		Input("Save As", commit)
-	{
-		_value = path;
-		move_cursor(path.size());
-	}
-};
-}
-
 void Editor::View::ctl_save_as(UI::Frame &ctx)
 {
 	if (_doc.readonly()) return;
 	_doc.commit();
-	auto commit = [this](UI::Frame &ctx, std::string path)
+	auto field = new UI::Input("Save As", _targetpath);
+	auto commit = [this, field](UI::Frame &ctx)
 	{
 		// Clearing out the path name is the same as cancelling.
+		std::string path = field->value();
 		if (path.empty()) {
 			ctx.show_result("Cancelled");
 			return;
@@ -369,17 +350,9 @@ void Editor::View::ctl_save_as(UI::Frame &ctx)
 		_targetpath = path;
 		ctx.set_title(path);
 	};
-	std::unique_ptr<UI::View> dptr(new SaveDialog(_targetpath, commit));
-	ctx.show_dialog(std::move(dptr));
+	std::unique_ptr<UI::Form::Field> fptr(field);
+	UI::Form::show(ctx, std::move(fptr), commit);
 }
-
-namespace {
-class GoLineDialog: public UI::Dialog::Input
-{
-public:
-	GoLineDialog(std::string prompt, action_t commit): Input(prompt, commit) {}
-};
-} // namespace
 
 void Editor::View::ctl_toline(UI::Frame &ctx)
 {
@@ -389,8 +362,10 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 	std::string prompt = "Go to line (";
 	prompt += std::to_string(_cursor.location().line + 1);
 	prompt += ")";
-	auto commit = [this](UI::Frame &ctx, std::string value)
+	auto field = new UI::Input(prompt, "");
+	auto commit = [this, field](UI::Frame &ctx)
 	{
+		std::string value = field->value();
 		if (value.empty()) return;
 		long valnum = std::stol(value) - 1;
 		size_t index = (valnum >= 0) ? valnum : 0;
@@ -398,18 +373,50 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 		drop_selection();
 		postprocess(ctx);
 	};
-	std::unique_ptr<UI::View> dptr(new GoLineDialog(prompt, commit));
-	ctx.show_dialog(std::move(dptr));
+	std::unique_ptr<UI::Form::Field> fptr(field);
+	UI::Form::show(ctx, std::move(fptr), commit);
 }
 
 namespace {
 class FindDialog: public UI::Dialog::Input
 {
+	typedef UI::Dialog::Input inherited;
 public:
-	FindDialog(std::string prompt, action_t commit):
-		Input(prompt, commit)
+	FindDialog(std::string prompt, std::string path, action_t commit):
+		Input(prompt, commit), _path(path)
 	{
 	}
+	virtual bool process(UI::Frame &ctx, int ch) override
+	{
+		if (Control::Find == ch) {
+			// switch to a directory-wide find operation
+			std::string dirpath;
+			std::string filename;
+			size_t slashpos = _path.find_last_of('/');
+			if (slashpos != std::string::npos) {
+				// Split the file name off from the directory path.
+				dirpath = _path.substr(0, slashpos);
+				filename = _path.substr(slashpos + 1);
+			} else {
+				// If the path is a bare file name, assume the working dir.
+				dirpath = ctx.app().current_dir();
+				filename = _path;
+			}
+			dirpath = ctx.app().display_path(dirpath);
+			Find::spec job = {_value, dirpath, filename};
+			Find::Dialog::show(ctx, job);
+			return false;
+		}
+		return inherited::process(ctx, ch);
+	}
+	virtual void set_help(UI::HelpBar::Panel &panel) override
+	{
+		using namespace UI::HelpBar;
+		inherited::set_help(panel);
+		panel.label[0][5] = Label('F', true, "Find All");
+	}
+private:
+	std::string _path;
 };
 } // namespace
 
@@ -426,7 +433,8 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 		}
 		ctl_find_next(ctx);
 	};
-	std::unique_ptr<UI::View> dptr(new FindDialog(prompt, commit));
+	auto dialog = new FindDialog(prompt, _targetpath, commit);
+	std::unique_ptr<UI::View> dptr(dialog);
 	ctx.show_dialog(std::move(dptr));
 }
 
