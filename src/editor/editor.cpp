@@ -377,65 +377,19 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 	UI::Form::show(ctx, std::move(fptr), commit);
 }
 
-namespace {
-class FindDialog: public UI::Dialog::Input
-{
-	typedef UI::Dialog::Input inherited;
-public:
-	FindDialog(std::string prompt, std::string path, action_t commit):
-		Input(prompt, commit), _path(path)
-	{
-	}
-	virtual bool process(UI::Frame &ctx, int ch) override
-	{
-		if (Control::Find == ch) {
-			// switch to a directory-wide find operation
-			std::string dirpath;
-			std::string filename;
-			size_t slashpos = _path.find_last_of('/');
-			if (slashpos != std::string::npos) {
-				// Split the file name off from the directory path.
-				dirpath = _path.substr(0, slashpos);
-				filename = _path.substr(slashpos + 1);
-			} else {
-				// If the path is a bare file name, assume the working dir.
-				dirpath = ctx.app().current_dir();
-				filename = _path;
-			}
-			dirpath = ctx.app().display_path(dirpath);
-			Find::spec job = {_value, dirpath, filename};
-			Find::Dialog::show(ctx, job);
-			return false;
-		}
-		return inherited::process(ctx, ch);
-	}
-	virtual void set_help(UI::HelpBar::Panel &panel) override
-	{
-		using namespace UI::HelpBar;
-		inherited::set_help(panel);
-		panel.label[0][5] = Label('F', true, "Find All");
-	}
-private:
-	std::string _path;
-};
-} // namespace
-
 void Editor::View::ctl_find(UI::Frame &ctx)
 {
-	std::string prompt = "Find";
-	if (!_find_text.empty()) {
-		prompt += " (" + _find_text + ")";
-	}
-	auto commit = [this](UI::Frame &ctx, std::string value)
+	auto field = new UI::Input("Find", _find_text);
+	std::unique_ptr<UI::Form::Field> fptr(field);
+	auto commit = [this, field](UI::Frame &ctx)
 	{
+		std::string value = field->value();
 		if (!value.empty()) {
 			_find_text = value;
 		}
 		ctl_find_next(ctx);
 	};
-	auto dialog = new FindDialog(prompt, _targetpath, commit);
-	std::unique_ptr<UI::View> dptr(dialog);
-	ctx.show_dialog(std::move(dptr));
+	UI::Form::show(ctx, std::move(fptr), commit);
 }
 
 void Editor::View::ctl_find_next(UI::Frame &ctx)
