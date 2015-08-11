@@ -64,7 +64,6 @@ private:
 	std::string canonical_abspath(std::string path);
 	void exec(std::string command);
 	editor open_editor(std::string path);
-	std::string tab_complete(std::string path, bool only_dirs);
 
 	UI::Shell _shell;
 	std::string _home_dir;

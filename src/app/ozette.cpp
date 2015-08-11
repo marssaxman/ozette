@@ -19,6 +19,7 @@
 
 #include "app/ozette.h"
 #include "browser/browser.h"
+#include "browser/completer.h"
 #include "editor/editor.h"
 #include "console/console.h"
 #include "find/find.h"
@@ -179,44 +180,6 @@ Ozette::editor Ozette::open_editor(std::string path)
 	return edrec;
 }
 
-std::string Ozette::tab_complete(std::string path, bool only_dirs)
-{
-	std::string dir = ".";
-	std::string prefix = path;
-	size_t slashpos = path.find_last_of('/');
-	if (slashpos != std::string::npos) {
-		dir = path.substr(0, slashpos + 1);
-		prefix = path.substr(slashpos + 1);
-	}
-	// Look for all the names which begin with this prefix. Identify the
-	// longest common sequence of characters following the prefix. We will
-	// append that to the input path as our result.
-	std::string suffix;
-	bool found_match = false;
-	DirTree list(canonical_abspath(dir));
-	for (auto &item: list.items()) {
-		std::string name = item.name();
-		if (item.is_directory()) {
-			if (!only_dirs) name.push_back('/');
-		} else if (only_dirs) {
-			continue;
-		}
-		if (name.substr(0, prefix.size()) != prefix) continue;
-		std::string remainder = name.substr(prefix.size());
-		if (found_match) {
-			size_t len = std::min(suffix.size(), remainder.size());
-			while (len > 0 && suffix[len-1] != remainder[len-1]) {
-				--len;
-			}
-			suffix.resize(len);
-		} else {
-			found_match = true;
-			suffix = remainder;
-		}
-	}
-	return path + suffix;
-}
-
 void Ozette::find(std::string text, std::string tree, std::string filter)
 {
 	// Make the search results prettier: if we're searching in the working
@@ -259,11 +222,7 @@ void Ozette::show_browser()
 
 void Ozette::change_directory()
 {
-	auto completer = [this](std::string path)
-	{
-		return tab_complete(path, /*only_dirs*/true);
-	};
-	auto field = new UI::Input("Change Directory", "", completer);
+	auto field = new UI::Input("Change Directory", "", &Browser::complete_dir);
 	std::unique_ptr<UI::Form::Field> fptr(field);
 	show_browser();
 	UI::Form::action_t action = [this, field](UI::Frame &ctx) {
@@ -285,11 +244,7 @@ void Ozette::new_file()
 
 void Ozette::open_file()
 {
-	auto completer = [this](std::string path)
-	{
-		return tab_complete(path, /*only_dirs*/false);
-	};
-	auto field = new UI::Input("Open", "", completer);
+	auto field = new UI::Input("Open", "", &Browser::complete_file);
 	std::unique_ptr<UI::Form::Field> fptr(field);
 	UI::Form::action_t action = [this, field](UI::Frame &ctx) {
 		std::string path = field->value();
