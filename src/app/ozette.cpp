@@ -23,7 +23,6 @@
 #include "console/console.h"
 #include "find/find.h"
 #include "app/control.h"
-#include "browser/picker.h"
 #include "app/help.h"
 #include <unistd.h>
 #include <fstream>
@@ -65,8 +64,6 @@ void Ozette::change_dir(std::string path)
 	_current_dir = path;
 	_config.change_directory(path);
 	Browser::View::change_directory(path);
-	set_mru(path, _recent_dirs);
-	cache_write("recent_dirs", _recent_dirs);
 }
 
 std::string Ozette::display_path(std::string path) const
@@ -224,35 +221,15 @@ void Ozette::show_browser()
 
 void Ozette::change_directory()
 {
+	auto field = new UI::Input("Change Directory", "");
+	std::unique_ptr<UI::Form::Field> fptr(field);
 	show_browser();
-	std::string prompt = "Change Directory";
-	// Get the cached list of directories we have opened. Strip out any dirs
-	// which no longer exist, then make a temporary copy of the list in which
-	// the current directory is most recent. Format the paths in the display
-	// list using the tilde ~ in place of the home dir prefix, since that reads
-	// better, though we store full paths in the cache.
-	cache_read("recent_dirs", _recent_dirs);
-	for (size_t i = _recent_dirs.size(); i-- > 0;) {
-		std::string path = _recent_dirs[i];
-		struct stat st;
-		if (stat(path.c_str(), &st)) {
-			_recent_dirs.erase(_recent_dirs.begin() + i);
-		}
-	}
-	auto options = _recent_dirs;
-	set_mru(_current_dir, options);
-	for (auto &path: options) {
-		if (path.substr(0, _home_dir.size()) == _home_dir) {
-			path = "~" + path.substr(_home_dir.size());
-		}
-	}
-	auto commit = [this](UI::Frame &ctx, std::string path)
-	{
+	UI::Form::action_t action = [this, field](UI::Frame &ctx) {
+		std::string path = field->value();
+		if (path.empty()) return;
 		change_dir(path);
 	};
-	auto dialog = new Browser::Picker(prompt, options, commit);
-	std::unique_ptr<UI::View> dptr(dialog);
-	_shell.active()->show_dialog(std::move(dptr));
+	UI::Form::show(*_shell.active(), std::move(fptr), action);
 }
 
 void Ozette::new_file()
@@ -266,8 +243,15 @@ void Ozette::new_file()
 
 void Ozette::open_file()
 {
+	auto field = new UI::Input("Open", "");
+	std::unique_ptr<UI::Form::Field> fptr(field);
+	UI::Form::action_t action = [this, field](UI::Frame &ctx) {
+		std::string path = field->value();
+		if (path.empty()) return;
+		edit_file(path);
+	};
 	show_browser();
-	_shell.active()->process(Control::Open);
+	UI::Form::show(*_shell.active(), std::move(fptr), action);
 }
 
 void Ozette::show_help()
@@ -339,20 +323,6 @@ int Ozette::fix_control_quirks(int ch)
 
 	default:
 	return ch;
-	}
-}
-
-void Ozette::set_mru(std::string path, std::vector<std::string> &mru)
-{
-	// make this item the front of the list
-	// if there are other instances, remove them
-	mru.insert(mru.begin(), path);
-	for (size_t i = 1; i < mru.size();) {
-		if (mru[i] == path) {
-			mru.erase(mru.begin() + i);
-		} else {
-			++i;
-		}
 	}
 }
 

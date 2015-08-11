@@ -61,7 +61,6 @@ private:
 	void execute();
 	void build();
 	int fix_control_quirks(int ch);
-	static void set_mru(std::string path, std::vector<std::string> &mru);
 	std::string canonical_abspath(std::string path);
 	void exec(std::string command);
 	editor open_editor(std::string path);
@@ -74,7 +73,6 @@ private:
 	std::map<std::string, editor> _editors;
 	std::string _clipboard;
 	bool _done = false;
-	std::vector<std::string> _recent_dirs;
 };
 
 #endif //APP_OZETTE_H

@@ -20,7 +20,6 @@
 #include "browser/browser.h"
 #include "app/control.h"
 #include "ui/dialog.h"
-#include "browser/picker.h"
 #include "find/find.h"
 #include <cctype>
 #include <climits>
