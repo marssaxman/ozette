@@ -20,6 +20,7 @@
 #include "find/find.h"
 #include "app/control.h"
 #include "ui/dialog.h"
+#include "browser/completer.h"
 #include <assert.h>
 #include <algorithm>
 #include <unistd.h>
@@ -28,13 +29,14 @@ Find::View *Find::View::_instance;
 
 void Find::Dialog::show(UI::Frame &ctx, spec job)
 {
-	auto needle = new UI::Input("Find Pattern", job.needle);
-	auto haystack = new UI::Input("In Directory", job.haystack);
-	auto filter = new UI::Input("Files Named", job.filter);
+	auto needle = new UI::Input("Find", job.needle);
+	auto filter = new UI::Input("Files", job.filter);
+	auto completer = &Browser::complete_dir;
+	auto haystack = new UI::Input("Directory", job.haystack, completer);
 	UI::Form::FieldList fields;
 	fields.emplace_back(needle);
-	fields.emplace_back(haystack);
 	fields.emplace_back(filter);
+	fields.emplace_back(haystack);
 	auto action = [needle, haystack, filter](UI::Frame &ctx)
 	{
 		spec job = {needle->value(), haystack->value(), filter->value()};
@@ -216,7 +218,7 @@ void Find::View::exec(spec job, UI::Frame &ctx)
 	std::string targetdir = job.haystack;
 	if (targetdir.empty()) targetdir = ".";
 	std::string findarg = " -type f";
-	if (!job.filter.empty()) {
+	if (!job.filter.empty() && job.filter != "*") {
 		findarg += " -name " + job.filter;
 	}
 	std::string find = "find " + targetdir + findarg + " -print0";
