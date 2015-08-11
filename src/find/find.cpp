@@ -19,7 +19,6 @@
 
 #include "find/find.h"
 #include "app/control.h"
-#include "ui/dialog.h"
 #include "browser/completer.h"
 #include <assert.h>
 #include <algorithm>

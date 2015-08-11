@@ -19,7 +19,6 @@
 
 #include "editor/editor.h"
 #include "app/control.h"
-#include "ui/dialog.h"
 #include "ui/form.h"
 #include "find/find.h"
 #include <assert.h>

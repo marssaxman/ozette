@@ -19,7 +19,6 @@
 
 #include "console/console.h"
 #include "app/control.h"
-#include "ui/dialog.h"
 #include <assert.h>
 
 Console::View *Console::View::_instance;
