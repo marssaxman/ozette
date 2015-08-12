@@ -222,15 +222,15 @@ void Ozette::show_browser()
 
 void Ozette::change_directory()
 {
-	auto field = new UI::Input("Change Directory", "", &Browser::complete_dir);
-	std::unique_ptr<UI::Form::Field> fptr(field);
 	show_browser();
-	UI::Form::action_t action = [this, field](UI::Frame &ctx) {
-		std::string path = field->value();
+	UI::Form dialog = {
+		{"Change Directory", "", &Browser::complete_dir}
+	};
+	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string path)
+	{
 		if (path.empty()) return;
 		change_dir(path);
-	};
-	UI::Form::show(*_shell.active(), std::move(fptr), action);
+	});
 }
 
 void Ozette::new_file()
@@ -244,15 +244,15 @@ void Ozette::new_file()
 
 void Ozette::open_file()
 {
-	auto field = new UI::Input("Open", "", &Browser::complete_file);
-	std::unique_ptr<UI::Form::Field> fptr(field);
-	UI::Form::action_t action = [this, field](UI::Frame &ctx) {
-		std::string path = field->value();
+	show_browser();
+	UI::Form dialog = {
+		{"Open", "", &Browser::complete_file}
+	};
+	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string path)
+	{
 		if (path.empty()) return;
 		edit_file(path);
-	};
-	show_browser();
-	UI::Form::show(*_shell.active(), std::move(fptr), action);
+	});
 }
 
 void Ozette::show_help()
@@ -278,13 +278,13 @@ void Ozette::show_help()
 void Ozette::execute()
 {
 	show_browser();
-	auto field = new UI::Input("exec", "");
-	auto commit = [this, field](UI::Frame &ctx)
-	{
-		exec(field->value());
+	UI::Form dialog = {
+		{"exec"}
 	};
-	std::unique_ptr<UI::Form::Field> fptr(field);
-	UI::Form::show(*_shell.active(), std::move(fptr), commit);
+	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string cmd)
+	{
+		exec(cmd);
+	});
 }
 
 void Ozette::build()

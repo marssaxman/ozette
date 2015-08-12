@@ -19,42 +19,128 @@
 
 #include "ui/form.h"
 #include "ui/colors.h"
+#include "ui/view.h"
+#include "ui/helpbar.h"
+#include <assert.h>
 
-void UI::Form::show(
-		UI::Frame &ctx, std::unique_ptr<Field> &&field, action_t action)
-{
-	FieldList fields;
-	fields.emplace_back(std::move(field));
-	show(ctx, std::move(fields), action);
-}
+namespace {
 
-void UI::Form::show(UI::Frame &ctx, FieldList &&fields, action_t action)
+// Single UI control managing a form field
+class Input
 {
-	std::unique_ptr<UI::View> dptr(new Form(std::move(fields), action));
+public:
+	typedef std::function<std::string(std::string)> Completer;
+	Input(std::string caption, std::string value, Completer completer);
+	bool process(UI::Frame &ctx, int ch);
+	void paint(WINDOW *view, int row, UI::View::State state);
+	void set_help(UI::HelpBar::Panel &panel);
+	std::string name() const { return _caption; }
+	std::string value() const { return _value; }
+protected:
+	void ctl_cut(UI::Frame &ctx);
+	void ctl_copy(UI::Frame &ctx);
+	void ctl_paste(UI::Frame &ctx);
+	void arrow_left(UI::Frame &ctx);
+	void arrow_right(UI::Frame &ctx);
+	void select_left(UI::Frame &ctx);
+	void select_right(UI::Frame &ctx);
+	void delete_prev(UI::Frame &ctx);
+	void delete_next(UI::Frame &ctx);
+	void delete_selection(UI::Frame &ctx);
+	void tab_complete(UI::Frame &ctx);
+	void key_insert(UI::Frame &ctx, int ch);
+	std::string _caption;
+	std::string _value;
+	unsigned _cursor_pos = 0;
+	unsigned _anchor_pos = 0;
+	Completer _completer = nullptr;
+};
+
+// View managing the active representation of the form
+class FormView : public UI::View
+{
+	typedef UI::View inherited;
+public:
+	typedef std::vector<Input> FieldList;
+	typedef std::function<void(UI::Frame&, FieldList&, size_t i)> action_t;
+	FormView(FieldList &&fields, action_t action);
+
+	virtual void layout(int vpos, int hpos, int height, int width) override;
+	virtual bool process(UI::Frame &ctx, int ch) override;
+	virtual void set_help(UI::HelpBar::Panel &panel) override;
+protected:
+	virtual void paint_into(WINDOW *view, State state) override;
+	void paint_line(WINDOW *view, size_t i, State state);
+	void key_up(UI::Frame &ctx);
+	void key_down(UI::Frame &ctx);
+private:
+	FieldList _fields;
+	size_t _selected = 0;
+	action_t _commit = nullptr;
+};
+
+} // namespace
+
+static void run_view(
+		UI::Frame &ctx,
+		std::vector<UI::Form::Field> &fields,
+		FormView::action_t action)
+{
+	std::vector<Input> inputs;
+	for (auto &field: fields) {
+		inputs.emplace_back(field.name, field.value, field.completer);
+	}
+	std::unique_ptr<UI::View> dptr(new FormView(std::move(inputs), action));
 	ctx.show_dialog(std::move(dptr));
 }
 
-UI::Form::Form(FieldList &&fields, action_t commit):
+void UI::Form::show(UI::Frame &ctx, all_fields_t action)
+{
+	auto commit = [this, action](
+			UI::Frame &ctx, std::vector<Input> &inputs, size_t selected)
+	{
+		std::map<std::string, std::string> results;
+		for (auto &input: inputs) {
+			results[input.name()] = input.value();
+		}
+		action(ctx, results);
+	};
+	run_view(ctx, _fields, commit);
+}
+
+void UI::Form::show(UI::Frame &ctx, selected_val_t action)
+{
+	auto commit = [this, action](
+			UI::Frame &ctx, std::vector<Input> &inputs, size_t selected)
+	{
+		action(ctx, inputs[selected].value());
+	};
+	run_view(ctx, _fields, commit);
+}
+
+FormView::FormView(FieldList &&fields, action_t commit):
 	_fields(std::move(fields)),
 	_commit(commit)
 {
+	assert(!_fields.empty());
+	assert(_commit != nullptr);
 }
 
-void UI::Form::layout(int vpos, int hpos, int height, int width)
+void FormView::layout(int vpos, int hpos, int height, int width)
 {
 	int new_height = std::min((int)_fields.size(), height / 2);
 	int new_vpos = vpos + height - new_height;
 	inherited::layout(new_vpos, hpos, new_height, width);
 }
 
-bool UI::Form::process(UI::Frame &ctx, int ch)
+bool FormView::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
 		case Control::Return:
 		case Control::Enter:
 			// the user is happy with their choice, so tell the action to
 			// proceed and then inform our host that we are finished
-			if (_commit) _commit(ctx);
+			_commit(ctx, _fields, _selected);
 			return false;
 		case Control::Escape:	// escape key
 			// the user no longer wants this action
@@ -64,25 +150,24 @@ bool UI::Form::process(UI::Frame &ctx, int ch)
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
 		default: {
-			if (_selected < _fields.size()) {
-				return _fields[_selected]->process(ctx, ch);
-			}
+			assert(_selected < _fields.size());
+			return _fields[_selected].process(ctx, ch);
 		} break;
 	}
 	return true;
 }
 
-void UI::Form::set_help(HelpBar::Panel &panel)
+void FormView::set_help(UI::HelpBar::Panel &panel)
 {
 	if (_selected < _fields.size()) {
-		_fields[_selected]->set_help(panel);
+		_fields[_selected].set_help(panel);
 	}
-	panel.label[1][0] = HelpBar::Label('[', true, "Escape");
+	panel.label[1][0] = UI::HelpBar::Label('[', true, "Escape");
 }
 
-void UI::Form::paint_into(WINDOW *view, State state)
+void FormView::paint_into(WINDOW *view, State state)
 {
-	wattrset(view, Colors::dialog(state == State::Focused));
+	wattrset(view, UI::Colors::dialog(state == State::Focused));
 	// Draw each field, below the title bar but above the help text.
 	// Skip the selected field; we will draw it last, so it can set its
 	// cursor / selection range graphics.
@@ -97,31 +182,31 @@ void UI::Form::paint_into(WINDOW *view, State state)
 	paint_line(view, _selected, state);
 }
 
-void UI::Form::paint_line(WINDOW *view, size_t i, State state)
+void FormView::paint_line(WINDOW *view, size_t i, State state)
 {
 	int height, width;
 	getmaxyx(view, height, width);
 	(void)height;
 	wmove(view, i, 0);
 	whline(view, ' ', width);
-	_fields[i]->paint(view, i, state);
+	_fields[i].paint(view, i, state);
 }
 
-void UI::Form::key_up(UI::Frame &ctx)
+void FormView::key_up(UI::Frame &ctx)
 {
 	if (_selected == 0) return;
 	_selected--;
 	ctx.repaint();
 }
 
-void UI::Form::key_down(UI::Frame &ctx)
+void FormView::key_down(UI::Frame &ctx)
 {
 	if (_selected + 1 >= _fields.size()) return;
 	_selected++;
 	ctx.repaint();
 }
 
-UI::Input::Input(std::string caption, std::string value, Completer completer):
+Input::Input(std::string caption, std::string value, Completer completer):
 	_caption(caption),
 	_value(value),
 	_cursor_pos(value.size()),
@@ -130,7 +215,7 @@ UI::Input::Input(std::string caption, std::string value, Completer completer):
 {
 }
 
-bool UI::Input::process(UI::Frame &ctx, int ch)
+bool Input::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
 		case Control::Cut: ctl_cut(ctx); break;
@@ -154,7 +239,7 @@ bool UI::Input::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-void UI::Input::paint(WINDOW *view, int row, UI::View::State state)
+void Input::paint(WINDOW *view, int row, UI::View::State state)
 {
 	int height, width;
 	getmaxyx(view, height, width);
@@ -201,20 +286,20 @@ void UI::Input::paint(WINDOW *view, int row, UI::View::State state)
 	}
 }
 
-void UI::Input::set_help(HelpBar::Panel &panel)
+void Input::set_help(UI::HelpBar::Panel &panel)
 {
-	panel.label[0][0] = HelpBar::Label('X', true, "Cut");
-	panel.label[0][1] = HelpBar::Label('C', true, "Copy");
-	panel.label[0][2] = HelpBar::Label('V', true, "Paste");
+	panel.label[0][0] = UI::HelpBar::Label('X', true, "Cut");
+	panel.label[0][1] = UI::HelpBar::Label('C', true, "Copy");
+	panel.label[0][2] = UI::HelpBar::Label('V', true, "Paste");
 }
 
-void UI::Input::ctl_cut(UI::Frame &ctx)
+void Input::ctl_cut(UI::Frame &ctx)
 {
 	ctl_copy(ctx);
 	delete_selection(ctx);
 }
 
-void UI::Input::ctl_copy(UI::Frame &ctx)
+void Input::ctl_copy(UI::Frame &ctx)
 {
 	// Don't replace the current clipboard contents unless something is
 	// actually selected.
@@ -226,7 +311,7 @@ void UI::Input::ctl_copy(UI::Frame &ctx)
 	ctx.app().set_clipboard(_value.substr(begin, count));
 }
 
-void UI::Input::ctl_paste(UI::Frame &ctx)
+void Input::ctl_paste(UI::Frame &ctx)
 {
 	delete_selection(ctx);
 	std::string clip = ctx.app().get_clipboard();
@@ -235,19 +320,19 @@ void UI::Input::ctl_paste(UI::Frame &ctx)
 	_anchor_pos = _cursor_pos;
 }
 
-void UI::Input::arrow_left(UI::Frame &ctx)
+void Input::arrow_left(UI::Frame &ctx)
 {
 	select_left(ctx);
 	_anchor_pos = _cursor_pos;
 }
 
-void UI::Input::arrow_right(UI::Frame &ctx)
+void Input::arrow_right(UI::Frame &ctx)
 {
 	select_right(ctx);
 	_anchor_pos = _cursor_pos;
 }
 
-void UI::Input::select_left(UI::Frame &ctx)
+void Input::select_left(UI::Frame &ctx)
 {
 	if (_cursor_pos > 0) {
 		_cursor_pos--;
@@ -255,7 +340,7 @@ void UI::Input::select_left(UI::Frame &ctx)
 	}
 }
 
-void UI::Input::select_right(UI::Frame &ctx)
+void Input::select_right(UI::Frame &ctx)
 {
 	if (_cursor_pos < _value.size()) {
 		_cursor_pos++;
@@ -263,7 +348,7 @@ void UI::Input::select_right(UI::Frame &ctx)
 	}
 }
 
-void UI::Input::delete_prev(UI::Frame &ctx)
+void Input::delete_prev(UI::Frame &ctx)
 {
 	if (_cursor_pos == _anchor_pos) {
 		select_left(ctx);
@@ -271,7 +356,7 @@ void UI::Input::delete_prev(UI::Frame &ctx)
 	delete_selection(ctx);
 }
 
-void UI::Input::delete_next(UI::Frame &ctx)
+void Input::delete_next(UI::Frame &ctx)
 {
 	if (_cursor_pos == _anchor_pos) {
 		select_right(ctx);
@@ -279,7 +364,7 @@ void UI::Input::delete_next(UI::Frame &ctx)
 	delete_selection(ctx);
 }
 
-void UI::Input::delete_selection(UI::Frame &ctx)
+void Input::delete_selection(UI::Frame &ctx)
 {
 	if (_value.empty()) return;
 	if (_cursor_pos == _anchor_pos) return;
@@ -291,7 +376,7 @@ void UI::Input::delete_selection(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-void UI::Input::tab_complete(UI::Frame &ctx)
+void Input::tab_complete(UI::Frame &ctx)
 {
 	// If we have an autocompleter function, give it a chance to extend the
 	// text to the left of the insertion point.
@@ -307,7 +392,7 @@ void UI::Input::tab_complete(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-void UI::Input::key_insert(UI::Frame &ctx, int ch)
+void Input::key_insert(UI::Frame &ctx, int ch)
 {
 	delete_selection(ctx);
 	_value.insert(_cursor_pos++, 1, ch);

@@ -22,6 +22,7 @@
 #include "ui/form.h"
 #include "ui/dialog.h"
 #include "find/find.h"
+#include "browser/completer.h"
 #include <assert.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -333,11 +334,11 @@ void Editor::View::ctl_save_as(UI::Frame &ctx)
 {
 	if (_doc.readonly()) return;
 	_doc.commit();
-	auto field = new UI::Input("Save As", _targetpath);
-	auto commit = [this, field](UI::Frame &ctx)
+	UI::Form dialog = {
+		{"Save As", _targetpath, &Browser::complete_file}
+	};
+	dialog.show(ctx, [this](UI::Frame &ctx, std::string path)
 	{
-		// Clearing out the path name is the same as cancelling.
-		std::string path = field->value();
 		if (path.empty()) {
 			ctx.show_result("Cancelled");
 			return;
@@ -348,9 +349,7 @@ void Editor::View::ctl_save_as(UI::Frame &ctx)
 		ctx.app().rename_file(_targetpath, path);
 		_targetpath = path;
 		ctx.set_title(path);
-	};
-	std::unique_ptr<UI::Form::Field> fptr(field);
-	UI::Form::show(ctx, std::move(fptr), commit);
+	});
 }
 
 void Editor::View::ctl_toline(UI::Frame &ctx)
@@ -361,34 +360,32 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 	std::string prompt = "Go to line (";
 	prompt += std::to_string(_cursor.location().line + 1);
 	prompt += ")";
-	auto field = new UI::Input(prompt, "");
-	auto commit = [this, field](UI::Frame &ctx)
+	UI::Form dialog = {
+		{prompt}
+	};
+	dialog.show(ctx, [this](UI::Frame &ctx, std::string value)
 	{
-		std::string value = field->value();
 		if (value.empty()) return;
 		long valnum = std::stol(value) - 1;
 		size_t index = (valnum >= 0) ? valnum : 0;
 		_cursor.move_to(_doc.home(index));
 		drop_selection();
 		postprocess(ctx);
-	};
-	std::unique_ptr<UI::Form::Field> fptr(field);
-	UI::Form::show(ctx, std::move(fptr), commit);
+	});
 }
 
 void Editor::View::ctl_find(UI::Frame &ctx)
 {
-	auto field = new UI::Input("Find", _find_text);
-	std::unique_ptr<UI::Form::Field> fptr(field);
-	auto commit = [this, field](UI::Frame &ctx)
+	UI::Form dialog = {
+		{"Find", _find_text}
+	};
+	dialog.show(ctx, [this](UI::Frame &ctx, std::string value)
 	{
-		std::string value = field->value();
 		if (!value.empty()) {
 			_find_text = value;
 		}
 		ctl_find_next(ctx);
-	};
-	UI::Form::show(ctx, std::move(fptr), commit);
+	});
 }
 
 void Editor::View::ctl_find_next(UI::Frame &ctx)

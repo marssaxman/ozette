@@ -28,20 +28,21 @@ Find::View *Find::View::_instance;
 
 void Find::Dialog::show(UI::Frame &ctx, spec job)
 {
-	auto needle = new UI::Input("Find", job.needle);
-	auto filter = new UI::Input("Files", job.filter);
-	auto completer = &Browser::complete_dir;
-	auto haystack = new UI::Input("Directory", job.haystack, completer);
-	UI::Form::FieldList fields;
-	fields.emplace_back(needle);
-	fields.emplace_back(filter);
-	fields.emplace_back(haystack);
-	auto action = [needle, haystack, filter](UI::Frame &ctx)
-	{
-		spec job = {needle->value(), haystack->value(), filter->value()};
-		ctx.app().find(job.needle, job.haystack, job.filter);
+	UI::Form dialog = {
+		{"Find", job.needle},
+		{"Files", job.filter},
+		{"Directory", job.haystack, &Browser::complete_dir}
 	};
-	UI::Form::show(ctx, std::move(fields), action);
+	using namespace std;
+	dialog.show(ctx, [](UI::Frame &ctx, map<string, string> results)
+	{
+		spec job = {
+			results["Find"],
+			results["Directory"],
+			results["Files"]
+		};
+		ctx.app().find(job.needle, job.haystack, job.filter);
+	});
 }
 
 void Find::View::exec(spec job, UI::Shell &shell)

@@ -23,81 +23,30 @@
 #include <vector>
 #include <memory>
 #include <functional>
-#include "ui/view.h"
+#include <initializer_list>
+#include "ui/frame.h"
 
 namespace UI {
-// A view presenting a title and managing an array of fields, multiplexing
-// user input among them; can be committed (enter) or cancelled (escape).
-class Form : public UI::View
+class Form
 {
-	typedef UI::View inherited;
 public:
-	// Abstract field representing one row of input within a form
-	class Field
-	{
-	public:
-		virtual bool process(UI::Frame &ctx, int ch) = 0;
-		virtual void paint(WINDOW *view, int row, UI::View::State state) = 0;
-		virtual void set_help(HelpBar::Panel &panel) = 0;
+	struct Field {
+		std::string name;
+		std::string value;
+		std::function<std::string(std::string)> completer;
 	};
-	typedef std::vector<std::unique_ptr<Field>> FieldList;
-	typedef std::function<void(Frame&)> action_t;
-
-	// convenience wrappers for instantiating & showing a form
-	static void show(
-			UI::Frame &ctx,
-			std::unique_ptr<Field> &&field,
-			action_t action = nullptr);
-	static void show(
-			UI::Frame &ctx,
-			FieldList &&fields,
-			action_t action = nullptr);
-	Form(FieldList &&fields, action_t action);
-
-	virtual void layout(int vpos, int hpos, int height, int width) override;
-	virtual bool process(UI::Frame &ctx, int ch) override;
-	virtual void set_help(HelpBar::Panel &panel) override;
-protected:
-	virtual void paint_into(WINDOW *view, State state) override;
-	void paint_line(WINDOW *view, size_t i, State state);
-	void key_up(UI::Frame &ctx);
-	void key_down(UI::Frame &ctx);
+	Form(std::initializer_list<Field> fields): _fields(fields) {}
+	// Show the form, let the user edit, and return the values of all fields.
+	typedef std::map<std::string, std::string> results_t;
+	typedef std::function<void(UI::Frame&, results_t)> all_fields_t;
+	void show(UI::Frame &ctx, all_fields_t action);
+	// Show the form, let the user edit, and return the value of the field
+	// which was selected when the user committed the form.
+	typedef std::function<void(UI::Frame&, std::string)> selected_val_t;
+	void show(UI::Frame &ctx, selected_val_t);
 private:
-	FieldList _fields;
-	size_t _selected = 0;
-	action_t _commit = nullptr;
+	std::vector<Field> _fields;
 };
-
-// A form field in which the user can enter text.
-class Input : public Form::Field
-{
-public:
-	typedef std::function<std::string(std::string)> Completer;
-	Input(std::string caption, std::string value, Completer completer=nullptr);
-	virtual bool process(UI::Frame &ctx, int ch) override;
-	virtual void paint(WINDOW *view, int row, UI::View::State state) override;
-	virtual void set_help(HelpBar::Panel &panel) override;
-	virtual std::string value() const { return _value; }
-protected:
-	void ctl_cut(UI::Frame &ctx);
-	void ctl_copy(UI::Frame &ctx);
-	void ctl_paste(UI::Frame &ctx);
-	void arrow_left(UI::Frame &ctx);
-	void arrow_right(UI::Frame &ctx);
-	void select_left(UI::Frame &ctx);
-	void select_right(UI::Frame &ctx);
-	void delete_prev(UI::Frame &ctx);
-	void delete_next(UI::Frame &ctx);
-	void delete_selection(UI::Frame &ctx);
-	void tab_complete(UI::Frame &ctx);
-	void key_insert(UI::Frame &ctx, int ch);
-	std::string _caption;
-	std::string _value;
-	unsigned _cursor_pos = 0;
-	unsigned _anchor_pos = 0;
-	Completer _completer = nullptr;
-};
-
 } // namespace UI
 
 #endif //UI_FORM_H
