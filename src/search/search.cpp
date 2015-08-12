@@ -100,12 +100,12 @@ bool Search::View::poll(UI::Frame &ctx)
 void Search::View::set_help(UI::HelpBar::Panel &panel)
 {
 	if (_proc.get()) {
-		panel.label[0][0] = {"^K", "Kill"};
+		panel.kill();
 	} else {
-		panel.label[0][5] = {"^F", "Find"};
+		panel.find();
 	}
-	panel.label[1][0] = {"^W", "Close"};
-	panel.label[1][5] = {"^?", "Help"};
+	panel.close();
+	panel.help();
 }
 
 Search::View::View()

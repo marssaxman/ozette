@@ -143,24 +143,18 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 void Editor::View::set_help(UI::HelpBar::Panel &panel)
 {
 	if (!_doc.readonly()) {
-		panel.label[0][0] = {"^X", "Cut"};
-		panel.label[0][1] = {"^C", "Copy"};
-		panel.label[0][2] = {"^V", "Paste"};
+		panel.cut();
+		panel.copy();
+		panel.paste();
 	}
-	panel.label[0][4] = {"^L", "To Line"};
-	panel.label[0][5] = {"^F", "Find"};
-	panel.label[1][0] = {"^W", "Close"};
-	if (_doc.modified()) {
-		panel.label[1][1] = {"^S", "Save"};
-	}
-	panel.label[1][2] = {"^A", "Save As"};
-	if (_doc.can_redo()) {
-		panel.label[1][3] = {"^Y", "Redo"};
-	}
-	if (_doc.can_undo()) {
-		panel.label[1][4] = {"^Z", "Undo"};
-	}
-	panel.label[1][5] = {"^?", "Help"};
+	panel.to_line();
+	panel.find();
+	panel.close();
+	if (_doc.modified()) panel.save();
+	panel.save_as();
+	if (_doc.can_redo()) panel.redo();
+	if (_doc.can_undo()) panel.undo();
+	panel.help();
 }
 
 void Editor::View::jump_to(UI::Frame &ctx, line_t index)

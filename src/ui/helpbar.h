@@ -32,9 +32,31 @@ struct Label {
 	std::string text;
 };
 struct Panel {
-        static const size_t kWidth = 6;
-        static const size_t kHeight = 2;
-        Label label[kHeight][kWidth];
+    static const size_t kWidth = 6;
+    static const size_t kHeight = 2;
+    Label label[kHeight][kWidth];
+
+	void help()      { label[1][5] = {"^?", "Help"}; }
+	void quit()      { label[1][0] = {"^Q", "Quit"}; }
+	void close()     { label[1][0] = {"^W", "Close"}; }
+	void escape()    { label[1][0] = {"^[", "Escape"}; }
+	void open()      { label[0][0] = {"^O", "Open"}; }
+	void new_file()  { label[0][1] = {"^N", "New File"}; }
+	void cut()       { label[0][0] = {"^X", "Cut"}; }
+	void copy()      { label[0][1] = {"^C", "Copy"}; }
+	void paste()     { label[0][2] = {"^V", "Paste"}; }
+	void to_line()   { label[0][4] = {"^L", "To Line"}; }
+	void save()      { label[1][1] = {"^S", "Save"}; }
+	void save_as()   { label[1][2] = {"^A", "Save As"}; }
+	void find()      { label[0][5] = {"^F", "Find"}; }
+	void undo()      { label[1][4] = {"^Z", "Undo"}; }
+	void redo()      { label[1][3] = {"^Y", "Redo"}; }
+	void execute()   { label[1][1] = {"^E", "Execute"}; }
+	void directory() { label[1][2] = {"^D", "Directory"}; }
+	void build()     { label[1][4] = {"F5", "Build"}; }
+	void kill()      { label[0][0] = {"^K", "Kill"}; }
+	void yes()       { label[0][0] = {" Y", "Yes"}; }
+	void no()        { label[0][1] = {" N", "No"}; }
 };
 } // namespace HelpBar
 } // namespace UI

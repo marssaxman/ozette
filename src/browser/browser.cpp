@@ -147,14 +147,14 @@ bool Browser::View::poll(UI::Frame &ctx)
 
 void Browser::View::set_help(UI::HelpBar::Panel &panel)
 {
-	panel.label[0][0] = {"^O", "Open"};
-	panel.label[0][1] = {"^N", "New File"};
-	panel.label[0][5] = {"^F", "Find"};
-	panel.label[1][0] = {"^Q", "Quit"};
-	panel.label[1][1] = {"^E", "Execute"};
-	panel.label[1][2] = {"^D", "Directory"};
-	panel.label[1][4] = {"F5", "Build"};
-	panel.label[1][5] = {"^?", "Help"};
+	panel.open();
+	panel.new_file();
+	panel.find();
+	panel.quit();
+	panel.execute();
+	panel.directory();
+	panel.build();
+	panel.help();
 }
 
 void Browser::View::view(std::string path)

@@ -290,9 +290,9 @@ void Input::paint(WINDOW *view, int row, UI::View::State state)
 
 void Input::set_help(UI::HelpBar::Panel &panel)
 {
-	panel.label[0][0] = {"^X", "Cut"};
-	panel.label[0][1] = {"^C", "Copy"};
-	panel.label[0][2] = {"^V", "Paste"};
+	panel.cut();
+	panel.copy();
+	panel.paste();
 }
 
 void Input::ctl_cut(UI::Frame &ctx)
