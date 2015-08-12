@@ -355,10 +355,9 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 	// illogical as it is, the rest of the world seems to think that it is
 	// a good idea for line numbers to start counting at 1, so we will
 	// accommodate their perverse desires in the name of compatibility.
-	std::string prompt = "Go to line (";
-	prompt += std::to_string(_cursor.location().line + 1);
-	prompt += ")";
-	UI::Form dialog({prompt});
+	std::string prompt = "Go to line";
+	std::string current = std::to_string(_cursor.location().line + 1);
+	UI::Form dialog({prompt, current});
 	dialog.show(ctx, [this](UI::Frame &ctx, std::string value)
 	{
 		if (value.empty()) return;

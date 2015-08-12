@@ -220,7 +220,7 @@ Input::Input(std::string caption, std::string value, Completer completer):
 	_caption(caption),
 	_value(value),
 	_cursor_pos(value.size()),
-	_anchor_pos(_cursor_pos),
+	_anchor_pos(0),
 	_completer(completer)
 {
 }
