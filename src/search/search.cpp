@@ -227,7 +227,7 @@ void Search::View::exec(spec job, UI::Frame &ctx)
 	const char *argv[1 + 2 + 1] = {"sh", "-c", command.c_str(), nullptr};
 	_title = "find " + job.needle;
 	if (!job.haystack.empty()) {
-		_title += " in " + ctx.app().display_path(job.haystack) + "/";
+		_title += " in " + Browser::display_path(job.haystack) + "/";
 	}
 	_proc.reset(new Console::Subproc(argv[0], argv));
 	ctx.repaint();

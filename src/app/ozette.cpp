@@ -67,19 +67,6 @@ void Ozette::change_dir(std::string path)
 	Browser::View::change_directory(path);
 }
 
-std::string Ozette::display_path(std::string path) const
-{
-	size_t cwdsize = _current_dir.size();
-	if (path.size() > cwdsize && path.substr(0, cwdsize) == _current_dir) {
-		return path.substr(1 + cwdsize);
-	}
-	size_t homesize = _home_dir.size();
-	if (path.substr(0, homesize) == _home_dir) {
-		return "~" + path.substr(homesize);
-	}
-	return path;
-}
-
 void Ozette::edit_file(std::string path)
 {
 	open_editor(path);
@@ -224,7 +211,7 @@ void Ozette::change_directory()
 	show_browser();
 	UI::Form dialog({
 		"Change Directory",
-		display_path(_current_dir),
+		Browser::display_path(_current_dir),
 		&Browser::complete_dir
 	});
 	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string path)

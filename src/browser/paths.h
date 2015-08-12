@@ -41,6 +41,9 @@ std::string complete_dir(std::string partial_path);
 // duplicate separators, and return a clean absolute path.
 std::string absolute_path(std::string path);
 
+// Format this path for compact user display.
+std::string display_path(std::string path);
+
 } // namespace Browser
 
 #endif // BROWSER_PATHS_H

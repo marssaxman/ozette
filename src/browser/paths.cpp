@@ -24,6 +24,20 @@
 #include <cstring>
 #include <assert.h>
 
+static std::string home_dir()
+{
+	return std::string(getenv("HOME"));
+}
+
+static std::string current_dir()
+{
+	char *cwd = getcwd(NULL, 0);
+	assert(cwd);
+	std::string out = std::string(cwd);
+	free(cwd);
+	return out;
+}
+
 static std::string complete_path(std::string path, bool only_dirs)
 {
 	// Figure out whether this string contains a directory path or just a name
@@ -39,8 +53,7 @@ static std::string complete_path(std::string path, bool only_dirs)
 	// If the path begins with the magic home-dir marker, replace it with the
 	// actual path to the home dir, because opendir won't parse it.
 	if (base[0] == '~') {
-		std::string homepath(getenv("HOME"));
-		base = homepath + base.substr(1);
+		base = home_dir() + base.substr(1);
 	}
 	// Iterate through the items in this directory, looking for entries which
 	// begin with the same chars as our name fragment.
@@ -91,25 +104,20 @@ std::string Browser::complete_dir(std::string partial_path)
 
 std::string Browser::absolute_path(std::string path)
 {
-	std::string home_dir = std::string(getenv("HOME"));
-	std::string working_dir = home_dir;
-	char *cwd = getcwd(NULL, 0);
-	if (cwd) {
-		working_dir = std::string(cwd);
-		free(cwd);
-	}
 	// Canonicalize this path and expand it as necessary to produce
 	// a full path relative to the filesystem root.
-	if (path.empty()) return working_dir;
+	if (path.empty()) {
+		return current_dir();
+	}
 	std::string out;
 	size_t offset = 0;
 	if (path[0] == '/') {
 		offset = 1;
 	} else if (path[0] == '~') {
 		offset = 1;
-		out = home_dir;
+		out = home_dir();
 	} else {
-		out = working_dir;
+		out = current_dir();
 	}
 	while (offset != std::string::npos) {
 		size_t segpos = path.find_first_of('/', offset);
@@ -136,3 +144,18 @@ std::string Browser::absolute_path(std::string path)
 	return out;
 }
 
+std::string Browser::display_path(std::string path)
+{
+	std::string cwd = current_dir();
+	size_t cwdsize = cwd.size();
+	if (path.size() > cwdsize && path.substr(0, cwdsize) == cwd) {
+		return path.substr(1 + cwdsize);
+	}
+	std::string home = home_dir();
+	size_t homesize = home.size();
+	if (path.substr(0, homesize) == home) {
+		return "~" + path.substr(homesize);
+	}
+	return path;
+
+}

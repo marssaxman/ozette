@@ -58,7 +58,7 @@ void Editor::View::activate(UI::Frame &ctx)
 	if (_targetpath.empty()) {
 		ctx.set_title("Untitled");
 	} else {
-		ctx.set_title(ctx.app().display_path(_targetpath));
+		ctx.set_title(Browser::display_path(_targetpath));
 	}
 	set_status(ctx);
 }

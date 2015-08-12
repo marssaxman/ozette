@@ -18,6 +18,7 @@
 //
 
 #include "browser/browser.h"
+#include "browser/paths.h"
 #include "app/control.h"
 #include "search/search.h"
 #include <cctype>
@@ -210,7 +211,7 @@ void Browser::View::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 
 void Browser::View::ctl_find(UI::Frame &ctx)
 {
-	Search::spec job = {"", ctx.app().display_path(_tree.path()), "*"};
+	Search::spec job = {"", Browser::display_path(_tree.path()), "*"};
 	Search::Dialog::show(ctx, job);
 }
 
@@ -427,9 +428,9 @@ void Browser::View::set_title(UI::Frame &ctx)
 	// view directory if we have focused in on a subtree.
 	std::string workingdir = ctx.app().current_dir();
 	std::string viewdir = _tree.path();
-	std::string title = ctx.app().display_path(workingdir);
+	std::string title = Browser::display_path(workingdir);
 	if (viewdir != workingdir) {
-		title = ctx.app().display_path(viewdir) + " (" + title + ")";
+		title = Browser::display_path(viewdir) + " (" + title + ")";
 	}
 	ctx.set_title(title);
 }
@@ -470,7 +471,7 @@ void Browser::View::toggle(UI::Frame &ctx)
 		_expanded_items.insert(path);
 		display.expanded = true;
 		insert_rows(_selection + 1, display.indent + 1, entry);
-		_path_filter = ctx.app().display_path(path) + "/";
+		_path_filter = Browser::display_path(path) + "/";
 	}
 	update_filter(ctx);
 	ctx.repaint();
