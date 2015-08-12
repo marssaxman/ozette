@@ -31,7 +31,7 @@ class Input
 public:
 	typedef std::function<std::string(std::string)> Completer;
 	Input(std::string caption, std::string value, Completer completer);
-	bool process(UI::Frame &ctx, int ch);
+	void process(UI::Frame &ctx, int ch);
 	void paint(WINDOW *view, int row, UI::View::State state);
 	void set_help(UI::HelpBar::Panel &panel);
 	std::string name() const { return _caption; }
@@ -161,7 +161,7 @@ bool FormView::process(UI::Frame &ctx, int ch)
 		case KEY_DOWN: key_down(ctx); break;
 		default: {
 			assert(_selected < _fields.size());
-			return _fields[_selected].process(ctx, ch);
+			_fields[_selected].process(ctx, ch);
 		} break;
 	}
 	return true;
@@ -225,7 +225,7 @@ Input::Input(std::string caption, std::string value, Completer completer):
 {
 }
 
-bool Input::process(UI::Frame &ctx, int ch)
+void Input::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
 		case Control::Cut: ctl_cut(ctx); break;
@@ -246,7 +246,6 @@ bool Input::process(UI::Frame &ctx, int ch)
 			key_insert(ctx, ch);
 			break;
 	}
-	return true;
 }
 
 void Input::paint(WINDOW *view, int row, UI::View::State state)
@@ -333,14 +332,26 @@ void Input::ctl_paste(UI::Frame &ctx)
 
 void Input::arrow_left(UI::Frame &ctx)
 {
-	select_left(ctx);
-	_anchor_pos = _cursor_pos;
+	if (_cursor_pos != _anchor_pos) {
+		_cursor_pos = std::min(_cursor_pos, _anchor_pos);
+		_anchor_pos = _cursor_pos;
+		ctx.repaint();
+	} else {
+		select_left(ctx);
+		_anchor_pos = _cursor_pos;
+	}
 }
 
 void Input::arrow_right(UI::Frame &ctx)
 {
-	select_right(ctx);
-	_anchor_pos = _cursor_pos;
+	if (_cursor_pos != _anchor_pos) {
+		_cursor_pos = std::max(_cursor_pos, _anchor_pos);
+		_anchor_pos = _cursor_pos;
+		ctx.repaint();
+	} else {
+		select_right(ctx);
+		_anchor_pos = _cursor_pos;
+	}
 }
 
 void Input::select_left(UI::Frame &ctx)
