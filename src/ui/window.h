@@ -56,12 +56,12 @@ protected:
 	void clear_result();
 	void calculate_content(int &vpos, int &hpos, int &height, int &width);
 	void layout_contentwin();
-	void layout_taskbar();
+	void layout_helpbar();
 	void paint();
 	void paint_content();
 	void paint_chrome();
 	void paint_titlebar(int width);
-	void paint_taskbar(int height, int width);
+	void paint_helpbar(int height, int width);
 private:
 	void process_dialog(int ch);
 	void close_dialog();
@@ -82,7 +82,7 @@ private:
 	// What are the dimensional attributes we worked out during layout?
 	bool _lframe = false;
 	bool _rframe = false;
-	unsigned _taskbar_height = 0;
+	unsigned _helpbar_height = 0;
 	// Have we experienced changes which require repainting but which we
 	// have not yet had a chance to implement?
 	bool _dirty_content = true;

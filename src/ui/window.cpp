@@ -64,7 +64,7 @@ void UI::Window::layout(int xpos, int width)
 		width++;
 	}
 	_rframe = new_rframe;
-	_taskbar_height = HelpBar::Panel::kHeight;
+	_helpbar_height = HelpBar::Panel::kHeight;
 
 	// What are the dimensions and location of our existing frame?
 	// If the window has the wrong size, we must rebuild it, and
@@ -226,7 +226,7 @@ void UI::Window::calculate_content(int &vpos, int &hpos, int &height, int &width
 		width--;
 	}
 	// There may be a task bar, whose height may vary.
-	height -= _taskbar_height;
+	height -= _helpbar_height;
 }
 
 void UI::Window::layout_contentwin()
@@ -241,14 +241,14 @@ void UI::Window::layout_contentwin()
 	}
 }
 
-void UI::Window::layout_taskbar()
+void UI::Window::layout_helpbar()
 {
 	unsigned new_height = 0;
 	// The help panel occupies two lines
 	new_height += HelpBar::Panel::kHeight;
 	// Is that the height we planned for?
-	if (new_height != _taskbar_height) {
-		_taskbar_height = new_height;
+	if (new_height != _helpbar_height) {
+		_helpbar_height = new_height;
 		_dirty_chrome = true;
 		layout_contentwin();
 	}
@@ -297,11 +297,11 @@ void UI::Window::paint_chrome()
 	if (_rframe) {
 		mvwvline(_framewin, 1, width-1, ACS_VLINE, height-1);
 	}
-	if (_taskbar_height) {
+	if (_helpbar_height) {
 		// The task bar is still active when a dialog is open, because it shows
 		// context-specific information.
 		wattrset(_framewin, Colors::chrome(_has_focus));
-		paint_taskbar(height, width);
+		paint_helpbar(height, width);
 	}
 	_dirty_chrome = false;
 	wstandend(_framewin);
@@ -354,7 +354,7 @@ void UI::Window::paint_titlebar(int width)
 	}
 }
 
-void UI::Window::paint_taskbar(int height, int width)
+void UI::Window::paint_helpbar(int height, int width)
 {
 	HelpBar::Panel panel;
 	if (_dialog) {
@@ -363,13 +363,17 @@ void UI::Window::paint_taskbar(int height, int width)
 		// help tag to the panel ourselves.
 		panel.escape();
 	} else {
+		// Windows get "close" by default, but they can change it if need be.
+		panel.close();
 		_view->set_help(panel);
+		// The help command, however, is mandatory.
+		panel.help();
 	}
 
 	int xpos = _lframe ? 1 : 0;
 	width -= xpos;
 	if (_rframe) width--;
-	int ypos = height - _taskbar_height;
+	int ypos = height - _helpbar_height;
 	// Clear out the space we're going to work in.
 	for (int v = ypos; v < height; ++v) {
 		mvwhline(_framewin, v, xpos, ' ', width);

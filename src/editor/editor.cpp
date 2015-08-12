@@ -149,12 +149,10 @@ void Editor::View::set_help(UI::HelpBar::Panel &panel)
 	}
 	panel.to_line();
 	panel.find();
-	panel.close();
 	if (_doc.modified()) panel.save();
 	panel.save_as();
 	if (_doc.can_redo()) panel.redo();
 	if (_doc.can_undo()) panel.undo();
-	panel.help();
 }
 
 void Editor::View::jump_to(UI::Frame &ctx, line_t index)

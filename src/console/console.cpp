@@ -83,11 +83,7 @@ bool Console::View::poll(UI::Frame &ctx)
 
 void Console::View::set_help(UI::HelpBar::Panel &panel)
 {
-	if (_proc.get()) {
-		panel.kill();
-	}
-	panel.close();
-	panel.help();
+	if (_proc.get()) panel.kill();
 }
 
 Console::View::View()

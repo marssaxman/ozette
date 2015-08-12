@@ -154,7 +154,6 @@ void Browser::View::set_help(UI::HelpBar::Panel &panel)
 	panel.execute();
 	panel.directory();
 	panel.build();
-	panel.help();
 }
 
 void Browser::View::view(std::string path)

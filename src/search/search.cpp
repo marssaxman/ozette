@@ -104,8 +104,6 @@ void Search::View::set_help(UI::HelpBar::Panel &panel)
 	} else {
 		panel.search();
 	}
-	panel.close();
-	panel.help();
 }
 
 Search::View::View()
