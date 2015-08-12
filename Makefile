@@ -10,7 +10,7 @@ ozette-executable:
 	@./build.sh ozette ./obj ./src
 
 clean:
-	@rm -f ozette ./obj/*
+	@rm -rf ozette ./obj/*
 
 install:
 	@./install.sh

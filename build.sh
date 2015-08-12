@@ -112,12 +112,14 @@ done
 # the source file's dependencies.
 errorfound=0
 for src in $(find $rootdirs -type f -name "*.cpp" -o -name "*.c"); do
-	# get just the file name, no path
-	srcname="${src##*/}"
 	# make up an obj file path in our obj subdirectory
-	objname="${srcname%.*}.o"
+	# Strip off any leading "./" which might happen to be present
+	src="${src#\./}"
+	relpath="${src%/*.*}"
+	mkdir -p "$objdir/$relpath"
+	objname="${src%.*}.o"
 	obj="$objdir/$objname"
-	depname="${srcname%.*}.d"
+	depname="${src%.*}.d"
 	dep="$objdir/$depname"
 
 	# Do we need to recompile the source file?
@@ -127,7 +129,7 @@ for src in $(find $rootdirs -type f -name "*.cpp" -o -name "*.c"); do
 		true
 	else
 		# no object file, so we'll compile one
-		echo "compiling $srcname..."
+		echo "compiling $src..."
 
 		# only specify C99 if we are not compiling a c++ file
 		if [[ ${src##*.} != "cpp" ]]; then
