@@ -24,6 +24,12 @@
 
 namespace Browser {
 
+// What is the full absolute path for the current working directory?
+std::string current_dir();
+
+// What is the full path to the user's home directory?
+std::string home_dir();
+
 // Given a path ending with a fragment of a name, find the characters which
 // must follow that fragment and append them to the path. If the fragment
 // constitutes a directory name, also append a slash, since we assume that

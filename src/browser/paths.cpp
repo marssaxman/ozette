@@ -24,12 +24,12 @@
 #include <cstring>
 #include <assert.h>
 
-static std::string home_dir()
+std::string Browser::home_dir()
 {
 	return std::string(getenv("HOME"));
 }
 
-static std::string current_dir()
+std::string Browser::current_dir()
 {
 	char *cwd = getcwd(NULL, 0);
 	assert(cwd);
@@ -53,7 +53,7 @@ static std::string complete_path(std::string path, bool only_dirs)
 	// If the path begins with the magic home-dir marker, replace it with the
 	// actual path to the home dir, because opendir won't parse it.
 	if (base[0] == '~') {
-		base = home_dir() + base.substr(1);
+		base = Browser::home_dir() + base.substr(1);
 	}
 	// Iterate through the items in this directory, looking for entries which
 	// begin with the same chars as our name fragment.
