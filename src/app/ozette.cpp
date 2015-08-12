@@ -223,9 +223,7 @@ void Ozette::show_browser()
 void Ozette::change_directory()
 {
 	show_browser();
-	UI::Form dialog = {
-		{"Change Directory", "", &Browser::complete_dir}
-	};
+	UI::Form dialog({"Change Directory", "", &Browser::complete_dir});
 	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string path)
 	{
 		if (path.empty()) return;
@@ -245,9 +243,7 @@ void Ozette::new_file()
 void Ozette::open_file()
 {
 	show_browser();
-	UI::Form dialog = {
-		{"Open", "", &Browser::complete_file}
-	};
+	UI::Form dialog({"Open", "", &Browser::complete_file});
 	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string path)
 	{
 		if (path.empty()) return;
@@ -278,9 +274,7 @@ void Ozette::show_help()
 void Ozette::execute()
 {
 	show_browser();
-	UI::Form dialog = {
-		{"exec"}
-	};
+	UI::Form dialog({"exec"});
 	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string cmd)
 	{
 		exec(cmd);

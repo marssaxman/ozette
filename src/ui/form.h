@@ -35,6 +35,7 @@ public:
 		std::string value;
 		std::function<std::string(std::string)> completer;
 	};
+	Form(Field field): _fields(1, field) {}
 	Form(std::initializer_list<Field> fields): _fields(fields) {}
 	// Show the form, let the user edit, and return the values of all fields.
 	typedef std::map<std::string, std::string> results_t;

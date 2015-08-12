@@ -334,9 +334,7 @@ void Editor::View::ctl_save_as(UI::Frame &ctx)
 {
 	if (_doc.readonly()) return;
 	_doc.commit();
-	UI::Form dialog = {
-		{"Save As", _targetpath, &Browser::complete_file}
-	};
+	UI::Form dialog({"Save As", _targetpath, &Browser::complete_file});
 	dialog.show(ctx, [this](UI::Frame &ctx, std::string path)
 	{
 		if (path.empty()) {
@@ -360,9 +358,7 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 	std::string prompt = "Go to line (";
 	prompt += std::to_string(_cursor.location().line + 1);
 	prompt += ")";
-	UI::Form dialog = {
-		{prompt}
-	};
+	UI::Form dialog({prompt});
 	dialog.show(ctx, [this](UI::Frame &ctx, std::string value)
 	{
 		if (value.empty()) return;
@@ -376,9 +372,7 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 
 void Editor::View::ctl_find(UI::Frame &ctx)
 {
-	UI::Form dialog = {
-		{"Find", _find_text}
-	};
+	UI::Form dialog({"Find", _find_text});
 	dialog.show(ctx, [this](UI::Frame &ctx, std::string value)
 	{
 		if (!value.empty()) {
