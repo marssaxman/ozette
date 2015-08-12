@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef FIND_FIND_H
-#define FIND_FIND_H
+#ifndef SEARCH_SEARCH_H
+#define SEARCH_SEARCH_H
 
 #include "ui/view.h"
 #include "ui/shell.h"
@@ -26,7 +26,7 @@
 #include "console/subproc.h"
 #include <set>
 
-namespace Find {
+namespace Search {
 struct spec {
 	std::string needle;
 	std::string haystack;
@@ -85,7 +85,7 @@ private:
 	int _height = 0;
 	int _width = 0;
 };
-} // namespace Find
+} // namespace Search
 
-#endif // FIND_FIND_H
+#endif // SEARCH_SEARCH_H
 

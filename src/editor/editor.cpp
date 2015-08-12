@@ -21,7 +21,7 @@
 #include "app/control.h"
 #include "ui/form.h"
 #include "ui/dialog.h"
-#include "find/find.h"
+#include "search/search.h"
 #include "browser/completer.h"
 #include <assert.h>
 #include <sys/stat.h>

@@ -17,16 +17,16 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "find/find.h"
+#include "search/search.h"
 #include "app/control.h"
 #include "browser/completer.h"
 #include <assert.h>
 #include <algorithm>
 #include <unistd.h>
 
-Find::View *Find::View::_instance;
+Search::View *Search::View::_instance;
 
-void Find::Dialog::show(UI::Frame &ctx, spec job)
+void Search::Dialog::show(UI::Frame &ctx, spec job)
 {
 	UI::Form dialog = {
 		{"Find", job.needle},
@@ -45,28 +45,28 @@ void Find::Dialog::show(UI::Frame &ctx, spec job)
 	});
 }
 
-void Find::View::exec(spec job, UI::Shell &shell)
+void Search::View::exec(spec job, UI::Shell &shell)
 {
 	if (_instance) {
 		shell.make_active(_instance->_window);
 	} else {
-		_instance = new Find::View;
+		_instance = new Search::View;
 		std::unique_ptr<UI::View> view(_instance);
 		_instance->_window = shell.open_window(std::move(view));
 	}
 	_instance->exec(job, *_instance->_window);
 }
 
-void Find::View::activate(UI::Frame &ctx)
+void Search::View::activate(UI::Frame &ctx)
 {
 	set_title(ctx);
 }
 
-void Find::View::deactivate(UI::Frame &ctx)
+void Search::View::deactivate(UI::Frame &ctx)
 {
 }
 
-bool Find::View::process(UI::Frame &ctx, int ch)
+bool Search::View::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
 		case Control::Close: return false;
@@ -82,7 +82,7 @@ bool Find::View::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-bool Find::View::poll(UI::Frame &ctx)
+bool Search::View::poll(UI::Frame &ctx)
 {
 	// We only need to poll if we have an active subprocess.
 	if (!_proc.get()) return true;
@@ -114,7 +114,7 @@ bool Find::View::poll(UI::Frame &ctx)
 	return true;
 }
 
-void Find::View::set_help(UI::HelpBar::Panel &panel)
+void Search::View::set_help(UI::HelpBar::Panel &panel)
 {
 	if (_proc.get()) {
 		panel.label[0][0] = UI::HelpBar::Label('K', true, "Kill");
@@ -125,17 +125,17 @@ void Find::View::set_help(UI::HelpBar::Panel &panel)
 	panel.label[1][5] = UI::HelpBar::Label('?', true, "Help");
 }
 
-Find::View::View()
+Search::View::View()
 {
 	assert(_instance == nullptr);
 }
 
-Find::View::~View()
+Search::View::~View()
 {
 	_instance = nullptr;
 }
 
-void Find::View::paint_into(WINDOW *view, State state)
+void Search::View::paint_into(WINDOW *view, State state)
 {
 	wmove(view, 0, 0);
 	getmaxyx(view, _height, _width);
@@ -161,7 +161,7 @@ void Find::View::paint_into(WINDOW *view, State state)
 	}
 }
 
-void Find::View::read_one(char ch)
+void Search::View::read_one(char ch)
 {
 	if ('\n' == ch) {
 		// we have just finished processing a line; we should have
@@ -206,7 +206,7 @@ void Find::View::read_one(char ch)
 	}
 }
 
-void Find::View::exec(spec job, UI::Frame &ctx)
+void Search::View::exec(spec job, UI::Frame &ctx)
 {
 	_job = job;
 	_match_files = 0;
@@ -234,7 +234,7 @@ void Find::View::exec(spec job, UI::Frame &ctx)
 	set_title(ctx);
 }
 
-void Find::View::ctl_kill(UI::Frame &ctx)
+void Search::View::ctl_kill(UI::Frame &ctx)
 {
 	if (_proc.get()) {
 		_proc.reset(nullptr);
@@ -242,19 +242,19 @@ void Find::View::ctl_kill(UI::Frame &ctx)
 	}
 }
 
-void Find::View::ctl_find(UI::Frame &ctx)
+void Search::View::ctl_find(UI::Frame &ctx)
 {
-	Find::Dialog::show(ctx, _job);
+	Search::Dialog::show(ctx, _job);
 }
 
-void Find::View::key_return(UI::Frame &ctx)
+void Search::View::key_return(UI::Frame &ctx)
 {
 	if (_selection >= _lines.size()) return;
 	auto &line = _lines[_selection];
 	ctx.app().find_in_file(line.path, line.index);
 }
 
-void Find::View::key_down(UI::Frame &ctx)
+void Search::View::key_down(UI::Frame &ctx)
 {
 	if (_selection < _lines.size()) {
 		_selection++;
@@ -262,7 +262,7 @@ void Find::View::key_down(UI::Frame &ctx)
 	}
 }
 
-void Find::View::key_up(UI::Frame &ctx)
+void Search::View::key_up(UI::Frame &ctx)
 {
 	if (_selection > 0) {
 		_selection--;
@@ -270,20 +270,20 @@ void Find::View::key_up(UI::Frame &ctx)
 	}
 }
 
-void Find::View::key_page_down(UI::Frame &ctx)
+void Search::View::key_page_down(UI::Frame &ctx)
 {
 	_selection = std::min(_scrollpos + (size_t)_height, _lines.size()-1);
 	ctx.repaint();
 }
 
-void Find::View::key_page_up(UI::Frame &ctx)
+void Search::View::key_page_up(UI::Frame &ctx)
 {
 	// Move to last line of previous page.
 	_selection = _scrollpos > 0? _scrollpos-1: 0;
 	ctx.repaint();
 }
 
-void Find::View::set_title(UI::Frame &ctx)
+void Search::View::set_title(UI::Frame &ctx)
 {
 	ctx.set_title(_title);
 	std::string status;
@@ -296,10 +296,11 @@ void Find::View::set_title(UI::Frame &ctx)
 	ctx.set_status(status);
 }
 
-unsigned Find::View::maxscroll() const
+unsigned Search::View::maxscroll() const
 {
 	// we'll show an extra blank line at the top and the bottom in order to
 	// help the user see when they are at the end of the log
 	int displines = (int)_lines.size() + 2;
 	return (displines > _height)? (displines - _height): 0;
 }
+

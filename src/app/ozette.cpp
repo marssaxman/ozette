@@ -22,7 +22,7 @@
 #include "browser/completer.h"
 #include "editor/editor.h"
 #include "console/console.h"
-#include "find/find.h"
+#include "search/search.h"
 #include "app/control.h"
 #include "app/help.h"
 #include <unistd.h>
@@ -190,8 +190,8 @@ void Ozette::find(std::string text, std::string tree, std::string filter)
 	} else if (canontree == canonical_abspath(_home_dir)) {
 		tree = "~";
 	}
-	Find::spec job = {text, tree, filter};
-	Find::View::exec(job, _shell);
+	Search::spec job = {text, tree, filter};
+	Search::View::exec(job, _shell);
 }
 
 void Ozette::run()

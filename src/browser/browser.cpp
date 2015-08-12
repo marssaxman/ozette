@@ -19,7 +19,7 @@
 
 #include "browser/browser.h"
 #include "app/control.h"
-#include "find/find.h"
+#include "search/search.h"
 #include <cctype>
 #include <climits>
 #include <assert.h>
@@ -210,8 +210,8 @@ void Browser::View::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 
 void Browser::View::ctl_find(UI::Frame &ctx)
 {
-	Find::spec job = {"", ctx.app().display_path(_tree.path()), "*"};
-	Find::Dialog::show(ctx, job);
+	Search::spec job = {"", ctx.app().display_path(_tree.path()), "*"};
+	Search::Dialog::show(ctx, job);
 }
 
 void Browser::View::key_return(UI::Frame &ctx)
