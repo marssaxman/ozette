@@ -57,7 +57,8 @@ static std::string complete_path(std::string path, bool only_dirs)
 		// its characters as our completion suffix. If it's a subsequent
 		// match, we will use the leading sequence common to our existing
 		// suffix and this file's name.
-		const char *match = &entry->d_name[frag_len];
+		std::string match(&entry->d_name[frag_len]);
+		if (entry->d_type == DT_DIR) match.push_back('/');
 		if (matches++) {
 			// We've already found one match, so we will reduce the suffix
 			// string to the characters common to this new entry's name.
@@ -70,7 +71,7 @@ static std::string complete_path(std::string path, bool only_dirs)
 		} else {
 			// This was our first match, so we'll use the remainder of its
 			// name as our completion suffix.
-			suffix = std::string(match);
+			suffix = match;
 		}
 	}
 	closedir(pdir);
