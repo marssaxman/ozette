@@ -63,6 +63,7 @@ protected:
 	void paint_titlebar(int width);
 	void paint_taskbar(int height, int width);
 private:
+	void process_dialog(int ch);
 	static std::string ltrunc(const std::string &text, size_t surplus);
 	Controller &_app;
 	std::unique_ptr<View> _view;

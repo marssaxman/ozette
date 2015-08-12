@@ -125,31 +125,24 @@ void UI::Window::bring_forward(FocusRelative rel)
 bool UI::Window::process(int ch)
 {
 	clear_result();
-	bool more = true;
+	// The user can always press escape to cancel the current dialog.
+	// That is an independent action and neither the window's nor the
+	// dialog's view need to deal with it.
 	if (_dialog && ch == Control::Escape) {
-		// Every dialog can be cancelled by pressing escape.
 		_dialog.reset(nullptr);
 		show_result("Cancelled");
+		paint();
+		return true;
 	}
-	if (_dialog && ch != Control::Close) {
-		// A dialog may invoke actions which may result in its own replacement.
-		// We will temporarily move it into a local variable while it has
-		// control, so we don't delete the object while its methods are on the
-		// call stack.
-		std::unique_ptr<View> temp(std::move(_dialog));
-		if (temp->process(*this, ch)) {
-			// If this dialog wants to stick around, we
-			// expect that it hasn't done anything to change _dialog.
-			assert(_dialog.get() == nullptr);
-			_dialog = std::move(temp);
-		} else {
-			// If the dialog closed, that is sort of like
-			// activating the window again, so tell the
-			// controller to check up on whatever it was
-			// doing.
-			_view->activate(*this);
-			_dirty_content = true;
-		}
+	// A signal to close the window implicitly cancels any open dialog.
+	if (ch == Control::Close && _dialog) {
+		_dialog.reset(nullptr);
+	}
+	// If there's a dialog open, it gets to handle this event. Otherwise, the
+	// window's own view will process it.
+	bool more = true;
+	if (_dialog) {
+		process_dialog(ch);
 	} else {
 		more = _view->process(*this, ch);
 	}
@@ -412,3 +405,24 @@ std::string UI::Window::ltrunc(const std::string &text, size_t surplus)
 	return (text.size() > surplus)? text.substr(surplus): "";
 }
 
+void UI::Window::process_dialog(int ch)
+{
+	// A dialog may invoke actions which may result in its own replacement.
+	// We will temporarily move it into a local variable while it has
+	// control, so we don't delete the object while its methods are on the
+	// call stack.
+	std::unique_ptr<View> temp(std::move(_dialog));
+	if (temp->process(*this, ch)) {
+		// If this dialog wants to stick around, we
+		// expect that it hasn't done anything to change _dialog.
+		assert(_dialog.get() == nullptr);
+		_dialog = std::move(temp);
+	} else {
+		// If the dialog closed, that is sort of like
+		// activating the window again, so tell the
+		// controller to check up on whatever it was
+		// doing.
+		_view->activate(*this);
+		_dirty_content = true;
+	}
+}
