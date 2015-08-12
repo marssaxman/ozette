@@ -129,14 +129,14 @@ bool UI::Window::process(int ch)
 	// That is an independent action and neither the window's nor the
 	// dialog's view need to deal with it.
 	if (_dialog && ch == Control::Escape) {
-		_dialog.reset(nullptr);
+		close_dialog();
 		show_result("Cancelled");
 		paint();
 		return true;
 	}
 	// A signal to close the window implicitly cancels any open dialog.
 	if (ch == Control::Close && _dialog) {
-		_dialog.reset(nullptr);
+		close_dialog();
 	}
 	// If there's a dialog open, it gets to handle this event. Otherwise, the
 	// window's own view will process it.
@@ -425,4 +425,11 @@ void UI::Window::process_dialog(int ch)
 		_view->activate(*this);
 		_dirty_content = true;
 	}
+}
+
+void UI::Window::close_dialog()
+{
+	_dialog.reset(nullptr);
+	_view->activate(*this);
+	_dirty_content = true;
 }

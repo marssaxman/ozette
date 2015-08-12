@@ -117,7 +117,7 @@ void Browser::View::paint_into(WINDOW *view, State state)
 bool Browser::View::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
-		case Control::Find: ctl_find(ctx); break;
+		case KEY_F(4): search(ctx); break;
 		case Control::Return: key_return(ctx); break;
 		case Control::Close: return false; break;
 		case Control::Escape: clear_filter(ctx); break;
@@ -149,7 +149,7 @@ void Browser::View::set_help(UI::HelpBar::Panel &panel)
 {
 	panel.open();
 	panel.new_file();
-	panel.find();
+	panel.search();
 	panel.quit();
 	panel.execute();
 	panel.directory();
@@ -209,7 +209,7 @@ void Browser::View::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 	mvwaddnstr(view, vpos, width-drawch, buf, drawch);
 }
 
-void Browser::View::ctl_find(UI::Frame &ctx)
+void Browser::View::search(UI::Frame &ctx)
 {
 	Search::spec job = {"", Path::display(_tree.path()), "*"};
 	Search::Dialog::show(ctx, job);

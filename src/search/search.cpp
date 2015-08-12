@@ -54,7 +54,7 @@ bool Search::View::process(UI::Frame &ctx, int ch)
 	switch (ch) {
 		case Control::Close: return false;
 		case Control::Kill: ctl_kill(ctx); break;
-		case Control::Find: ctl_find(ctx); break;
+		case KEY_F(4): search(ctx); break;
 		case Control::Return: key_return(ctx); break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
@@ -102,7 +102,7 @@ void Search::View::set_help(UI::HelpBar::Panel &panel)
 	if (_proc.get()) {
 		panel.kill();
 	} else {
-		panel.find();
+		panel.search();
 	}
 	panel.close();
 	panel.help();
@@ -225,7 +225,7 @@ void Search::View::ctl_kill(UI::Frame &ctx)
 	}
 }
 
-void Search::View::ctl_find(UI::Frame &ctx)
+void Search::View::search(UI::Frame &ctx)
 {
 	Search::Dialog::show(ctx, _job);
 }
