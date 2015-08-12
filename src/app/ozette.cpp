@@ -203,7 +203,6 @@ void Ozette::show_browser()
 
 void Ozette::change_directory()
 {
-	show_browser();
 	UI::Form dialog({
 		"Change Directory",
 		Path::display(_current_dir),
@@ -227,7 +226,6 @@ void Ozette::new_file()
 
 void Ozette::open_file()
 {
-	show_browser();
 	UI::Form dialog({"Open", "", &Path::complete_file});
 	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string path)
 	{
@@ -258,7 +256,6 @@ void Ozette::show_help()
 
 void Ozette::execute()
 {
-	show_browser();
 	UI::Form dialog({"exec"});
 	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string cmd)
 	{
