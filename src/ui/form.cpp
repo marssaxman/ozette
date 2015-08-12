@@ -36,6 +36,7 @@ public:
 	void set_help(UI::HelpBar::Panel &panel);
 	std::string name() const { return _caption; }
 	std::string value() const { return _value; }
+	void set_indent(int i) { _indent = i; }
 protected:
 	void ctl_cut(UI::Frame &ctx);
 	void ctl_copy(UI::Frame &ctx);
@@ -51,6 +52,7 @@ protected:
 	void key_insert(UI::Frame &ctx, int ch);
 	std::string _caption;
 	std::string _value;
+	int _indent = 0;
 	unsigned _cursor_pos = 0;
 	unsigned _anchor_pos = 0;
 	Completer _completer = nullptr;
@@ -124,6 +126,14 @@ FormView::FormView(FieldList &&fields, action_t commit):
 {
 	assert(!_fields.empty());
 	assert(_commit != nullptr);
+	// Align all the field captions to the right, so their colons line up.
+	size_t longest = 0;
+	for (auto &f: _fields) {
+		longest = std::max(longest, f.name().size());
+	}
+	for (auto &f: _fields) {
+		f.set_indent(longest - f.name().size());
+	}
 }
 
 void FormView::layout(int vpos, int hpos, int height, int width)
@@ -246,7 +256,8 @@ void Input::paint(WINDOW *view, int row, UI::View::State state)
 	(void)height;
 
 	// Draw the caption, on the left side of the field.
-	wmove(view, row, 0);
+	wmove(view, row, _indent);
+	width -= _indent;
 	waddnstr(view, _caption.c_str(), width);
 	width -= std::min(static_cast<int>(_caption.size()), width);
 
