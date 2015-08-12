@@ -41,7 +41,7 @@ void Search::Dialog::show(UI::Frame &ctx, spec job)
 			results["Directory"],
 			results["Files"]
 		};
-		ctx.app().find(job.needle, job.haystack, job.filter);
+		ctx.app().search(job);
 	});
 }
 

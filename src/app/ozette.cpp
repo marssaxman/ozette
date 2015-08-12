@@ -180,18 +180,17 @@ Ozette::editor Ozette::open_editor(std::string path)
 	return edrec;
 }
 
-void Ozette::find(std::string text, std::string tree, std::string filter)
+void Ozette::search(Search::spec query)
 {
 	// Make the search results prettier: if we're searching in the working
 	// directory, use "." instead of the literal path.
-	std::string canontree = canonical_abspath(tree);
+	std::string canontree = canonical_abspath(query.haystack);
 	if (canontree == canonical_abspath(_current_dir)) {
-		tree = ".";
+		query.haystack = ".";
 	} else if (canontree == canonical_abspath(_home_dir)) {
-		tree = "~";
+		query.haystack = "~";
 	}
-	Search::spec job = {text, tree, filter};
-	Search::View::exec(job, _shell);
+	Search::View::exec(query, _shell);
 }
 
 void Ozette::run()

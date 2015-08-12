@@ -24,15 +24,10 @@
 #include "ui/shell.h"
 #include "ui/form.h"
 #include "console/subproc.h"
+#include "search/engine.h"
 #include <set>
 
 namespace Search {
-struct spec {
-	std::string needle;
-	std::string haystack;
-	std::string filter;
-};
-
 namespace Dialog {
 void show(UI::Frame &ctx, spec job);
 } // namespace Dialog

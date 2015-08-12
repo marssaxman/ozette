@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include "app/config.h"
+#include "search/engine.h"
 
 // Abstract interface for centralized application actions.
 class Controller
@@ -36,7 +37,7 @@ public:
 	virtual void rename_file(std::string from, std::string to) = 0;
 	virtual void close_file(std::string path) = 0;
 	virtual void find_in_file(std::string path, size_t index) = 0;
-	virtual void find(std::string text, std::string tree, std::string filter) = 0;
+	virtual void search(Search::spec) = 0;
 	virtual void set_clipboard(std::string text) = 0;
 	virtual std::string get_clipboard() = 0;
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) = 0;
