@@ -126,6 +126,11 @@ bool UI::Window::process(int ch)
 {
 	clear_result();
 	bool more = true;
+	if (_dialog && ch == Control::Escape) {
+		// Every dialog can be cancelled by pressing escape.
+		_dialog.reset(nullptr);
+		show_result("Cancelled");
+	}
 	if (_dialog && ch != Control::Close) {
 		// A dialog may invoke actions which may result in its own replacement.
 		// We will temporarily move it into a local variable while it has

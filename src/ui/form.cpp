@@ -152,11 +152,6 @@ bool FormView::process(UI::Frame &ctx, int ch)
 			// proceed and then inform our host that we are finished
 			_commit(ctx, _fields, _selected);
 			return false;
-		case Control::Escape:	// escape key
-			// the user no longer wants this action
-			// this dialog has no further purpose
-			ctx.show_result("Cancelled");
-			return false;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
 		default: {
