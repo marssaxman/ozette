@@ -53,7 +53,7 @@ std::string Ozette::current_dir() const
 
 void Ozette::change_dir(std::string path)
 {
-	path = canonical_abspath(path);
+	path = Browser::absolute_path(path);
 	int result = chdir(path.c_str());
 	if (0 != result) {
 		int code = errno;
@@ -89,16 +89,16 @@ void Ozette::rename_file(std::string from, std::string to)
 {
 	// Somebody has moved or renamed a file. If there is an editor
 	// open for it, update our editor map.
-	auto existing = _editors.find(canonical_abspath(from));
+	auto existing = _editors.find(Browser::absolute_path(from));
 	if (existing == _editors.end()) return;
 	auto edrec = existing->second;
 	_editors.erase(existing);
-	_editors[canonical_abspath(to)] = edrec;
+	_editors[Browser::absolute_path(to)] = edrec;
 }
 
 void Ozette::close_file(std::string path)
 {
-	auto iter = _editors.find(canonical_abspath(path));
+	auto iter = _editors.find(Browser::absolute_path(path));
 	if (iter != _editors.end()) {
 		_shell.close_window(iter->second.window);
 		_editors.erase(iter);
@@ -165,7 +165,7 @@ void Ozette::exec(std::string command)
 Ozette::editor Ozette::open_editor(std::string path)
 {
 	// If we already have this file open, bring it forward.
-	path = canonical_abspath(path);
+	path = Browser::absolute_path(path);
 	auto existing = _editors.find(path);
 	if (existing != _editors.end()) {
 		_shell.make_active(existing->second.window);
@@ -184,10 +184,10 @@ void Ozette::search(Search::spec query)
 {
 	// Make the search results prettier: if we're searching in the working
 	// directory, use "." instead of the literal path.
-	std::string canontree = canonical_abspath(query.haystack);
-	if (canontree == canonical_abspath(_current_dir)) {
+	std::string canontree = Browser::absolute_path(query.haystack);
+	if (canontree == Browser::absolute_path(_current_dir)) {
 		query.haystack = ".";
-	} else if (canontree == canonical_abspath(_home_dir)) {
+	} else if (canontree == Browser::absolute_path(_home_dir)) {
 		query.haystack = "~";
 	}
 	Search::View::exec(query, _shell);
@@ -240,7 +240,7 @@ void Ozette::new_file()
 	edrec.view = new Editor::View(_config);
 	std::unique_ptr<UI::View> edptr(edrec.view);
 	edrec.window = _shell.open_window(std::move(edptr));
-	_editors[canonical_abspath("")] = edrec;
+	_editors[Browser::absolute_path("")] = edrec;
 }
 
 void Ozette::open_file()
@@ -257,7 +257,7 @@ void Ozette::open_file()
 void Ozette::show_help()
 {
 	static const std::string help_key = " Help ";
-	static const std::string abs_help = canonical_abspath(help_key);
+	static const std::string abs_help = Browser::absolute_path(help_key);
 	auto existing = _editors.find(abs_help);
 	if (existing != _editors.end()) {
 		_shell.make_active(existing->second.window);
@@ -323,45 +323,4 @@ int Ozette::fix_control_quirks(int ch)
 	return ch;
 	}
 }
-
-std::string Ozette::canonical_abspath(std::string path)
-{
-	// Canonicalize this path and expand it as necessary to produce
-	// a full path relative to the filesystem root.
-	if (path.empty()) return _current_dir;
-	std::string out;
-	size_t offset = 0;
-	if (path[0] == '/') {
-		offset = 1;
-	} else if (path[0] == '~') {
-		offset = 1;
-		out = _home_dir;
-	} else {
-		out = _current_dir;
-	}
-	while (offset != std::string::npos) {
-		size_t segpos = path.find_first_of('/', offset);
-		std::string seg;
-		if (segpos == std::string::npos) {
-			seg = path.substr(offset);
-			offset = segpos;
-		} else {
-			seg = path.substr(offset, segpos - offset);
-			offset = segpos + 1;
-		}
-		if (seg.empty()) continue;
-		if (seg == ".") continue;
-		if (seg == "..") {
-			size_t trunc = out.find_last_of('/');
-			if (trunc == std::string::npos) {
-				trunc = 0;
-			}
-			out.resize(trunc);
-			continue;
-		}
-		out += "/" + seg;
-	}
-	return out;
-}
-
 

@@ -18,6 +18,7 @@
 //
 
 #include "browser/paths.h"
+#include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <cstring>
@@ -85,7 +86,53 @@ std::string Browser::complete_file(std::string partial_path)
 
 std::string Browser::complete_dir(std::string partial_path)
 {
-	return complete_path(partial_path, /*only_dirl*/true);
+	return complete_path(partial_path, /*only_dirs*/true);
 }
 
+std::string Browser::absolute_path(std::string path)
+{
+	std::string home_dir = std::string(getenv("HOME"));
+	std::string working_dir = home_dir;
+	char *cwd = getcwd(NULL, 0);
+	if (cwd) {
+		working_dir = std::string(cwd);
+		free(cwd);
+	}
+	// Canonicalize this path and expand it as necessary to produce
+	// a full path relative to the filesystem root.
+	if (path.empty()) return working_dir;
+	std::string out;
+	size_t offset = 0;
+	if (path[0] == '/') {
+		offset = 1;
+	} else if (path[0] == '~') {
+		offset = 1;
+		out = home_dir;
+	} else {
+		out = working_dir;
+	}
+	while (offset != std::string::npos) {
+		size_t segpos = path.find_first_of('/', offset);
+		std::string seg;
+		if (segpos == std::string::npos) {
+			seg = path.substr(offset);
+			offset = segpos;
+		} else {
+			seg = path.substr(offset, segpos - offset);
+			offset = segpos + 1;
+		}
+		if (seg.empty()) continue;
+		if (seg == ".") continue;
+		if (seg == "..") {
+			size_t trunc = out.find_last_of('/');
+			if (trunc == std::string::npos) {
+				trunc = 0;
+			}
+			out.resize(trunc);
+			continue;
+		}
+		out += "/" + seg;
+	}
+	return out;
+}
 

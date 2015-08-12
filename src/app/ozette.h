@@ -61,7 +61,6 @@ private:
 	void execute();
 	void build();
 	int fix_control_quirks(int ch);
-	std::string canonical_abspath(std::string path);
 	void exec(std::string command);
 	editor open_editor(std::string path);
 

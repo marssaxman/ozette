@@ -36,6 +36,11 @@ std::string complete_file(std::string partial_path);
 // the target or just another link in the ultimate chain.
 std::string complete_dir(std::string partial_path);
 
+// Reformat this path into its canonical absolute form. We will find the
+// appropriate base directory, expand tildes and parent refs, strip any
+// duplicate separators, and return a clean absolute path.
+std::string absolute_path(std::string path);
+
 } // namespace Browser
 
 #endif // BROWSER_PATHS_H
