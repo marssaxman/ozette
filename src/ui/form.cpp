@@ -121,29 +121,6 @@ void UI::Form::key_down(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-bool UI::Label::process(UI::Frame &ctx, int ch)
-{
-	switch (toupper(ch)) {
-		case 'Y': return _yes? (_yes(ctx), false): true;
-		case 'N': return _no? (_no(ctx), false): true;
-		default: return true;
-	}
-}
-
-void UI::Label::paint(WINDOW *view, int row, UI::View::State state)
-{
-	int height, width;
-	getmaxyx(view, height, width);
-	(void)height;
-	mvwaddnstr(view, row, 0, _text.c_str(), width);
-}
-
-void UI::Label::set_help(HelpBar::Panel &panel)
-{
-	if (_yes) panel.label[0][0] = HelpBar::Label('Y', false, "Yes");
-	if (_no) panel.label[0][1] = HelpBar::Label('N', false, "No");
-}
-
 UI::Input::Input(std::string caption, std::string value, Completer completer):
 	_caption(caption),
 	_value(value),

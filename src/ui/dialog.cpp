@@ -18,5 +18,56 @@
 //
 
 #include "ui/dialog.h"
+#include "ui/colors.h"
+#include <assert.h>
 
-// not here yet
+void UI::Dialog::show(
+		UI::Frame &ctx, std::string text, action_t yes, action_t no)
+{
+	std::unique_ptr<View> dptr(new Dialog(text, yes, no));
+	ctx.show_dialog(std::move(dptr));
+}
+
+UI::Dialog::Dialog(std::string text, action_t yes, action_t no):
+	_text(text), _yes(yes), _no(no)
+{
+	assert(!text.empty());
+	assert(_yes != nullptr);
+	assert(_no != nullptr);
+}
+
+void UI::Dialog::layout(int vpos, int hpos, int height, int width)
+{
+	// A dialog always has exactly one line, with question text.
+	inherited::layout(vpos + height - 1, hpos, 1, width);
+}
+
+bool UI::Dialog::process(UI::Frame &ctx, int ch)
+{
+	switch (ch) {
+		case Control::Escape: ctx.show_result("Cancelled"); return false;
+		case 'Y':
+		case 'y': _yes(ctx); return false;
+		case 'N':
+		case 'n': _no(ctx); return false;
+	}
+	return true;
+}
+
+void UI::Dialog::set_help(UI::HelpBar::Panel &panel)
+{
+	panel.label[0][0] = UI::HelpBar::Label('Y', false, "Yes");
+	panel.label[0][1] = UI::HelpBar::Label('N', false, "No");
+	panel.label[1][0] = UI::HelpBar::Label('[', true, "Escape");
+}
+
+void UI::Dialog::paint_into(WINDOW *view, State state)
+{
+	int height, width;
+	getmaxyx(view, height, width);
+	(void)height;
+	wattrset(view, Colors::dialog(state == State::Focused));
+	whline(view, ' ', width);
+	mvwaddnstr(view, 0, 0, _text.c_str(), width);
+}
+

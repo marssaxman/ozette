@@ -20,6 +20,28 @@
 #ifndef UI_DIALOG_H
 #define UI_DIALOG_H
 
-// closed for repairs
+#include "ui/view.h"
+
+// A dialog box asks the user a question, then waits for their answer.
+// They may answer "yes" or "no", or they may cancel the operation that
+// prompted the question.
+namespace UI {
+class Dialog : public UI::View {
+	typedef UI::View inherited;
+public:
+	typedef std::function<void(Frame&)> action_t;
+	static void show(Frame &ctx, std::string text, action_t yes, action_t no);
+	Dialog(std::string text, action_t yes, action_t no);
+
+	virtual void layout(int vpos, int hpos, int height, int width) override;
+	virtual bool process(UI::Frame &ctx, int ch) override;
+	virtual void set_help(HelpBar::Panel &panel) override;
+protected:
+	virtual void paint_into(WINDOW *view, State state) override;
+	std::string _text;
+	action_t _yes = nullptr;
+	action_t _no = nullptr;
+};
+} // namespace UI
 
 #endif UI_DIALOG_H

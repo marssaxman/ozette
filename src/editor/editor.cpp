@@ -20,6 +20,7 @@
 #include "editor/editor.h"
 #include "app/control.h"
 #include "ui/form.h"
+#include "ui/dialog.h"
 #include "find/find.h"
 #include <assert.h>
 #include <sys/stat.h>
@@ -315,8 +316,7 @@ void Editor::View::ctl_close(UI::Frame &ctx)
 		// just close it
 		ctx.app().close_file(_targetpath);
 	};
-	std::unique_ptr<UI::Form::Field> label(new UI::Label(prompt, yes, no));
-	UI::Form::show(ctx, std::move(label));
+	UI::Dialog::show(ctx, prompt, yes, no);
 }
 
 void Editor::View::ctl_save(UI::Frame &ctx)

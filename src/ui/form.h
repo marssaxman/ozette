@@ -68,22 +68,6 @@ private:
 	action_t _commit = nullptr;
 };
 
-// A static message, with optional yes/no decision actions.
-class Label : public Form::Field
-{
-public:
-	Label(std::string text): _text(text) {}
-	Label(std::string text, Form::action_t yes, Form::action_t no):
-		_text(text), _yes(yes), _no(no) {}
-	virtual bool process(UI::Frame &ctx, int ch) override;
-	virtual void paint(WINDOW *view, int row, UI::View::State state) override;
-	virtual void set_help(HelpBar::Panel &panel) override;
-private:
-	std::string _text;
-	Form::action_t _yes = nullptr;
-	Form::action_t _no = nullptr;
-};
-
 // A form field in which the user can enter text.
 class Input : public Form::Field
 {
