@@ -32,7 +32,6 @@ class Ozette : public Controller
 {
 public:
 	Ozette();
-	virtual std::string current_dir() const override;
 	virtual void change_dir(std::string path) override;
 	virtual void edit_file(std::string path) override;
 	virtual void rename_file(std::string from, std::string to) override;

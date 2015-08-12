@@ -18,8 +18,8 @@
 //
 
 #include "app/ozette.h"
+#include "app/path.h"
 #include "browser/browser.h"
-#include "browser/paths.h"
 #include "editor/editor.h"
 #include "console/console.h"
 #include "search/search.h"
@@ -46,14 +46,9 @@ Ozette::Ozette():
 	_config.change_directory(_current_dir);
 }
 
-std::string Ozette::current_dir() const
-{
-	return _current_dir;
-}
-
 void Ozette::change_dir(std::string path)
 {
-	path = Browser::absolute_path(path);
+	path = Path::absolute(path);
 	int result = chdir(path.c_str());
 	if (0 != result) {
 		int code = errno;
@@ -76,16 +71,16 @@ void Ozette::rename_file(std::string from, std::string to)
 {
 	// Somebody has moved or renamed a file. If there is an editor
 	// open for it, update our editor map.
-	auto existing = _editors.find(Browser::absolute_path(from));
+	auto existing = _editors.find(Path::absolute(from));
 	if (existing == _editors.end()) return;
 	auto edrec = existing->second;
 	_editors.erase(existing);
-	_editors[Browser::absolute_path(to)] = edrec;
+	_editors[Path::absolute(to)] = edrec;
 }
 
 void Ozette::close_file(std::string path)
 {
-	auto iter = _editors.find(Browser::absolute_path(path));
+	auto iter = _editors.find(Path::absolute(path));
 	if (iter != _editors.end()) {
 		_shell.close_window(iter->second.window);
 		_editors.erase(iter);
@@ -152,7 +147,7 @@ void Ozette::exec(std::string command)
 Ozette::editor Ozette::open_editor(std::string path)
 {
 	// If we already have this file open, bring it forward.
-	path = Browser::absolute_path(path);
+	path = Path::absolute(path);
 	auto existing = _editors.find(path);
 	if (existing != _editors.end()) {
 		_shell.make_active(existing->second.window);
@@ -171,10 +166,10 @@ void Ozette::search(Search::spec query)
 {
 	// Make the search results prettier: if we're searching in the working
 	// directory, use "." instead of the literal path.
-	std::string canontree = Browser::absolute_path(query.haystack);
-	if (canontree == Browser::absolute_path(_current_dir)) {
+	std::string canontree = Path::absolute(query.haystack);
+	if (canontree == Path::absolute(_current_dir)) {
 		query.haystack = ".";
-	} else if (canontree == Browser::absolute_path(_home_dir)) {
+	} else if (canontree == Path::absolute(_home_dir)) {
 		query.haystack = "~";
 	}
 	Search::View::exec(query, _shell);
@@ -211,8 +206,8 @@ void Ozette::change_directory()
 	show_browser();
 	UI::Form dialog({
 		"Change Directory",
-		Browser::display_path(_current_dir),
-		&Browser::complete_dir
+		Path::display(_current_dir),
+		&Path::complete_dir
 	});
 	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string path)
 	{
@@ -227,13 +222,13 @@ void Ozette::new_file()
 	edrec.view = new Editor::View(_config);
 	std::unique_ptr<UI::View> edptr(edrec.view);
 	edrec.window = _shell.open_window(std::move(edptr));
-	_editors[Browser::absolute_path("")] = edrec;
+	_editors[Path::absolute("")] = edrec;
 }
 
 void Ozette::open_file()
 {
 	show_browser();
-	UI::Form dialog({"Open", "", &Browser::complete_file});
+	UI::Form dialog({"Open", "", &Path::complete_file});
 	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string path)
 	{
 		if (path.empty()) return;
@@ -244,7 +239,7 @@ void Ozette::open_file()
 void Ozette::show_help()
 {
 	static const std::string help_key = " Help ";
-	static const std::string abs_help = Browser::absolute_path(help_key);
+	static const std::string abs_help = Path::absolute(help_key);
 	auto existing = _editors.find(abs_help);
 	if (existing != _editors.end()) {
 		_shell.make_active(existing->second.window);

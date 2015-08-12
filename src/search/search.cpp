@@ -19,7 +19,7 @@
 
 #include "search/search.h"
 #include "app/control.h"
-#include "browser/paths.h"
+#include "app/path.h"
 #include <assert.h>
 #include <algorithm>
 #include <unistd.h>
@@ -31,7 +31,7 @@ void Search::Dialog::show(UI::Frame &ctx, spec job)
 	UI::Form dialog = {
 		{"Find", job.needle},
 		{"Files", job.filter},
-		{"Directory", job.haystack, &Browser::complete_dir}
+		{"Directory", job.haystack, &Path::complete_dir}
 	};
 	using namespace std;
 	dialog.show(ctx, [](UI::Frame &ctx, map<string, string> results)
@@ -227,7 +227,7 @@ void Search::View::exec(spec job, UI::Frame &ctx)
 	const char *argv[1 + 2 + 1] = {"sh", "-c", command.c_str(), nullptr};
 	_title = "find " + job.needle;
 	if (!job.haystack.empty()) {
-		_title += " in " + Browser::display_path(job.haystack) + "/";
+		_title += " in " + Path::display(job.haystack) + "/";
 	}
 	_proc.reset(new Console::Subproc(argv[0], argv));
 	ctx.repaint();

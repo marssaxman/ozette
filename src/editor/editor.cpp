@@ -19,10 +19,10 @@
 
 #include "editor/editor.h"
 #include "app/control.h"
+#include "app/path.h"
 #include "ui/form.h"
 #include "ui/dialog.h"
 #include "search/search.h"
-#include "browser/paths.h"
 #include <assert.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -58,7 +58,7 @@ void Editor::View::activate(UI::Frame &ctx)
 	if (_targetpath.empty()) {
 		ctx.set_title("Untitled");
 	} else {
-		ctx.set_title(Browser::display_path(_targetpath));
+		ctx.set_title(Path::display(_targetpath));
 	}
 	set_status(ctx);
 }
@@ -334,7 +334,7 @@ void Editor::View::ctl_save_as(UI::Frame &ctx)
 {
 	if (_doc.readonly()) return;
 	_doc.commit();
-	UI::Form dialog({"Save As", _targetpath, &Browser::complete_file});
+	UI::Form dialog({"Save As", _targetpath, &Path::complete_file});
 	dialog.show(ctx, [this](UI::Frame &ctx, std::string path)
 	{
 		if (path.empty()) {

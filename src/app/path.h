@@ -17,12 +17,12 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef BROWSER_PATHS_H
-#define BROWSER_PATHS_H
+#ifndef APP_PATH_H
+#define APP_PATH_H
 
 #include <string>
 
-namespace Browser {
+namespace Path {
 
 // What is the full absolute path for the current working directory?
 std::string current_dir();
@@ -45,12 +45,13 @@ std::string complete_dir(std::string partial_path);
 // Reformat this path into its canonical absolute form. We will find the
 // appropriate base directory, expand tildes and parent refs, strip any
 // duplicate separators, and return a clean absolute path.
-std::string absolute_path(std::string path);
+std::string absolute(std::string path);
 
 // Format this path for compact user display.
-std::string display_path(std::string path);
+std::string display(std::string path);
 
-} // namespace Browser
+} // namespace Path
 
-#endif // BROWSER_PATHS_H
+#endif // APP_PATH_H
+
 

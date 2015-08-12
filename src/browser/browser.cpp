@@ -18,7 +18,7 @@
 //
 
 #include "browser/browser.h"
-#include "browser/paths.h"
+#include "app/path.h"
 #include "app/control.h"
 #include "search/search.h"
 #include <cctype>
@@ -211,7 +211,7 @@ void Browser::View::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 
 void Browser::View::ctl_find(UI::Frame &ctx)
 {
-	Search::spec job = {"", Browser::display_path(_tree.path()), "*"};
+	Search::spec job = {"", Path::display(_tree.path()), "*"};
 	Search::Dialog::show(ctx, job);
 }
 
@@ -227,7 +227,7 @@ void Browser::View::key_return(UI::Frame &ctx)
 void Browser::View::key_left(UI::Frame &ctx)
 {
 	clear_filter(ctx);
-	std::string path = ctx.app().current_dir();
+	std::string path = Path::current_dir();
 	// Make sure the current directory will still be expanded after the shift.
 	_expanded_items.insert(path);
 	// Find the directory containing the current directory.
@@ -245,7 +245,7 @@ void Browser::View::key_right(UI::Frame &ctx)
 {
 	clear_filter(ctx);
 	// Change dir inward to the outermost directory containing the selection.
-	std::string trunk = ctx.app().current_dir();
+	std::string trunk = Path::current_dir();
 	std::string leaf = sel_entry()->path();
 	size_t preslash = leaf.find('/', trunk.size() + 1);
 	ctx.app().change_dir(leaf.substr(0, preslash));
@@ -255,7 +255,7 @@ void Browser::View::key_alt_left(UI::Frame &ctx)
 {
 	clear_filter(ctx);
 	std::string path = _tree.path();
-	if (path == ctx.app().current_dir()) {
+	if (path == Path::current_dir()) {
 		return;
 	}
 	size_t lastslash = path.find_last_of('/');
@@ -426,11 +426,11 @@ void Browser::View::set_title(UI::Frame &ctx)
 {
 	// Show the current working directory, annotated with the current
 	// view directory if we have focused in on a subtree.
-	std::string workingdir = ctx.app().current_dir();
+	std::string workingdir = Path::current_dir();
 	std::string viewdir = _tree.path();
-	std::string title = Browser::display_path(workingdir);
+	std::string title = Path::display(workingdir);
 	if (viewdir != workingdir) {
-		title = Browser::display_path(viewdir) + " (" + title + ")";
+		title = Path::display(viewdir) + " (" + title + ")";
 	}
 	ctx.set_title(title);
 }
@@ -471,7 +471,7 @@ void Browser::View::toggle(UI::Frame &ctx)
 		_expanded_items.insert(path);
 		display.expanded = true;
 		insert_rows(_selection + 1, display.indent + 1, entry);
-		_path_filter = Browser::display_path(path) + "/";
+		_path_filter = Path::display(path) + "/";
 	}
 	update_filter(ctx);
 	ctx.repaint();

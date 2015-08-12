@@ -30,7 +30,6 @@ class Controller
 {
 public:
 	virtual ~Controller() = default;
-	virtual std::string current_dir() const = 0;
 	virtual void change_dir(std::string path) = 0;
 	virtual void edit_file(std::string path) = 0;
 	virtual void rename_file(std::string from, std::string to) = 0;

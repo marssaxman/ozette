@@ -17,19 +17,19 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "browser/paths.h"
+#include "app/path.h"
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <cstring>
 #include <assert.h>
 
-std::string Browser::home_dir()
+std::string Path::home_dir()
 {
 	return std::string(getenv("HOME"));
 }
 
-std::string Browser::current_dir()
+std::string Path::current_dir()
 {
 	char *cwd = getcwd(NULL, 0);
 	assert(cwd);
@@ -53,7 +53,7 @@ static std::string complete_path(std::string path, bool only_dirs)
 	// If the path begins with the magic home-dir marker, replace it with the
 	// actual path to the home dir, because opendir won't parse it.
 	if (base[0] == '~') {
-		base = Browser::home_dir() + base.substr(1);
+		base = Path::home_dir() + base.substr(1);
 	}
 	// Iterate through the items in this directory, looking for entries which
 	// begin with the same chars as our name fragment.
@@ -92,17 +92,17 @@ static std::string complete_path(std::string path, bool only_dirs)
 	return path + suffix;
 }
 
-std::string Browser::complete_file(std::string partial_path)
+std::string Path::complete_file(std::string partial_path)
 {
 	return complete_path(partial_path, /*only_dirs*/false);
 }
 
-std::string Browser::complete_dir(std::string partial_path)
+std::string Path::complete_dir(std::string partial_path)
 {
 	return complete_path(partial_path, /*only_dirs*/true);
 }
 
-std::string Browser::absolute_path(std::string path)
+std::string Path::absolute(std::string path)
 {
 	// Canonicalize this path and expand it as necessary to produce
 	// a full path relative to the filesystem root.
@@ -144,7 +144,7 @@ std::string Browser::absolute_path(std::string path)
 	return out;
 }
 
-std::string Browser::display_path(std::string path)
+std::string Path::display(std::string path)
 {
 	std::string cwd = current_dir();
 	size_t cwdsize = cwd.size();
