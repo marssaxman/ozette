@@ -17,7 +17,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "browser/completer.h"
+#include "browser/paths.h"
 #include <dirent.h>
 #include <sys/stat.h>
 #include <cstring>

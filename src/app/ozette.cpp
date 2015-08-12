@@ -19,7 +19,7 @@
 
 #include "app/ozette.h"
 #include "browser/browser.h"
-#include "browser/completer.h"
+#include "browser/paths.h"
 #include "editor/editor.h"
 #include "console/console.h"
 #include "search/search.h"

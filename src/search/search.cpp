@@ -19,7 +19,7 @@
 
 #include "search/search.h"
 #include "app/control.h"
-#include "browser/completer.h"
+#include "browser/paths.h"
 #include <assert.h>
 #include <algorithm>
 #include <unistd.h>

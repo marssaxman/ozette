@@ -22,7 +22,7 @@
 #include "ui/form.h"
 #include "ui/dialog.h"
 #include "search/search.h"
-#include "browser/completer.h"
+#include "browser/paths.h"
 #include <assert.h>
 #include <sys/stat.h>
 #include <dirent.h>

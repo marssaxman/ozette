@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef BROWSER_COMPLETER_H
-#define BROWSER_COMPLETER_H
+#ifndef BROWSER_PATHS_H
+#define BROWSER_PATHS_H
 
 #include <string>
 
@@ -38,5 +38,5 @@ std::string complete_dir(std::string partial_path);
 
 } // namespace Browser
 
-#endif // BROWSER_COMPLETER_H
+#endif // BROWSER_PATHS_H
 
