@@ -223,8 +223,11 @@ void Ozette::show_browser()
 void Ozette::change_directory()
 {
 	show_browser();
-	std::string label = "Change Directory";
-	UI::Form dialog({label, _current_dir, &Browser::complete_dir});
+	UI::Form dialog({
+		"Change Directory",
+		display_path(_current_dir),
+		&Browser::complete_dir
+	});
 	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string path)
 	{
 		if (path.empty()) return;
