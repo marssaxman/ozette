@@ -331,26 +331,24 @@ std::string Ozette::canonical_abspath(std::string path)
 	size_t offset = 0;
 	if (path[0] == '/') {
 		offset = 1;
-		out = "/";
+	} else if (path[0] == '~') {
+		offset = 1;
+		out = _home_dir;
 	} else {
 		out = _current_dir;
 	}
 	while (offset != std::string::npos) {
-		size_t nextseg = path.find_first_of('/', offset);
+		size_t segpos = path.find_first_of('/', offset);
 		std::string seg;
-		if (nextseg == std::string::npos) {
+		if (segpos == std::string::npos) {
 			seg = path.substr(offset);
-			offset = nextseg;
+			offset = segpos;
 		} else {
-			seg = path.substr(offset, nextseg - offset);
-			offset = nextseg + 1;
+			seg = path.substr(offset, segpos - offset);
+			offset = segpos + 1;
 		}
 		if (seg.empty()) continue;
 		if (seg == ".") continue;
-		if (seg == "~") {
-			out = _home_dir;
-			continue;
-		}
 		if (seg == "..") {
 			size_t trunc = out.find_last_of('/');
 			if (trunc == std::string::npos) {
