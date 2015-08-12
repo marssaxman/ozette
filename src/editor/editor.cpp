@@ -21,7 +21,7 @@
 #include "app/control.h"
 #include "app/path.h"
 #include "ui/form.h"
-#include "ui/dialog.h"
+#include "ui/confirm.h"
 #include "search/search.h"
 #include <assert.h>
 #include <sys/stat.h>
@@ -308,7 +308,7 @@ void Editor::View::ctl_close(UI::Frame &ctx)
 		// just close it
 		ctx.app().close_file(_targetpath);
 	};
-	UI::Dialog::show(ctx, prompt, yes, no);
+	UI::Confirm::show(ctx, prompt, yes, no);
 }
 
 void Editor::View::ctl_save(UI::Frame &ctx)

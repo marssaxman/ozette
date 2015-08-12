@@ -55,6 +55,7 @@ enum {
 	Find = 0x06, //ACK ^F
 	FindNext = 0x07, // BEL ^G
 	ToLine = 0x0C, //FF ^L
+	Replace = 0x12, //DC2 ^R
 
 	// Console
 	Kill = 0x0B, //VT ^K
@@ -68,7 +69,6 @@ enum {
 	// Unused ASCII control codes
 	STX = 0x02, // " B b
 	DLE = 0x10, // 0 P p
-	DC2 = 0x12, // 2 R r
 	DC4 = 0x14, // 4 T t
 	NAK = 0x15, // 5 U u
 	FS = 0x1C, // < \ |

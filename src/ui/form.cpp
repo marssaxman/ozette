@@ -96,7 +96,7 @@ static void run_view(
 	ctx.show_dialog(std::move(dptr));
 }
 
-void UI::Form::show(UI::Frame &ctx, all_fields_t action)
+void UI::Form::show(UI::Frame &ctx, all_fields_action action)
 {
 	auto commit = [this, action](
 			UI::Frame &ctx, std::vector<Input> &inputs, size_t selected)
@@ -110,7 +110,7 @@ void UI::Form::show(UI::Frame &ctx, all_fields_t action)
 	run_view(ctx, _fields, commit);
 }
 
-void UI::Form::show(UI::Frame &ctx, selected_val_t action)
+void UI::Form::show(UI::Frame &ctx, selection_action action)
 {
 	auto commit = [this, action](
 			UI::Frame &ctx, std::vector<Input> &inputs, size_t selected)

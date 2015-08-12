@@ -35,16 +35,19 @@ public:
 		std::string value;
 		std::function<std::string(std::string)> completer;
 	};
+	// A set of all field values, indexed by field names.
+	typedef std::map<std::string, std::string> results_t;
+	// A completion function which receives a set of all field values.
+	typedef std::function<void(Frame&, results_t)> all_fields_action;
+	// A completion function which receives the value of the selected field.
+	typedef std::function<void(Frame&, std::string)> selection_action;
 	Form(Field field): _fields(1, field) {}
 	Form(std::initializer_list<Field> fields): _fields(fields) {}
 	// Show the form, let the user edit, and return the values of all fields.
-	typedef std::map<std::string, std::string> results_t;
-	typedef std::function<void(UI::Frame&, results_t)> all_fields_t;
-	void show(UI::Frame &ctx, all_fields_t action);
+	void show(UI::Frame &ctx, all_fields_action);
 	// Show the form, let the user edit, and return the value of the field
 	// which was selected when the user committed the form.
-	typedef std::function<void(UI::Frame&, std::string)> selected_val_t;
-	void show(UI::Frame &ctx, selected_val_t);
+	void show(UI::Frame &ctx, selection_action);
 private:
 	std::vector<Field> _fields;
 };
