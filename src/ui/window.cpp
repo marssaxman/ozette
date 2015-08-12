@@ -361,7 +361,7 @@ void UI::Window::paint_taskbar(int height, int width)
 		_dialog->set_help(panel);
 		// The window handles dialog cancel via escape, so we'll add that
 		// help tag to the panel ourselves.
-		panel.label[1][0] = HelpBar::Label('[', true, "Escape");
+		panel.label[1][0] = {"^[", "Escape"};
 	} else {
 		_view->set_help(panel);
 	}
@@ -387,12 +387,12 @@ void UI::Window::paint_taskbar(int height, int width)
 		v = i / HelpBar::Panel::kWidth;
 		h = i % HelpBar::Panel::kWidth;
 		auto &label = panel.label[v][h];
-		if (0 == label.mnemonic) continue;
+		if (0 == label.mnemonic[0]) continue;
 		unsigned labelpos = h * labelwidth;
 		wmove(_framewin, v+ypos, labelpos+xpos);
 		wattron(_framewin, key_highlight);
-		waddch(_framewin, label.is_ctrl? '^': ' ');
-		waddch(_framewin, label.mnemonic);
+		waddch(_framewin, label.mnemonic[0]);
+		waddch(_framewin, label.mnemonic[1]);
 		wattroff(_framewin, key_highlight);
 		waddch(_framewin, ' ');
 		waddnstr(_framewin, label.text.c_str(), textwidth);

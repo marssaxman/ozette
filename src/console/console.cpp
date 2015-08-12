@@ -84,10 +84,10 @@ bool Console::View::poll(UI::Frame &ctx)
 void Console::View::set_help(UI::HelpBar::Panel &panel)
 {
 	if (_proc.get()) {
-		panel.label[0][0] = UI::HelpBar::Label('K', true, "Kill");
+		panel.label[0][0] = {"^K", "Kill"};
 	}
-	panel.label[1][0] = UI::HelpBar::Label('W', true, "Close");
-	panel.label[1][5] = UI::HelpBar::Label('?', true, "Help");
+	panel.label[1][0] = {"^W", "Close"};
+	panel.label[1][5] = {"^?", "Help"};
 }
 
 Console::View::View()

@@ -55,8 +55,8 @@ bool UI::Dialog::process(UI::Frame &ctx, int ch)
 
 void UI::Dialog::set_help(UI::HelpBar::Panel &panel)
 {
-	panel.label[0][0] = UI::HelpBar::Label('Y', false, "Yes");
-	panel.label[0][1] = UI::HelpBar::Label('N', false, "No");
+	panel.label[0][0] = {" Y", "Yes"};
+	panel.label[0][1] = {" N", "No"};
 }
 
 void UI::Dialog::paint_into(WINDOW *view, State state)

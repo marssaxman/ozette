@@ -142,26 +142,25 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 
 void Editor::View::set_help(UI::HelpBar::Panel &panel)
 {
-	using namespace UI::HelpBar;
 	if (!_doc.readonly()) {
-		panel.label[0][0] = Label('X', true, "Cut");
-		panel.label[0][1] = Label('C', true, "Copy");
-		panel.label[0][2] = Label('V', true, "Paste");
+		panel.label[0][0] = {"^X", "Cut"};
+		panel.label[0][1] = {"^C", "Copy"};
+		panel.label[0][2] = {"^V", "Paste"};
 	}
-	panel.label[0][4] = Label('L', true, "To Line");
-	panel.label[0][5] = Label('F', true, "Find");
-	panel.label[1][0] = Label('W', true, "Close");
+	panel.label[0][4] = {"^L", "To Line"};
+	panel.label[0][5] = {"^F", "Find"};
+	panel.label[1][0] = {"^W", "Close"};
 	if (_doc.modified()) {
-		panel.label[1][1] = Label('S', true, "Save");
+		panel.label[1][1] = {"^S", "Save"};
 	}
-	panel.label[1][2] = Label('A', true, "Save As");
+	panel.label[1][2] = {"^A", "Save As"};
 	if (_doc.can_redo()) {
-		panel.label[1][3] = Label('Y', true, "Redo");
+		panel.label[1][3] = {"^Y", "Redo"};
 	}
 	if (_doc.can_undo()) {
-		panel.label[1][4] = Label('Z', true, "Undo");
+		panel.label[1][4] = {"^Z", "Undo"};
 	}
-	panel.label[1][5] = Label('?', true, "Help");
+	panel.label[1][5] = {"^?", "Help"};
 }
 
 void Editor::View::jump_to(UI::Frame &ctx, line_t index)

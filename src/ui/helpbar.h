@@ -21,14 +21,14 @@
 #define UI_HELPBAR_H
 
 #include <string>
+#include <initializer_list>
 
 namespace UI {
 namespace HelpBar {
 struct Label {
-	Label(char m, bool c, std::string t);
-	Label();
-	char mnemonic;
-	bool is_ctrl;
+	Label(std::initializer_list<std::string> items);
+	Label() {}
+	char mnemonic[2] = {0,0};
 	std::string text;
 };
 struct Panel {

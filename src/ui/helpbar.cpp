@@ -19,16 +19,19 @@
 
 #include "ui/helpbar.h"
 
-UI::HelpBar::Label::Label(char m, bool c, std::string t):
-	mnemonic(m),
-	is_ctrl(c),
-	text(t)
+UI::HelpBar::Label::Label(std::initializer_list<std::string> items)
 {
-}
-
-UI::HelpBar::Label::Label():
-	mnemonic(0),
-	is_ctrl(false)
-{
+	auto iter = items.begin();
+	if (iter != items.end()) {
+		std::string m = *iter++;
+		if (m.size() < 2) {
+			m.insert(0, 2 - m.size(), ' ');
+		}
+		mnemonic[0] = m[0];
+		mnemonic[1] = m[1];
+	}
+	if (iter != items.end()) {
+		text = *iter;
+	}
 }
 
