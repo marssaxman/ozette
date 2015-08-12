@@ -58,7 +58,6 @@ void UI::Dialog::set_help(UI::HelpBar::Panel &panel)
 {
 	panel.label[0][0] = UI::HelpBar::Label('Y', false, "Yes");
 	panel.label[0][1] = UI::HelpBar::Label('N', false, "No");
-	panel.label[1][0] = UI::HelpBar::Label('[', true, "Escape");
 }
 
 void UI::Dialog::paint_into(WINDOW *view, State state)

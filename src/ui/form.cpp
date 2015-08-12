@@ -169,10 +169,7 @@ bool FormView::process(UI::Frame &ctx, int ch)
 
 void FormView::set_help(UI::HelpBar::Panel &panel)
 {
-	if (_selected < _fields.size()) {
-		_fields[_selected].set_help(panel);
-	}
-	panel.label[1][0] = UI::HelpBar::Label('[', true, "Escape");
+	_fields[_selected].set_help(panel);
 }
 
 void FormView::paint_into(WINDOW *view, State state)

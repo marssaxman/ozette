@@ -361,6 +361,9 @@ void UI::Window::paint_taskbar(int height, int width)
 	HelpBar::Panel panel;
 	if (_dialog) {
 		_dialog->set_help(panel);
+		// The window handles dialog cancel via escape, so we'll add that
+		// help tag to the panel ourselves.
+		panel.label[1][0] = HelpBar::Label('[', true, "Escape");
 	} else {
 		_view->set_help(panel);
 	}
