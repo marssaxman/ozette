@@ -28,10 +28,6 @@
 #include <set>
 
 namespace Search {
-namespace Dialog {
-void show(UI::Frame &ctx, spec job);
-} // namespace Dialog
-
 class View : public UI::View
 {
 public:

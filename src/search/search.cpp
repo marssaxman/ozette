@@ -18,6 +18,7 @@
 //
 
 #include "search/search.h"
+#include "search/dialog.h"
 #include "app/control.h"
 #include "app/path.h"
 #include <assert.h>
@@ -26,24 +27,6 @@
 
 Search::View *Search::View::_instance;
 
-void Search::Dialog::show(UI::Frame &ctx, spec job)
-{
-	UI::Form dialog = {
-		{"Find", job.needle},
-		{"Files", job.filter},
-		{"Directory", job.haystack, &Path::complete_dir}
-	};
-	using namespace std;
-	dialog.show(ctx, [](UI::Frame &ctx, map<string, string> results)
-	{
-		spec job = {
-			results["Find"],
-			results["Directory"],
-			results["Files"]
-		};
-		ctx.app().search(job);
-	});
-}
 
 void Search::View::exec(spec job, UI::Shell &shell)
 {

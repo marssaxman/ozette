@@ -20,7 +20,7 @@
 #include "browser/browser.h"
 #include "app/path.h"
 #include "app/control.h"
-#include "search/search.h"
+#include "search/dialog.h"
 #include <cctype>
 #include <climits>
 #include <assert.h>
