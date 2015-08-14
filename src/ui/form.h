@@ -55,7 +55,7 @@ struct Form
 	// An optional alternate commit action may be invoked with a control key.
 	// A label will describe this action on the help bar.
 	struct Alternate {
-		char control_key;
+		int control_key;
 		UI::HelpBar::Label label;
 		action_t action;
 	};

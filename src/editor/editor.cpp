@@ -22,7 +22,7 @@
 #include "app/path.h"
 #include "ui/form.h"
 #include "ui/confirm.h"
-#include "search/search.h"
+#include "search/dialog.h"
 #include <assert.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -401,6 +401,19 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 			_find_text = value;
 		}
 		ctl_find_next(ctx);
+	};
+	dialog.alternates = {
+		{
+			KEY_F(4), {"F4", "Search"},
+			[](UI::Frame &ctx, UI::Form::Result &result)
+			{
+				Search::spec job = {
+					result.selected_value,
+					Path::current_dir()
+				};
+				Search::Dialog::show(ctx, job);
+			}
+		}
 	};
 	dialog.show(ctx);
 }
