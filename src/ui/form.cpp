@@ -64,9 +64,8 @@ class FormView : public UI::View
 {
 	typedef UI::View inherited;
 public:
-	typedef std::vector<Input> FieldList;
-	typedef std::function<void(UI::Frame&, FieldList&, size_t i)> action_t;
-	FormView(FieldList &&fields, action_t action);
+	typedef std::function<void(UI::Frame&, Input::Vector&, size_t i)> action_t;
+	FormView(Input::Vector &&fields, action_t action);
 
 	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
@@ -77,7 +76,7 @@ protected:
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
 private:
-	FieldList _fields;
+	Input::Vector _inputs;
 	size_t _selected = 0;
 	action_t _commit = nullptr;
 };
@@ -89,7 +88,7 @@ static void run_view(
 		std::vector<UI::Form::Field> &fields,
 		FormView::action_t action)
 {
-	std::vector<Input> inputs;
+	Input::Vector inputs;
 	for (auto &field: fields) {
 		inputs.emplace_back(field.name, field.value, field.completer);
 	}
@@ -99,7 +98,7 @@ static void run_view(
 
 void UI::Form::show(Frame &ctx)
 {
-	auto commit = [this](Frame &ctx, Input::Vector &inputs, size_t sel)
+	auto relay = [this](Frame &ctx, Input::Vector &inputs, size_t sel)
 	{
 		Form::Result result;
 		for (auto &input: inputs) {
@@ -107,30 +106,30 @@ void UI::Form::show(Frame &ctx)
 		}
 		result.selection = sel;
 		result.selected_value = inputs[sel].value();
-		_action(ctx, result);
+		commit(ctx, result);
 	};
-	run_view(ctx, _fields, commit);
+	run_view(ctx, fields, relay);
 }
 
-FormView::FormView(FieldList &&fields, action_t commit):
-	_fields(std::move(fields)),
+FormView::FormView(Input::Vector &&inputs, action_t commit):
+	_inputs(std::move(inputs)),
 	_commit(commit)
 {
-	assert(!_fields.empty());
+	assert(!inputs.empty());
 	assert(_commit != nullptr);
 	// Align all the field captions to the right, so their colons line up.
 	size_t longest = 0;
-	for (auto &f: _fields) {
+	for (auto &f: inputs) {
 		longest = std::max(longest, f.name().size());
 	}
-	for (auto &f: _fields) {
+	for (auto &f: inputs) {
 		f.set_indent(longest - f.name().size());
 	}
 }
 
 void FormView::layout(int vpos, int hpos, int height, int width)
 {
-	int new_height = std::min((int)_fields.size(), height / 2);
+	int new_height = std::min((int)_inputs.size(), height / 2);
 	int new_vpos = vpos + height - new_height;
 	inherited::layout(new_vpos, hpos, new_height, width);
 }
@@ -142,13 +141,13 @@ bool FormView::process(UI::Frame &ctx, int ch)
 		case Control::Enter:
 			// the user is happy with their choice, so tell the action to
 			// proceed and then inform our host that we are finished
-			_commit(ctx, _fields, _selected);
+			_commit(ctx, _inputs, _selected);
 			return false;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
 		default: {
-			assert(_selected < _fields.size());
-			_fields[_selected].process(ctx, ch);
+			assert(_selected < _inputs.size());
+			_inputs[_selected].process(ctx, ch);
 		} break;
 	}
 	return true;
@@ -156,7 +155,7 @@ bool FormView::process(UI::Frame &ctx, int ch)
 
 void FormView::set_help(UI::HelpBar::Panel &panel)
 {
-	_fields[_selected].set_help(panel);
+	_inputs[_selected].set_help(panel);
 }
 
 void FormView::paint_into(WINDOW *view, State state)
@@ -169,7 +168,7 @@ void FormView::paint_into(WINDOW *view, State state)
 	if (normal_state == State::Focused) {
 		normal_state = State::Active;
 	}
-	for (size_t i = 0; i < _fields.size(); ++i) {
+	for (size_t i = 0; i < _inputs.size(); ++i) {
 		if (i == _selected) continue;
 		paint_line(view, i, normal_state);
 	}
@@ -183,7 +182,7 @@ void FormView::paint_line(WINDOW *view, size_t i, State state)
 	(void)height;
 	wmove(view, i, 0);
 	whline(view, ' ', width);
-	_fields[i].paint(view, i, state);
+	_inputs[i].paint(view, i, state);
 }
 
 void FormView::key_up(UI::Frame &ctx)
@@ -195,7 +194,7 @@ void FormView::key_up(UI::Frame &ctx)
 
 void FormView::key_down(UI::Frame &ctx)
 {
-	if (_selected + 1 >= _fields.size()) return;
+	if (_selected + 1 >= _inputs.size()) return;
 	_selected++;
 	ctx.repaint();
 }

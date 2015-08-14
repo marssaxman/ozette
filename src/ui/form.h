@@ -37,21 +37,32 @@ public:
 		std::string value;
 		std::function<std::string(std::string)> completer;
 	};
-	// When the user commits the form, it collects the resulting values.
+	std::vector<Field> fields;
+
+	// The output values of the fields are collected into a result object.
 	struct Result {
 		std::map<std::string, std::string> fields;
 		size_t selection = 0;
 		std::string selected_value;
 	};
-	// The client provides an action function to invoke on commit.
-	typedef std::function<void(UI::Frame&, Result&)> action_t;
 
-	Form(std::initializer_list<Field> fields, action_t action):
-		_fields(fields), _action(action) {}
+	// If the user commits via Enter/Return, the primary action is invoked.
+	typedef std::function<void(UI::Frame&, Result&)> action_t;
+	action_t commit = nullptr;
+
+	// An optional alternate commit action may be invoked with a control key.
+	// A label will describe this action on the help bar.
+	struct Alternate {
+		int control_key = 0;
+		UI::HelpBar::Label label;
+		action_t action = nullptr;
+	};
+	Alternate secondary;
+
+	Form() {}
+	Form(std::initializer_list<Field> f, action_t action):
+		fields(f), commit(action) {}
 	void show(UI::Frame &ctx);
-private:
-	std::vector<Field> _fields;
-	action_t _action;
 };
 } // namespace UI
 

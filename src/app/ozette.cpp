@@ -203,18 +203,16 @@ void Ozette::show_browser()
 
 void Ozette::change_directory()
 {
-	using namespace Path;
-	UI::Form dialog(
-		{
-			{"Change Directory", display(_current_dir), &complete_dir}
-		},
-		[this](UI::Frame &ctx, UI::Form::Result &res)
-		{
-			std::string path = res.selected_value;
-			if (path.empty()) return;
-			change_dir(path);
-		}
-	);
+	UI::Form dialog;
+	dialog.fields = {
+		{"Change Directory", Path::display(_current_dir), &Path::complete_dir}
+	};
+	dialog.commit = [this](UI::Frame &ctx, UI::Form::Result &res)
+	{
+		std::string path = res.selected_value;
+		if (path.empty()) return;
+		change_dir(path);
+	};
 	dialog.show(*_shell.active());
 }
 
@@ -229,17 +227,16 @@ void Ozette::new_file()
 
 void Ozette::open_file()
 {
-	UI::Form dialog(
-		{
-			{"Open", "", &Path::complete_file}
-		},
-		[this](UI::Frame &ctx, UI::Form::Result &res)
-		{
-			std::string path = res.selected_value;
-			if (path.empty()) return;
-			edit_file(path);
-		}
-	);
+	UI::Form dialog;
+	dialog.fields = {
+		{"Open", "", &Path::complete_file}
+	};
+	dialog.commit = [this](UI::Frame &ctx, UI::Form::Result &res)
+	{
+		std::string path = res.selected_value;
+		if (path.empty()) return;
+		edit_file(path);
+	};
 	dialog.show(*_shell.active());
 }
 
@@ -265,15 +262,14 @@ void Ozette::show_help()
 
 void Ozette::execute()
 {
-	UI::Form dialog(
-		{
-			{"exec"}
-		},
-		[this](UI::Frame &ctx, UI::Form::Result &res)
-		{
-			exec(res.selected_value);
-		}
-	);
+	UI::Form dialog;
+	dialog.fields = {
+		{"exec"}
+	};
+	dialog.commit = [this](UI::Frame &ctx, UI::Form::Result &res)
+	{
+		exec(res.selected_value);
+	};
 	dialog.show(*_shell.active());
 }
 
