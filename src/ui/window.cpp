@@ -125,15 +125,6 @@ void UI::Window::bring_forward(FocusRelative rel)
 bool UI::Window::process(int ch)
 {
 	clear_result();
-	// The user can always press escape to cancel the current dialog.
-	// That is an independent action and neither the window's nor the
-	// dialog's view need to deal with it.
-	if (_dialog && ch == Control::Escape) {
-		close_dialog();
-		show_result("Cancelled");
-		paint();
-		return true;
-	}
 	// A signal to close the window implicitly cancels any open dialog.
 	if (ch == Control::Close && _dialog) {
 		close_dialog();

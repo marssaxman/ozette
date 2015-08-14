@@ -45,6 +45,7 @@ void UI::Confirm::layout(int vpos, int hpos, int height, int width)
 bool UI::Confirm::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
+		case Control::Escape: ctx.show_result("Cancelled"); return false;
 		case 'Y':
 		case 'y': _yes(ctx); return false;
 		case 'N':

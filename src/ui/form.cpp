@@ -102,6 +102,7 @@ bool FormView::process(UI::Frame &ctx, int ch)
 		}
 	}
 	switch (ch) {
+		case Control::Escape: ctx.show_result("Cancelled"); return false;
 		case Control::Return:
 		case Control::Enter: return commit(ctx, _form.commit);
 		case KEY_UP: key_up(ctx); break;
@@ -197,8 +198,10 @@ void FormInput::paint(WINDOW *view, int row, UI::View::State state)
 	(void)height;
 	// Draw the caption, left-justified.
 	mvwaddnstr(view, row, 0, _caption.c_str(), width);
+	int column = std::min(static_cast<int>(_caption.size()), width);
+	width -= column;
 	// Tell the input to draw itself in the remaining space.
-	_input.paint(view, row, _caption.size(), width, state);
+	_input.paint(view, row, column, width, state);
 }
 
 void FormInput::set_help(UI::HelpBar::Panel &panel)
