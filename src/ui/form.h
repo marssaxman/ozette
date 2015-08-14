@@ -40,23 +40,18 @@ public:
 	Form(Field field): _fields(1, field) {}
 	Form(std::initializer_list<Field> fields): _fields(fields) {}
 
+	struct Result {
+		std::map<std::string, std::string> fields;
+		size_t selection = 0;
+		std::string selected_value;
+	};
+	void show(UI::Frame&, std::function<void(UI::Frame&, Result&)>);
+
 	// When the user commits the form, it invokes some completion action.
 	// A completion function which receives a set of all field values.
-	typedef std::map<std::string, std::string> results_t;
-	typedef std::function<void(Frame&, results_t)> all_fields_action;
 	// A completion function which receives the value of the selected field.
 	typedef std::function<void(Frame&, std::string)> selection_action;
-	// A completion with an alternate action having its own control key.
-	struct multicompletion {
-		all_fields_action primary;
-		all_fields_action secondary;
-		int secondary_control = 0;
-		HelpBar::Label label;
-	};
 
-
-	// Show the form, let the user edit, and return the values of all fields.
-	void show(UI::Frame &ctx, all_fields_action);
 	// Show the form, let the user edit, and return the value of the field
 	// which was selected when the user committed the form.
 	void show(UI::Frame &ctx, selection_action);

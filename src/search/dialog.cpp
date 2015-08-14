@@ -29,12 +29,12 @@ void Search::Dialog::show(UI::Frame &ctx, spec job)
 		{"Directory", job.haystack, &Path::complete_dir}
 	};
 	using namespace std;
-	dialog.show(ctx, [](UI::Frame &ctx, map<string, string> results)
+	dialog.show(ctx, [](UI::Frame &ctx, UI::Form::Result &result)
 	{
 		spec job = {
-			results["Find"],
-			results["Directory"],
-			results["Files"]
+			result.fields["Find"],
+			result.fields["Directory"],
+			result.fields["Files"]
 		};
 		ctx.app().search(job);
 	});

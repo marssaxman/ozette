@@ -29,6 +29,7 @@ namespace {
 class Input
 {
 public:
+	typedef std::vector<Input> Vector;
 	typedef std::function<std::string(std::string)> Completer;
 	Input(std::string caption, std::string value, Completer completer);
 	void process(UI::Frame &ctx, int ch);
@@ -96,16 +97,17 @@ static void run_view(
 	ctx.show_dialog(std::move(dptr));
 }
 
-void UI::Form::show(UI::Frame &ctx, all_fields_action action)
+void UI::Form::show(Frame &ctx, std::function<void(Frame&, Result&)> action)
 {
-	auto commit = [this, action](
-			UI::Frame &ctx, std::vector<Input> &inputs, size_t selected)
+	auto commit = [action](Frame &ctx, Input::Vector &inputs, size_t sel)
 	{
-		std::map<std::string, std::string> results;
+		Form::Result result;
 		for (auto &input: inputs) {
-			results[input.name()] = input.value();
+			result.fields[input.name()] = input.value();
 		}
-		action(ctx, results);
+		result.selection = sel;
+		result.selected_value = inputs[sel].value();
+		action(ctx, result);
 	};
 	run_view(ctx, _fields, commit);
 }
