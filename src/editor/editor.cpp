@@ -325,21 +325,26 @@ void Editor::View::ctl_save_as(UI::Frame &ctx)
 {
 	if (_doc.readonly()) return;
 	_doc.commit();
-	UI::Form dialog({"Save As", _targetpath, &Path::complete_file});
-	dialog.show(ctx, [this](UI::Frame &ctx, UI::Form::Result &result)
-	{
-		std::string path = result.selected_value;
-		if (path.empty()) {
-			ctx.show_result("Cancelled");
-			return;
+	UI::Form dialog(
+		{
+			{"Save As", _targetpath, &Path::complete_file}
+		},
+		[this](UI::Frame &ctx, UI::Form::Result &result)
+		{
+			std::string path = result.selected_value;
+			if (path.empty()) {
+				ctx.show_result("Cancelled");
+				return;
+			}
+			// Write the file to disk at its new location.
+			save(ctx, path);
+			// Update the editor to point at the new path.
+			ctx.app().rename_file(_targetpath, path);
+			_targetpath = path;
+			ctx.set_title(path);
 		}
-		// Write the file to disk at its new location.
-		save(ctx, path);
-		// Update the editor to point at the new path.
-		ctx.app().rename_file(_targetpath, path);
-		_targetpath = path;
-		ctx.set_title(path);
-	});
+	);
+	dialog.show(ctx);
 }
 
 void Editor::View::ctl_toline(UI::Frame &ctx)
@@ -349,30 +354,40 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 	// accommodate their perverse desires in the name of compatibility.
 	std::string prompt = "Go to line";
 	std::string current = std::to_string(_cursor.location().line + 1);
-	UI::Form dialog({prompt, current});
-	dialog.show(ctx, [this](UI::Frame &ctx, UI::Form::Result &result)
-	{
-		std::string value = result.selected_value;
-		if (value.empty()) return;
-		long valnum = std::stol(value) - 1;
-		size_t index = (valnum >= 0) ? valnum : 0;
-		_cursor.move_to(_doc.home(index));
-		drop_selection();
-		postprocess(ctx);
-	});
+	UI::Form dialog(
+		{
+			{prompt, current}
+		},
+		[this](UI::Frame &ctx, UI::Form::Result &result)
+		{
+			std::string value = result.selected_value;
+			if (value.empty()) return;
+			long valnum = std::stol(value) - 1;
+			size_t index = (valnum >= 0) ? valnum : 0;
+			_cursor.move_to(_doc.home(index));
+			drop_selection();
+			postprocess(ctx);
+		}
+	);
+	dialog.show(ctx);
 }
 
 void Editor::View::ctl_find(UI::Frame &ctx)
 {
-	UI::Form dialog({"Find", _find_text});
-	dialog.show(ctx, [this](UI::Frame &ctx, UI::Form::Result &result)
-	{
-		std::string value = result.selected_value;
-		if (!value.empty()) {
-			_find_text = value;
+	UI::Form dialog(
+		{
+			{"Find", _find_text}
+		},
+		[this](UI::Frame &ctx, UI::Form::Result &result)
+		{
+			std::string value = result.selected_value;
+			if (!value.empty()) {
+				_find_text = value;
+			}
+			ctl_find_next(ctx);
 		}
-		ctl_find_next(ctx);
-	});
+	);
+	dialog.show(ctx);
 }
 
 void Editor::View::ctl_find_next(UI::Frame &ctx)

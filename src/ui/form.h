@@ -37,19 +37,21 @@ public:
 		std::string value;
 		std::function<std::string(std::string)> completer;
 	};
-	Form(Field field): _fields(1, field) {}
-	Form(std::initializer_list<Field> fields): _fields(fields) {}
-
-	// When the user commits the form, it passes the result to a completion.
+	// When the user commits the form, it collects the resulting values.
 	struct Result {
 		std::map<std::string, std::string> fields;
 		size_t selection = 0;
 		std::string selected_value;
 	};
-	typedef std::function<void(UI::Frame&, Result&)> action;
-	void show(UI::Frame&, action);
+	// The client provides an action function to invoke on commit.
+	typedef std::function<void(UI::Frame&, Result&)> action_t;
+
+	Form(std::initializer_list<Field> fields, action_t action):
+		_fields(fields), _action(action) {}
+	void show(UI::Frame &ctx);
 private:
 	std::vector<Field> _fields;
+	action_t _action;
 };
 } // namespace UI
 
