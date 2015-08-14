@@ -25,16 +25,16 @@ void Search::Dialog::show(UI::Frame &ctx, spec job)
 {
 	UI::Form dialog;
 	dialog.fields = {
-		{"Find", job.needle},
-		{"Files", job.filter},
+		{"Search for", job.needle},
+		{"Filenames", job.filter.empty()? "*": job.filter},
 		{"Directory", job.haystack, &Path::complete_dir}
 	};
 	dialog.commit = [](UI::Frame &ctx, UI::Form::Result &result)
 	{
 		spec job = {
-			result.fields["Find"],
+			result.fields["Search for"],
 			result.fields["Directory"],
-			result.fields["Files"]
+			result.fields["Filenames"]
 		};
 		ctx.app().search(job);
 	};
