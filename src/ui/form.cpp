@@ -21,39 +21,26 @@
 #include "ui/colors.h"
 #include "ui/view.h"
 #include "ui/helpbar.h"
+#include "ui/input.h"
 #include <assert.h>
 
 namespace {
-
-// Single UI control managing a form field. This is a helper class for
-// FormView, managing the state for a single form field.
-class Input
+// Inputs for form fields fill the window width, but have a name caption
+// on the left.
+class FormInput
 {
 public:
-	Input(const UI::Form::Field &field);
+	FormInput(const UI::Form::Field &field);
 	void process(UI::Frame &ctx, int ch);
 	void paint(WINDOW *view, int row, UI::View::State state);
 	void set_help(UI::HelpBar::Panel &panel);
 	std::string name() const { return _field.name; }
-	std::string value() const { return _field.value; }
-	void set_indent(int i) { _indent = i; }
-protected:
-	void ctl_cut(UI::Frame &ctx);
-	void ctl_copy(UI::Frame &ctx);
-	void ctl_paste(UI::Frame &ctx);
-	void arrow_left(UI::Frame &ctx);
-	void arrow_right(UI::Frame &ctx);
-	void select_left(UI::Frame &ctx);
-	void select_right(UI::Frame &ctx);
-	void delete_prev(UI::Frame &ctx);
-	void delete_next(UI::Frame &ctx);
-	void delete_selection(UI::Frame &ctx);
-	void tab_complete(UI::Frame &ctx);
-	void key_insert(UI::Frame &ctx, int ch);
+	std::string value() const { return _input.value(); }
+	void set_indent(int i);
+private:
 	UI::Form::Field _field;
-	int _indent = 0;
-	unsigned _cursor_pos = 0;
-	unsigned _anchor_pos = 0;
+	UI::Input _input;
+	std::string _caption;
 };
 
 // View managing the active representation of the form
@@ -73,7 +60,7 @@ protected:
 	bool commit(UI::Frame &ctx, UI::Form::action_t action);
 private:
 	UI::Form _form;
-	std::vector<Input> _inputs;
+	std::vector<FormInput> _inputs;
 	size_t _selected = 0;
 };
 
@@ -191,209 +178,37 @@ bool FormView::commit(UI::Frame &ctx, UI::Form::action_t action)
 	return false;
 }
 
-Input::Input(const UI::Form::Field &field):
+FormInput::FormInput(const UI::Form::Field &field):
 	_field(field),
-	_cursor_pos(field.value.size()),
-	_anchor_pos(0)
+	_input(field.value, field.completer, nullptr)
 {
+	set_indent(0);
 }
 
-void Input::process(UI::Frame &ctx, int ch)
+void FormInput::process(UI::Frame &ctx, int ch)
 {
-	switch (ch) {
-		case Control::Cut: ctl_cut(ctx); break;
-		case Control::Copy: ctl_copy(ctx); break;
-		case Control::Paste: ctl_paste(ctx); break;
-		case KEY_LEFT: arrow_left(ctx); break;
-		case KEY_RIGHT: arrow_right(ctx); break;
-		case KEY_SLEFT: select_left(ctx); break;
-		case KEY_SRIGHT: select_right(ctx); break;
-		case Control::Backspace: delete_prev(ctx); break;
-		case KEY_DC: delete_next(ctx); break;
-		case Control::Tab: tab_complete(ctx); break;
-		default:
-			// we only care about non-control chars now
-			if (ch < 32 || ch > 127) break;
-			// in all other situations, the keypress should be
-			// inserted into the field at the cursor point.
-			key_insert(ctx, ch);
-			break;
-	}
+	_input.process(ctx, ch);
 }
 
-void Input::paint(WINDOW *view, int row, UI::View::State state)
+void FormInput::paint(WINDOW *view, int row, UI::View::State state)
 {
 	int height, width;
 	getmaxyx(view, height, width);
 	(void)height;
-
-	// Draw the caption, on the left side of the field.
-	wmove(view, row, _indent);
-	width -= _indent;
-	waddnstr(view, _field.name.c_str(), width);
-	width -= std::min(static_cast<int>(_field.name.size()), width);
-
-	// Draw the current value, truncated to fit remaining space.
-	int value_hpos, value_vpos;
-	(void)value_vpos;
-	if (width >= 2) {
-		waddnstr(view, ": ", width);
-		width -= 2;
-		getyx(view, value_vpos, value_hpos);
-		waddnstr(view, _field.value.c_str(), width);
-		width -= std::min(static_cast<int>(_field.value.size()), width);
-	}
-
-	// If there is space remaining, clear it out.
-	if (width > 0) {
-		int end_vpos, end_hpos;
-		getyx(view, end_vpos, end_hpos);
-		(void)end_vpos; // unused
-		whline(view, ' ', width - end_hpos);
-	}
-
-	// Position the cursor, or draw the selection range.
-	bool focused = (state == UI::View::State::Focused);
-	if (_anchor_pos == _cursor_pos) {
-		// Put the cursor where it ought to be. Make it visible, if that
-		// would be appropriate for our activation state.
-		wmove(view, row, value_hpos + _cursor_pos);
-		curs_set(focused? 1: 0);
-	} else {
-		if (focused) {
-			int selbegin = value_hpos + std::min(_cursor_pos, _anchor_pos);
-			int selcount = std::abs((int)_cursor_pos - (int)_anchor_pos);
-			mvwchgat(view, row, selbegin, selcount, A_NORMAL, 0, NULL);
-		}
-		curs_set(0);
-	}
+	// Draw the caption, left-justified.
+	mvwaddnstr(view, row, 0, _caption.c_str(), width);
+	// Tell the input to draw itself in the remaining space.
+	_input.paint(view, row, _caption.size(), width, state);
 }
 
-void Input::set_help(UI::HelpBar::Panel &panel)
+void FormInput::set_help(UI::HelpBar::Panel &panel)
 {
-	panel.cut();
-	panel.copy();
-	panel.paste();
+	_input.set_help(panel);
 }
 
-void Input::ctl_cut(UI::Frame &ctx)
+void FormInput::set_indent(int i)
 {
-	ctl_copy(ctx);
-	delete_selection(ctx);
-}
-
-void Input::ctl_copy(UI::Frame &ctx)
-{
-	// Don't replace the current clipboard contents unless something is
-	// actually selected.
-	if (_anchor_pos == _cursor_pos) {
-		return;
-	}
-	unsigned begin = std::min(_anchor_pos, _cursor_pos);
-	unsigned count = std::max(_anchor_pos - begin, _cursor_pos - begin);
-	ctx.app().set_clipboard(_field.value.substr(begin, count));
-}
-
-void Input::ctl_paste(UI::Frame &ctx)
-{
-	delete_selection(ctx);
-	std::string clip = ctx.app().get_clipboard();
-	auto &value = _field.value;
-	value = value.substr(0, _cursor_pos) + clip + value.substr(_cursor_pos);
-	_cursor_pos += clip.size();
-	_anchor_pos = _cursor_pos;
-}
-
-void Input::arrow_left(UI::Frame &ctx)
-{
-	if (_cursor_pos != _anchor_pos) {
-		_cursor_pos = std::min(_cursor_pos, _anchor_pos);
-		_anchor_pos = _cursor_pos;
-		ctx.repaint();
-	} else {
-		select_left(ctx);
-		_anchor_pos = _cursor_pos;
-	}
-}
-
-void Input::arrow_right(UI::Frame &ctx)
-{
-	if (_cursor_pos != _anchor_pos) {
-		_cursor_pos = std::max(_cursor_pos, _anchor_pos);
-		_anchor_pos = _cursor_pos;
-		ctx.repaint();
-	} else {
-		select_right(ctx);
-		_anchor_pos = _cursor_pos;
-	}
-}
-
-void Input::select_left(UI::Frame &ctx)
-{
-	if (_cursor_pos > 0) {
-		_cursor_pos--;
-		ctx.repaint();
-	}
-}
-
-void Input::select_right(UI::Frame &ctx)
-{
-	if (_cursor_pos < _field.value.size()) {
-		_cursor_pos++;
-		ctx.repaint();
-	}
-}
-
-void Input::delete_prev(UI::Frame &ctx)
-{
-	if (_cursor_pos == _anchor_pos) {
-		select_left(ctx);
-	}
-	delete_selection(ctx);
-}
-
-void Input::delete_next(UI::Frame &ctx)
-{
-	if (_cursor_pos == _anchor_pos) {
-		select_right(ctx);
-	}
-	delete_selection(ctx);
-}
-
-void Input::delete_selection(UI::Frame &ctx)
-{
-	if (_field.value.empty()) return;
-	if (_cursor_pos == _anchor_pos) return;
-	auto begin = std::min(_anchor_pos, _cursor_pos);
-	auto end = std::max(_anchor_pos, _cursor_pos);
-	auto &value = _field.value;
-	value = value.substr(0, begin) + value.substr(end);
-	_cursor_pos = begin;
-	_anchor_pos = begin;
-	ctx.repaint();
-}
-
-void Input::tab_complete(UI::Frame &ctx)
-{
-	// If we have an autocompleter function, give it a chance to extend the
-	// text to the left of the insertion point.
-	if (!_field.completer) return;
-	size_t searchpos = std::min(_cursor_pos, _anchor_pos);
-	std::string prefix = _field.value.substr(0, searchpos);
-	std::string postfix = _field.value.substr(searchpos);
-	std::string extended = _field.completer(prefix);
-	if (extended == prefix) return;
-	_field.value = extended + postfix;
-	_cursor_pos = extended.size();
-	_anchor_pos = extended.size();
-	ctx.repaint();
-}
-
-void Input::key_insert(UI::Frame &ctx, int ch)
-{
-	delete_selection(ctx);
-	_field.value.insert(_cursor_pos++, 1, ch);
-	_anchor_pos = _cursor_pos;
-	ctx.repaint();
+	std::string spacer(i, ' ');
+	_caption = spacer + _field.name + ": ";
 }
 
