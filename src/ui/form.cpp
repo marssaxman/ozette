@@ -25,18 +25,17 @@
 
 namespace {
 
-// Single UI control managing a form field
+// Single UI control managing a form field. This is a helper class for
+// FormView, managing the state for a single form field.
 class Input
 {
 public:
-	typedef std::vector<Input> Vector;
-	typedef std::function<std::string(std::string)> Completer;
-	Input(std::string caption, std::string value, Completer completer);
+	Input(const UI::Form::Field &field);
 	void process(UI::Frame &ctx, int ch);
 	void paint(WINDOW *view, int row, UI::View::State state);
 	void set_help(UI::HelpBar::Panel &panel);
-	std::string name() const { return _caption; }
-	std::string value() const { return _value; }
+	std::string name() const { return _field.name; }
+	std::string value() const { return _field.value; }
 	void set_indent(int i) { _indent = i; }
 protected:
 	void ctl_cut(UI::Frame &ctx);
@@ -51,12 +50,10 @@ protected:
 	void delete_selection(UI::Frame &ctx);
 	void tab_complete(UI::Frame &ctx);
 	void key_insert(UI::Frame &ctx, int ch);
-	std::string _caption;
-	std::string _value;
+	UI::Form::Field _field;
 	int _indent = 0;
 	unsigned _cursor_pos = 0;
 	unsigned _anchor_pos = 0;
-	Completer _completer = nullptr;
 };
 
 // View managing the active representation of the form
@@ -64,9 +61,7 @@ class FormView : public UI::View
 {
 	typedef UI::View inherited;
 public:
-	typedef std::function<void(UI::Frame&, Input::Vector&, size_t i)> action_t;
-	FormView(Input::Vector &&fields, action_t action);
-
+	FormView(const UI::Form &form);
 	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
@@ -75,55 +70,33 @@ protected:
 	void paint_line(WINDOW *view, size_t i, State state);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
+	bool commit(UI::Frame &ctx, UI::Form::action_t action);
 private:
-	Input::Vector _inputs;
+	UI::Form _form;
+	std::vector<Input> _inputs;
 	size_t _selected = 0;
-	action_t _commit = nullptr;
 };
 
 } // namespace
 
-static void run_view(
-		UI::Frame &ctx,
-		std::vector<UI::Form::Field> &fields,
-		FormView::action_t action)
+void UI::Form::show(Frame &ctx)
 {
-	Input::Vector inputs;
-	for (auto &field: fields) {
-		inputs.emplace_back(field.name, field.value, field.completer);
-	}
-	std::unique_ptr<UI::View> dptr(new FormView(std::move(inputs), action));
+	std::unique_ptr<UI::View> dptr(new FormView(*this));
 	ctx.show_dialog(std::move(dptr));
 }
 
-void UI::Form::show(Frame &ctx)
+FormView::FormView(const UI::Form &form):
+	inherited(),
+	_form(form)
 {
-	auto relay = [this](Frame &ctx, Input::Vector &inputs, size_t sel)
-	{
-		Form::Result result;
-		for (auto &input: inputs) {
-			result.fields[input.name()] = input.value();
-		}
-		result.selection = sel;
-		result.selected_value = inputs[sel].value();
-		commit(ctx, result);
-	};
-	run_view(ctx, fields, relay);
-}
-
-FormView::FormView(Input::Vector &&inputs, action_t commit):
-	_inputs(std::move(inputs)),
-	_commit(commit)
-{
-	assert(!inputs.empty());
-	assert(_commit != nullptr);
-	// Align all the field captions to the right, so their colons line up.
-	size_t longest = 0;
-	for (auto &f: inputs) {
-		longest = std::max(longest, f.name().size());
+	size_t max_caption = 0;
+	for (auto &field: _form.fields) {
+		_inputs.emplace_back(field);
+		max_caption = std::max(max_caption, field.name.size());
 	}
-	for (auto &f: inputs) {
-		f.set_indent(longest - f.name().size());
+	// Right-align the field names.
+	for (auto &input: _inputs) {
+		input.set_indent(max_caption - input.name().size());
 	}
 }
 
@@ -138,11 +111,7 @@ bool FormView::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
 		case Control::Return:
-		case Control::Enter:
-			// the user is happy with their choice, so tell the action to
-			// proceed and then inform our host that we are finished
-			_commit(ctx, _inputs, _selected);
-			return false;
+		case Control::Enter: return commit(ctx, _form.commit);
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
 		default: {
@@ -199,12 +168,23 @@ void FormView::key_down(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-Input::Input(std::string caption, std::string value, Completer completer):
-	_caption(caption),
-	_value(value),
-	_cursor_pos(value.size()),
-	_anchor_pos(0),
-	_completer(completer)
+bool FormView::commit(UI::Frame &ctx, UI::Form::action_t action)
+{
+	if (!action) return true;
+	UI::Form::Result result;
+	for (auto &input: _inputs) {
+		result.fields[input.name()] = input.value();
+	}
+	result.selection = _selected;
+	result.selected_value = _inputs[_selected].value();
+	action(ctx, result);
+	return false;
+}
+
+Input::Input(const UI::Form::Field &field):
+	_field(field),
+	_cursor_pos(field.value.size()),
+	_anchor_pos(0)
 {
 }
 
@@ -240,8 +220,8 @@ void Input::paint(WINDOW *view, int row, UI::View::State state)
 	// Draw the caption, on the left side of the field.
 	wmove(view, row, _indent);
 	width -= _indent;
-	waddnstr(view, _caption.c_str(), width);
-	width -= std::min(static_cast<int>(_caption.size()), width);
+	waddnstr(view, _field.name.c_str(), width);
+	width -= std::min(static_cast<int>(_field.name.size()), width);
 
 	// Draw the current value, truncated to fit remaining space.
 	int value_hpos, value_vpos;
@@ -250,8 +230,8 @@ void Input::paint(WINDOW *view, int row, UI::View::State state)
 		waddnstr(view, ": ", width);
 		width -= 2;
 		getyx(view, value_vpos, value_hpos);
-		waddnstr(view, _value.c_str(), width);
-		width -= std::min(static_cast<int>(_value.size()), width);
+		waddnstr(view, _field.value.c_str(), width);
+		width -= std::min(static_cast<int>(_field.value.size()), width);
 	}
 
 	// If there is space remaining, clear it out.
@@ -301,14 +281,15 @@ void Input::ctl_copy(UI::Frame &ctx)
 	}
 	unsigned begin = std::min(_anchor_pos, _cursor_pos);
 	unsigned count = std::max(_anchor_pos - begin, _cursor_pos - begin);
-	ctx.app().set_clipboard(_value.substr(begin, count));
+	ctx.app().set_clipboard(_field.value.substr(begin, count));
 }
 
 void Input::ctl_paste(UI::Frame &ctx)
 {
 	delete_selection(ctx);
 	std::string clip = ctx.app().get_clipboard();
-	_value = _value.substr(0, _cursor_pos) + clip + _value.substr(_cursor_pos);
+	auto &value = _field.value;
+	value = value.substr(0, _cursor_pos) + clip + value.substr(_cursor_pos);
 	_cursor_pos += clip.size();
 	_anchor_pos = _cursor_pos;
 }
@@ -347,7 +328,7 @@ void Input::select_left(UI::Frame &ctx)
 
 void Input::select_right(UI::Frame &ctx)
 {
-	if (_cursor_pos < _value.size()) {
+	if (_cursor_pos < _field.value.size()) {
 		_cursor_pos++;
 		ctx.repaint();
 	}
@@ -371,11 +352,12 @@ void Input::delete_next(UI::Frame &ctx)
 
 void Input::delete_selection(UI::Frame &ctx)
 {
-	if (_value.empty()) return;
+	if (_field.value.empty()) return;
 	if (_cursor_pos == _anchor_pos) return;
 	auto begin = std::min(_anchor_pos, _cursor_pos);
 	auto end = std::max(_anchor_pos, _cursor_pos);
-	_value = _value.substr(0, begin) + _value.substr(end);
+	auto &value = _field.value;
+	value = value.substr(0, begin) + value.substr(end);
 	_cursor_pos = begin;
 	_anchor_pos = begin;
 	ctx.repaint();
@@ -385,13 +367,13 @@ void Input::tab_complete(UI::Frame &ctx)
 {
 	// If we have an autocompleter function, give it a chance to extend the
 	// text to the left of the insertion point.
-	if (!_completer) return;
+	if (!_field.completer) return;
 	size_t searchpos = std::min(_cursor_pos, _anchor_pos);
-	std::string prefix = _value.substr(0, searchpos);
-	std::string postfix = _value.substr(searchpos);
-	std::string extended = _completer(prefix);
+	std::string prefix = _field.value.substr(0, searchpos);
+	std::string postfix = _field.value.substr(searchpos);
+	std::string extended = _field.completer(prefix);
 	if (extended == prefix) return;
-	_value = extended + postfix;
+	_field.value = extended + postfix;
 	_cursor_pos = extended.size();
 	_anchor_pos = extended.size();
 	ctx.repaint();
@@ -400,7 +382,7 @@ void Input::tab_complete(UI::Frame &ctx)
 void Input::key_insert(UI::Frame &ctx, int ch)
 {
 	delete_selection(ctx);
-	_value.insert(_cursor_pos++, 1, ch);
+	_field.value.insert(_cursor_pos++, 1, ch);
 	_anchor_pos = _cursor_pos;
 	ctx.repaint();
 }

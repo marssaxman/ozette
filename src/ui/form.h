@@ -28,9 +28,8 @@
 #include "ui/helpbar.h"
 
 namespace UI {
-class Form
+struct Form
 {
-public:
 	// A form is a list of named input fields.
 	struct Field {
 		std::string name;
@@ -46,8 +45,11 @@ public:
 		std::string selected_value;
 	};
 
-	// If the user commits via Enter/Return, the primary action is invoked.
+	// If the user commits rather than canceling, the form will invoke a
+	// completion action.
 	typedef std::function<void(UI::Frame&, Result&)> action_t;
+
+	// The commit action is invoked by return/enter.
 	action_t commit = nullptr;
 
 	// An optional alternate commit action may be invoked with a control key.
@@ -59,9 +61,7 @@ public:
 	};
 	Alternate secondary;
 
-	Form() {}
-	Form(std::initializer_list<Field> f, action_t action):
-		fields(f), commit(action) {}
+	// Once the form is configured, show it within a host window.
 	void show(UI::Frame &ctx);
 };
 } // namespace UI
