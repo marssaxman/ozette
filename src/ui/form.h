@@ -55,11 +55,11 @@ struct Form
 	// An optional alternate commit action may be invoked with a control key.
 	// A label will describe this action on the help bar.
 	struct Alternate {
-		int control_key = 0;
+		char control_key;
 		UI::HelpBar::Label label;
-		action_t action = nullptr;
+		action_t action;
 	};
-	Alternate secondary;
+	std::vector<Alternate> alternates;
 
 	// Once the form is configured, show it within a host window.
 	void show(UI::Frame &ctx);

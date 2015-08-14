@@ -365,6 +365,26 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 		drop_selection();
 		postprocess(ctx);
 	};
+	dialog.alternates = {
+		{
+			'L', {" L", "Last"},
+			[this](UI::Frame &ctx, UI::Form::Result&)
+			{
+				_cursor.move_to(_doc.end());
+				drop_selection();
+				postprocess(ctx);
+			}
+		},
+		{
+			'F', {" F", "First"},
+			[this](UI::Frame &ctx, UI::Form::Result&)
+			{
+				_cursor.move_to(_doc.home());
+				drop_selection();
+				postprocess(ctx);
+			}
+		}
+	};
 	dialog.show(ctx);
 }
 
