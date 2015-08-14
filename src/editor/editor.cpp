@@ -326,8 +326,9 @@ void Editor::View::ctl_save_as(UI::Frame &ctx)
 	if (_doc.readonly()) return;
 	_doc.commit();
 	UI::Form dialog({"Save As", _targetpath, &Path::complete_file});
-	dialog.show(ctx, [this](UI::Frame &ctx, std::string path)
+	dialog.show(ctx, [this](UI::Frame &ctx, UI::Form::Result &result)
 	{
+		std::string path = result.selected_value;
 		if (path.empty()) {
 			ctx.show_result("Cancelled");
 			return;
@@ -349,8 +350,9 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 	std::string prompt = "Go to line";
 	std::string current = std::to_string(_cursor.location().line + 1);
 	UI::Form dialog({prompt, current});
-	dialog.show(ctx, [this](UI::Frame &ctx, std::string value)
+	dialog.show(ctx, [this](UI::Frame &ctx, UI::Form::Result &result)
 	{
+		std::string value = result.selected_value;
 		if (value.empty()) return;
 		long valnum = std::stol(value) - 1;
 		size_t index = (valnum >= 0) ? valnum : 0;
@@ -363,8 +365,9 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 void Editor::View::ctl_find(UI::Frame &ctx)
 {
 	UI::Form dialog({"Find", _find_text});
-	dialog.show(ctx, [this](UI::Frame &ctx, std::string value)
+	dialog.show(ctx, [this](UI::Frame &ctx, UI::Form::Result &result)
 	{
+		std::string value = result.selected_value;
 		if (!value.empty()) {
 			_find_text = value;
 		}

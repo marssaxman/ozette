@@ -40,21 +40,14 @@ public:
 	Form(Field field): _fields(1, field) {}
 	Form(std::initializer_list<Field> fields): _fields(fields) {}
 
+	// When the user commits the form, it passes the result to a completion.
 	struct Result {
 		std::map<std::string, std::string> fields;
 		size_t selection = 0;
 		std::string selected_value;
 	};
-	void show(UI::Frame&, std::function<void(UI::Frame&, Result&)>);
-
-	// When the user commits the form, it invokes some completion action.
-	// A completion function which receives a set of all field values.
-	// A completion function which receives the value of the selected field.
-	typedef std::function<void(Frame&, std::string)> selection_action;
-
-	// Show the form, let the user edit, and return the value of the field
-	// which was selected when the user committed the form.
-	void show(UI::Frame &ctx, selection_action);
+	typedef std::function<void(UI::Frame&, Result&)> action;
+	void show(UI::Frame&, action);
 private:
 	std::vector<Field> _fields;
 };

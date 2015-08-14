@@ -208,8 +208,9 @@ void Ozette::change_directory()
 		Path::display(_current_dir),
 		&Path::complete_dir
 	});
-	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string path)
+	dialog.show(*_shell.active(), [this](UI::Frame &ctx, UI::Form::Result &res)
 	{
+		std::string path = res.selected_value;
 		if (path.empty()) return;
 		change_dir(path);
 	});
@@ -227,8 +228,9 @@ void Ozette::new_file()
 void Ozette::open_file()
 {
 	UI::Form dialog({"Open", "", &Path::complete_file});
-	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string path)
+	dialog.show(*_shell.active(), [this](UI::Frame &ctx, UI::Form::Result &res)
 	{
+		std::string path = res.selected_value;
 		if (path.empty()) return;
 		edit_file(path);
 	});
@@ -257,9 +259,9 @@ void Ozette::show_help()
 void Ozette::execute()
 {
 	UI::Form dialog({"exec"});
-	dialog.show(*_shell.active(), [this](UI::Frame &ctx, std::string cmd)
+	dialog.show(*_shell.active(), [this](UI::Frame &ctx, UI::Form::Result &res)
 	{
-		exec(cmd);
+		exec(res.selected_value);
 	});
 }
 

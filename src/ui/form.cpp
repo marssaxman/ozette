@@ -112,16 +112,6 @@ void UI::Form::show(Frame &ctx, std::function<void(Frame&, Result&)> action)
 	run_view(ctx, _fields, commit);
 }
 
-void UI::Form::show(UI::Frame &ctx, selection_action action)
-{
-	auto commit = [this, action](
-			UI::Frame &ctx, std::vector<Input> &inputs, size_t selected)
-	{
-		action(ctx, inputs[selected].value());
-	};
-	run_view(ctx, _fields, commit);
-}
-
 FormView::FormView(FieldList &&fields, action_t commit):
 	_fields(std::move(fields)),
 	_commit(commit)
