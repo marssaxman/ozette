@@ -21,7 +21,7 @@
 #include "app/control.h"
 #include "app/path.h"
 #include "ui/form.h"
-#include "ui/confirm.h"
+#include "ui/confirmation.h"
 #include "editor/finder.h"
 #include "ui/input.h"
 #include "ui/colors.h"
@@ -313,7 +313,7 @@ void Editor::View::ctl_close(UI::Frame &ctx)
 		// just close it
 		ctx.app().close_file(_targetpath);
 	};
-	UI::Confirm::show(ctx, prompt, yes, no);
+	UI::Confirmation::show(ctx, prompt, yes, no);
 }
 
 void Editor::View::ctl_save(UI::Frame &ctx)

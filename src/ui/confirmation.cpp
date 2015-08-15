@@ -17,18 +17,18 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "ui/confirm.h"
+#include "ui/confirmation.h"
 #include "ui/colors.h"
 #include <assert.h>
 
-void UI::Confirm::show(
+void UI::Confirmation::show(
 		UI::Frame &ctx, std::string text, action_t yes, action_t no)
 {
-	std::unique_ptr<View> dptr(new Confirm(text, yes, no));
+	std::unique_ptr<View> dptr(new Confirmation(text, yes, no));
 	ctx.show_dialog(std::move(dptr));
 }
 
-UI::Confirm::Confirm(std::string text, action_t yes, action_t no):
+UI::Confirmation::Confirmation(std::string text, action_t yes, action_t no):
 	_text(text), _yes(yes), _no(no)
 {
 	assert(!text.empty());
@@ -36,13 +36,13 @@ UI::Confirm::Confirm(std::string text, action_t yes, action_t no):
 	assert(_no != nullptr);
 }
 
-void UI::Confirm::layout(int vpos, int hpos, int height, int width)
+void UI::Confirmation::layout(int vpos, int hpos, int height, int width)
 {
 	// A confirmation dialog always has exactly one line, with question text.
 	inherited::layout(vpos + height - 1, hpos, 1, width);
 }
 
-bool UI::Confirm::process(UI::Frame &ctx, int ch)
+bool UI::Confirmation::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
 		case Control::Escape: ctx.show_result("Cancelled"); return false;
@@ -54,13 +54,13 @@ bool UI::Confirm::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-void UI::Confirm::set_help(UI::HelpBar::Panel &panel)
+void UI::Confirmation::set_help(UI::HelpBar::Panel &panel)
 {
 	panel.yes();
 	panel.no();
 }
 
-void UI::Confirm::paint_into(WINDOW *view, State state)
+void UI::Confirmation::paint_into(WINDOW *view, State state)
 {
 	int height, width;
 	getmaxyx(view, height, width);
