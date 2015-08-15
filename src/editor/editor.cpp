@@ -109,6 +109,7 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::SaveAs: ctl_save_as(ctx); break;
 		case Control::ToLine: ctl_toline(ctx); break;
 		case Control::Find: ctl_find(ctx); break;
+		case Control::FindNext: ctl_find_next(ctx); break;
 		case Control::Undo: ctl_undo(ctx); break;
 		case Control::Redo: ctl_redo(ctx); break;
 		case Control::DownArrow: ctl_open_next(ctx); break;
@@ -402,6 +403,12 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 	// go back to the original selection; otherwise, committing the dialog
 	// will retain it.
 	std::unique_ptr<UI::View> dptr(new Finder(*this, _doc, _selection));
+	ctx.show_dialog(std::move(dptr));
+}
+
+void Editor::View::ctl_find_next(UI::Frame &ctx)
+{
+	std::unique_ptr<UI::View> dptr(new Finder(ctx, *this, _doc, _selection));
 	ctx.show_dialog(std::move(dptr));
 }
 

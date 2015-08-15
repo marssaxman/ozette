@@ -102,7 +102,6 @@ private:
 	Cursor _cursor;
 	location_t _anchor;
 	Range _selection;
-	std::string _find_text;
 	Settings _settings;
 
 	// Update status: must we perform a full repaint?

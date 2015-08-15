@@ -31,6 +31,20 @@ Editor::Finder::Finder(Editor::View &editor, Document &doc, Range selection):
 	_input.reset(new UI::Input("", nullptr, updater));
 }
 
+Editor::Finder::Finder(
+		UI::Frame &ctx, Editor::View &editor, Document &doc, Range selection):
+	inherited(),
+	_editor(editor),
+	_document(doc),
+	_original_selection(selection),
+	_anchor_selection(selection)
+{
+	auto updater = [this](UI::Frame &ctx){ input_changed(ctx); };
+	std::string pattern = doc.text(selection);
+	_input.reset(new UI::Input(pattern, nullptr, updater));
+	run_find(ctx);
+}
+
 void Editor::Finder::layout(int vpos, int hpos, int height, int width)
 {
 	inherited::layout(vpos + height - 1, hpos, 1, width);
@@ -43,7 +57,6 @@ bool Editor::Finder::process(UI::Frame &ctx, int ch)
 			_editor.select(ctx, _original_selection);
 			return false;
 		}
-		case KEY_F(9): run_find(ctx); break;
 		case Control::Enter:
 		case Control::Return: return false;
 		case Control::FindNext: find_next(ctx); break;
@@ -114,7 +127,10 @@ void Editor::Finder::run_find(UI::Frame &ctx)
 		if (match.begin() > anchorpoint) break;
 		_found_item++;
 	}
-	find_next(ctx);
+	if (_found_item >= _matches.size()) {
+		_found_item = 0;
+	}
+	_editor.select(ctx, _matches[_found_item]);
 }
 
 void Editor::Finder::find_next(UI::Frame &ctx)
