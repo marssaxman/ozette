@@ -29,14 +29,16 @@ class Finder : public UI::View
 {
 	typedef UI::View inherited;
 public:
-	// Open a finder and wait for input.
-	Finder(Editor::View&, Document&, Range selection);
-	// Open a finder and immediately search for the selected text.
-	Finder(UI::Frame&, Editor::View&, Document&, Range selection);
+	static Finder* find(Editor::View&, Document&, Range selection);
+	static Finder* find_next(UI::Frame&, Editor::View&, Document&, Range sel);
 	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
 protected:
+	// Open a finder and wait for input.
+	Finder(Editor::View&, Document&, Range selection);
+	// Open a finder and immediately search for the selected text.
+	Finder(UI::Frame&, Editor::View&, Document&, Range selection);
 	virtual void paint_into(WINDOW *view, State state) override;
 	void input_changed(UI::Frame &ctx);
 	void run_find(UI::Frame &ctx);

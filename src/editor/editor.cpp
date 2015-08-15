@@ -402,13 +402,15 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 	// view to bring it on screen. If the user cancels the dialog, we will
 	// go back to the original selection; otherwise, committing the dialog
 	// will retain it.
-	std::unique_ptr<UI::View> dptr(new Finder(*this, _doc, _selection));
+	Editor::Finder *finder = Finder::find(*this, _doc, _selection);
+	std::unique_ptr<UI::View> dptr(finder);
 	ctx.show_dialog(std::move(dptr));
 }
 
 void Editor::View::ctl_find_next(UI::Frame &ctx)
 {
-	std::unique_ptr<UI::View> dptr(new Finder(ctx, *this, _doc, _selection));
+	Editor::Finder *finder = Finder::find_next(ctx, *this, _doc, _selection);
+	std::unique_ptr<UI::View> dptr(finder);
 	ctx.show_dialog(std::move(dptr));
 }
 

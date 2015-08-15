@@ -20,6 +20,18 @@
 #include "editor/finder.h"
 #include "ui/colors.h"
 
+Editor::Finder* Editor::Finder::find(
+	Editor::View &editor, Document &doc, Range selection)
+{
+	return new Finder(editor, doc, selection);
+}
+
+Editor::Finder* Editor::Finder::find_next(
+		UI::Frame &ctx, Editor::View &editor, Document &doc, Range sel)
+{
+	return new Finder(ctx, editor, doc, sel);
+}
+
 Editor::Finder::Finder(Editor::View &editor, Document &doc, Range selection):
 	inherited(),
 	_editor(editor),
