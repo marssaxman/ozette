@@ -36,7 +36,6 @@ Editor::Finder::Finder(Editor::View &editor, Document &doc, Range selection):
 	inherited(),
 	_editor(editor),
 	_document(doc),
-	_original_selection(selection),
 	_anchor_selection(selection)
 {
 	auto updater = [this](UI::Frame &ctx){ input_changed(ctx); };
@@ -48,7 +47,6 @@ Editor::Finder::Finder(
 	inherited(),
 	_editor(editor),
 	_document(doc),
-	_original_selection(selection),
 	_anchor_selection(selection)
 {
 	auto updater = [this](UI::Frame &ctx){ input_changed(ctx); };
@@ -67,7 +65,8 @@ bool Editor::Finder::process(UI::Frame &ctx, int ch)
 	switch (ch) {
 		case Control::Escape: return false;
 		case Control::Enter:
-		case Control::Return: find_next(ctx); break;
+		case Control::Return:
+		case Control::FindNext: find_next(ctx); break;
 		default: _input->process(ctx, ch); break;
 	}
 	return true;

@@ -46,7 +46,6 @@ protected:
 private:
 	Editor::View &_editor;
 	Editor::Document &_document;
-	Editor::Range _original_selection;
 	Editor::Range _anchor_selection;
 	std::unique_ptr<UI::Input> _input;
 	std::vector<Range> _matches;
