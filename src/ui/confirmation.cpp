@@ -25,17 +25,13 @@ namespace {
 class ConfirmationView : public UI::View {
 	typedef UI::View inherited;
 public:
-	typedef std::function<void(UI::Frame&)> action_t;
-	ConfirmationView(const UI::Confirmation &confirmation);
-
+	ConfirmationView(const UI::Confirmation &spec);
 	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
 protected:
 	virtual void paint_into(WINDOW *view, State state) override;
-	std::string _text;
-	action_t _yes = nullptr;
-	action_t _no = nullptr;
+	UI::Confirmation _spec;
 };
 } // namespace anonymous
 
@@ -45,20 +41,19 @@ void UI::Confirmation::show(UI::Frame &ctx)
 	ctx.show_dialog(std::move(dptr));
 }
 
-ConfirmationView::ConfirmationView(const UI::Confirmation &confirmation):
-	_text(confirmation.text),
-	_yes(confirmation.yes),
-	_no(confirmation.no)
+ConfirmationView::ConfirmationView(const UI::Confirmation &spec):
+	_spec(spec)
 {
-	assert(!_text.empty());
-	assert(_yes != nullptr);
-	assert(_no != nullptr);
+	assert(!_spec.text.empty());
+	assert(_spec.yes != nullptr);
+	assert(_spec.no != nullptr);
 }
 
 void ConfirmationView::layout(int vpos, int hpos, int height, int width)
 {
 	// A confirmation dialog always has exactly one line, with question text.
-	inherited::layout(vpos + height - 1, hpos, 1, width);
+	int rows = 1 + _spec.supplement.size();
+	inherited::layout(vpos + height - rows, hpos, rows, width);
 }
 
 bool ConfirmationView::process(UI::Frame &ctx, int ch)
@@ -66,9 +61,9 @@ bool ConfirmationView::process(UI::Frame &ctx, int ch)
 	switch (ch) {
 		case Control::Escape: ctx.show_result("Cancelled"); return false;
 		case 'Y':
-		case 'y': _yes(ctx); return false;
+		case 'y': _spec.yes(ctx); return false;
 		case 'N':
-		case 'n': _no(ctx); return false;
+		case 'n': _spec.no(ctx); return false;
 	}
 	return true;
 }
@@ -86,6 +81,12 @@ void ConfirmationView::paint_into(WINDOW *view, State state)
 	(void)height;
 	wattrset(view, UI::Colors::dialog(state == State::Focused));
 	whline(view, ' ', width);
-	mvwaddnstr(view, 0, 0, _text.c_str(), width);
+	int row = 0;
+	mvwaddnstr(view, row++, 0, _spec.text.c_str(), width);
+	for (std::string line: _spec.supplement) {
+		mvwhline(view, row, 0, ' ', width);
+		mvwaddnstr(view, row, 2, line.c_str(), width - 2);
+		++row;
+	}
 }
 

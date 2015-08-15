@@ -29,6 +29,8 @@ namespace UI {
 struct Confirmation {
 	// A confirmation dialog asks the user a yes or no question.
 	std::string text;
+	// The question may include some lines of explanatory text.
+	std::vector<std::string> supplement;
 	// The user may answer yes or no.
 	std::function<void(Frame&)> yes;
 	std::function<void(Frame&)> no;
