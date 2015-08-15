@@ -65,15 +65,10 @@ void Editor::Finder::layout(int vpos, int hpos, int height, int width)
 bool Editor::Finder::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
-		case Control::Escape: {
-			_editor.select(ctx, _original_selection);
-			return false;
-		}
+		case Control::Escape: return false;
 		case Control::Enter:
-		case Control::Return: return false;
-		case Control::FindNext: find_next(ctx); break;
-		default:
-			_input->process(ctx, ch);
+		case Control::Return: find_next(ctx); break;
+		default: _input->process(ctx, ch); break;
 	}
 	return true;
 }
@@ -81,7 +76,6 @@ bool Editor::Finder::process(UI::Frame &ctx, int ch)
 void Editor::Finder::set_help(UI::HelpBar::Panel &panel)
 {
 	_input->set_help(panel);
-	panel.find_next();
 }
 
 void Editor::Finder::paint_into(WINDOW *view, State state)
@@ -142,7 +136,9 @@ void Editor::Finder::run_find(UI::Frame &ctx)
 	if (_found_item >= _matches.size()) {
 		_found_item = 0;
 	}
-	_editor.select(ctx, _matches[_found_item]);
+	if (!_matches.empty()) {
+		_editor.select(ctx, _matches[_found_item]);
+	}
 }
 
 void Editor::Finder::find_next(UI::Frame &ctx)
