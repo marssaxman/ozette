@@ -21,28 +21,47 @@
 #include "ui/colors.h"
 #include <assert.h>
 
-void UI::Confirmation::show(
-		UI::Frame &ctx, std::string text, action_t yes, action_t no)
+namespace {
+class ConfirmationView : public UI::View {
+	typedef UI::View inherited;
+public:
+	typedef std::function<void(UI::Frame&)> action_t;
+	ConfirmationView(const UI::Confirmation &confirmation);
+
+	virtual void layout(int vpos, int hpos, int height, int width) override;
+	virtual bool process(UI::Frame &ctx, int ch) override;
+	virtual void set_help(UI::HelpBar::Panel &panel) override;
+protected:
+	virtual void paint_into(WINDOW *view, State state) override;
+	std::string _text;
+	action_t _yes = nullptr;
+	action_t _no = nullptr;
+};
+} // namespace anonymous
+
+void UI::Confirmation::show(UI::Frame &ctx)
 {
-	std::unique_ptr<View> dptr(new Confirmation(text, yes, no));
+	std::unique_ptr<UI::View> dptr(new ConfirmationView(*this));
 	ctx.show_dialog(std::move(dptr));
 }
 
-UI::Confirmation::Confirmation(std::string text, action_t yes, action_t no):
-	_text(text), _yes(yes), _no(no)
+ConfirmationView::ConfirmationView(const UI::Confirmation &confirmation):
+	_text(confirmation.text),
+	_yes(confirmation.yes),
+	_no(confirmation.no)
 {
-	assert(!text.empty());
+	assert(!_text.empty());
 	assert(_yes != nullptr);
 	assert(_no != nullptr);
 }
 
-void UI::Confirmation::layout(int vpos, int hpos, int height, int width)
+void ConfirmationView::layout(int vpos, int hpos, int height, int width)
 {
 	// A confirmation dialog always has exactly one line, with question text.
 	inherited::layout(vpos + height - 1, hpos, 1, width);
 }
 
-bool UI::Confirmation::process(UI::Frame &ctx, int ch)
+bool ConfirmationView::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
 		case Control::Escape: ctx.show_result("Cancelled"); return false;
@@ -54,18 +73,18 @@ bool UI::Confirmation::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-void UI::Confirmation::set_help(UI::HelpBar::Panel &panel)
+void ConfirmationView::set_help(UI::HelpBar::Panel &panel)
 {
 	panel.yes();
 	panel.no();
 }
 
-void UI::Confirmation::paint_into(WINDOW *view, State state)
+void ConfirmationView::paint_into(WINDOW *view, State state)
 {
 	int height, width;
 	getmaxyx(view, height, width);
 	(void)height;
-	wattrset(view, Colors::dialog(state == State::Focused));
+	wattrset(view, UI::Colors::dialog(state == State::Focused));
 	whline(view, ' ', width);
 	mvwaddnstr(view, 0, 0, _text.c_str(), width);
 }

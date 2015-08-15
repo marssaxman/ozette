@@ -300,20 +300,20 @@ void Editor::View::ctl_close(UI::Frame &ctx)
 		return;
 	}
 	// ask the user if they want to save first
-	std::string prompt = "You have modified this file.";
-	prompt += " Save changes before closing?";
-	auto yes = [this](UI::Frame &ctx)
+	UI::Confirmation dialog;
+	dialog.text = "You have modified this file. Save changes before closing?";
+	dialog.yes = [this](UI::Frame &ctx)
 	{
 		// save the file
 		_doc.Write(_targetpath);
 		ctx.app().close_file(_targetpath);
 	};
-	auto no = [this](UI::Frame &ctx)
+	dialog.no = [this](UI::Frame &ctx)
 	{
 		// just close it
 		ctx.app().close_file(_targetpath);
 	};
-	UI::Confirmation::show(ctx, prompt, yes, no);
+	dialog.show(ctx);
 }
 
 void Editor::View::ctl_save(UI::Frame &ctx)
