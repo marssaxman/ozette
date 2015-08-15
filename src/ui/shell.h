@@ -36,6 +36,11 @@ public:
 	void make_active(Window *window);
 	Window *active() const { return _tabs[_focus].get(); }
 protected:
+	// handle some control actions
+	void ctl_quit();
+	void key_left();
+	void key_right();
+
 	void reap();
 	// change the focus to a specific window
 	void set_focus(size_t index);

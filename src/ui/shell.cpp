@@ -81,36 +81,41 @@ bool UI::Shell::process(int ch)
 		// reliably distinguish between these codes because some terminals
 		// (terminal.app for example) send the shifted codes for left and right
 		// whether or not the user is pressing the shift key.
-		case Control::LeftArrow: {
-			if (_focus > 0) {
-				set_focus(_focus - 1);
-			} else {
-				set_focus(_tabs.size() - 1);
-			}
-		} break;
-		case Control::RightArrow: {
-			size_t next = _focus + 1;
-			if (next >= _tabs.size()) {
-				next = 0;
-			}
-			set_focus(next);
-		} break;
-		case Control::Quit: {
-			for (size_t index = _tabs.size(); index > 0; --index) {
-				if (!_tabs[index - 1]->process(Control::Close)) {
-					close_window(index - 1);
-				}
-			}
-		} break;
-		case KEY_RESIZE: {
-			layout();
-		} break;
-		default: {
-			send_to_focus(ch);
-		} break;
+		case Control::LeftArrow: key_left(); break;
+		case Control::RightArrow: key_right(); break;
+		case Control::Quit: ctl_quit(); break;
+		case KEY_RESIZE: layout(); break;
+		default: send_to_focus(ch); break;
 	}
 	reap();
 	return !_tabs.empty();
+}
+
+void UI::Shell::key_left()
+{
+	if (_focus > 0) {
+		set_focus(_focus - 1);
+	} else {
+		set_focus(_tabs.size() - 1);
+	}
+}
+
+void UI::Shell::key_right()
+{
+	size_t next = _focus + 1;
+	if (next >= _tabs.size()) {
+		next = 0;
+	}
+	set_focus(next);
+}
+
+void UI::Shell::ctl_quit()
+{
+	for (size_t index = _tabs.size(); index > 0; --index) {
+		if (!_tabs[index - 1]->process(Control::Close)) {
+			close_window(index - 1);
+		}
+	}
 }
 
 void UI::Shell::reap()
