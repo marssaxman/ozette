@@ -30,6 +30,7 @@ UI::Input::Input(std::string value, Completer completer, Updater updater):
 
 void UI::Input::process(UI::Frame &ctx, int ch)
 {
+	std::string old_value = _value;
 	switch (ch) {
 		case Control::Cut: ctl_cut(ctx); break;
 		case Control::Copy: ctl_copy(ctx); break;
@@ -48,6 +49,9 @@ void UI::Input::process(UI::Frame &ctx, int ch)
 			// inserted into the field at the cursor point.
 			key_insert(ctx, ch);
 			break;
+	}
+	if (_updater && _value != old_value) {
+		_updater(ctx);
 	}
 }
 

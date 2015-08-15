@@ -22,6 +22,9 @@
 #include "app/path.h"
 #include "ui/form.h"
 #include "ui/confirm.h"
+#include "editor/finder.h"
+#include "ui/input.h"
+#include "ui/colors.h"
 #include "search/dialog.h"
 #include <assert.h>
 #include <sys/stat.h>
@@ -106,7 +109,6 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::SaveAs: ctl_save_as(ctx); break;
 		case Control::ToLine: ctl_toline(ctx); break;
 		case Control::Find: ctl_find(ctx); break;
-		case Control::FindNext: ctl_find_next(ctx); break;
 		case Control::Undo: ctl_undo(ctx); break;
 		case Control::Redo: ctl_redo(ctx); break;
 		case Control::DownArrow: ctl_open_next(ctx); break;
@@ -155,11 +157,13 @@ void Editor::View::set_help(UI::HelpBar::Panel &panel)
 	if (_doc.can_undo()) panel.undo();
 }
 
-void Editor::View::jump_to(UI::Frame &ctx, line_t index)
+void Editor::View::select(UI::Frame &ctx, Range range)
 {
-	_cursor.move_to(_doc.home(index));
-	drop_selection();
-	postprocess(ctx);
+	_anchor = range.begin();
+	_selection = range;
+	_cursor.move_to(range.end());
+	reveal_cursor();
+	ctx.repaint();
 }
 
 void Editor::View::postprocess(UI::Frame &ctx)
@@ -178,7 +182,7 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, State state)
 	wmove(dest, (int)v, 0);
 	DisplayLine line = _doc.display(index);
 	line.paint(dest, _scroll.h, _width, state != State::Inactive);
-	if (state != State::Focused) return;
+	if (state == State::Inactive) return;
 	if (_selection.empty()) return;
 	column_t selbegin = 0;
 	unsigned selcount = 0;
@@ -390,53 +394,15 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 
 void Editor::View::ctl_find(UI::Frame &ctx)
 {
-	UI::Form dialog;
-	dialog.fields = {
-		{"Find", _find_text}
-	};
-	dialog.commit = [this](UI::Frame &ctx, UI::Form::Result &result)
-	{
-		std::string value = result.selected_value;
-		if (!value.empty()) {
-			_find_text = value;
-		}
-		ctl_find_next(ctx);
-	};
-	dialog.alternates = {
-		{
-			KEY_F(4), {"F4", "Search"},
-			[](UI::Frame &ctx, UI::Form::Result &result)
-			{
-				Search::spec job = {
-					result.selected_value,
-					Path::current_dir()
-				};
-				Search::Dialog::show(ctx, job);
-			}
-		}
-	};
-	dialog.show(ctx);
-}
-
-void Editor::View::ctl_find_next(UI::Frame &ctx)
-{
-	if (_find_text.empty()) return;
-	location_t loc = _doc.next(_cursor.location());
-	auto next = _doc.find(_find_text, loc);
-	if (next == _doc.end()) {
-		next = _doc.find(_find_text, _doc.home());
-		if (next == _doc.end()) {
-			ctx.show_result("Not found");
-			next = _cursor.location();
-		} else if (next == _cursor.location()) {
-			ctx.show_result("This is the only occurrence");
-		} else {
-			ctx.show_result("Search wrapped");
-		}
-	}
-	_cursor.move_to(next);
-	drop_selection();
-	postprocess(ctx);
+	// Create a dialog box that provides an interactive find mode. We'll save
+	// the current cursor/selection, and as the user types, we'll search for
+	// all the occurrences of that pattern in the document. We'll select the
+	// first occurrence following the original anchor point, then shift the
+	// view to bring it on screen. If the user cancels the dialog, we will
+	// go back to the original selection; otherwise, committing the dialog
+	// will retain it.
+	std::unique_ptr<UI::View> dptr(new Finder(*this, _doc, _selection));
+	ctx.show_dialog(std::move(dptr));
 }
 
 void Editor::View::ctl_undo(UI::Frame &ctx)
@@ -703,3 +669,4 @@ void Editor::View::save(UI::Frame &ctx, std::string dest)
 	stat += (_doc.maxline() > 1) ? " lines" : " line";
 	ctx.show_result(stat);
 }
+

@@ -30,7 +30,7 @@ class Input
 {
 public:
 	typedef std::function<std::string(std::string)> Completer;
-	typedef std::function<void(std::string)> Updater;
+	typedef std::function<void(UI::Frame &ctx)> Updater;
 	Input(std::string value, Completer, Updater);
 	void process(UI::Frame &ctx, int ch);
 	void paint(WINDOW *view, int vpos, int hpos, int width, View::State state);

@@ -37,7 +37,7 @@ public:
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
-	void jump_to(UI::Frame &ctx, line_t index);
+	void select(UI::Frame &ctx, Range range);
 protected:
 	virtual void paint_into(WINDOW *view, State state) override;
 	virtual void clear_overlay() override;
@@ -90,8 +90,8 @@ private:
 	void drop_selection();
 	void adjust_selection(bool extend);
 
-	// File management basics.
 	void save(UI::Frame &ctx, std::string dest);
+	void find(UI::Frame &ctx);
 
 	// Information about the file being edited
 	std::string _targetpath;

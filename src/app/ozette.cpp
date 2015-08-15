@@ -93,7 +93,9 @@ void Ozette::find_in_file(std::string path, Editor::line_t index)
 	// regex, so we can put the editor into find mode.
 	auto edrec = open_editor(path);
 	if (edrec.view) {
-		edrec.view->jump_to(*edrec.window, index);
+		Editor::location_t line(index, 0);
+		Editor::Range sel(line, line);
+		edrec.view->select(*edrec.window, sel);
 	}
 }
 
