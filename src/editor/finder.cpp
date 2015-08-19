@@ -27,10 +27,12 @@ class FindView : public UI::View
 {
 	typedef UI::View inherited;
 public:
-	// Open a finder and wait for input.
-	FindView(Editor::View&, Document&, Range selection);
-	// Open a finder and immediately search for the selected text.
-	FindView(UI::Frame&, Editor::View&, Document&, Range selection);
+	FindView(
+			UI::Frame& ctx,
+			std::string pattern,
+			Editor::View& editor,
+			Document& document,
+			location_t anchor);
 	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
@@ -42,7 +44,7 @@ protected:
 private:
 	Editor::View &_editor;
 	Editor::Document &_document;
-	Editor::Range _anchor_selection;
+	Editor::location_t _anchor;
 	std::unique_ptr<UI::Input> _input;
 	std::vector<Range> _matches;
 	size_t _found_item;
@@ -52,7 +54,9 @@ private:
 void Editor::Finder::find(
 		UI::Frame &ctx, Editor::View &editor, Document &doc, Range selection)
 {
-	auto view = new FindView(editor, doc, selection);
+	std::string pattern = "";
+	location_t anchor = selection.begin();
+	auto view = new FindView(ctx, pattern, editor, doc, anchor);
 	std::unique_ptr<UI::View> dptr(view);
 	ctx.show_dialog(std::move(dptr));
 }
@@ -60,30 +64,25 @@ void Editor::Finder::find(
 void Editor::Finder::find_next(
 		UI::Frame &ctx, Editor::View &editor, Document &doc, Range sel)
 {
-	auto view = new FindView(ctx, editor, doc, sel);
+	std::string pattern = doc.text(sel);
+	location_t anchor = sel.end();
+	auto view = new FindView(ctx, pattern, editor, doc, anchor);
 	std::unique_ptr<UI::View> dptr(view);
 	ctx.show_dialog(std::move(dptr));
 }
 
-FindView::FindView(Editor::View &editor, Document &doc, Range selection):
-	inherited(),
-	_editor(editor),
-	_document(doc),
-	_anchor_selection(selection)
-{
-	auto updater = [this](UI::Frame &ctx){ input_changed(ctx); };
-	_input.reset(new UI::Input("", nullptr, updater));
-}
-
 FindView::FindView(
-		UI::Frame &ctx, Editor::View &editor, Document &doc, Range selection):
+		UI::Frame &ctx,
+		std::string pattern,
+		Editor::View &editor,
+		Document &doc,
+		location_t anchor):
 	inherited(),
 	_editor(editor),
 	_document(doc),
-	_anchor_selection(selection)
+	_anchor(anchor)
 {
 	auto updater = [this](UI::Frame &ctx){ input_changed(ctx); };
-	std::string pattern = doc.text(selection);
 	_input.reset(new UI::Input(pattern, nullptr, updater));
 	run_find(ctx);
 }
@@ -155,14 +154,13 @@ void FindView::run_find(UI::Frame &ctx)
 	if (pattern.empty()) {
 		_matches.clear();
 		_found_item = 0;
-		_editor.select(ctx, _anchor_selection);
+		_editor.select(ctx, Range(_anchor, _anchor));
 		return;
 	}
-	location_t anchorpoint = _anchor_selection.begin();
 	_matches = _document.find(_input->value());
 	_found_item = 0;
 	for (auto &match: _matches) {
-		if (match.begin() > anchorpoint) break;
+		if (match.begin() > _anchor) break;
 		_found_item++;
 	}
 	if (_found_item >= _matches.size()) {
