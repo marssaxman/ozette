@@ -732,6 +732,6 @@ void Editor::View::find(UI::Frame &ctx, location_t anchor)
 		}
 		return std::move(out);
 	};
-	dialog.show(ctx);
+	dialog.show_find(ctx);
 }
 

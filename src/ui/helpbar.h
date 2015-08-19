@@ -49,6 +49,7 @@ struct Panel {
 	void save()      { label[1][1] = {"^S", "Save"}; }
 	void save_as()   { label[1][2] = {"^A", "Save As"}; }
 	void find()      { label[0][5] = {"^F", "Find"}; }
+	void replace()   { label[0][5] = {"^R", "Replace"}; }
 	void find_next() { label[0][5] = {"^G", "Find Next"}; }
 	void search()    { label[0][5] = {"F4", "Search"}; }
 	void undo()      { label[1][4] = {"^Z", "Undo"}; }

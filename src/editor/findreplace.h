@@ -29,6 +29,8 @@ struct FindReplace {
 	std::string pattern;
 	// Where should it begin looking?
 	Range anchor;
+	// When it finds a match, what should it replace the text with?
+	std::string replacement;
 	// The result of a search: an iterator through a list of matches.
 	class MatchList {
 	public:
@@ -52,7 +54,8 @@ struct FindReplace {
 	// The user has replaced some pattern with another value.
 	std::function<void(std::string pattern, std::string value)> commit_replace;
 	// Show the dialog and let the user perform a search.
-	void show(UI::Frame&);
+	void show_find(UI::Frame&);
+	void show_replace(UI::Frame&);
 };
 } // namespace Editor
 
