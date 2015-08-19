@@ -91,7 +91,7 @@ private:
 	void adjust_selection(bool extend);
 
 	void save(UI::Frame &ctx, std::string dest);
-	void find(UI::Frame &ctx);
+	void find(UI::Frame &ctx, location_t anchor);
 
 	// Information about the file being edited
 	std::string _targetpath;
@@ -114,6 +114,8 @@ private:
 	row_t _maxscroll = 0;
 	// Where is the viewrect origin?
 	position_t _scroll = {0,0};
+	// What was the last string the user searched for?
+	std::string _find_pattern;
 };
 } // namespace Editor
 

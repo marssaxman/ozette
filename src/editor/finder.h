@@ -30,11 +30,12 @@ struct Finder {
 	// Where should it begin looking?
 	location_t anchor;
 	// Function to select and display a matched string.
-	typedef std::function<void(UI::Frame&, Range)> selector_t;
-	selector_t selector = nullptr;
+	std::function<void(UI::Frame&, Range)> selector;
+	// The user has taken some action which commits this pattern as their most
+	// recent search string.
+	std::function<void(std::string)> committer;
 	// Function to search for a pattern and return a range of matches.
-	typedef std::function<std::vector<Range>(std::string)> matcher_t;
-	matcher_t matcher = nullptr;
+	std::function<std::vector<Range>(std::string)> matcher;
 	// Show the dialog and let the user perform a search.
 	void show(UI::Frame&);
 };

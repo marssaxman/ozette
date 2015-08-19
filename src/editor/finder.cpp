@@ -31,7 +31,7 @@ class FindView : public UI::View
 {
 	typedef UI::View inherited;
 public:
-	FindView(UI::Frame& ctx, const Finder &dialog);
+	FindView(UI::Frame& ctx, Finder spec);
 	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
@@ -40,10 +40,9 @@ protected:
 	void input_changed(UI::Frame &ctx);
 	void run_find(UI::Frame &ctx);
 	void find_next(UI::Frame &ctx);
+	void commit(UI::Frame &ctx);
 private:
-	Finder::selector_t _selector;
-	Finder::matcher_t _matcher;
-	Editor::location_t _anchor;
+	Finder _finder;
 	std::unique_ptr<UI::Input> _input;
 	std::vector<Range> _matches;
 	size_t _found_item = 0;
@@ -56,14 +55,12 @@ void Editor::Finder::show(UI::Frame &ctx)
 	ctx.show_dialog(std::move(dptr));
 }
 
-FindView::FindView(UI::Frame &ctx, const Finder &dialog):
+FindView::FindView(UI::Frame &ctx, Finder spec):
 	inherited(),
-	_selector(dialog.selector),
-	_matcher(dialog.matcher),
-	_anchor(dialog.anchor)
+	_finder(spec)
 {
 	auto updater = [this](UI::Frame &ctx){ input_changed(ctx); };
-	_input.reset(new UI::Input(dialog.pattern, nullptr, updater));
+	_input.reset(new UI::Input(_finder.pattern, nullptr, updater));
 	run_find(ctx);
 }
 
@@ -78,7 +75,7 @@ bool FindView::process(UI::Frame &ctx, int ch)
 		case Control::Escape: return false;
 		case Control::Enter:
 		case Control::Return:
-		case Control::FindNext: find_next(ctx); break;
+		case Control::FindNext: commit(ctx); break;
 		default: _input->process(ctx, ch); break;
 	}
 	return true;
@@ -134,26 +131,26 @@ void FindView::run_find(UI::Frame &ctx)
 	if (pattern.empty()) {
 		_matches.clear();
 		_found_item = 0;
-		if (_selector) {
-			_selector(ctx, Range(_anchor, _anchor));
+		if (_finder.selector) {
+			_finder.selector(ctx, Range(_finder.anchor, _finder.anchor));
 		}
 		return;
 	}
-	if (_matcher) {
-		_matches = _matcher(_input->value());
+	if (_finder.matcher) {
+		_matches = _finder.matcher(_input->value());
 	} else {
 		_matches.clear();
 	}
 	_found_item = 0;
 	for (auto &match: _matches) {
-		if (match.begin() > _anchor) break;
+		if (match.begin() > _finder.anchor) break;
 		_found_item++;
 	}
 	if (_found_item >= _matches.size()) {
 		_found_item = 0;
 	}
-	if (!_matches.empty() && _selector) {
-		_selector(ctx, _matches[_found_item]);
+	if (!_matches.empty() && _finder.selector) {
+		_finder.selector(ctx, _matches[_found_item]);
 	}
 }
 
@@ -164,8 +161,15 @@ void FindView::find_next(UI::Frame &ctx)
 	if (_found_item >= _matches.size()) {
 		_found_item = 0;
 	}
-	if (_selector) {
-		_selector(ctx, _matches[_found_item]);
+	if (_finder.selector) {
+		_finder.selector(ctx, _matches[_found_item]);
 	}
 }
 
+void FindView::commit(UI::Frame &ctx)
+{
+	if (_finder.committer) {
+		_finder.committer(_input->value());
+	}
+	find_next(ctx);
+}

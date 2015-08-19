@@ -395,37 +395,12 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 
 void Editor::View::ctl_find(UI::Frame &ctx)
 {
-	// Create a dialog box that provides an interactive find mode. We'll save
-	// the current cursor/selection, and as the user types, we'll search for
-	// all the occurrences of that pattern in the document. We'll select the
-	// first occurrence following the original anchor point, then shift the
-	// view to bring it on screen. If the user cancels the dialog, we will
-	// go back to the original selection; otherwise, committing the dialog
-	// will retain it.
-	Finder dialog;
-	dialog.pattern = "";
-	dialog.anchor = _selection.begin();
-	dialog.selector = [this](UI::Frame &ctx, Range sel) {
-		select(ctx, sel);
-	};
-	dialog.matcher = [this](std::string pattern) {
-		return _doc.find(pattern);
-	};
-	dialog.show(ctx);
+	find(ctx, _selection.begin());
 }
 
 void Editor::View::ctl_find_next(UI::Frame &ctx)
 {
-	Finder dialog;
-	dialog.pattern = _doc.text(_selection);
-	dialog.anchor = _selection.end();
-	dialog.selector = [this](UI::Frame &ctx, Range sel) {
-		select(ctx, sel);
-	};
-	dialog.matcher = [this](std::string pattern) {
-		return _doc.find(pattern);
-	};
-	dialog.show(ctx);
+	find(ctx, _selection.end());
 }
 
 void Editor::View::ctl_undo(UI::Frame &ctx)
@@ -691,5 +666,29 @@ void Editor::View::save(UI::Frame &ctx, std::string dest)
 	std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
 	stat += (_doc.maxline() > 1) ? " lines" : " line";
 	ctx.show_result(stat);
+}
+
+void Editor::View::find(UI::Frame &ctx, location_t anchor)
+{
+	// Create a dialog box that provides an interactive find mode. We'll save
+	// the current cursor/selection, and as the user types, we'll search for
+	// all the occurrences of that pattern in the document. We'll select the
+	// first occurrence following the original anchor point, then shift the
+	// view to bring it on screen. If the user cancels the dialog, we will
+	// go back to the original selection; otherwise, committing the dialog
+	// will retain it.
+	Finder dialog;
+	dialog.pattern = _find_pattern;
+	dialog.anchor = anchor;
+	dialog.selector = [this](UI::Frame &ctx, Range sel) {
+		select(ctx, sel);
+	};
+	dialog.committer = [this](std::string pattern) {
+		_find_pattern = pattern;
+	};
+	dialog.matcher = [this](std::string pattern) {
+		return _doc.find(pattern);
+	};
+	dialog.show(ctx);
 }
 
