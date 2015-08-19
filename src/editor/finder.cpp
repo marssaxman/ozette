@@ -45,7 +45,7 @@ protected:
 private:
 	Finder _finder;
 	std::unique_ptr<UI::Input> _input;
-	std::unique_ptr<Finder::Matches> _matches;
+	std::unique_ptr<Finder::MatchList> _matches;
 	size_t _found_item = 0;
 };
 } // namespace
@@ -104,9 +104,7 @@ void FindView::paint_into(WINDOW *view, State state)
 	if (!_input->value().empty()) {
 		location = " (";
 		if (_matches) {
-			location += std::to_string(1 + _matches->index());
-			location += " of ";
-			location += std::to_string(_matches->size());
+			location = _matches->description();
 		} else {
 			location += "None found";
 		}

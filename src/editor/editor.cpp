@@ -669,7 +669,7 @@ void Editor::View::save(UI::Frame &ctx, std::string dest)
 }
 
 namespace {
-class DocumentMatches : public Editor::Finder::Matches
+class DocumentMatches : public Editor::Finder::MatchList
 {
 public:
 	DocumentMatches(
@@ -679,18 +679,23 @@ public:
 	{
 		assert(!matches.empty());
 		for (auto &match: _matches) {
-			if (match.begin() > anchor) break;
+			if (match.begin() >= anchor) break;
 			next();
 		}
 	}
-	virtual size_t size() const override { return _matches.size(); }
 	virtual Editor::Range value() const override { return _matches[_index]; }
-	virtual size_t index() const override { return _index; }
 	virtual void next() override
 	{
 		if (++_index >= _matches.size()) {
 			_index = 0;
 		}
+	}
+	virtual std::string description() const override
+	{
+		std::string location = std::to_string(1 + _index);
+		location += " of ";
+		location += std::to_string(_matches.size());
+		return location;
 	}
 private:
 	std::vector<Editor::Range> _matches;
@@ -721,7 +726,7 @@ void Editor::View::find(UI::Frame &ctx, location_t anchor)
 	dialog.matcher = [this](std::string pattern, location_t anchor)
 	{
 		std::vector<Range> found = _doc.find(pattern);
-		std::unique_ptr<Finder::Matches> out;
+		std::unique_ptr<Finder::MatchList> out;
 		if (!found.empty()) {
 			out.reset(new DocumentMatches(found, anchor));
 		}

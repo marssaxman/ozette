@@ -35,21 +35,19 @@ struct Finder {
 	// recent search string.
 	std::function<void(std::string)> committer;
 	// The result of a search: an iterator through a list of matches.
-	class Matches {
+	class MatchList {
 	public:
-		virtual ~Matches() {}
-		// Never return an empty match set. Return nullptr instead.
-		// How many matches were found?
-		virtual size_t size() const = 0;
-		// What is the location of the current match?
+		virtual ~MatchList() {}
+		// What is the current location value?
 		virtual Range value() const = 0;
-		// What is the (zero-based) index of the current match?
-		virtual size_t index() const = 0;
-		// Advance to the next match in the list.
+		// Advance to the next location value in the match list.
 		virtual void next() = 0;
+		// Optional: produce a human-readable description of the current
+		// location's position within the overall list, such as "X of Y".
+		virtual std::string description() const { return ""; }
 	};
 	// Function to search for a pattern and return a range of matches.
-	std::function<std::unique_ptr<Matches>(std::string, location_t)> matcher;
+	std::function<std::unique_ptr<MatchList>(std::string, location_t)> matcher;
 	// Show the dialog and let the user perform a search.
 	void show(UI::Frame&);
 };
