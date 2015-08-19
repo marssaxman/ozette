@@ -672,38 +672,51 @@ namespace Editor {
 class DocumentMatches : public FindReplace::MatchList
 {
 public:
-	DocumentMatches(Document &doc, std::string pattern, Range anchor)
+	DocumentMatches(Document &doc, std::string pattern, Range anchor):
+		_doc(doc), _pattern(pattern)
 	{
 		location_t found = doc.find(pattern, doc.home());
 		while (found != doc.end()) {
 			location_t matchend(found.line, found.offset + pattern.size());
-			_matches.emplace_back(found, matchend);
+			if (_current.empty() && found >= anchor.begin()) {
+				_index = _count;
+				_current = Range(found, matchend);
+			}
+			_count++;
 			found = doc.find(pattern, matchend);
 		}
-		if (_matches.empty()) return;
-		for (auto &match: _matches) {
-			if (match.begin() >= anchor.begin()) break;
-			next();
-		}
 	}
-	bool empty() const { return _matches.empty(); }
-	virtual Editor::Range value() const override { return _matches[_index]; }
+	bool empty() const { return 0 == _count; }
+	virtual Editor::Range value() const override { return _current; }
 	virtual void next() override
 	{
-		if (++_index >= _matches.size()) {
+		// Find the next instance of the pattern following the current match.
+		location_t found = _doc.find(_pattern, _current.end());
+		if (found != _doc.end()) {
+			_index++;
+		} else {
+			found = _doc.find(_pattern, _doc.home());
 			_index = 0;
 		}
+		assert(found != _doc.end());
+		location_t matchend(found.line, found.offset + _pattern.size());
+		_current = Range(found, matchend);
 	}
 	virtual std::string description() const override
 	{
+		// Explain which match we are looking at, in human-oriented one-based
+		// line numbers rather than actual indexes.
 		std::string location = std::to_string(1 + _index);
 		location += " of ";
-		location += std::to_string(_matches.size());
+		location += std::to_string(_count);
 		return location;
 	}
 private:
-	std::vector<Editor::Range> _matches;
+	Document &_doc;
+	std::string _pattern;
+	Editor::Range _current;
 	size_t _index = 0;
+	size_t _count = 0;
 };
 }
 
