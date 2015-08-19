@@ -31,12 +31,7 @@ class FindView : public UI::View
 {
 	typedef UI::View inherited;
 public:
-	FindView(
-			UI::Frame& ctx,
-			std::string pattern,
-			Finder::selector_t selector,
-			Finder::matcher_t matcher,
-			location_t anchor);
+	FindView(UI::Frame& ctx, const Finder &dialog);
 	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
@@ -51,30 +46,24 @@ private:
 	Editor::location_t _anchor;
 	std::unique_ptr<UI::Input> _input;
 	std::vector<Range> _matches;
-	size_t _found_item;
+	size_t _found_item = 0;
 };
 } // namespace
 
 void Editor::Finder::show(UI::Frame &ctx)
 {
-	auto view = new FindView(ctx, pattern, selector, matcher, anchor);
-	std::unique_ptr<UI::View> dptr(view);
+	std::unique_ptr<UI::View> dptr(new FindView(ctx, *this));
 	ctx.show_dialog(std::move(dptr));
 }
 
-FindView::FindView(
-		UI::Frame &ctx,
-		std::string pattern,
-		Finder::selector_t selector,
-		Finder::matcher_t matcher,
-		location_t anchor):
+FindView::FindView(UI::Frame &ctx, const Finder &dialog):
 	inherited(),
-	_selector(selector),
-	_matcher(matcher),
-	_anchor(anchor)
+	_selector(dialog.selector),
+	_matcher(dialog.matcher),
+	_anchor(dialog.anchor)
 {
 	auto updater = [this](UI::Frame &ctx){ input_changed(ctx); };
-	_input.reset(new UI::Input(pattern, nullptr, updater));
+	_input.reset(new UI::Input(dialog.pattern, nullptr, updater));
 	run_find(ctx);
 }
 
