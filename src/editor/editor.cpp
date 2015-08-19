@@ -673,13 +673,13 @@ class DocumentMatches : public Editor::Finder::MatchList
 {
 public:
 	DocumentMatches(
-			std::vector<Editor::Range> matches, Editor::location_t anchor):
+			std::vector<Editor::Range> matches, Editor::Range anchor):
 		_matches(matches),
 		_index(0)
 	{
 		assert(!matches.empty());
 		for (auto &match: _matches) {
-			if (match.begin() >= anchor) break;
+			if (match.begin() >= anchor.begin()) break;
 			next();
 		}
 	}
@@ -714,7 +714,7 @@ void Editor::View::find(UI::Frame &ctx, location_t anchor)
 	// will retain it.
 	Finder dialog;
 	dialog.pattern = _find_pattern;
-	dialog.anchor = anchor;
+	dialog.anchor = Range(anchor, anchor);
 	dialog.selector = [this](UI::Frame &ctx, Range sel)
 	{
 		select(ctx, sel);
@@ -723,7 +723,7 @@ void Editor::View::find(UI::Frame &ctx, location_t anchor)
 	{
 		_find_pattern = pattern;
 	};
-	dialog.matcher = [this](std::string pattern, location_t anchor)
+	dialog.matcher = [this](std::string pattern, Range anchor)
 	{
 		std::vector<Range> found = _doc.find(pattern);
 		std::unique_ptr<Finder::MatchList> out;

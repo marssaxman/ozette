@@ -46,7 +46,6 @@ private:
 	Finder _finder;
 	std::unique_ptr<UI::Input> _input;
 	std::unique_ptr<Finder::MatchList> _matches;
-	size_t _found_item = 0;
 };
 } // namespace
 
@@ -130,7 +129,7 @@ void FindView::run_find(UI::Frame &ctx)
 	if (pattern.empty()) {
 		_matches.release();
 		if (_finder.selector) {
-			_finder.selector(ctx, Range(_finder.anchor, _finder.anchor));
+			_finder.selector(ctx, _finder.anchor);
 		}
 		return;
 	}

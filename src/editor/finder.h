@@ -28,7 +28,7 @@ struct Finder {
 	// What should the find dialog look for?
 	std::string pattern;
 	// Where should it begin looking?
-	location_t anchor;
+	Range anchor;
 	// Function to select and display a matched string.
 	std::function<void(UI::Frame&, Range)> selector;
 	// The user has taken some action which commits this pattern as their most
@@ -47,7 +47,7 @@ struct Finder {
 		virtual std::string description() const { return ""; }
 	};
 	// Function to search for a pattern and return a range of matches.
-	std::function<std::unique_ptr<MatchList>(std::string, location_t)> matcher;
+	std::function<std::unique_ptr<MatchList>(std::string, Range)> matcher;
 	// Show the dialog and let the user perform a search.
 	void show(UI::Frame&);
 };
