@@ -20,19 +20,52 @@
 #include "editor/finder.h"
 #include "ui/colors.h"
 
-Editor::Finder* Editor::Finder::find(
-	Editor::View &editor, Document &doc, Range selection)
+using namespace Editor;
+
+namespace {
+class FindView : public UI::View
 {
-	return new Finder(editor, doc, selection);
+	typedef UI::View inherited;
+public:
+	// Open a finder and wait for input.
+	FindView(Editor::View&, Document&, Range selection);
+	// Open a finder and immediately search for the selected text.
+	FindView(UI::Frame&, Editor::View&, Document&, Range selection);
+	virtual void layout(int vpos, int hpos, int height, int width) override;
+	virtual bool process(UI::Frame &ctx, int ch) override;
+	virtual void set_help(UI::HelpBar::Panel &panel) override;
+protected:
+	virtual void paint_into(WINDOW *view, State state) override;
+	void input_changed(UI::Frame &ctx);
+	void run_find(UI::Frame &ctx);
+	void find_next(UI::Frame &ctx);
+private:
+	Editor::View &_editor;
+	Editor::Document &_document;
+	Editor::Range _anchor_selection;
+	std::unique_ptr<UI::Input> _input;
+	std::vector<Range> _matches;
+	size_t _found_item;
+};
+} // namespace
+
+void Editor::Finder::find(
+		UI::Frame &ctx, Editor::View &editor, Document &doc, Range selection)
+{
+	auto view = new FindView(editor, doc, selection);
+	std::unique_ptr<UI::View> dptr(view);
+	ctx.show_dialog(std::move(dptr));
 }
 
-Editor::Finder* Editor::Finder::find_next(
+void Editor::Finder::find_next(
 		UI::Frame &ctx, Editor::View &editor, Document &doc, Range sel)
 {
-	return new Finder(ctx, editor, doc, sel);
+	auto view = new FindView(ctx, editor, doc, sel);
+	std::unique_ptr<UI::View> dptr(view);
+	ctx.show_dialog(std::move(dptr));
 }
 
-Editor::Finder::Finder(Editor::View &editor, Document &doc, Range selection):
+FindView::FindView(Editor::View &editor, Document &doc, Range selection):
 	inherited(),
 	_editor(editor),
 	_document(doc),
@@ -42,7 +75,7 @@ Editor::Finder::Finder(Editor::View &editor, Document &doc, Range selection):
 	_input.reset(new UI::Input("", nullptr, updater));
 }
 
-Editor::Finder::Finder(
+FindView::FindView(
 		UI::Frame &ctx, Editor::View &editor, Document &doc, Range selection):
 	inherited(),
 	_editor(editor),
@@ -55,12 +88,12 @@ Editor::Finder::Finder(
 	run_find(ctx);
 }
 
-void Editor::Finder::layout(int vpos, int hpos, int height, int width)
+void FindView::layout(int vpos, int hpos, int height, int width)
 {
 	inherited::layout(vpos + height - 1, hpos, 1, width);
 }
 
-bool Editor::Finder::process(UI::Frame &ctx, int ch)
+bool FindView::process(UI::Frame &ctx, int ch)
 {
 	switch (ch) {
 		case Control::Escape: return false;
@@ -72,12 +105,12 @@ bool Editor::Finder::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-void Editor::Finder::set_help(UI::HelpBar::Panel &panel)
+void FindView::set_help(UI::HelpBar::Panel &panel)
 {
 	_input->set_help(panel);
 }
 
-void Editor::Finder::paint_into(WINDOW *view, State state)
+void FindView::paint_into(WINDOW *view, State state)
 {
 
 	int height, width;
@@ -108,12 +141,12 @@ void Editor::Finder::paint_into(WINDOW *view, State state)
 	_input->paint(view, 0, fieldpos, locpos - fieldpos, state);
 }
 
-void Editor::Finder::input_changed(UI::Frame &ctx)
+void FindView::input_changed(UI::Frame &ctx)
 {
 	run_find(ctx);
 }
 
-void Editor::Finder::run_find(UI::Frame &ctx)
+void FindView::run_find(UI::Frame &ctx)
 {
 	// Find all locations in the document which match the current pattern.
 	// Identify the location immediately after the current anchor location.
@@ -140,7 +173,7 @@ void Editor::Finder::run_find(UI::Frame &ctx)
 	}
 }
 
-void Editor::Finder::find_next(UI::Frame &ctx)
+void FindView::find_next(UI::Frame &ctx)
 {
 	if (_matches.empty()) return;
 	_found_item++;
