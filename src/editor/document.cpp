@@ -157,18 +157,6 @@ Editor::location_t Editor::Document::find(std::string needle, location_t loc)
 	return end();
 }
 
-std::vector<Editor::Range> Editor::Document::find(std::string needle)
-{
-	std::vector<Editor::Range> out;
-	location_t found = find(needle, home());
-	while (found != end()) {
-		location_t matchend(found.line, found.offset + needle.size());
-		out.emplace_back(found, matchend);
-		found = find(needle, matchend);
-	}
-	return out;
-}
-
 const std::string &Editor::Document::line(line_t index) const
 {
 	return index < _lines.size()? _lines[index]: _blank;

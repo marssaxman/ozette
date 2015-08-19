@@ -668,21 +668,25 @@ void Editor::View::save(UI::Frame &ctx, std::string dest)
 	ctx.show_result(stat);
 }
 
-namespace {
-class DocumentMatches : public Editor::FindReplace::MatchList
+namespace Editor {
+class DocumentMatches : public FindReplace::MatchList
 {
 public:
-	DocumentMatches(
-			std::vector<Editor::Range> matches, Editor::Range anchor):
-		_matches(matches),
-		_index(0)
+	DocumentMatches(Document &doc, std::string pattern, Range anchor)
 	{
-		assert(!matches.empty());
+		location_t found = doc.find(pattern, doc.home());
+		while (found != doc.end()) {
+			location_t matchend(found.line, found.offset + pattern.size());
+			_matches.emplace_back(found, matchend);
+			found = doc.find(pattern, matchend);
+		}
+		if (_matches.empty()) return;
 		for (auto &match: _matches) {
 			if (match.begin() >= anchor.begin()) break;
 			next();
 		}
 	}
+	bool empty() const { return _matches.empty(); }
 	virtual Editor::Range value() const override { return _matches[_index]; }
 	virtual void next() override
 	{
@@ -699,7 +703,7 @@ public:
 	}
 private:
 	std::vector<Editor::Range> _matches;
-	size_t _index;
+	size_t _index = 0;
 };
 }
 
@@ -725,11 +729,11 @@ void Editor::View::find(UI::Frame &ctx, location_t anchor)
 	};
 	dialog.matcher = [this](std::string pattern, Range anchor)
 	{
-		std::vector<Range> found = _doc.find(pattern);
-		std::unique_ptr<FindReplace::MatchList> out;
-		if (!found.empty()) {
-			out.reset(new DocumentMatches(found, anchor));
-		}
+		// Create an iterator over the document's matches for this pattern.
+		auto found = new DocumentMatches(_doc, pattern, anchor);
+		std::unique_ptr<FindReplace::MatchList> out(found);
+		// Don't return an empty match set; return null instead.
+		if (found->empty()) out.release();
 		return std::move(out);
 	};
 	if (!_doc.readonly()) {
