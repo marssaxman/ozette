@@ -26,8 +26,12 @@
 
 namespace Editor {
 struct Finder {
-	static void find(UI::Frame&, Editor::View&, Document&, Range selection);
-	static void find_next(UI::Frame&, Editor::View&, Document&, Range sel);
+	// What should the find dialog look for?
+	std::string pattern;
+	// Where should it begin looking?
+	location_t anchor;
+	// Show the dialog and let the user search.
+	void show(UI::Frame&, Editor::View&, Document&);
 };
 } // namespace Editor
 

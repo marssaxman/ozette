@@ -402,12 +402,18 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 	// view to bring it on screen. If the user cancels the dialog, we will
 	// go back to the original selection; otherwise, committing the dialog
 	// will retain it.
-	Finder::find(ctx, *this, _doc, _selection);
+	Finder dialog;
+	dialog.pattern = "";
+	dialog.anchor = _selection.begin();
+	dialog.show(ctx, *this, _doc);
 }
 
 void Editor::View::ctl_find_next(UI::Frame &ctx)
 {
-	Finder::find_next(ctx, *this, _doc, _selection);
+	Finder dialog;
+	dialog.pattern = _doc.text(_selection);
+	dialog.anchor = _selection.end();
+	dialog.show(ctx, *this, _doc);
 }
 
 void Editor::View::ctl_undo(UI::Frame &ctx)

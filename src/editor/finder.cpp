@@ -51,21 +51,8 @@ private:
 };
 } // namespace
 
-void Editor::Finder::find(
-		UI::Frame &ctx, Editor::View &editor, Document &doc, Range selection)
+void Editor::Finder::show(UI::Frame &ctx, Editor::View &editor, Document &doc)
 {
-	std::string pattern = "";
-	location_t anchor = selection.begin();
-	auto view = new FindView(ctx, pattern, editor, doc, anchor);
-	std::unique_ptr<UI::View> dptr(view);
-	ctx.show_dialog(std::move(dptr));
-}
-
-void Editor::Finder::find_next(
-		UI::Frame &ctx, Editor::View &editor, Document &doc, Range sel)
-{
-	std::string pattern = doc.text(sel);
-	location_t anchor = sel.end();
 	auto view = new FindView(ctx, pattern, editor, doc, anchor);
 	std::unique_ptr<UI::View> dptr(view);
 	ctx.show_dialog(std::move(dptr));
