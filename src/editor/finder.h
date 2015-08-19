@@ -20,9 +20,8 @@
 #ifndef EDITOR_FINDER_H
 #define EDITOR_FINDER_H
 
-#include "ui/view.h"
-#include "editor/editor.h"
-#include "ui/input.h"
+#include "ui/frame.h"
+#include "editor/coordinates.h"
 
 namespace Editor {
 struct Finder {
@@ -30,8 +29,14 @@ struct Finder {
 	std::string pattern;
 	// Where should it begin looking?
 	location_t anchor;
-	// Show the dialog and let the user search.
-	void show(UI::Frame&, Editor::View&, Document&);
+	// Function to select and display a matched string.
+	typedef std::function<void(UI::Frame&, Range)> selector_t;
+	selector_t selector = nullptr;
+	// Function to search for a pattern and return a range of matches.
+	typedef std::function<std::vector<Range>(std::string)> matcher_t;
+	matcher_t matcher = nullptr;
+	// Show the dialog and let the user perform a search.
+	void show(UI::Frame&);
 };
 } // namespace Editor
 

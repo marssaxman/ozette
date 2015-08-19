@@ -405,7 +405,13 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 	Finder dialog;
 	dialog.pattern = "";
 	dialog.anchor = _selection.begin();
-	dialog.show(ctx, *this, _doc);
+	dialog.selector = [this](UI::Frame &ctx, Range sel) {
+		select(ctx, sel);
+	};
+	dialog.matcher = [this](std::string pattern) {
+		return _doc.find(pattern);
+	};
+	dialog.show(ctx);
 }
 
 void Editor::View::ctl_find_next(UI::Frame &ctx)
@@ -413,7 +419,13 @@ void Editor::View::ctl_find_next(UI::Frame &ctx)
 	Finder dialog;
 	dialog.pattern = _doc.text(_selection);
 	dialog.anchor = _selection.end();
-	dialog.show(ctx, *this, _doc);
+	dialog.selector = [this](UI::Frame &ctx, Range sel) {
+		select(ctx, sel);
+	};
+	dialog.matcher = [this](std::string pattern) {
+		return _doc.find(pattern);
+	};
+	dialog.show(ctx);
 }
 
 void Editor::View::ctl_undo(UI::Frame &ctx)

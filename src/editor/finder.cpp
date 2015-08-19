@@ -17,8 +17,12 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
+#include "ui/view.h"
+#include "editor/editor.h"
+#include "editor/document.h"
 #include "editor/finder.h"
 #include "ui/colors.h"
+#include "ui/input.h"
 
 using namespace Editor;
 
@@ -30,8 +34,8 @@ public:
 	FindView(
 			UI::Frame& ctx,
 			std::string pattern,
-			Editor::View& editor,
-			Document& document,
+			Finder::selector_t selector,
+			Finder::matcher_t matcher,
 			location_t anchor);
 	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
@@ -42,8 +46,8 @@ protected:
 	void run_find(UI::Frame &ctx);
 	void find_next(UI::Frame &ctx);
 private:
-	Editor::View &_editor;
-	Editor::Document &_document;
+	Finder::selector_t _selector;
+	Finder::matcher_t _matcher;
 	Editor::location_t _anchor;
 	std::unique_ptr<UI::Input> _input;
 	std::vector<Range> _matches;
@@ -51,9 +55,9 @@ private:
 };
 } // namespace
 
-void Editor::Finder::show(UI::Frame &ctx, Editor::View &editor, Document &doc)
+void Editor::Finder::show(UI::Frame &ctx)
 {
-	auto view = new FindView(ctx, pattern, editor, doc, anchor);
+	auto view = new FindView(ctx, pattern, selector, matcher, anchor);
 	std::unique_ptr<UI::View> dptr(view);
 	ctx.show_dialog(std::move(dptr));
 }
@@ -61,12 +65,12 @@ void Editor::Finder::show(UI::Frame &ctx, Editor::View &editor, Document &doc)
 FindView::FindView(
 		UI::Frame &ctx,
 		std::string pattern,
-		Editor::View &editor,
-		Document &doc,
+		Finder::selector_t selector,
+		Finder::matcher_t matcher,
 		location_t anchor):
 	inherited(),
-	_editor(editor),
-	_document(doc),
+	_selector(selector),
+	_matcher(matcher),
 	_anchor(anchor)
 {
 	auto updater = [this](UI::Frame &ctx){ input_changed(ctx); };
@@ -141,10 +145,16 @@ void FindView::run_find(UI::Frame &ctx)
 	if (pattern.empty()) {
 		_matches.clear();
 		_found_item = 0;
-		_editor.select(ctx, Range(_anchor, _anchor));
+		if (_selector) {
+			_selector(ctx, Range(_anchor, _anchor));
+		}
 		return;
 	}
-	_matches = _document.find(_input->value());
+	if (_matcher) {
+		_matches = _matcher(_input->value());
+	} else {
+		_matches.clear();
+	}
 	_found_item = 0;
 	for (auto &match: _matches) {
 		if (match.begin() > _anchor) break;
@@ -153,8 +163,8 @@ void FindView::run_find(UI::Frame &ctx)
 	if (_found_item >= _matches.size()) {
 		_found_item = 0;
 	}
-	if (!_matches.empty()) {
-		_editor.select(ctx, _matches[_found_item]);
+	if (!_matches.empty() && _selector) {
+		_selector(ctx, _matches[_found_item]);
 	}
 }
 
@@ -165,6 +175,8 @@ void FindView::find_next(UI::Frame &ctx)
 	if (_found_item >= _matches.size()) {
 		_found_item = 0;
 	}
-	_editor.select(ctx, _matches[_found_item]);
+	if (_selector) {
+		_selector(ctx, _matches[_found_item]);
+	}
 }
 
