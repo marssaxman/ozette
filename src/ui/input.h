@@ -36,6 +36,7 @@ public:
 	void paint(WINDOW *view, int vpos, int hpos, int width, View::State state);
 	void set_help(UI::HelpBar::Panel &panel);
 	std::string value() const { return _value; }
+	void select_all(UI::Frame &ctx);
 protected:
 	void ctl_cut(UI::Frame &ctx);
 	void ctl_copy(UI::Frame &ctx);

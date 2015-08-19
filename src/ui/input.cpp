@@ -90,6 +90,18 @@ void UI::Input::set_help(UI::HelpBar::Panel &panel)
 	panel.paste();
 }
 
+void UI::Input::select_all(UI::Frame &ctx)
+{
+	if (_anchor_pos != 0) {
+		_anchor_pos = 0;
+		ctx.repaint();
+	}
+	if (_cursor_pos != _value.size()) {
+		_cursor_pos = _value.size();
+		ctx.repaint();
+	}
+}
+
 void UI::Input::ctl_cut(UI::Frame &ctx)
 {
 	ctl_copy(ctx);

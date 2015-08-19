@@ -44,6 +44,7 @@ protected:
 	bool ctl_replace(UI::Frame &ctx);
 	void run_find(UI::Frame &ctx);
 	void find_next(UI::Frame &ctx);
+	void replace_current(UI::Frame &ctx);
 	void commit(UI::Frame &ctx);
 private:
 	FindReplace _spec;
@@ -54,20 +55,11 @@ private:
 };
 } // namespace
 
-static void show(UI::Frame &ctx, FindReplace &spec, bool replace_mode)
+void Editor::FindReplace::show(UI::Frame &ctx)
 {
-	std::unique_ptr<UI::View> dptr(new FindView(ctx, spec, replace_mode));
+	bool replace_mode = false;
+	std::unique_ptr<UI::View> dptr(new FindView(ctx, *this, replace_mode));
 	ctx.show_dialog(std::move(dptr));
-}
-
-void Editor::FindReplace::show_find(UI::Frame &ctx)
-{
-	show(ctx, *this, false);
-}
-
-void Editor::FindReplace::show_replace(UI::Frame &ctx)
-{
-	show(ctx, *this, true);
 }
 
 FindView::FindView(UI::Frame &ctx, FindReplace spec, bool replace_mode):
@@ -157,7 +149,7 @@ void FindView::paint_into(WINDOW *view, State state)
 	if (!_pattern->value().empty()) {
 		location = " (";
 		if (_matches) {
-			location = _matches->description();
+			location += _matches->description();
 		} else {
 			location += "None found";
 		}
@@ -200,9 +192,10 @@ bool FindView::ctl_find(UI::Frame &ctx)
 {
 	// If we are already in find mode, there is nothing to do.
 	if (!_replacement) return true;
-	// Otherwise, reopen this dialog spec in find-only mode, hiding the
-	// replacement field. This closes the current dialog.
-	_spec.show_find(ctx);
+	// Otherwise, reopen this spec in find-only mode, hiding the replacement
+	// field by closing the current dialog.
+	std::unique_ptr<UI::View> dptr(new FindView(ctx, _spec, false));
+	ctx.show_dialog(std::move(dptr));
 	return false;
 }
 
@@ -214,7 +207,8 @@ bool FindView::ctl_replace(UI::Frame &ctx)
 	// the replace field.
 	if (!_spec.replacer) return true;
 	// Otherwise, reopen this dialog spec, showing the replace field.
-	_spec.show_replace(ctx);
+	std::unique_ptr<UI::View> dptr(new FindView(ctx, _spec, true));
+	ctx.show_dialog(std::move(dptr));
 	return false;
 }
 
@@ -235,7 +229,6 @@ void FindView::run_find(UI::Frame &ctx)
 
 void FindView::find_next(UI::Frame &ctx)
 {
-
 	if (!_matches) return;
 	_matches->next();
 	if (_spec.selector) {
@@ -243,11 +236,32 @@ void FindView::find_next(UI::Frame &ctx)
 	}
 }
 
+void FindView::replace_current(UI::Frame &ctx)
+{
+	if (!_matches) return;
+	if (!_spec.replacer) return;
+	_spec.anchor = _spec.replacer(ctx, _matches->value(), _spec.replacement);
+	run_find(ctx);
+}
+
 void FindView::commit(UI::Frame &ctx)
 {
+	if (_spec.pattern.empty()) return;
 	if (_spec.commit_find) {
-		_spec.commit_find(_pattern->value());
+		_spec.commit_find(_spec.pattern);
 	}
-	find_next(ctx);
+	_pattern->select_all(ctx);
+	if (!_matches) {
+		_active = _pattern.get();
+		ctx.repaint();
+		return;
+	}
+	_spec.anchor = _matches->value();
+	if (_replacement) {
+		_replacement->select_all(ctx);
+		replace_current(ctx);
+	} else {
+		find_next(ctx);
+	}
 }
 

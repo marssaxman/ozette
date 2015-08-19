@@ -48,14 +48,11 @@ struct FindReplace {
 	// Select and display a matched string, to show the user what they found.
 	std::function<void(UI::Frame&, Range)> selector;
 	// Replace the specified range with a new value.
-	std::function<void(UI::Frame&, Range, std::string)> replacer;
+	std::function<Range(UI::Frame&, Range, std::string)> replacer;
 	// The user has performed a search for some pattern.
 	std::function<void(std::string)> commit_find;
-	// The user has replaced some pattern with another value.
-	std::function<void(std::string pattern, std::string value)> commit_replace;
 	// Show the dialog and let the user perform a search.
-	void show_find(UI::Frame&);
-	void show_replace(UI::Frame&);
+	void show(UI::Frame&);
 };
 } // namespace Editor
 

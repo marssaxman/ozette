@@ -732,6 +732,14 @@ void Editor::View::find(UI::Frame &ctx, location_t anchor)
 		}
 		return std::move(out);
 	};
-	dialog.show_find(ctx);
+	if (!_doc.readonly()) {
+		dialog.replacer = [this](UI::Frame &ctx, Range sel, std::string value)
+		{
+			location_t pre = _doc.erase(sel);
+			location_t post = _doc.insert(pre, value);
+			return Range(post, post);
+		};
+	}
+	dialog.show(ctx);
 }
 
