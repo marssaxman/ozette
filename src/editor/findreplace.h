@@ -17,23 +17,18 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef EDITOR_FINDER_H
-#define EDITOR_FINDER_H
+#ifndef EDITOR_FINDREPLACE_H
+#define EDITOR_FINDREPLACE_H
 
 #include "ui/frame.h"
 #include "editor/coordinates.h"
 
 namespace Editor {
-struct Finder {
-	// What should the find dialog look for?
+struct FindReplace {
+	// What should the dialog look for?
 	std::string pattern;
 	// Where should it begin looking?
 	Range anchor;
-	// Function to select and display a matched string.
-	std::function<void(UI::Frame&, Range)> selector;
-	// The user has taken some action which commits this pattern as their most
-	// recent search string.
-	std::function<void(std::string)> committer;
 	// The result of a search: an iterator through a list of matches.
 	class MatchList {
 	public:
@@ -48,10 +43,18 @@ struct Finder {
 	};
 	// Function to search for a pattern and return a range of matches.
 	std::function<std::unique_ptr<MatchList>(std::string, Range)> matcher;
+	// Select and display a matched string, to show the user what they found.
+	std::function<void(UI::Frame&, Range)> selector;
+	// Replace the specified range with a new value.
+	std::function<void(UI::Frame&, Range, std::string)> replacer;
+	// The user has performed a search for some pattern.
+	std::function<void(std::string)> commit_find;
+	// The user has replaced some pattern with another value.
+	std::function<void(std::string pattern, std::string value)> commit_replace;
 	// Show the dialog and let the user perform a search.
 	void show(UI::Frame&);
 };
 } // namespace Editor
 
-#endif //EDITOR_FINDER_H
+#endif //EDITOR_FINDREPLACE_H
 

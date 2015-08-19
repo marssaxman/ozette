@@ -22,7 +22,7 @@
 #include "app/path.h"
 #include "ui/form.h"
 #include "ui/confirmation.h"
-#include "editor/finder.h"
+#include "editor/findreplace.h"
 #include "ui/input.h"
 #include "ui/colors.h"
 #include "search/dialog.h"
@@ -669,7 +669,7 @@ void Editor::View::save(UI::Frame &ctx, std::string dest)
 }
 
 namespace {
-class DocumentMatches : public Editor::Finder::MatchList
+class DocumentMatches : public Editor::FindReplace::MatchList
 {
 public:
 	DocumentMatches(
@@ -712,21 +712,21 @@ void Editor::View::find(UI::Frame &ctx, location_t anchor)
 	// view to bring it on screen. If the user cancels the dialog, we will
 	// go back to the original selection; otherwise, committing the dialog
 	// will retain it.
-	Finder dialog;
+	FindReplace dialog;
 	dialog.pattern = _find_pattern;
 	dialog.anchor = Range(anchor, anchor);
 	dialog.selector = [this](UI::Frame &ctx, Range sel)
 	{
 		select(ctx, sel);
 	};
-	dialog.committer = [this](std::string pattern)
+	dialog.commit_find = [this](std::string pattern)
 	{
 		_find_pattern = pattern;
 	};
 	dialog.matcher = [this](std::string pattern, Range anchor)
 	{
 		std::vector<Range> found = _doc.find(pattern);
-		std::unique_ptr<Finder::MatchList> out;
+		std::unique_ptr<FindReplace::MatchList> out;
 		if (!found.empty()) {
 			out.reset(new DocumentMatches(found, anchor));
 		}

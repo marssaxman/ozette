@@ -20,7 +20,7 @@
 #include "ui/view.h"
 #include "editor/editor.h"
 #include "editor/document.h"
-#include "editor/finder.h"
+#include "editor/findreplace.h"
 #include "ui/colors.h"
 #include "ui/input.h"
 #include <assert.h>
@@ -32,7 +32,7 @@ class FindView : public UI::View
 {
 	typedef UI::View inherited;
 public:
-	FindView(UI::Frame& ctx, Finder spec);
+	FindView(UI::Frame& ctx, FindReplace spec);
 	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
@@ -43,19 +43,19 @@ protected:
 	void find_next(UI::Frame &ctx);
 	void commit(UI::Frame &ctx);
 private:
-	Finder _finder;
+	FindReplace _finder;
 	std::unique_ptr<UI::Input> _input;
-	std::unique_ptr<Finder::MatchList> _matches;
+	std::unique_ptr<FindReplace::MatchList> _matches;
 };
 } // namespace
 
-void Editor::Finder::show(UI::Frame &ctx)
+void Editor::FindReplace::show(UI::Frame &ctx)
 {
 	std::unique_ptr<UI::View> dptr(new FindView(ctx, *this));
 	ctx.show_dialog(std::move(dptr));
 }
 
-FindView::FindView(UI::Frame &ctx, Finder spec):
+FindView::FindView(UI::Frame &ctx, FindReplace spec):
 	inherited(),
 	_finder(spec)
 {
@@ -151,8 +151,8 @@ void FindView::find_next(UI::Frame &ctx)
 
 void FindView::commit(UI::Frame &ctx)
 {
-	if (_finder.committer) {
-		_finder.committer(_input->value());
+	if (_finder.commit_find) {
+		_finder.commit_find(_input->value());
 	}
 	find_next(ctx);
 }
