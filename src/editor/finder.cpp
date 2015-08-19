@@ -23,6 +23,7 @@
 #include "editor/finder.h"
 #include "ui/colors.h"
 #include "ui/input.h"
+#include <assert.h>
 
 using namespace Editor;
 
@@ -44,7 +45,7 @@ protected:
 private:
 	Finder _finder;
 	std::unique_ptr<UI::Input> _input;
-	std::vector<Range> _matches;
+	std::unique_ptr<Finder::Matches> _matches;
 	size_t _found_item = 0;
 };
 } // namespace
@@ -102,12 +103,12 @@ void FindView::paint_into(WINDOW *view, State state)
 	std::string location;
 	if (!_input->value().empty()) {
 		location = " (";
-		if (_matches.empty()) {
-			location += "None found";
-		} else {
-			location += std::to_string(1 + _found_item);
+		if (_matches) {
+			location += std::to_string(1 + _matches->index());
 			location += " of ";
-			location += std::to_string(_matches.size());
+			location += std::to_string(_matches->size());
+		} else {
+			location += "None found";
 		}
 		location += ")";
 	}
@@ -129,40 +130,25 @@ void FindView::run_find(UI::Frame &ctx)
 	// Tell the editor to select that location. Update the "X of Y" status.
 	std::string pattern = _input->value();
 	if (pattern.empty()) {
-		_matches.clear();
-		_found_item = 0;
+		_matches.release();
 		if (_finder.selector) {
 			_finder.selector(ctx, Range(_finder.anchor, _finder.anchor));
 		}
 		return;
 	}
-	if (_finder.matcher) {
-		_matches = _finder.matcher(_input->value());
-	} else {
-		_matches.clear();
-	}
-	_found_item = 0;
-	for (auto &match: _matches) {
-		if (match.begin() > _finder.anchor) break;
-		_found_item++;
-	}
-	if (_found_item >= _matches.size()) {
-		_found_item = 0;
-	}
-	if (!_matches.empty() && _finder.selector) {
-		_finder.selector(ctx, _matches[_found_item]);
+	assert(_finder.matcher);
+	_matches = std::move(_finder.matcher(pattern, _finder.anchor));
+	if (_matches && _finder.selector) {
+		_finder.selector(ctx, _matches->value());
 	}
 }
 
 void FindView::find_next(UI::Frame &ctx)
 {
-	if (_matches.empty()) return;
-	_found_item++;
-	if (_found_item >= _matches.size()) {
-		_found_item = 0;
-	}
+	if (!_matches) return;
+	_matches->next();
 	if (_finder.selector) {
-		_finder.selector(ctx, _matches[_found_item]);
+		_finder.selector(ctx, _matches->value());
 	}
 }
 
@@ -173,3 +159,4 @@ void FindView::commit(UI::Frame &ctx)
 	}
 	find_next(ctx);
 }
+

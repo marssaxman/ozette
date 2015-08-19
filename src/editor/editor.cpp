@@ -668,6 +668,36 @@ void Editor::View::save(UI::Frame &ctx, std::string dest)
 	ctx.show_result(stat);
 }
 
+namespace {
+class DocumentMatches : public Editor::Finder::Matches
+{
+public:
+	DocumentMatches(
+			std::vector<Editor::Range> matches, Editor::location_t anchor):
+		_matches(matches),
+		_index(0)
+	{
+		assert(!matches.empty());
+		for (auto &match: _matches) {
+			if (match.begin() > anchor) break;
+			next();
+		}
+	}
+	virtual size_t size() const override { return _matches.size(); }
+	virtual Editor::Range value() const override { return _matches[_index]; }
+	virtual size_t index() const override { return _index; }
+	virtual void next() override
+	{
+		if (++_index >= _matches.size()) {
+			_index = 0;
+		}
+	}
+private:
+	std::vector<Editor::Range> _matches;
+	size_t _index;
+};
+}
+
 void Editor::View::find(UI::Frame &ctx, location_t anchor)
 {
 	// Create a dialog box that provides an interactive find mode. We'll save
@@ -680,14 +710,22 @@ void Editor::View::find(UI::Frame &ctx, location_t anchor)
 	Finder dialog;
 	dialog.pattern = _find_pattern;
 	dialog.anchor = anchor;
-	dialog.selector = [this](UI::Frame &ctx, Range sel) {
+	dialog.selector = [this](UI::Frame &ctx, Range sel)
+	{
 		select(ctx, sel);
 	};
-	dialog.committer = [this](std::string pattern) {
+	dialog.committer = [this](std::string pattern)
+	{
 		_find_pattern = pattern;
 	};
-	dialog.matcher = [this](std::string pattern) {
-		return _doc.find(pattern);
+	dialog.matcher = [this](std::string pattern, location_t anchor)
+	{
+		std::vector<Range> found = _doc.find(pattern);
+		std::unique_ptr<Finder::Matches> out;
+		if (!found.empty()) {
+			out.reset(new DocumentMatches(found, anchor));
+		}
+		return std::move(out);
 	};
 	dialog.show(ctx);
 }
