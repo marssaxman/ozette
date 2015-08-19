@@ -49,7 +49,7 @@ private:
 	FindReplace _spec;
 	std::unique_ptr<UI::Input> _pattern; // row 0, always present
 	std::unique_ptr<UI::Input> _replacement; // row 1, may not be present
-	size_t _field_row = 0;
+	UI::Input *_active = nullptr;
 	std::unique_ptr<FindReplace::MatchList> _matches;
 };
 } // namespace
@@ -82,6 +82,7 @@ FindView::FindView(UI::Frame &ctx, FindReplace spec, bool replace_mode):
 	};
 	field = new UI::Input(_spec.pattern, nullptr, update_pattern);
 	_pattern.reset(field);
+	_active = _pattern.get();
 	if (replace_mode && _spec.replacer) {
 		auto update_replacement = [this](UI::Frame &ctx)
 		{
@@ -93,7 +94,7 @@ FindView::FindView(UI::Frame &ctx, FindReplace spec, bool replace_mode):
 	if (!_spec.pattern.empty()) {
 		run_find(ctx);
 		if (_replacement) {
-			_field_row = 1;
+			_active = _replacement.get();
 		}
 	}
 }
@@ -117,12 +118,7 @@ bool FindView::process(UI::Frame &ctx, int ch)
 		case Control::Enter:
 		case Control::Return: commit(ctx); break;
 		case Control::FindNext: find_next(ctx); break;
-		default: switch (_field_row) {
-			case 0: _pattern->process(ctx, ch); break;
-			case 1: if (_replacement) {
-				_replacement->process(ctx, ch);
-			} break;
-		} break;
+		default: _active->process(ctx, ch); break;
 	}
 	return true;
 }
@@ -171,7 +167,7 @@ void FindView::paint_into(WINDOW *view, State state)
 	mvwaddnstr(view, 0, locpos, location.c_str(), width - locpos);
 	// Draw the input field in between caption and location.
 	int fieldwidth = locpos - fieldpos;
-	State fieldstate = (_field_row == 0)? state: normal_state;
+	State fieldstate = (_active == _pattern.get())? state: normal_state;
 	_pattern->paint(view, 0, fieldpos, fieldwidth, fieldstate);
 
 	if (!_replacement) return;
@@ -180,22 +176,22 @@ void FindView::paint_into(WINDOW *view, State state)
 	mvwaddnstr(view, 1, 0, caption.c_str(), width);
 	fieldpos = std::min((int)caption.size(), width);
 	fieldwidth = width - fieldpos;
-	fieldstate = ((int)_field_row == 1)? state: normal_state;
+	fieldstate = (_active == _replacement.get())? state: normal_state;
 	_replacement->paint(view, 1, fieldpos, fieldwidth, fieldstate);
 }
 
 void FindView::key_up(UI::Frame &ctx)
 {
-	if (_field_row > 0) {
-		_field_row--;
+	if (_active != _pattern.get()) {
+		_active = _pattern.get();
 		ctx.repaint();
 	}
 }
 
 void FindView::key_down(UI::Frame &ctx)
 {
-	if (_field_row < 1 && _replacement) {
-		_field_row++;
+	if (_replacement && _active != _replacement.get()) {
+		_active = _replacement.get();
 		ctx.repaint();
 	}
 }
