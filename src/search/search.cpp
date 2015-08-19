@@ -187,6 +187,27 @@ void Search::View::read_one(char ch)
 	}
 }
 
+std::string shell_escape(std::string arg)
+{
+	// Wrap the arg in quotes.
+	// Escape all quotes and other shell metacharacters.
+	std::set<char> metas;
+	for (char ch: " \t\n|&;()<>\\") {
+		metas.insert(ch);
+	}
+	std::string out;
+	out.reserve(arg.size() + 2);
+	out.push_back('\"');
+	for (char ch: arg) {
+		if (metas.find(ch) != metas.end()) {
+			out.push_back('\\');
+		}
+		out.push_back(ch);
+	}
+	out.push_back('\"');
+	return out;
+}
+
 void Search::View::exec(spec job, UI::Frame &ctx)
 {
 	_job = job;
@@ -203,12 +224,13 @@ void Search::View::exec(spec job, UI::Frame &ctx)
 		findarg += " -name " + job.filter;
 	}
 	std::string find = "find " + targetdir + findarg + " -print0";
-	std::string grep = "grep -H -n -I \"" + job.needle + "\"";
+	std::string grep = "grep -H -n -I " + shell_escape(job.needle);
 	std::string command = find + " | xargs -0 " + grep;
 	const char *argv[1 + 2 + 1] = {"sh", "-c", command.c_str(), nullptr};
 	_title = "find " + job.needle;
+	_title += " in " + (job.filter.empty()? "*": job.filter);
 	if (!job.haystack.empty()) {
-		_title += " in " + Path::display(job.haystack) + "/";
+		_title += " under " + Path::display(job.haystack) + "/";
 	}
 	_proc.reset(new Console::Subproc(argv[0], argv));
 	ctx.repaint();
