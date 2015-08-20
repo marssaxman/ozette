@@ -17,8 +17,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef UI_FORM_H
-#define UI_FORM_H
+#ifndef DIALOG_FORM_H
+#define DIALOG_FORM_H
 
 #include <vector>
 #include <memory>
@@ -27,7 +27,7 @@
 #include "ui/frame.h"
 #include "ui/helpbar.h"
 
-namespace UI {
+namespace Dialog {
 struct Form
 {
 	// A form is a list of named input fields.
@@ -64,7 +64,7 @@ struct Form
 	// Once the form is configured, show it within a host window.
 	void show(UI::Frame &ctx);
 };
-} // namespace UI
+} // namespace Dialog
 
-#endif //UI_FORM_H
+#endif //DIALOG_FORM_H
 

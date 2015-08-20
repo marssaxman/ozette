@@ -17,11 +17,11 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "ui/form.h"
+#include "dialog/form.h"
 #include "ui/colors.h"
 #include "ui/view.h"
 #include "ui/helpbar.h"
-#include "ui/input.h"
+#include "dialog/input.h"
 #include <assert.h>
 
 namespace {
@@ -30,7 +30,7 @@ namespace {
 class FormInput
 {
 public:
-	FormInput(const UI::Form::Field &field);
+	FormInput(const Dialog::Form::Field &field);
 	void process(UI::Frame &ctx, int ch);
 	void paint(WINDOW *view, int row, UI::View::State state);
 	void set_help(UI::HelpBar::Panel &panel);
@@ -38,8 +38,8 @@ public:
 	std::string value() const { return _input.value(); }
 	void set_indent(int i);
 private:
-	UI::Form::Field _field;
-	UI::Input _input;
+	Dialog::Form::Field _field;
+	Dialog::Input _input;
 	std::string _caption;
 };
 
@@ -48,7 +48,7 @@ class FormView : public UI::View
 {
 	typedef UI::View inherited;
 public:
-	FormView(const UI::Form &form);
+	FormView(const Dialog::Form &form);
 	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
@@ -57,22 +57,22 @@ protected:
 	void paint_line(WINDOW *view, size_t i, State state);
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
-	bool commit(UI::Frame &ctx, UI::Form::action_t action);
+	bool commit(UI::Frame &ctx, Dialog::Form::action_t action);
 private:
-	UI::Form _form;
+	Dialog::Form _form;
 	std::vector<FormInput> _inputs;
 	size_t _selected = 0;
 };
 
 } // namespace
 
-void UI::Form::show(Frame &ctx)
+void Dialog::Form::show(UI::Frame &ctx)
 {
 	std::unique_ptr<UI::View> dptr(new FormView(*this));
 	ctx.show_dialog(std::move(dptr));
 }
 
-FormView::FormView(const UI::Form &form):
+FormView::FormView(const Dialog::Form &form):
 	inherited(),
 	_form(form)
 {
@@ -166,10 +166,10 @@ void FormView::key_down(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-bool FormView::commit(UI::Frame &ctx, UI::Form::action_t action)
+bool FormView::commit(UI::Frame &ctx, Dialog::Form::action_t action)
 {
 	if (!action) return true;
-	UI::Form::Result result;
+	Dialog::Form::Result result;
 	for (auto &input: _inputs) {
 		result.fields[input.name()] = input.value();
 	}
@@ -179,7 +179,7 @@ bool FormView::commit(UI::Frame &ctx, UI::Form::action_t action)
 	return false;
 }
 
-FormInput::FormInput(const UI::Form::Field &field):
+FormInput::FormInput(const Dialog::Form::Field &field):
 	_field(field),
 	_input(field.value, field.completer, nullptr)
 {

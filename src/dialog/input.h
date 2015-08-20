@@ -17,14 +17,14 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef UI_INPUT_H
-#define UI_INPUT_H
+#ifndef DIALOG_INPUT_H
+#define DIALOG_INPUT_H
 
 #include "ui/view.h"
 #include "ui/frame.h"
 #include "ui/helpbar.h"
 
-namespace UI {
+namespace Dialog {
 // All common functionality for a single-line text input box.
 class Input
 {
@@ -33,7 +33,7 @@ public:
 	typedef std::function<void(UI::Frame &ctx)> Updater;
 	Input(std::string value, Completer, Updater);
 	void process(UI::Frame &ctx, int ch);
-	void paint(WINDOW *view, int vpos, int hpos, int width, View::State state);
+	void paint(WINDOW*, int vpos, int hpos, int width, UI::View::State);
 	void set_help(UI::HelpBar::Panel &panel);
 	std::string value() const { return _value; }
 	void select_all(UI::Frame &ctx);
@@ -56,7 +56,7 @@ protected:
 	unsigned _cursor_pos = 0;
 	unsigned _anchor_pos = 0;
 };
-} // namespace UI
+} // namespace Dialog
 
-#endif UI_INPUT_H
+#endif DIALOG_INPUT_H
 

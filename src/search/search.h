@@ -22,7 +22,7 @@
 
 #include "ui/view.h"
 #include "ui/shell.h"
-#include "ui/form.h"
+#include "dialog/form.h"
 #include "console/subproc.h"
 #include "search/engine.h"
 #include <set>

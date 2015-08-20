@@ -20,10 +20,9 @@
 #include "editor/editor.h"
 #include "app/control.h"
 #include "app/path.h"
-#include "ui/form.h"
-#include "ui/confirmation.h"
+#include "dialog/form.h"
+#include "dialog/confirmation.h"
 #include "editor/findreplace.h"
-#include "ui/input.h"
 #include "ui/colors.h"
 #include "search/dialog.h"
 #include <assert.h>
@@ -300,7 +299,7 @@ void Editor::View::ctl_close(UI::Frame &ctx)
 		return;
 	}
 	// ask the user if they want to save first
-	UI::Confirmation dialog;
+	Dialog::Confirmation dialog;
 	dialog.text = "You have modified this file. Save changes before closing?";
 	dialog.yes = [this](UI::Frame &ctx)
 	{
@@ -330,11 +329,11 @@ void Editor::View::ctl_save_as(UI::Frame &ctx)
 {
 	if (_doc.readonly()) return;
 	_doc.commit();
-	UI::Form dialog;
+	Dialog::Form dialog;
 	dialog.fields = {
 		{"Save As", _targetpath, &Path::complete_file}
 	};
-	dialog.commit = [this](UI::Frame &ctx, UI::Form::Result &result)
+	dialog.commit = [this](UI::Frame &ctx, Dialog::Form::Result &result)
 	{
 		std::string path = result.selected_value;
 		if (path.empty()) {
@@ -356,11 +355,11 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 	// illogical as it is, the rest of the world seems to think that it is
 	// a good idea for line numbers to start counting at 1, so we will
 	// accommodate their perverse desires in the name of compatibility.
-	UI::Form dialog;
+	Dialog::Form dialog;
 	dialog.fields = {
 		{"Go to line", std::to_string(_cursor.location().line + 1)}
 	};
-	dialog.commit = [this](UI::Frame &ctx, UI::Form::Result &result)
+	dialog.commit = [this](UI::Frame &ctx, Dialog::Form::Result &result)
 	{
 		std::string value = result.selected_value;
 		if (value.empty()) return;
@@ -373,7 +372,7 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 	dialog.alternates = {
 		{
 			'L', {" L", "Last"},
-			[this](UI::Frame &ctx, UI::Form::Result&)
+			[this](UI::Frame &ctx, Dialog::Form::Result&)
 			{
 				_cursor.move_to(_doc.end());
 				drop_selection();
@@ -382,7 +381,7 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 		},
 		{
 			'F', {" F", "First"},
-			[this](UI::Frame &ctx, UI::Form::Result&)
+			[this](UI::Frame &ctx, Dialog::Form::Result&)
 			{
 				_cursor.move_to(_doc.home());
 				drop_selection();

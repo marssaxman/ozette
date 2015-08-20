@@ -18,18 +18,18 @@
 //
 
 #include "search/dialog.h"
-#include "ui/form.h"
+#include "dialog/form.h"
 #include "app/path.h"
 
 void Search::Dialog::show(UI::Frame &ctx, spec job)
 {
-	UI::Form dialog;
+	::Dialog::Form dialog;
 	dialog.fields = {
 		{"Search for", job.needle},
 		{"Filenames", job.filter.empty()? "*": job.filter},
 		{"Directory", job.haystack, &Path::complete_dir}
 	};
-	dialog.commit = [](UI::Frame &ctx, UI::Form::Result &result)
+	dialog.commit = [](UI::Frame &ctx, ::Dialog::Form::Result &result)
 	{
 		spec job = {
 			result.fields["Search for"],

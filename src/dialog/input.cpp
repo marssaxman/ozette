@@ -17,9 +17,9 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "ui/input.h"
+#include "dialog/input.h"
 
-UI::Input::Input(std::string value, Completer completer, Updater updater):
+Dialog::Input::Input(std::string value, Completer completer, Updater updater):
 	_value(value),
 	_completer(completer),
 	_updater(updater),
@@ -28,7 +28,7 @@ UI::Input::Input(std::string value, Completer completer, Updater updater):
 {
 }
 
-void UI::Input::process(UI::Frame &ctx, int ch)
+void Dialog::Input::process(UI::Frame &ctx, int ch)
 {
 	std::string old_value = _value;
 	switch (ch) {
@@ -55,7 +55,8 @@ void UI::Input::process(UI::Frame &ctx, int ch)
 	}
 }
 
-void UI::Input::paint(WINDOW *view, int v, int h, int width, View::State state)
+void Dialog::Input::paint(
+		WINDOW *view, int v, int h, int width, UI::View::State state)
 {
 	// Move to the specified window location and draw the value, truncated
 	// to fit in the available space.
@@ -83,14 +84,14 @@ void UI::Input::paint(WINDOW *view, int v, int h, int width, View::State state)
 	}
 }
 
-void UI::Input::set_help(UI::HelpBar::Panel &panel)
+void Dialog::Input::set_help(UI::HelpBar::Panel &panel)
 {
 	panel.cut();
 	panel.copy();
 	panel.paste();
 }
 
-void UI::Input::select_all(UI::Frame &ctx)
+void Dialog::Input::select_all(UI::Frame &ctx)
 {
 	if (_anchor_pos != 0) {
 		_anchor_pos = 0;
@@ -102,13 +103,13 @@ void UI::Input::select_all(UI::Frame &ctx)
 	}
 }
 
-void UI::Input::ctl_cut(UI::Frame &ctx)
+void Dialog::Input::ctl_cut(UI::Frame &ctx)
 {
 	ctl_copy(ctx);
 	delete_selection(ctx);
 }
 
-void UI::Input::ctl_copy(UI::Frame &ctx)
+void Dialog::Input::ctl_copy(UI::Frame &ctx)
 {
 	// Don't replace the current clipboard contents unless something is
 	// actually selected.
@@ -120,7 +121,7 @@ void UI::Input::ctl_copy(UI::Frame &ctx)
 	ctx.app().set_clipboard(_value.substr(begin, count));
 }
 
-void UI::Input::ctl_paste(UI::Frame &ctx)
+void Dialog::Input::ctl_paste(UI::Frame &ctx)
 {
 	delete_selection(ctx);
 	std::string clip = ctx.app().get_clipboard();
@@ -129,7 +130,7 @@ void UI::Input::ctl_paste(UI::Frame &ctx)
 	_anchor_pos = _cursor_pos;
 }
 
-void UI::Input::arrow_left(UI::Frame &ctx)
+void Dialog::Input::arrow_left(UI::Frame &ctx)
 {
 	if (_cursor_pos != _anchor_pos) {
 		_cursor_pos = std::min(_cursor_pos, _anchor_pos);
@@ -141,7 +142,7 @@ void UI::Input::arrow_left(UI::Frame &ctx)
 	}
 }
 
-void UI::Input::arrow_right(UI::Frame &ctx)
+void Dialog::Input::arrow_right(UI::Frame &ctx)
 {
 	if (_cursor_pos != _anchor_pos) {
 		_cursor_pos = std::max(_cursor_pos, _anchor_pos);
@@ -153,7 +154,7 @@ void UI::Input::arrow_right(UI::Frame &ctx)
 	}
 }
 
-void UI::Input::select_left(UI::Frame &ctx)
+void Dialog::Input::select_left(UI::Frame &ctx)
 {
 	if (_cursor_pos > 0) {
 		_cursor_pos--;
@@ -161,7 +162,7 @@ void UI::Input::select_left(UI::Frame &ctx)
 	}
 }
 
-void UI::Input::select_right(UI::Frame &ctx)
+void Dialog::Input::select_right(UI::Frame &ctx)
 {
 	if (_cursor_pos < _value.size()) {
 		_cursor_pos++;
@@ -169,7 +170,7 @@ void UI::Input::select_right(UI::Frame &ctx)
 	}
 }
 
-void UI::Input::delete_prev(UI::Frame &ctx)
+void Dialog::Input::delete_prev(UI::Frame &ctx)
 {
 	if (_cursor_pos == _anchor_pos) {
 		select_left(ctx);
@@ -177,7 +178,7 @@ void UI::Input::delete_prev(UI::Frame &ctx)
 	delete_selection(ctx);
 }
 
-void UI::Input::delete_next(UI::Frame &ctx)
+void Dialog::Input::delete_next(UI::Frame &ctx)
 {
 	if (_cursor_pos == _anchor_pos) {
 		select_right(ctx);
@@ -185,7 +186,7 @@ void UI::Input::delete_next(UI::Frame &ctx)
 	delete_selection(ctx);
 }
 
-void UI::Input::delete_selection(UI::Frame &ctx)
+void Dialog::Input::delete_selection(UI::Frame &ctx)
 {
 	if (_value.empty()) return;
 	if (_cursor_pos == _anchor_pos) return;
@@ -197,7 +198,7 @@ void UI::Input::delete_selection(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-void UI::Input::tab_complete(UI::Frame &ctx)
+void Dialog::Input::tab_complete(UI::Frame &ctx)
 {
 	// If we have an autocompleter function, give it a chance to extend the
 	// text to the left of the insertion point.
@@ -213,7 +214,7 @@ void UI::Input::tab_complete(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-void UI::Input::key_insert(UI::Frame &ctx, int ch)
+void Dialog::Input::key_insert(UI::Frame &ctx, int ch)
 {
 	delete_selection(ctx);
 	_value.insert(_cursor_pos++, 1, ch);

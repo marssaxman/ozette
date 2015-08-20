@@ -17,26 +17,27 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#ifndef UI_CONFIRMATION_H
-#define UI_CONFIRMATION_H
+#ifndef DIALOG_CONFIRMATION_H
+#define DIALOG_CONFIRMATION_H
 
 #include "ui/view.h"
 
-// A dialog box asks the user a question, then waits for their answer.
+// A confirmation box asks the user a question, then waits for their answer.
 // They may answer "yes" or "no", or they may cancel the operation that
 // prompted the question.
-namespace UI {
+namespace Dialog {
 struct Confirmation {
 	// A confirmation dialog asks the user a yes or no question.
 	std::string text;
 	// The question may include some lines of explanatory text.
 	std::vector<std::string> supplement;
 	// The user may answer yes or no.
-	std::function<void(Frame&)> yes;
-	std::function<void(Frame&)> no;
+	std::function<void(UI::Frame&)> yes;
+	std::function<void(UI::Frame&)> no;
 	// Once the confirmation is configured, show it within a window.
 	void show(UI::Frame &ctx);
 };
-} // namespace UI
+} // namespace Dialog
 
-#endif UI_CONFIRMATION_H
+#endif DIALOG_CONFIRMATION_H
+

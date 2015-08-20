@@ -22,7 +22,7 @@
 #include "editor/document.h"
 #include "editor/findreplace.h"
 #include "ui/colors.h"
-#include "ui/input.h"
+#include "dialog/input.h"
 #include <assert.h>
 
 using namespace Editor;
@@ -48,9 +48,9 @@ protected:
 	void commit(UI::Frame &ctx);
 private:
 	FindReplace _spec;
-	std::unique_ptr<UI::Input> _pattern; // row 0, always present
-	std::unique_ptr<UI::Input> _replacement; // row 1, may not be present
-	UI::Input *_active = nullptr;
+	std::unique_ptr<Dialog::Input> _pattern; // row 0, always present
+	std::unique_ptr<Dialog::Input> _replacement; // row 1, may not be present
+	Dialog::Input *_active = nullptr;
 	std::unique_ptr<FindReplace::MatchList> _matches;
 };
 } // namespace
@@ -66,21 +66,21 @@ FindView::FindView(UI::Frame &ctx, FindReplace spec, bool replace_mode):
 	inherited(),
 	_spec(spec)
 {
-	UI::Input *field = nullptr;
+	Dialog::Input *field = nullptr;
 	auto update_pattern = [this](UI::Frame &ctx)
 	{
 		_spec.pattern = _pattern->value();
 		run_find(ctx);
 	};
-	field = new UI::Input(_spec.pattern, nullptr, update_pattern);
+	field = new Dialog::Input(_spec.pattern, nullptr, update_pattern);
 	_pattern.reset(field);
 	_active = _pattern.get();
 	if (replace_mode && _spec.replacer) {
-		auto update_replacement = [this](UI::Frame &ctx)
+		auto update_repl = [this](UI::Frame &ctx)
 		{
 			_spec.replacement = _replacement->value();
 		};
-		field = new UI::Input(_spec.replacement, nullptr, update_replacement);
+		field = new Dialog::Input(_spec.replacement, nullptr, update_repl);
 		_replacement.reset(field);
 	}
 	if (!_spec.pattern.empty()) {

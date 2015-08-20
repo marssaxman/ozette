@@ -17,7 +17,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 
-#include "ui/confirmation.h"
+#include "dialog/confirmation.h"
 #include "ui/colors.h"
 #include <assert.h>
 
@@ -25,23 +25,23 @@ namespace {
 class ConfirmationView : public UI::View {
 	typedef UI::View inherited;
 public:
-	ConfirmationView(const UI::Confirmation &spec);
+	ConfirmationView(const Dialog::Confirmation &spec);
 	virtual void layout(int vpos, int hpos, int height, int width) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
 protected:
 	virtual void paint_into(WINDOW *view, State state) override;
-	UI::Confirmation _spec;
+	Dialog::Confirmation _spec;
 };
 } // namespace anonymous
 
-void UI::Confirmation::show(UI::Frame &ctx)
+void Dialog::Confirmation::show(UI::Frame &ctx)
 {
 	std::unique_ptr<UI::View> dptr(new ConfirmationView(*this));
 	ctx.show_dialog(std::move(dptr));
 }
 
-ConfirmationView::ConfirmationView(const UI::Confirmation &spec):
+ConfirmationView::ConfirmationView(const Dialog::Confirmation &spec):
 	_spec(spec)
 {
 	assert(!_spec.text.empty());
