@@ -64,7 +64,7 @@ public:
 	location_t next(location_t loc);
 	location_t prev(location_t loc);
 	// Where is the next occurrence of the specified string?
-	location_t find(std::string text, location_t begin);
+	Range find(std::string text, location_t begin);
 
 	// Get the raw text of the indexed source line.
 	const std::string &line(line_t index) const;

@@ -35,6 +35,7 @@ struct Form
 		std::string name;
 		std::string value;
 		std::function<std::string(std::string)> completer;
+		std::function<void(std::string)> updater;
 	};
 	std::vector<Field> fields;
 

@@ -145,16 +145,17 @@ Editor::location_t Editor::Document::prev(location_t loc)
 	return loc;
 }
 
-Editor::location_t Editor::Document::find(std::string needle, location_t loc)
+Editor::Range Editor::Document::find(std::string needle, location_t loc)
 {
 	do {
 		loc.offset = _lines[loc.line].find(needle, loc.offset);
 		if (loc.offset != std::string::npos) {
-			return loc;
+			location_t match = {loc.line, loc.offset + needle.size()};
+			return Range(loc, sanitize(match));
 		}
 		loc.offset = 0;
 	} while (loc.line++ < _maxline);
-	return end();
+	return Range(end(), end());
 }
 
 const std::string &Editor::Document::line(line_t index) const

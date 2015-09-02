@@ -377,12 +377,32 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 
 void Editor::View::ctl_find(UI::Frame &ctx)
 {
-	find(ctx, _selection.begin());
+	Dialog::Form::Field find;
+	find.name = "Find";
+	find.value = "";
+	location_t anchor = _selection.begin();
+	find.updater = [this, anchor, &ctx](std::string pattern)
+	{
+		// Look for the pattern after the anchor point.
+		Range match = _doc.find(pattern, anchor);
+		if (match.empty()) {
+			// Look for the pattern after the beginning of the document.
+			match = _doc.find(pattern, _doc.home());
+			if (match.empty()) {
+				// The document does not contain any instances of the pattern.
+				match = Range(anchor, anchor);
+			}
+		}
+		select(ctx, match);
+	};
+	Dialog::Form dialog;
+	dialog.fields = {find};
+	dialog.commit = [](UI::Frame&, Dialog::Form::Result&){};
+	dialog.show(ctx);
 }
 
 void Editor::View::ctl_find_next(UI::Frame &ctx)
 {
-	find(ctx, _selection.end());
 }
 
 void Editor::View::ctl_undo(UI::Frame &ctx)
@@ -648,10 +668,5 @@ void Editor::View::save(UI::Frame &ctx, std::string dest)
 	std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
 	stat += (_doc.maxline() > 1) ? " lines" : " line";
 	ctx.show_result(stat);
-}
-
-void Editor::View::find(UI::Frame &ctx, location_t anchor)
-{
-	// temporarily unimplemented
 }
 

@@ -178,7 +178,11 @@ FormInput::FormInput(const Dialog::Form::Field &field):
 
 void FormInput::process(UI::Frame &ctx, int ch)
 {
+	std::string old_value = _input.value();
 	_input.process(ctx, ch);
+	if (_field.updater && _input.value() != old_value) {
+		_field.updater(_input.value());
+	}
 }
 
 void FormInput::paint(WINDOW *view, int row, UI::View::State state)

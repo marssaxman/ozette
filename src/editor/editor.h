@@ -91,7 +91,6 @@ private:
 	void adjust_selection(bool extend);
 
 	void save(UI::Frame &ctx, std::string dest);
-	void find(UI::Frame &ctx, location_t anchor);
 
 	// Information about the file being edited
 	std::string _targetpath;
