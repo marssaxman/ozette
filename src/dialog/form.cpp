@@ -96,11 +96,6 @@ void FormView::layout(int vpos, int hpos, int height, int width)
 
 bool FormView::process(UI::Frame &ctx, int ch)
 {
-	for (auto &alt: _form.alternates) {
-		if (ch == alt.control_key) {
-			return commit(ctx, alt.action);
-		}
-	}
 	switch (ch) {
 		case Control::Escape: ctx.show_result("Cancelled"); return false;
 		case Control::Return:
@@ -118,11 +113,6 @@ bool FormView::process(UI::Frame &ctx, int ch)
 void FormView::set_help(UI::HelpBar::Panel &panel)
 {
 	_inputs[_selected].set_help(panel);
-	size_t column = 5;
-	for (auto &alt: _form.alternates) {
-		panel.label[0][column--] = alt.label;
-		if (column < 3) break;
-	}
 }
 
 void FormView::paint_into(WINDOW *view, State state)

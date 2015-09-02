@@ -356,8 +356,12 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 	// a good idea for line numbers to start counting at 1, so we will
 	// accommodate their perverse desires in the name of compatibility.
 	Dialog::Form dialog;
+
 	dialog.fields = {
-		{"Go to line", std::to_string(_cursor.location().line + 1)}
+		{
+			"Go to line (of " + std::to_string(_doc.maxline() + 1) + ")",
+			std::to_string(_cursor.location().line + 1)
+		}
 	};
 	dialog.commit = [this](UI::Frame &ctx, Dialog::Form::Result &result)
 	{
@@ -368,26 +372,6 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 		_cursor.move_to(_doc.home(index));
 		drop_selection();
 		postprocess(ctx);
-	};
-	dialog.alternates = {
-		{
-			'L', {" L", "Last"},
-			[this](UI::Frame &ctx, Dialog::Form::Result&)
-			{
-				_cursor.move_to(_doc.end());
-				drop_selection();
-				postprocess(ctx);
-			}
-		},
-		{
-			'F', {" F", "First"},
-			[this](UI::Frame &ctx, Dialog::Form::Result&)
-			{
-				_cursor.move_to(_doc.home());
-				drop_selection();
-				postprocess(ctx);
-			}
-		}
 	};
 	dialog.show(ctx);
 }
