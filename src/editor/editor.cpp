@@ -22,7 +22,6 @@
 #include "app/path.h"
 #include "dialog/form.h"
 #include "dialog/confirmation.h"
-#include "editor/findreplace.h"
 #include "ui/colors.h"
 #include "search/dialog.h"
 #include <assert.h>
@@ -651,95 +650,8 @@ void Editor::View::save(UI::Frame &ctx, std::string dest)
 	ctx.show_result(stat);
 }
 
-namespace Editor {
-class DocumentMatches : public FindReplace::MatchList
-{
-public:
-	DocumentMatches(Document &doc, std::string pattern, Range anchor):
-		_doc(doc), _pattern(pattern)
-	{
-		location_t found = doc.find(pattern, doc.home());
-		while (found != doc.end()) {
-			location_t matchend(found.line, found.offset + pattern.size());
-			if (_current.empty() && found >= anchor.begin()) {
-				_index = _count;
-				_current = Range(found, matchend);
-			}
-			_count++;
-			found = doc.find(pattern, matchend);
-		}
-	}
-	bool empty() const { return 0 == _count; }
-	virtual Editor::Range value() const override { return _current; }
-	virtual void next() override
-	{
-		// Find the next instance of the pattern following the current match.
-		location_t found = _doc.find(_pattern, _current.end());
-		if (found != _doc.end()) {
-			_index++;
-		} else {
-			found = _doc.find(_pattern, _doc.home());
-			_index = 0;
-		}
-		assert(found != _doc.end());
-		location_t matchend(found.line, found.offset + _pattern.size());
-		_current = Range(found, matchend);
-	}
-	virtual std::string description() const override
-	{
-		// Explain which match we are looking at, in human-oriented one-based
-		// line numbers rather than actual indexes.
-		std::string location = std::to_string(1 + _index);
-		location += " of ";
-		location += std::to_string(_count);
-		return location;
-	}
-private:
-	Document &_doc;
-	std::string _pattern;
-	Editor::Range _current;
-	size_t _index = 0;
-	size_t _count = 0;
-};
-}
-
 void Editor::View::find(UI::Frame &ctx, location_t anchor)
 {
-	// Create a dialog box that provides an interactive find mode. We'll save
-	// the current cursor/selection, and as the user types, we'll search for
-	// all the occurrences of that pattern in the document. We'll select the
-	// first occurrence following the original anchor point, then shift the
-	// view to bring it on screen. If the user cancels the dialog, we will
-	// go back to the original selection; otherwise, committing the dialog
-	// will retain it.
-	FindReplace dialog;
-	dialog.pattern = _find_pattern;
-	dialog.anchor = Range(anchor, anchor);
-	dialog.selector = [this](UI::Frame &ctx, Range sel)
-	{
-		select(ctx, sel);
-	};
-	dialog.commit_find = [this](std::string pattern)
-	{
-		_find_pattern = pattern;
-	};
-	dialog.matcher = [this](std::string pattern, Range anchor)
-	{
-		// Create an iterator over the document's matches for this pattern.
-		auto found = new DocumentMatches(_doc, pattern, anchor);
-		std::unique_ptr<FindReplace::MatchList> out(found);
-		// Don't return an empty match set; return null instead.
-		if (found->empty()) out.release();
-		return std::move(out);
-	};
-	if (!_doc.readonly()) {
-		dialog.replacer = [this](UI::Frame &ctx, Range sel, std::string value)
-		{
-			location_t pre = _doc.erase(sel);
-			location_t post = _doc.insert(pre, value);
-			return Range(post, post);
-		};
-	}
-	dialog.show(ctx);
+	// temporarily unimplemented
 }
 

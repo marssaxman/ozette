@@ -114,8 +114,6 @@ private:
 	row_t _maxscroll = 0;
 	// Where is the viewrect origin?
 	position_t _scroll = {0,0};
-	// What was the last string the user searched for?
-	std::string _find_pattern;
 };
 } // namespace Editor
 
