@@ -1,49 +1,19 @@
 #!/usr/bin/env bash
 #
-# Project build script.
-# Find all the source files involved in our project and compile them.
-# If we compiled successfuly, link an executable.
+# Build process for C or C++ programs compiled with GCC.
 #
-# The first argument should be the name of the executable to build.
-# If there are more arguments, they will be taken as the names of root
-# directories for your source tree.  We will search them recursively for
-# source & header files. If you do not specify any source directories, we will
-# assume the current working directory. We expect that the current directory
-# is your "project directory" and will create a subdirectory there for object
-# and dependency files.
+# Find all the source files, check for changes, resolve dependencies, and
+# recompile anything that needs an update. If we succeeded, link it together.
 #
-# example:   build.sh foo ./objs/ ./foo/src/
-#
-# arg immediately after the target name is the dir to put object files in
+# Configuration via environment variables:
+#  OUTFILE - destination executable
+#  OBJDIR - where to store .o and .d files
+#  SRCDIR - where to find source and header files
+#  CCFLAGS - configuration flags for the compiler
+#  LDFLAGS - configuration flags for the linker
 
 
-# standard compiler options; adjust these as you please
-ccflags="-Wall -Wno-endif-labels -g -falign-functions=4"
-ccflags="$ccflags -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS"
-ccflags="$ccflags -std=c++11"
-# compiler command - needs to be gcc so we can have the -MD option
-# without -MD, we have no way to generate dependency information.
-cpp="gcc"
-ldflags="-lpanel -lncurses -lpthread -lstdc++"
-
-# Project structure:
-#
-# We will search in all of the rootdirs for source & header files.
-# Intermediate .o files will be stored in the objdir.
-# If we compile everything successfully, we will link up the outfile.
-outfile=$1
-echo "compiling $1"
-shift
-
-objdir=$1
-shift
-
-if [ "$1" != "" ]; then
-	rootdirs="$*"
-else
-	rootdirs="."
-fi
-
+echo "compiling $OUTFILE"
 
 # Ozette-specific variant of the standard martian build process:
 # generate a C source file representation of the help file.
@@ -51,20 +21,14 @@ if [ ./HELP -nt src/app/help.cpp ] ; then
 	xxd -i HELP src/app/help.cpp
 fi
 
-# Begin!
-
 # If there is no obj directory, we should create one.
-if [[ -e $objdir ]]
+if [[ -e $OBJDIR ]]
 then
 	# nothing to do
 	echo -n ""
 else
-	# I'd like to call the objdir "obj", as is traditional, but make has an
-	# interesting habit of noticing that an "obj" dir exists and cd'ing into
-	# it, automatically, before invoking the build rules. This creates certain
-	# difficulties, and it's not worth bothering with.
-	echo "creating '$objdir' directory..."
-	mkdir $objdir
+	echo "creating '$OBJDIR' directory..."
+	mkdir $OBJDIR
 fi
 
 # Process dependencies: delete any obj files that are out of date. Each
@@ -72,7 +36,7 @@ fi
 # If any of those dependencies are newer than the obj file, we'll delete it,
 # which will cause it to be recompiled on the next loop.
 echo "checking dependencies..."
-for dep in $(find $objdir -type f -name "*.d"); do
+for dep in $(find $OBJDIR -type f -name "*.d"); do
 	depfiledata=$(cat $dep)
 	objtarget=${depfiledata%%:*}
 	if [[ -e $objtarget ]]
@@ -95,32 +59,22 @@ for dep in $(find $objdir -type f -name "*.d"); do
 	fi
 done
 
-# List all of the directories in our project, then generate include directives
-# for each one. We need to tell the compiler where to find header files. We
-# might as well do this ahead of time so we can reuse the include arguments
-# for each compilation.
-include=""
-#dirs=$(find $rootdirs -type d | grep -v -e "/\.")
-for i in $rootdirs; do
-	include="$include -I$i"
-done
-
 # Run the main compile loop.
 # Examine each source file. If there is not already a .o file for it in the
 # objdir, then we must recompile it. This will happen the first time we
 # compile, every time we change the source file, or every time we change one of
 # the source file's dependencies.
 errorfound=0
-for src in $(find $rootdirs -type f -name "*.cpp" -o -name "*.c"); do
+for src in $(find $SRCDIR -type f -name "*.cpp" -o -name "*.c"); do
 	# make up an obj file path in our obj subdirectory
 	# Strip off any leading "./" which might happen to be present
 	src="${src#\./}"
 	relpath="${src%/*.*}"
-	mkdir -p "$objdir/$relpath"
+	mkdir -p "$OBJDIR/$relpath"
 	objname="${src%.*}.o"
-	obj="$objdir/$objname"
+	obj="$OBJDIR/$objname"
 	depname="${src%.*}.d"
-	dep="$objdir/$depname"
+	dep="$OBJDIR/$depname"
 
 	# Do we need to recompile the source file?
 	if [[ -e $obj && -e $dep ]] ; then
@@ -135,10 +89,10 @@ for src in $(find $rootdirs -type f -name "*.cpp" -o -name "*.c"); do
 		if [[ ${src##*.} != "cpp" ]]; then
 			cstd="-std=c99"
 		else
-			cstd=""
+			cstd="-std=c++11"
 		fi
 
-		if $cpp $ccflags -MD $cstd $include -c $src -o $obj
+		if gcc $CCFLAGS -MD $cstd -I$SRCDIR -c $src -o $obj
 		then
 			echo -n ""
 		else
@@ -151,7 +105,7 @@ done
 if (( !errorfound )) ; then
 	echo "linking..."
 	# use gcc to link an executable
-	if $cpp -o $outfile $(find $objdir -name "*.o") $ldflags; then
+	if gcc -o $OUTFILE $(find $OBJDIR -name "*.o") $LDFLAGS; then
 		echo "done."
 	else
 		errorfound=1
@@ -159,7 +113,7 @@ if (( !errorfound )) ; then
 fi
 
 if (( !errorfound )) ; then
-	ls -l $outfile
+	ls -l $OUTFILE
 fi
 
 exit $errorfound

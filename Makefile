@@ -1,16 +1,24 @@
-# make is not worth the hassle, so we'll do everything inside bash scripts.
-# it has several annoying habits. one of them is that if it happens to find a
-# directory named "obj", it will cd into that directory before making anything.
-# another is that if there happens to be a directory with the name of a target,
-# make will refuse to build that target, claiming that it is up to date. grrr.
+OUTFILE := "ozette"
+OBJDIR := "./obj"
+SRCDIR := "./src"
+CCFLAGS := -Wall -Wno-endif-labels -g -falign-functions=4
+CCFLAGS += -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
+CPP := "gcc"
+LDFLAGS := -lpanel -lncurses -lpthread -lstdc++
 
-all: ozette-executable
 
-ozette-executable:
-	@./build.sh ozette ./obj ./src
+all: build
+
+build:
+	@OUTFILE="$(OUTFILE)" \
+	OBJDIR="$(OBJDIR)" \
+	SRCDIR="$(SRCDIR)" \
+	CCFLAGS="$(CCFLAGS)" \
+	LDFLAGS="$(LDFLAGS)" \
+	./build.sh
 
 clean:
-	@rm -rf ozette ./obj/*
+	@rm -rf $(OUTFILE) $(OBJDIR)/*
 
 install:
 	@./install.sh
