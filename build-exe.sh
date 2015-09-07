@@ -12,14 +12,7 @@
 #  CCFLAGS - configuration flags for the compiler
 #  LDFLAGS - configuration flags for the linker
 
-
 echo "compiling $OUTFILE"
-
-# Ozette-specific variant of the standard martian build process:
-# generate a C source file representation of the help file.
-if [ ./HELP -nt src/app/help.cpp ] ; then
-	xxd -i HELP src/app/help.cpp
-fi
 
 # If there is no obj directory, we should create one.
 if [[ -e $OBJDIR ]]

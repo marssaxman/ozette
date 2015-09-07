@@ -7,15 +7,15 @@ CPP := "gcc"
 LDFLAGS := -lpanel -lncurses -lpthread -lstdc++
 
 
-all: build
+all: executable help
 
-build:
+executable:
 	@OUTFILE="$(OUTFILE)" \
 	OBJDIR="$(OBJDIR)" \
 	SRCDIR="$(SRCDIR)" \
 	CCFLAGS="$(CCFLAGS)" \
 	LDFLAGS="$(LDFLAGS)" \
-	./build.sh
+	./build-exe.sh
 
 clean:
 	@rm -rf $(OUTFILE) $(OBJDIR)/*
@@ -23,7 +23,8 @@ clean:
 install:
 	@./install.sh
 
-
+help:
+	@./build-help.sh
 
 
 
