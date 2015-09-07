@@ -11,6 +11,8 @@
 #  SRCDIR - where to find source and header files
 #  CCFLAGS - configuration flags for the compiler
 #  LDFLAGS - configuration flags for the linker
+#  STDC - standard to use when compiling .c files
+#  STDCPP - standard to use when compiling .cpp files
 
 echo "compiling $OUTFILE"
 
@@ -80,12 +82,12 @@ for src in $(find $SRCDIR -type f -name "*.cpp" -o -name "*.c"); do
 
 		# only specify C99 if we are not compiling a c++ file
 		if [[ ${src##*.} != "cpp" ]]; then
-			cstd="-std=c99"
+			std=$STDC
 		else
-			cstd="-std=c++11"
+			std=$STDCPP
 		fi
 
-		if gcc $CCFLAGS -MD $cstd -I$SRCDIR -c $src -o $obj
+		if $CPP $CCFLAGS -MD -std=$std -I$SRCDIR -c $src -o $obj
 		then
 			echo -n ""
 		else
@@ -98,7 +100,7 @@ done
 if (( !errorfound )) ; then
 	echo "linking..."
 	# use gcc to link an executable
-	if gcc -o $OUTFILE $(find $OBJDIR -name "*.o") $LDFLAGS; then
+	if $CPP -o $OUTFILE $(find $OBJDIR -name "*.o") $LDFLAGS; then
 		echo "done."
 	else
 		errorfound=1
