@@ -5,14 +5,23 @@
 # Find all the source files, check for changes, resolve dependencies, and
 # recompile anything that needs an update. If we succeeded, link it together.
 #
-# Configuration via environment variables:
-#  OUTFILE - destination executable
-#  OBJDIR - where to store .o and .d files
-#  SRCDIR - where to find source and header files
-#  CCFLAGS - configuration flags for the compiler
-#  LDFLAGS - configuration flags for the linker
-#  STDC - standard to use when compiling .c files
-#  STDCPP - standard to use when compiling .cpp files
+# The script may be configured by setting environment variables as follows.
+# Name of executable to build:
+: ${OUTFILE=executable}
+# Directory for .o and .d files:
+: ${OBJDIR=./obj}
+# Source tree location:
+: ${SRCDIR=./src}
+# Compiler to invoke:
+: ${CPP=gcc}
+# Extra flags to pass the compiler on each source file:
+: ${CCFLAGS=}
+# Extra flags to pass the compiler when linking:
+: ${LDFLAGS=}
+# Standard to use when compiling .c files:
+: ${STDC=c99}
+# Standard to use when compiling .cpp files:
+: ${STDCPP=c++11}
 
 echo "compiling $OUTFILE"
 
