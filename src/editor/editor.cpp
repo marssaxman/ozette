@@ -383,17 +383,8 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 	location_t anchor = _selection.begin();
 	find.updater = [this, anchor, &ctx](std::string pattern)
 	{
-		// Look for the pattern after the anchor point.
-		Range match = _doc.find(pattern, anchor);
-		if (match.empty()) {
-			// Look for the pattern after the beginning of the document.
-			match = _doc.find(pattern, _doc.home());
-			if (match.empty()) {
-				// The document does not contain any instances of the pattern.
-				match = Range(anchor, anchor);
-			}
-		}
-		select(ctx, match);
+		_find_text = pattern;
+		this->find(ctx, anchor, pattern);
 	};
 	Dialog::Form dialog;
 	dialog.fields = {find};
@@ -403,6 +394,8 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 
 void Editor::View::ctl_find_next(UI::Frame &ctx)
 {
+	if (_find_text.empty()) return;
+	find(ctx, _selection.end(), _find_text);
 }
 
 void Editor::View::ctl_undo(UI::Frame &ctx)
@@ -670,3 +663,17 @@ void Editor::View::save(UI::Frame &ctx, std::string dest)
 	ctx.show_result(stat);
 }
 
+void Editor::View::find(UI::Frame &ctx, location_t anchor, std::string pattern)
+{
+	// Look for the pattern after the anchor point.
+	Range match = _doc.find(pattern, anchor);
+	if (match.empty()) {
+		// Look for the pattern after the beginning of the document.
+		match = _doc.find(pattern, _doc.home());
+		if (match.empty()) {
+			// The document does not contain any instances of the pattern.
+			match = Range(anchor, anchor);
+		}
+	}
+	select(ctx, match);
+}
