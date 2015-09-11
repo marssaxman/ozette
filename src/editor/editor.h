@@ -91,6 +91,7 @@ private:
 	void adjust_selection(bool extend);
 
 	void save(UI::Frame &ctx, std::string dest);
+	void find(UI::Frame &ctx, location_t anchor, std::string pattern);
 
 	// Information about the file being edited
 	std::string _targetpath;
@@ -102,6 +103,7 @@ private:
 	location_t _anchor;
 	Range _selection;
 	Settings _settings;
+	std::string _find_text;
 
 	// Update status: must we perform a full repaint?
 	State _last_state = State::Inactive;
