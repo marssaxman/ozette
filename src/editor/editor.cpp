@@ -379,7 +379,7 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 {
 	Dialog::Form::Field find;
 	find.name = "Find";
-	find.value = "";
+	find.value = _find_text;
 	location_t anchor = _selection.begin();
 	find.updater = [this, anchor, &ctx](std::string pattern)
 	{
@@ -388,7 +388,11 @@ void Editor::View::ctl_find(UI::Frame &ctx)
 	};
 	Dialog::Form dialog;
 	dialog.fields = {find};
-	dialog.commit = [](UI::Frame&, Dialog::Form::Result&){};
+	dialog.commit = [this](UI::Frame& ctx, Dialog::Form::Result&)
+	{
+		ctl_find_next(ctx);
+		ctl_find(ctx);
+	};
 	dialog.show(ctx);
 }
 
