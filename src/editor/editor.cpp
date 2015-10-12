@@ -131,6 +131,7 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 		case Control::Backspace: key_backspace(ctx); break;
 		case KEY_DC: key_delete(ctx); break;
 		case KEY_BTAB: key_btab(ctx); break;	// shift-tab
+		case Control::Escape: key_escape(ctx); break;
 
 		default: {
 			if (isprint(ch)) key_insert(ch);
@@ -599,6 +600,11 @@ void Editor::View::key_btab(UI::Frame &ctx)
 	_cursor.move_to(_doc.end(end));
 	_selection.reset(_anchor, _cursor.location());
 	_update.range(_selection);
+}
+
+void Editor::View::key_escape(UI::Frame &ctx)
+{
+	drop_selection();
 }
 
 void Editor::View::key_enter(UI::Frame &ctx)

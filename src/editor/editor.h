@@ -82,6 +82,7 @@ private:
 	void key_return(UI::Frame &ctx);
 	void key_backspace(UI::Frame &ctx);
 	void key_delete(UI::Frame &ctx);
+	void key_escape(UI::Frame &ctx);
 
 	// If there was a selection, pressing a key usually does something
 	// to it, so we need to release the selection and start over with a
