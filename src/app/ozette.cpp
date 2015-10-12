@@ -23,6 +23,7 @@
 #include "editor/editor.h"
 #include "console/console.h"
 #include "search/search.h"
+#include "search/dialog.h"
 #include "app/control.h"
 #include "app/help.h"
 #include <unistd.h>
@@ -192,6 +193,7 @@ void Ozette::run()
 			case Control::Directory: change_directory(); break;
 			case Control::Help: show_help(); break;
 			case Control::Execute: execute(); break;
+			case KEY_F(4): search(); break;
 			case KEY_F(5): build(); break;
 			default: _done |= !_shell.process(ch);
 		}
@@ -283,6 +285,13 @@ void Ozette::build()
 	}
 	std::string command = _config.get("build-command", "make");
 	exec(command);
+}
+
+void Ozette::search()
+{
+	show_browser();
+	Search::spec job = {"", Path::display("."), "*"};
+	Search::Dialog::show(*_shell.active(), job);
 }
 
 int Ozette::fix_control_quirks(int ch)

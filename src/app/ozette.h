@@ -58,6 +58,7 @@ private:
 	void show_help();
 	void execute();
 	void build();
+	void search();
 	int fix_control_quirks(int ch);
 	void exec(std::string command);
 	editor open_editor(std::string path);
