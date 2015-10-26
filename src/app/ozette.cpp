@@ -65,7 +65,12 @@ void Ozette::change_dir(std::string path)
 
 void Ozette::edit_file(std::string path)
 {
-	open_editor(path);
+	struct stat st;
+	if (0 == stat(path.c_str(), &st) && S_ISDIR(st.st_mode)) {
+		change_dir(path);
+	} else {
+		open_editor(path);
+	}
 }
 
 void Ozette::rename_file(std::string from, std::string to)
