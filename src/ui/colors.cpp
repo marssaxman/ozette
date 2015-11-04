@@ -84,5 +84,6 @@ void UI::Colors::init()
 	sKeyword |= COLOR_PAIR(2);
 	sString |= COLOR_PAIR(2);
 	sComment = COLOR_PAIR(3);
+	sTrailingSpace |= COLOR_PAIR(3);
 }
 
