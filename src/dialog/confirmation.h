@@ -39,5 +39,5 @@ struct Confirmation {
 };
 } // namespace Dialog
 
-#endif DIALOG_CONFIRMATION_H
+#endif //DIALOG_CONFIRMATION_H
 

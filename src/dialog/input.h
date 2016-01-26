@@ -58,5 +58,5 @@ protected:
 };
 } // namespace Dialog
 
-#endif DIALOG_INPUT_H
+#endif //DIALOG_INPUT_H
 

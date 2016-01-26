@@ -20,5 +20,5 @@
 int popenRWE(int *rwepipe, const char *exe, const char *const argv[]);
 int pcloseRWE(int pid, int *rwepipe);
 
-#endif CONSOLE_POPENRWE_H
+#endif //CONSOLE_POPENRWE_H
 

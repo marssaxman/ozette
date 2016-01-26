@@ -1,25 +1,35 @@
-OUTFILE := "ozette"
-CCFLAGS := -Wall -Wno-endif-labels -g
-CCFLAGS += -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
-LDFLAGS := -lpanel -lncurses -lpthread -lstdc++
+default: ozette
+ozette: bin/ozette
 
+include srctree.mk
+-include $(call findtype, d, obj)
 
-all: executable help
+CPPFLAGS=-MD -MP -Wall -Wno-endif-labels -g -Werror
+CPPFLAGS+=-D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
+CXXFLAGS=-std=c++11
+CFLAGS=-std=c99
+LDLIBS=-lpanel -lncurses -lpthread -lstdc++
+SRCEXTS=c cpp
 
-executable:
-	@OUTFILE="$(OUTFILE)" CCFLAGS="$(CCFLAGS)" LDFLAGS="$(LDFLAGS)" \
-	./build-exe.sh
+bin/ozette: $(call objs, $(SRCEXTS), src, obj)
+	@mkdir -p $(@D)
+	g++ $^ $(LDLIBS) -o $@
+obj/%.o: src/%.cpp
+	mkdir -p $(@D)
+	$(CC) -Isrc $(CXXFLAGS) -c $< -o $@
+obj/%.o: src/%.c
+	mkdir -p $(@D)
+	$(CC) -Isrc $(CFLAGS) -c $< -o $@
+src/app/help.cpp: HELP
+	xxd -i HELP src/app/help.cpp
 
 clean:
-	@rm -rf $(OUTFILE) ./obj/*
+	@rm -rf bin obj
 
-install:
-	@./install.sh
+install: bin/ozette
+	cp bin/ozette /usr/bin/
 
-help:
-	@./build-help.sh
-
-
+.PHONY: clean install
 
 
 
