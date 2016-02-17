@@ -185,15 +185,23 @@ Editor::location_t Editor::ChangeList::change_t::rollback(Document &doc, Update 
 		// We inserted some text, which now occupies the range specified by
 		// insertloc. Delete that text.
 		doc.erase(insertloc);
-		update.range(insertloc);
 		out = insertloc.begin();
+		if (insertloc.multiline()) {
+			update.forward(out);
+		} else {
+			update.range(insertloc);
+		}
 	}
 	if (erase) {
 		// We erased some text, which was at the range specified by eraseloc,
 		// and which we have saved as erasetext. Re-insert it at the beginning
 		// of the eraseloc.
 		doc.insert(eraseloc.begin(), erasetext);
-		update.range(eraseloc);
+		if (eraseloc.multiline()) {
+			update.forward(eraseloc.begin());
+		} else {
+			update.range(eraseloc);
+		}
 		out = eraseloc.end();
 	}
 	return out;

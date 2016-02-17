@@ -9,16 +9,15 @@ CPPFLAGS+=-D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
 CXXFLAGS=-std=c++11
 CFLAGS=-std=c99
 LDLIBS=-lpanel -lncurses -lpthread -lstdc++
-SRCEXTS=c cpp
 
-bin/ozette: $(call objs, $(SRCEXTS), src, obj)
+bin/ozette: $(call cxx_objs, src, obj)
 	@mkdir -p $(@D)
 	g++ $^ $(LDLIBS) -o $@
 obj/%.o: src/%.cpp
-	mkdir -p $(@D)
+	@mkdir -p $(@D)
 	$(CC) -Isrc $(CXXFLAGS) -c $< -o $@
 obj/%.o: src/%.c
-	mkdir -p $(@D)
+	@mkdir -p $(@D)
 	$(CC) -Isrc $(CFLAGS) -c $< -o $@
 src/app/help.cpp: HELP
 	xxd -i HELP src/app/help.cpp

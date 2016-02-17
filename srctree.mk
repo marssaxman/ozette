@@ -1,3 +1,44 @@
+# Copyright (C) 2016 Mars Saxman. All rights reserved.
+# Permission is granted to use at your own risk and distribute this software
+# in source and binary forms provided all source code distributions retain
+# this paragraph and the above copyright notice. THIS SOFTWARE IS PROVIDED "AS
+# IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
+
+
+# This is a package of functions which help automate the process of building a
+# C or C++ program and reduce the need for manual editing of Makefiles, by
+# finding all the files in your source tree and generating a corresponding list
+# of ".o" file dependencies for your output binary. This lets you add, move,
+# rename, and delete source files at will, without touching your Makefile; make
+# will simply use these functions to figure it out and do the right thing.
+
+# Imagine that your project directory looks like this:
+# program/
+#   Makefile
+#   LICENSE
+#   README
+#   src/
+#    main.cpp
+#    sub1/
+#      foo.cpp
+#      bar.cpp
+#    sub2/
+#      baz.cpp
+
+# Those .cpp files presumably need to be compiled into .o files which can be
+# linked together into some executable, so you need a build rule like this:
+# program: obj/main.o obj/sub1/foo.o obj/sub1/bar.o obj/sub2/baz.o
+
+# You can use this library to generate such a list automatically, like this:
+# include srctree.mk
+# program: $(cxx_objs, src, obj)
+
+# If you use other extensions for your source files, just call the "listobjs"
+# function instead and specify anything you like:
+# program: $(listobjs, "c cc cx", src, obj)
+
+
+
 # function (map function,list):
 #  Apply the function to each item in the list.
 map = $(foreach item,$(2),$(call $(1),$(item)))
@@ -27,8 +68,13 @@ setsuffix = $(addsuffix $(1),$(basename $(2)))
 #  mapping the source file hierarchy to an equivalent object file hierarchy.
 objsubst = $(call setsuffix,.o, $(call setprefix,$(1),$(2),$(3)))
 
-# function (objs suffixes,srcdir,objdir)
+# function (listobjs suffixes,srcdir,objdir)
 #  For all files in srcdir having one of the listed suffixes, list the path
 #  its corresponding .o file would have under objdir.
-objs = $(call objsubst,$(2),$(3),$(call findtype,$(1),$(2)))
+listobjs = $(call objsubst,$(2),$(3),$(call findtype,$(1),$(2)))
+
+# function (cxx_objs srcdir,objdir)
+#  List all the .o files for all the files in the source directory having
+#  one of the usual C or C++ source file extensions.
+cxx_objs = $(call listobjs,c cpp,$(1),$(2))
 
