@@ -84,7 +84,7 @@ Grammar::Grammar():
 		"|if|while|do|for|else|switch|case|default"
 		"|new|delete|goto|continue|break|return"
 		")\\>"),
-	_string("\\\"(.*)[^\\\\]\\\""),
+	_string("\\\"([^\\\"]|(\\\\.))*\\\""),
 	_comment("//(.*)$"),
 	_trailing_space("[[:space:]]+$")
 {
