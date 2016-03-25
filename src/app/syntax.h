@@ -72,6 +72,8 @@ private:
 	Regex _trailing_space;
 };
 
+extern Grammar generic;
+
 } // namespace Syntax
 
 #endif //APP_SYNTAX_H

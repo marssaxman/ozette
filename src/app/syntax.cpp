@@ -1,6 +1,6 @@
 //
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,38 +22,34 @@
 
 using namespace Syntax;
 
+Grammar Syntax::generic;
+
 Regex::Regex(std::string pattern):
-	_pattern(pattern)
-{
+	_pattern(pattern) {
 	compile();
 }
 
 Regex::Regex(const Regex &other):
-	_pattern(other._pattern)
-{
+	_pattern(other._pattern) {
 	compile();
 }
 
-Regex &Regex::operator=(const Regex &other)
-{
+Regex &Regex::operator=(const Regex &other) {
 	regfree(&_re);
 	_pattern = other._pattern;
 	compile();
 	return *this;
 }
 
-Regex::~Regex()
-{
+Regex::~Regex() {
 	regfree(&_re);
 }
 
-void Regex::compile()
-{
+void Regex::compile() {
 	_comp_err = regcomp(&_re, _pattern.c_str(), REG_EXTENDED);
 }
 
-Regex::Match Regex::find(const std::string &text, size_t offset) const
-{
+Regex::Match Regex::find(const std::string &text, size_t offset) const {
 	regmatch_t rm;
 	Match out;
 	if (_comp_err) return out;
@@ -63,8 +59,7 @@ Regex::Match Regex::find(const std::string &text, size_t offset) const
 	return out;
 }
 
-Regex::Matches Regex::find_all(const std::string &text) const
-{
+Regex::Matches Regex::find_all(const std::string &text) const {
 	Match found = find(text);
 	std::list<Match> out;
 	while (!found.empty()) {
@@ -90,8 +85,7 @@ Grammar::Grammar():
 {
 }
 
-Grammar::Tokens Grammar::parse(const std::string &text) const
-{
+Grammar::Tokens Grammar::parse(const std::string &text) const {
 	struct prod_t {
 		Token::Type type;
 		const Regex &re;
@@ -128,8 +122,7 @@ Grammar::Tokens Grammar::parse(const std::string &text) const
 }
 
 Grammar::Tokens Grammar::tokenize(
-		const Regex::Matches &matches, Token::Type type) const
-{
+		const Regex::Matches &matches, Token::Type type) const {
 	Tokens out;
 	for (auto &match: matches) {
 		Token tk = {match.begin, match.end, type};
@@ -138,8 +131,7 @@ Grammar::Tokens Grammar::tokenize(
 	return out;
 }
 
-int Grammar::Token::style() const
-{
+int Grammar::Token::style() const {
 	switch (type) {
 		case Token::Type::Identifier: return UI::Colors::identifier();
 		case Token::Type::Keyword: return UI::Colors::keyword();
@@ -149,3 +141,4 @@ int Grammar::Token::style() const
 		default: return 0;
 	}
 }
+

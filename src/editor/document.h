@@ -99,7 +99,7 @@ private:
 	// Editor settings for the current working directory
 	Settings _settings;
 	// Syntax for this document's file type
-	Syntax::Grammar _syntax;
+	Syntax::Grammar &_syntax;
 
 	std::string _blank;
 	std::vector<std::string> _lines;

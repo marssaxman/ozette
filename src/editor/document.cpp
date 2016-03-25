@@ -1,6 +1,6 @@
 //
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,12 +24,14 @@
 #include <sys/stat.h>
 
 Editor::Document::Document(const Config &config):
-	_settings(config)
+	_settings(config),
+	_syntax(Syntax::generic)
 {
 }
 
 Editor::Document::Document(std::string path, const Config &config):
-	_settings(config)
+	_settings(config),
+	_syntax(Syntax::generic)
 {
 	_lines.clear();
 	_edits.clear();
