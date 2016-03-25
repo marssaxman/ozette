@@ -32,7 +32,6 @@ Grammar c = {
 	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
 	{"\\'([^\\']|(\\\\.))*\\'", Token::Type::String},
 	{"//(.*)$", Token::Type::Comment},
-	{"[[:space:]]+$", Token::Type::TrailingSpace}
 };
 Grammar cxx = {
 	{"\\<("
@@ -49,7 +48,6 @@ Grammar cxx = {
 	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
 	{"\\'([^\\']|(\\\\.))*\\'", Token::Type::String},
 	{"//(.*)$", Token::Type::Comment},
-	{"[[:space:]]+$", Token::Type::TrailingSpace}
 };
 Grammar ruby = {
 	{"\\<("
@@ -61,11 +59,12 @@ Grammar ruby = {
 	{"\\'([^\\']|(\\\\.))*\\'", Token::Type::String},
 	{"\\`([^\\']|(\\\\.))*\\`", Token::Type::String},
 	{"#(.*)$", Token::Type::Comment},
-	{"[[:space:]]+$", Token::Type::TrailingSpace}
 };
 Grammar make = {
 	{"#(.*)$", Token::Type::Comment},
-	{"[[:space:]]+$", Token::Type::TrailingSpace}
+};
+Grammar assembly = {
+	{"#(.*)$", Token::Type::Comment},
 };
 const std::map<std::string, const Grammar&> extensions = {
 	{"c", c}, {"C", c},
@@ -74,6 +73,7 @@ const std::map<std::string, const Grammar&> extensions = {
 	{"hh", cxx}, {"hpp", cxx}, {"HPP", cxx},
 	{"rb", ruby},
 	{"mk", make},
+	{"s", assembly},
 };
 }
 
@@ -129,7 +129,6 @@ int Token::style() const {
 		case Type::Keyword: return UI::Colors::keyword();
 		case Type::String: return UI::Colors::string();
 		case Type::Comment: return UI::Colors::comment();
-		case Type::TrailingSpace: return UI::Colors::trailing_space();
 		default: return 0;
 	}
 }

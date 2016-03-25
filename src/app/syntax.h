@@ -53,7 +53,6 @@ struct Token {
 		Keyword,
 		String,
 		Comment,
-		TrailingSpace,
 	} type;
 	int style() const;
 };

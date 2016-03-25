@@ -28,6 +28,13 @@ Editor::DisplayLine::DisplayLine(
 		_style(text.size()),
 		_settings(settings),
 		_syntax(syntax) {
+	static Syntax::Regex trailing_space("[[:space:]]+$");
+	Syntax::Regex::Match m = trailing_space.find(text);
+	if (!m.empty()) {
+		for (size_t i= m.begin; i < m.end; ++i) {
+			_style[i] = UI::Colors::trailing_space();
+		}
+	}
 	for (auto &token: Syntax::parse(_syntax, text)) {
 		for (size_t i = token.begin; i < token.end; ++i) {
 			_style[i] = token.style();
