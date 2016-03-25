@@ -46,33 +46,29 @@ private:
 	int _comp_err = 0;
 };
 
-class Grammar {
-public:
-	struct Token {
-		size_t begin;
-		size_t end;
-		enum class Type {
-			Identifier,
-			Keyword,
-			String,
-			Comment,
-			TrailingSpace
-		} type;
-		int style() const;
-	};
-	typedef std::list<Token> Tokens;
-	Grammar();
-	Tokens parse(const std::string &text) const;
-private:
-	Tokens tokenize(const Regex::Matches &matches, Token::Type type) const;
-	Regex _identifier;
-	Regex _keyword;
-	Regex _string;
-	Regex _comment;
-	Regex _trailing_space;
+struct Token {
+	size_t begin;
+	size_t end;
+	enum class Type {
+		Keyword,
+		String,
+		Comment,
+		TrailingSpace,
+	} type;
+	int style() const;
 };
+typedef std::list<Token> Tokens;
 
-extern Grammar generic;
+struct Rule {
+	Rule(const char *p, Token::Type t): pattern(std::string(p)), token(t) {}
+	Rule(const std::string &p, Token::Type t): pattern(p), token(t) {}
+	Regex pattern;
+	Token::Type token;
+};
+typedef std::list<Rule> Grammar;
+
+Tokens parse(const Grammar&, const std::string&);
+const Grammar &lookup(const std::string &path);
 
 } // namespace Syntax
 

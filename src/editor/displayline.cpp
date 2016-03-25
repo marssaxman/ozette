@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "editor/displayline.h"
 #include "ui/colors.h"
@@ -26,12 +24,11 @@ Editor::DisplayLine::DisplayLine(
 		const std::string &text,
 		const Settings &settings,
 		const Syntax::Grammar &syntax):
-	_text(text),
-	_style(text.size()),
-	_settings(settings),
-	_syntax(syntax)
-{
-	for (auto &token: _syntax.parse(text)) {
+		_text(text),
+		_style(text.size()),
+		_settings(settings),
+		_syntax(syntax) {
+	for (auto &token: Syntax::parse(_syntax, text)) {
 		for (size_t i = token.begin; i < token.end; ++i) {
 			_style[i] = token.style();
 		}
@@ -39,13 +36,11 @@ Editor::DisplayLine::DisplayLine(
 }
 
 
-unsigned Editor::DisplayLine::width() const
-{
+unsigned Editor::DisplayLine::width() const {
 	return column(size());
 }
 
-Editor::column_t Editor::DisplayLine::column(offset_t loc) const
-{
+Editor::column_t Editor::DisplayLine::column(offset_t loc) const {
 	column_t out = 0;
 	offset_t pos = 0;
 	for (auto ch: text()) {
@@ -55,8 +50,7 @@ Editor::column_t Editor::DisplayLine::column(offset_t loc) const
 	return out;
 }
 
-Editor::offset_t Editor::DisplayLine::offset(column_t h) const
-{
+Editor::offset_t Editor::DisplayLine::offset(column_t h) const {
 	offset_t out = 0;
 	column_t pos = 0;
 	for (char ch: text()) {
@@ -67,16 +61,14 @@ Editor::offset_t Editor::DisplayLine::offset(column_t h) const
 	return out;
 }
 
-void Editor::DisplayLine::advance(char ch, column_t &h) const
-{
+void Editor::DisplayLine::advance(char ch, column_t &h) const {
 	do {
 		h++;
 	} while (ch == '\t' && h % kTabWidth);
 }
 
 void Editor::DisplayLine::paint(
-		WINDOW *d, column_t hoff, unsigned width, bool active) const
-{
+		WINDOW *d, column_t hoff, unsigned width, bool active) const {
 	column_t h = 0;
 	width += hoff;
 	size_t i = 0;

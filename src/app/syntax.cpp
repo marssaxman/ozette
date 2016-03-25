@@ -1,4 +1,3 @@
-//
 // ozette
 // Copyright (C) 2014-2016 Mars J. Saxman
 //
@@ -15,14 +14,70 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "app/syntax.h"
 #include "ui/colors.h"
+#include <map>
+
+namespace Syntax {
+Grammar generic = {};
+Grammar c = {
+	{"\\<("
+		"auto|break|case|char|const|continue|default|do|double|else|enum"
+		"|extern|float|for|goto|if|inline|int|long|register|restrict|return"
+		"|short|signed|sizeof|static|struct|switch|typedef|union|unsigned"
+		"|void|volatile|while|_Alignas|_Alignof|_Atomic|_Bool|_Complex"
+		"|_Generic|_Imaginary|_Noreturn|_Static_assert|_Thread_local"
+	")\\>", Token::Type::Keyword},
+	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
+	{"\\'([^\\']|(\\\\.))*\\'", Token::Type::String},
+	{"//(.*)$", Token::Type::Comment},
+	{"[[:space:]]+$", Token::Type::TrailingSpace}
+};
+Grammar cxx = {
+	{"\\<("
+		"alignas|alignof|and|and_eq|asm|auto|bitand|bitor|bool|break|case"
+		"|catch|char|char16_t|char32_t|class|compl|const|constexpr|const_cast"
+		"|continue|decltype|default|delete|do|double|dynamic_cast|else|enum"
+		"|explicit|export|extern|false|float|for|friend|goto|if|inline|int"
+		"|long|mutable|namespace|new|noexcept|not|not_eq|nullptr|operator|or"
+		"|or_eq|private|protected|public|register|reinterpret_cast|return"
+		"|short|signed|sizeof|static|static_assert|static_cast|struct|switch"
+		"|template|this|thread_local|throw|true|try|typedef|typeid|typename"
+		"|union|unsigned|using|virtual|void|volatile|wchar_t|while|xor|xor_eq"
+	")\\>", Token::Type::Keyword},
+	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
+	{"\\'([^\\']|(\\\\.))*\\'", Token::Type::String},
+	{"//(.*)$", Token::Type::Comment},
+	{"[[:space:]]+$", Token::Type::TrailingSpace}
+};
+Grammar ruby = {
+	{"\\<("
+		"do|begin|end|undef|alias|if|while|unless|until|return|yield|and|or"
+		"|not|super|defined?|elsif|else|case|when|rescue|ensure|class|module"
+		"|def|then|nil|self|true|false"
+	")\\>", Token::Type::Keyword},
+	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
+	{"\\'([^\\']|(\\\\.))*\\'", Token::Type::String},
+	{"\\`([^\\']|(\\\\.))*\\`", Token::Type::String},
+	{"#(.*)$", Token::Type::Comment},
+	{"[[:space:]]+$", Token::Type::TrailingSpace}
+};
+Grammar make = {
+	{"#(.*)$", Token::Type::Comment},
+	{"[[:space:]]+$", Token::Type::TrailingSpace}
+};
+const std::map<std::string, const Grammar&> extensions = {
+	{"c", c}, {"C", c},
+	{"h", cxx}, {"H", cxx},
+	{"cc", cxx}, {"cpp", cxx}, {"CPP", cxx}, {"c++", cxx}, {"cp", cxx},
+	{"hh", cxx}, {"hpp", cxx}, {"HPP", cxx},
+	{"rb", ruby},
+	{"mk", make},
+};
+}
 
 using namespace Syntax;
-
-Grammar Syntax::generic;
 
 Regex::Regex(std::string pattern):
 	_pattern(pattern) {
@@ -69,76 +124,53 @@ Regex::Matches Regex::find_all(const std::string &text) const {
 	return out;
 }
 
-Grammar::Grammar():
-	_identifier("\\<\\w+\\>"),
-	_keyword("\\<("
-		"void|bool|int|short|long|signed|unsigned|char|float|double|const"
-		"|enum|struct|class|union|typedef|extern|static|inline|register"
-		"|public|protected|private|this|friend|virtual|mutable|volatile"
-		"|template|typename|using|namespace|try|throw|catch|operator"
-		"|if|while|do|for|else|switch|case|default"
-		"|new|delete|goto|continue|break|return"
-		")\\>"),
-	_string("\\\"([^\\\"]|(\\\\.))*\\\""),
-	_comment("//(.*)$"),
-	_trailing_space("[[:space:]]+$")
-{
-}
-
-Grammar::Tokens Grammar::parse(const std::string &text) const {
-	struct prod_t {
-		Token::Type type;
-		const Regex &re;
-	};
-	const size_t kProdcount = 5;
-	prod_t prods[kProdcount] = {
-		{Token::Type::Keyword, _keyword},
-		{Token::Type::Identifier, _identifier},
-		{Token::Type::String, _string},
-		{Token::Type::Comment, _comment},
-		{Token::Type::TrailingSpace, _trailing_space}
-	};
-	Tokens out;
-	size_t pos = 0;
-	while (pos != std::string::npos) {
-		Regex::Match found_pos;
-		Token::Type found_type;
-		for (unsigned i = 0; i < kProdcount; ++i) {
-			auto &prod = prods[i];
-			auto match = prod.re.find(text, pos);
-			if (match.empty()) continue;
-			if (found_pos.empty() || match.begin < found_pos.begin) {
-				found_pos = match;
-				found_type = prod.type;
-			}
-		}
-		if (!found_pos.empty()) {
-			Token tk = {found_pos.begin, found_pos.end, found_type};
-			out.push_back(tk);
-		}
-		pos = found_pos.end;
-	}
-	return out;
-}
-
-Grammar::Tokens Grammar::tokenize(
-		const Regex::Matches &matches, Token::Type type) const {
-	Tokens out;
-	for (auto &match: matches) {
-		Token tk = {match.begin, match.end, type};
-		out.push_back(tk);
-	}
-	return out;
-}
-
-int Grammar::Token::style() const {
+int Token::style() const {
 	switch (type) {
-		case Token::Type::Identifier: return UI::Colors::identifier();
-		case Token::Type::Keyword: return UI::Colors::keyword();
-		case Token::Type::String: return UI::Colors::string();
-		case Token::Type::Comment: return UI::Colors::comment();
-		case Token::Type::TrailingSpace: return UI::Colors::trailing_space();
+		case Type::Keyword: return UI::Colors::keyword();
+		case Type::String: return UI::Colors::string();
+		case Type::Comment: return UI::Colors::comment();
+		case Type::TrailingSpace: return UI::Colors::trailing_space();
 		default: return 0;
 	}
 }
+
+Tokens Syntax::parse(const Grammar &prods, const std::string &text) {
+	Tokens out;
+	for (size_t pos = 0; pos != std::string::npos;) {
+		Token tk{std::string::npos, std::string::npos};
+		for (auto &prod: prods) {
+			auto match = prod.pattern.find(text, pos);
+			if (match.empty()) continue;
+			if (match.begin > tk.begin) continue;
+			if (match.begin == tk.begin && match.end <= tk.end) continue;
+			tk.begin = match.begin;
+			tk.end = match.end;
+			tk.type = prod.token;
+		}
+		if (tk.begin == tk.end) break;
+		out.push_back(tk);
+		pos = tk.end;
+	}
+	return out;
+}
+
+namespace {
+}
+
+const Grammar &Syntax::lookup(const std::string &path) {
+	std::string ext;
+	size_t dotpos = path.find_last_of('.');
+	if (dotpos != std::string::npos) {
+		size_t slashpos = path.find_last_of('/');
+		if (slashpos == std::string::npos || slashpos < dotpos) {
+			ext = path.substr(dotpos+1);
+		}
+	}
+	auto iter = extensions.find(ext);
+	if (iter != extensions.end()) {
+		return iter->second;
+	}
+	return generic;
+}
+
 
