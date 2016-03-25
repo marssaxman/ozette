@@ -1,32 +1,37 @@
 default: ozette
-ozette: bin/ozette
 
 include srctree.mk
 -include $(call findtype, d, obj)
 
-CPPFLAGS=-MD -MP -Wall -Wno-endif-labels -g -Werror
-CPPFLAGS+=-D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
-CXXFLAGS=-std=c++11
-CFLAGS=-std=c99
+FLAGS:=-MD -MP -Wall -Wno-endif-labels -g -Werror -Isrc
+CXXFLAGS:=$(FLAGS) -std=c++11
+CFLAGS:=$(FLAGS) -std=c99
+
 LDLIBS=-lpanel -lncurses -lpthread -lstdc++
 
-bin/ozette: $(call cxx_objs, src, obj)
+ozette: $(call cxx_objs, src, obj)
 	@mkdir -p $(@D)
 	g++ $^ $(LDLIBS) -o $@
+
 obj/%.o: src/%.cpp
 	@mkdir -p $(@D)
-	$(CC) -Isrc $(CXXFLAGS) -c $< -o $@
+	$(CC) $(CXXFLAGS) -c $< -o $@
+
 obj/%.o: src/%.c
 	@mkdir -p $(@D)
-	$(CC) -Isrc $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
+
+obj:
+	mkdir -p $@
+
 src/app/help.cpp: HELP
 	xxd -i HELP src/app/help.cpp
 
 clean:
 	@rm -rf bin obj
 
-install: bin/ozette
-	cp bin/ozette /usr/bin/
+install: ozette
+	cp ozette /usr/bin/
 
 .PHONY: clean install
 
