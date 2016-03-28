@@ -64,8 +64,30 @@ Grammar make = {
 	{"#(.*)$", Token::Type::Comment},
 };
 Grammar assembly = {
+	{"\\.[A-Za-z0-9]+", Token::Type::Keyword},
 	{"#(.*)$", Token::Type::Comment},
 };
+Grammar python = {
+	{"\\<("
+		"as|assert|break|class|continue|def|del|elif|else|except|exce|finally"
+		"|for|from|global|if|import|lambda|pass|print|raise|return|try|while"
+		"|with|yield|yield from"
+	")\\>", Token::Type::Keyword},
+	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
+	{"\\'([^\\']|(\\\\.))*\\'", Token::Type::String},
+	{"#(.*)$", Token::Type::Comment},
+};
+Grammar js = {
+	{"\\<("
+		"break|case|class|catch|const|continue|debugger|default|delete|do|else"
+		"|enum|export|extends|finally|for|function|if|import|in|instanceof|new"
+		"|return|super|switch|this|throw|try|typeof|var|void|while|with|yield"
+	")\\>", Token::Type::Keyword},
+	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
+	{"\\'([^\\']|(\\\\.))*\\'", Token::Type::String},
+	{"//(.*)$", Token::Type::Comment},
+};
+
 const std::map<std::string, const Grammar&> extensions = {
 	{"c", c}, {"C", c},
 	{"h", cxx}, {"H", cxx},
@@ -74,6 +96,8 @@ const std::map<std::string, const Grammar&> extensions = {
 	{"rb", ruby},
 	{"mk", make},
 	{"s", assembly},
+	{"py", python},
+	{"js", js},
 };
 }
 
