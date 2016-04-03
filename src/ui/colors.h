@@ -34,7 +34,6 @@ int dialog(bool active);
 int result(bool active);
 
 // colors for syntax elements within an editor
-int identifier();
 int keyword();
 int string();
 int comment();

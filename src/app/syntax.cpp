@@ -69,7 +69,7 @@ Grammar assembly = {
 };
 Grammar python = {
 	{"\\<("
-		"as|assert|break|class|continue|def|del|elif|else|except|exce|finally"
+		"as|assert|break|class|continue|def|del|elif|else|except|exec|finally"
 		"|for|from|global|if|import|lambda|pass|print|raise|return|try|while"
 		"|with|yield|yield from"
 	")\\>", Token::Type::Keyword},
@@ -175,9 +175,6 @@ Tokens Syntax::parse(const Grammar &prods, const std::string &text) {
 		pos = tk.end;
 	}
 	return out;
-}
-
-namespace {
 }
 
 const Grammar &Syntax::lookup(const std::string &path) {
