@@ -32,7 +32,7 @@ Editor::DisplayLine::DisplayLine(
 	Syntax::Regex::Match m = trailing_space.find(text);
 	if (!m.empty()) {
 		for (size_t i= m.begin; i < m.end; ++i) {
-			_style[i] = UI::Colors::trailing_space();
+			_style[i] = UI::Colors::error();
 		}
 	}
 	for (auto &token: Syntax::parse(_syntax, text)) {

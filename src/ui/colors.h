@@ -36,8 +36,9 @@ int result(bool active);
 // colors for syntax elements within an editor
 int keyword();
 int string();
+int literal();
 int comment();
-int trailing_space();
+int error();
 
 } // namespace Colors
 } // namespace UI

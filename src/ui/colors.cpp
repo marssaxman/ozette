@@ -26,10 +26,11 @@ int sChrome = A_NORMAL;
 int sDialog = A_NORMAL;
 int sInactive = A_DIM;
 
-int sKeyword = A_NORMAL;
+int sKeyword = A_BOLD;
 int sString = A_BOLD;
+int sLiteral = A_BOLD;
 int sComment = A_NORMAL;
-int sTrailingSpace = A_REVERSE;
+int sError = A_REVERSE;
 } // namespace
 
 int UI::Colors::content(bool active) {
@@ -50,11 +51,11 @@ int UI::Colors::result(bool active) {
 
 int UI::Colors::keyword() { return sKeyword; }
 int UI::Colors::string() { return sString; }
+int UI::Colors::literal() { return sLiteral; }
 int UI::Colors::comment() { return sComment; }
-int UI::Colors::trailing_space() { return sTrailingSpace; }
+int UI::Colors::error() { return sError; }
 
-void UI::Colors::init()
-{
+void UI::Colors::init() {
 	// Tell ncurses we want to use color if the terminal supports it.
 	start_color();
 	// If the terminal does not support color, there's no point in doing any
@@ -69,15 +70,17 @@ void UI::Colors::init()
 	init_pair(2, COLOR_YELLOW, -1);
 	init_pair(3, COLOR_CYAN, -1);
 	init_pair(4, COLOR_RED, -1);
+	init_pair(5, COLOR_MAGENTA, -1);
 
 	sContent = COLOR_PAIR(0);
 	sChrome = COLOR_PAIR(0);
 	sDialog = COLOR_PAIR(0);
 	sInactive = COLOR_PAIR(1);
 
-	sKeyword |= COLOR_PAIR(4);
+	sKeyword |= COLOR_PAIR(0);
 	sString |= COLOR_PAIR(2);
+	sLiteral |= COLOR_PAIR(5);
 	sComment |= COLOR_PAIR(3);
-	sTrailingSpace |= COLOR_PAIR(3);
+	sError |= COLOR_PAIR(4);
 }
 

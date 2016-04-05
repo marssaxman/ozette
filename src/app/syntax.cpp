@@ -29,8 +29,12 @@ Grammar c = {
 		"|void|volatile|while|_Alignas|_Alignof|_Atomic|_Bool|_Complex"
 		"|_Generic|_Imaginary|_Noreturn|_Static_assert|_Thread_local"
 	")\\>", Token::Type::Keyword},
+	{"^#[A-Za-z]+", Token::Type::Keyword},
 	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
-	{"\\'([^\\']|(\\\\.))*\\'", Token::Type::String},
+	{"\\\'([^\\\']|(\\\\.))*\\\'", Token::Type::String},
+	{"0", Token::Type::Literal},
+	{"[1-9]+", Token::Type::Literal},
+	{"0[Xx][0-9A-Fa-f]+", Token::Type::Literal},
 	{"//(.*)$", Token::Type::Comment},
 };
 Grammar cxx = {
@@ -45,8 +49,12 @@ Grammar cxx = {
 		"|template|this|thread_local|throw|true|try|typedef|typeid|typename"
 		"|union|unsigned|using|virtual|void|volatile|wchar_t|while|xor|xor_eq"
 	")\\>", Token::Type::Keyword},
+	{"^#[A-Za-z]+", Token::Type::Keyword},
 	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
-	{"\\'([^\\']|(\\\\.))*\\'", Token::Type::String},
+	{"\\\'([^\\\']|(\\\\.))*\\\'", Token::Type::String},
+	{"0", Token::Type::Literal},
+	{"[1-9]+", Token::Type::Literal},
+	{"0[Xx][0-9A-Fa-f]+", Token::Type::Literal},
 	{"//(.*)$", Token::Type::Comment},
 };
 Grammar ruby = {
@@ -152,7 +160,9 @@ int Token::style() const {
 	switch (type) {
 		case Type::Keyword: return UI::Colors::keyword();
 		case Type::String: return UI::Colors::string();
+		case Type::Literal: return UI::Colors::literal();
 		case Type::Comment: return UI::Colors::comment();
+		case Type::Error: return UI::Colors::error();
 		default: return 0;
 	}
 }

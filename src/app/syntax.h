@@ -52,7 +52,9 @@ struct Token {
 	enum class Type {
 		Keyword,
 		String,
+		Literal,
 		Comment,
+		Error,
 	} type;
 	int style() const;
 };
