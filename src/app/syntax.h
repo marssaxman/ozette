@@ -50,6 +50,7 @@ struct Token {
 	size_t begin;
 	size_t end;
 	enum class Type {
+		Identifier,
 		Keyword,
 		String,
 		Literal,

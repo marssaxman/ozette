@@ -32,6 +32,7 @@ Grammar c = {
 	{"^#[A-Za-z]+", Token::Type::Keyword},
 	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
 	{"\\\'([^\\\']|(\\\\.))*\\\'", Token::Type::String},
+	{"[A-Za-z_][A-Za-z0-9_]*", Token::Type::Identifier},
 	{"0", Token::Type::Literal},
 	{"[1-9]+", Token::Type::Literal},
 	{"0[Xx][0-9A-Fa-f]+", Token::Type::Literal},
@@ -52,6 +53,7 @@ Grammar cxx = {
 	{"^#[A-Za-z]+", Token::Type::Keyword},
 	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
 	{"\\\'([^\\\']|(\\\\.))*\\\'", Token::Type::String},
+	{"[A-Za-z_][A-Za-z0-9_]*", Token::Type::Identifier},
 	{"0", Token::Type::Literal},
 	{"[1-9]+", Token::Type::Literal},
 	{"0[Xx][0-9A-Fa-f]+", Token::Type::Literal},
@@ -158,6 +160,7 @@ Regex::Matches Regex::find_all(const std::string &text) const {
 
 int Token::style() const {
 	switch (type) {
+		case Type::Identifier: return 0;
 		case Type::Keyword: return UI::Colors::keyword();
 		case Type::String: return UI::Colors::string();
 		case Type::Literal: return UI::Colors::literal();
