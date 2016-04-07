@@ -28,8 +28,8 @@ Editor::DisplayLine::DisplayLine(
 		_style(text.size()),
 		_settings(settings),
 		_syntax(syntax) {
-	static Syntax::Regex trailing_space("[[:space:]]+$");
-	Syntax::Regex::Match m = trailing_space.find(text);
+	static Regex trailing_space("[[:space:]]+$");
+	Regex::Match m = trailing_space.find(text);
 	if (!m.empty()) {
 		for (size_t i= m.begin; i < m.end; ++i) {
 			_style[i] = UI::Colors::error();

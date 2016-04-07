@@ -21,6 +21,7 @@
 #include <sstream>
 
 namespace Syntax {
+
 const Rule cpreproc{"^#[A-Za-z]+", Token::Type::Keyword};
 const Rule strdq{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String};
 const Rule strsq{"\\\'([^\\\']|(\\\\.))*\\\'", Token::Type::String};
@@ -29,7 +30,8 @@ const Rule cnumber{"(0([Xx][0-9A-Fa-f]+)?)|([1-9]+)", Token::Type::Literal};
 const Rule slashcomment{"//(.*)$", Token::Type::Comment};
 const Rule hashcomment{"#(.*)$", Token::Type::Comment};
 
-const Grammar generic = {};
+const Grammar generic = {
+};
 
 const Grammar c = {
 	Rule::keywords({
@@ -121,51 +123,6 @@ const std::map<std::string, const Grammar&> extensions = {
 }
 
 using namespace Syntax;
-
-Regex::Regex(std::string pattern):
-	_pattern(pattern) {
-	compile();
-}
-
-Regex::Regex(const Regex &other):
-	_pattern(other._pattern) {
-	compile();
-}
-
-Regex &Regex::operator=(const Regex &other) {
-	regfree(&_re);
-	_pattern = other._pattern;
-	compile();
-	return *this;
-}
-
-Regex::~Regex() {
-	regfree(&_re);
-}
-
-void Regex::compile() {
-	_comp_err = regcomp(&_re, _pattern.c_str(), REG_EXTENDED);
-}
-
-Regex::Match Regex::find(const std::string &text, size_t offset) const {
-	regmatch_t rm;
-	Match out;
-	if (_comp_err) return out;
-	if (regexec(&_re, text.c_str() + offset, 1, &rm, 0)) return out;
-	out.begin = rm.rm_so + offset;
-	out.end = rm.rm_eo + offset;
-	return out;
-}
-
-Regex::Matches Regex::find_all(const std::string &text) const {
-	Match found = find(text);
-	std::list<Match> out;
-	while (!found.empty()) {
-		out.push_back(found);
-		found = find(text, found.end);
-	}
-	return out;
-}
 
 int Token::style() const {
 	switch (type) {

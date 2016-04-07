@@ -15,43 +15,33 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#ifndef APP_SYNTAX_H
-#define APP_SYNTAX_H
+#ifndef APP_REGEX_H
+#define APP_REGEX_H
 
-#include "app/regex.h"
-#include <string>
+#include <regex.h>
 #include <list>
+#include <string>
 
-namespace Syntax {
-
-struct Token {
-	size_t begin;
-	size_t end;
-	enum class Type {
-		Identifier,
-		Keyword,
-		String,
-		Literal,
-		Comment,
-		Error,
-	} type;
-	int style() const;
+class Regex {
+public:
+	explicit Regex(std::string pattern);
+	Regex(const Regex &);
+	Regex &operator=(const Regex &);
+	~Regex();
+	struct Match {
+		bool empty() const { return begin == end; }
+		size_t begin = std::string::npos;
+		size_t end = std::string::npos;
+	};
+	Match find(const std::string &text, size_t pos = 0) const;
+	typedef std::list<Match> Matches;
+	Matches find_all(const std::string &text) const;
+private:
+	void compile();
+	std::string _pattern;
+	regex_t _re;
+	int _comp_err = 0;
 };
-typedef std::list<Token> Tokens;
 
-struct Rule {
-	Rule(const char *p, Token::Type t): pattern(std::string(p)), token(t) {}
-	Rule(const std::string &p, Token::Type t): pattern(p), token(t) {}
-	static Rule keywords(std::list<std::string>);
-	Regex pattern;
-	Token::Type token;
-};
-typedef std::list<Rule> Grammar;
-
-Tokens parse(const Grammar&, const std::string&);
-const Grammar &lookup(const std::string &path);
-
-} // namespace Syntax
-
-#endif //APP_SYNTAX_H
+#endif //APP_REGEX_H
 
