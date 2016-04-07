@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "ui/shell.h"
 #include "ui/colors.h"
@@ -28,9 +26,7 @@
 // and ever shall it be, world without end, amen.
 static const int kWindowWidth = 80;
 
-UI::Shell::Shell(Controller &app):
-	_app(app)
-{
+UI::Shell::Shell(Controller &app): _app(app) {
 	// Set up ncurses.
 	initscr();
 	// We want color, if available.
@@ -63,16 +59,14 @@ UI::Shell::Shell(Controller &app):
 	set_escdelay(25);
 }
 
-UI::Shell::~Shell()
-{
+UI::Shell::~Shell() {
 	// Delete all of the windows.
 	_tabs.clear();
 	// Clean up ncurses.
 	endwin();
 }
 
-bool UI::Shell::process(int ch)
-{
+bool UI::Shell::process(int ch) {
 	// The UI handles control-shift-arrow-key presses by changing the focus
 	// window. All other keypresses are delegated to the focus window.
 	switch (ch) {
@@ -91,8 +85,7 @@ bool UI::Shell::process(int ch)
 	return !_tabs.empty();
 }
 
-void UI::Shell::key_left()
-{
+void UI::Shell::key_left() {
 	if (_focus > 0) {
 		set_focus(_focus - 1);
 	} else {
@@ -100,8 +93,7 @@ void UI::Shell::key_left()
 	}
 }
 
-void UI::Shell::key_right()
-{
+void UI::Shell::key_right() {
 	size_t next = _focus + 1;
 	if (next >= _tabs.size()) {
 		next = 0;
@@ -109,8 +101,7 @@ void UI::Shell::key_right()
 	set_focus(next);
 }
 
-void UI::Shell::ctl_quit()
-{
+void UI::Shell::ctl_quit() {
 	for (size_t index = _tabs.size(); index > 0; --index) {
 		if (!_tabs[index - 1]->process(Control::Close)) {
 			close_window(index - 1);
@@ -118,8 +109,7 @@ void UI::Shell::ctl_quit()
 	}
 }
 
-void UI::Shell::reap()
-{
+void UI::Shell::reap() {
 	// Closed windows go on the doomed list so they don't actually get
 	// destroyed until the stack has unwound. Otherwise, a window could request
 	// its immediate destruction.
@@ -128,8 +118,7 @@ void UI::Shell::reap()
 	}
 }
 
-UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view)
-{
+UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view) {
 	Window *win = new Window(_app, std::move(view));
 	size_t index;
 	switch (win->priority()) {
@@ -152,8 +141,7 @@ UI::Window *UI::Shell::open_window(std::unique_ptr<View> &&view)
 	return win;
 }
 
-void UI::Shell::make_active(Window *window)
-{
+void UI::Shell::make_active(Window *window) {
 	for (unsigned i = 0; i < _tabs.size(); ++i) {
 		if (_tabs[i].get() == window) {
 			set_focus(i);
@@ -161,8 +149,7 @@ void UI::Shell::make_active(Window *window)
 	}
 }
 
-void UI::Shell::close_window(Window *window)
-{
+void UI::Shell::close_window(Window *window) {
 	for (unsigned i = 0; i < _tabs.size(); ++i) {
 		if (_tabs[i].get() == window) {
 			close_window(i);
@@ -170,8 +157,7 @@ void UI::Shell::close_window(Window *window)
 	}
 }
 
-void UI::Shell::set_focus(size_t index)
-{
+void UI::Shell::set_focus(size_t index) {
 	assert(index < _tabs.size());
 	if (_focus < _tabs.size()) {
 		_tabs[_focus]->clear_focus();
@@ -191,8 +177,7 @@ void UI::Shell::set_focus(size_t index)
 	_tabs[_focus]->bring_forward(Window::FocusRelative::Equal);
 }
 
-void UI::Shell::layout()
-{
+void UI::Shell::layout() {
 	// The leftmost window owns column zero and covers no more than 80
 	// characters' width. Divide any remaining space among any remaining
 	// windows and stagger each remaining window proportionally across the
@@ -225,8 +210,7 @@ void UI::Shell::layout()
 	}
 }
 
-void UI::Shell::send_to_focus(int ch)
-{
+void UI::Shell::send_to_focus(int ch) {
 	bool more = false;
 	if (ch == ERR) {
 		more = _tabs[_focus]->poll();
@@ -238,8 +222,7 @@ void UI::Shell::send_to_focus(int ch)
 	layout();
 }
 
-void UI::Shell::close_window(size_t index)
-{
+void UI::Shell::close_window(size_t index) {
 	// If this window has focus, move focus first. It will make everything
 	// simpler afterward.
 	if (_focus == index) {

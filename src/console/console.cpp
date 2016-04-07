@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "console/console.h"
 #include "app/control.h"
@@ -27,8 +25,7 @@ void Console::View::exec(
 		std::string title,
 		const std::string &exe,
 		const std::vector<std::string> &argv,
-		UI::Shell &shell)
-{
+		UI::Shell &shell) {
 	if (_instance) {
 		shell.make_active(_instance->_window);
 	} else {
@@ -39,17 +36,14 @@ void Console::View::exec(
 	_instance->exec(title, exe, argv);
 }
 
-void Console::View::activate(UI::Frame &ctx)
-{
+void Console::View::activate(UI::Frame &ctx) {
 	set_title(ctx);
 }
 
-void Console::View::deactivate(UI::Frame &ctx)
-{
+void Console::View::deactivate(UI::Frame &ctx) {
 }
 
-bool Console::View::process(UI::Frame &ctx, int ch)
-{
+bool Console::View::process(UI::Frame &ctx, int ch) {
 	switch (ch) {
 		case Control::Close: return false;
 		case Control::Kill: ctl_kill(ctx); break;
@@ -60,8 +54,7 @@ bool Console::View::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-bool Console::View::poll(UI::Frame &ctx)
-{
+bool Console::View::poll(UI::Frame &ctx) {
 	// We only need to poll if we have an active subprocess.
 	if (!_proc.get()) return true;
 	bool follow_edge = _scrollpos == maxscroll();
@@ -81,23 +74,19 @@ bool Console::View::poll(UI::Frame &ctx)
 	return true;
 }
 
-void Console::View::set_help(UI::HelpBar::Panel &panel)
-{
+void Console::View::set_help(UI::HelpBar::Panel &panel) {
 	if (_proc.get()) panel.kill();
 }
 
-Console::View::View()
-{
+Console::View::View() {
 	assert(_instance == nullptr);
 }
 
-Console::View::~View()
-{
+Console::View::~View() {
 	_instance = nullptr;
 }
 
-void Console::View::paint_into(WINDOW *view, State state)
-{
+void Console::View::paint_into(WINDOW *view, State state) {
 	if (!_log.get()) return;
 	wmove(view, 0, 0);
 	getmaxyx(view, _height, _width);
@@ -116,8 +105,7 @@ void Console::View::paint_into(WINDOW *view, State state)
 void Console::View::exec(
 		std::string title,
 		const std::string &exe,
-		const std::vector<std::string> &args)
-{
+		const std::vector<std::string> &args) {
 	// Convert this vector into an old-style C array of chars.
 	// Allocate one extra slot at the beginning for the exe name,
 	// and one extra at the end to serve as terminator.
@@ -134,39 +122,34 @@ void Console::View::exec(
 	_log.reset(new Log(title, _width));
 }
 
-void Console::View::ctl_kill(UI::Frame &ctx)
-{
+void Console::View::ctl_kill(UI::Frame &ctx) {
 	if (_proc.get()) {
 		_proc.reset(nullptr);
 		ctx.repaint();
 	}
 }
 
-void Console::View::key_down(UI::Frame &ctx)
-{
+void Console::View::key_down(UI::Frame &ctx) {
 	if (_scrollpos < maxscroll()) {
 		_scrollpos++;
 		ctx.repaint();
 	}
 }
 
-void Console::View::key_up(UI::Frame &ctx)
-{
+void Console::View::key_up(UI::Frame &ctx) {
 	if (_scrollpos > 0) {
 		_scrollpos--;
 		ctx.repaint();
 	}
 }
 
-void Console::View::set_title(UI::Frame &ctx)
-{
+void Console::View::set_title(UI::Frame &ctx) {
 	std::string title = (_log.get())? _log->command(): "Console";
 	ctx.set_title(title);
 	ctx.set_status(_proc.get()? "running": "");
 }
 
-unsigned Console::View::maxscroll() const
-{
+unsigned Console::View::maxscroll() const {
 	// we'll show an extra blank line at the top and the bottom in order to
 	// help the user see when they are at the end of the log
 	int displines = (int)_log->size() + 2;

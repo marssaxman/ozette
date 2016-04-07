@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "dialog/confirmation.h"
 #include "ui/colors.h"
@@ -35,29 +33,25 @@ protected:
 };
 } // namespace anonymous
 
-void Dialog::Confirmation::show(UI::Frame &ctx)
-{
+void Dialog::Confirmation::show(UI::Frame &ctx) {
 	std::unique_ptr<UI::View> dptr(new ConfirmationView(*this));
 	ctx.show_dialog(std::move(dptr));
 }
 
 ConfirmationView::ConfirmationView(const Dialog::Confirmation &spec):
-	_spec(spec)
-{
+		_spec(spec) {
 	assert(!_spec.text.empty());
 	assert(_spec.yes != nullptr);
 	assert(_spec.no != nullptr);
 }
 
-void ConfirmationView::layout(int vpos, int hpos, int height, int width)
-{
+void ConfirmationView::layout(int vpos, int hpos, int height, int width) {
 	// A confirmation dialog always has exactly one line, with question text.
 	int rows = 1 + _spec.supplement.size();
 	inherited::layout(vpos + height - rows, hpos, rows, width);
 }
 
-bool ConfirmationView::process(UI::Frame &ctx, int ch)
-{
+bool ConfirmationView::process(UI::Frame &ctx, int ch) {
 	switch (ch) {
 		case Control::Escape: ctx.show_result("Cancelled"); return false;
 		case 'Y':
@@ -68,14 +62,12 @@ bool ConfirmationView::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-void ConfirmationView::set_help(UI::HelpBar::Panel &panel)
-{
+void ConfirmationView::set_help(UI::HelpBar::Panel &panel) {
 	panel.yes();
 	panel.no();
 }
 
-void ConfirmationView::paint_into(WINDOW *view, State state)
-{
+void ConfirmationView::paint_into(WINDOW *view, State state) {
 	int height, width;
 	getmaxyx(view, height, width);
 	(void)height;

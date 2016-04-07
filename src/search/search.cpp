@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "search/search.h"
 #include "search/dialog.h"
@@ -27,9 +25,7 @@
 
 Search::View *Search::View::_instance;
 
-
-void Search::View::exec(spec job, UI::Shell &shell)
-{
+void Search::View::exec(spec job, UI::Shell &shell) {
 	if (_instance) {
 		shell.make_active(_instance->_window);
 	} else {
@@ -40,17 +36,14 @@ void Search::View::exec(spec job, UI::Shell &shell)
 	_instance->exec(job, *_instance->_window);
 }
 
-void Search::View::activate(UI::Frame &ctx)
-{
+void Search::View::activate(UI::Frame &ctx) {
 	set_title(ctx);
 }
 
-void Search::View::deactivate(UI::Frame &ctx)
-{
+void Search::View::deactivate(UI::Frame &ctx) {
 }
 
-bool Search::View::process(UI::Frame &ctx, int ch)
-{
+bool Search::View::process(UI::Frame &ctx, int ch) {
 	switch (ch) {
 		case Control::Close: return false;
 		case Control::Kill: ctl_kill(ctx); break;
@@ -65,8 +58,7 @@ bool Search::View::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-bool Search::View::poll(UI::Frame &ctx)
-{
+bool Search::View::poll(UI::Frame &ctx) {
 	// We only need to poll if we have an active subprocess.
 	if (!_proc.get()) return true;
 	bool follow_edge = _scrollpos == maxscroll();
@@ -97,8 +89,7 @@ bool Search::View::poll(UI::Frame &ctx)
 	return true;
 }
 
-void Search::View::set_help(UI::HelpBar::Panel &panel)
-{
+void Search::View::set_help(UI::HelpBar::Panel &panel) {
 	if (_proc.get()) {
 		panel.kill();
 	} else {
@@ -106,18 +97,15 @@ void Search::View::set_help(UI::HelpBar::Panel &panel)
 	}
 }
 
-Search::View::View()
-{
+Search::View::View() {
 	assert(_instance == nullptr);
 }
 
-Search::View::~View()
-{
+Search::View::~View() {
 	_instance = nullptr;
 }
 
-void Search::View::paint_into(WINDOW *view, State state)
-{
+void Search::View::paint_into(WINDOW *view, State state) {
 	wmove(view, 0, 0);
 	getmaxyx(view, _height, _width);
 
@@ -142,8 +130,7 @@ void Search::View::paint_into(WINDOW *view, State state)
 	}
 }
 
-void Search::View::read_one(char ch)
-{
+void Search::View::read_one(char ch) {
 	if ('\n' == ch) {
 		// we have just finished processing a line; we should have
 		// between zero and three chunks in our line buffer, which
@@ -187,8 +174,7 @@ void Search::View::read_one(char ch)
 	}
 }
 
-std::string shell_escape(std::string arg)
-{
+std::string shell_escape(std::string arg) {
 	// Wrap the arg in quotes.
 	// Escape all quotes and other shell metacharacters.
 	std::set<char> metas;
@@ -208,8 +194,7 @@ std::string shell_escape(std::string arg)
 	return out;
 }
 
-void Search::View::exec(spec job, UI::Frame &ctx)
-{
+void Search::View::exec(spec job, UI::Frame &ctx) {
 	_job = job;
 	_match_files = 0;
 	_match_lines = 0;
@@ -237,57 +222,49 @@ void Search::View::exec(spec job, UI::Frame &ctx)
 	set_title(ctx);
 }
 
-void Search::View::ctl_kill(UI::Frame &ctx)
-{
+void Search::View::ctl_kill(UI::Frame &ctx) {
 	if (_proc.get()) {
 		_proc.reset(nullptr);
 		ctx.repaint();
 	}
 }
 
-void Search::View::search(UI::Frame &ctx)
-{
+void Search::View::search(UI::Frame &ctx) {
 	Search::Dialog::show(ctx, _job);
 }
 
-void Search::View::key_return(UI::Frame &ctx)
-{
+void Search::View::key_return(UI::Frame &ctx) {
 	if (_selection >= _lines.size()) return;
 	auto &line = _lines[_selection];
 	ctx.app().find_in_file(line.path, line.index);
 }
 
-void Search::View::key_down(UI::Frame &ctx)
-{
+void Search::View::key_down(UI::Frame &ctx) {
 	if (_selection < _lines.size()) {
 		_selection++;
 		ctx.repaint();
 	}
 }
 
-void Search::View::key_up(UI::Frame &ctx)
-{
+void Search::View::key_up(UI::Frame &ctx) {
 	if (_selection > 0) {
 		_selection--;
 		ctx.repaint();
 	}
 }
 
-void Search::View::key_page_down(UI::Frame &ctx)
-{
+void Search::View::key_page_down(UI::Frame &ctx) {
 	_selection = std::min(_scrollpos + (size_t)_height, _lines.size()-1);
 	ctx.repaint();
 }
 
-void Search::View::key_page_up(UI::Frame &ctx)
-{
+void Search::View::key_page_up(UI::Frame &ctx) {
 	// Move to last line of previous page.
 	_selection = _scrollpos > 0? _scrollpos-1: 0;
 	ctx.repaint();
 }
 
-void Search::View::set_title(UI::Frame &ctx)
-{
+void Search::View::set_title(UI::Frame &ctx) {
 	ctx.set_title(_title);
 	std::string status;
 	if (_proc.get()) {
@@ -299,8 +276,7 @@ void Search::View::set_title(UI::Frame &ctx)
 	ctx.set_status(status);
 }
 
-unsigned Search::View::maxscroll() const
-{
+unsigned Search::View::maxscroll() const {
 	// we'll show an extra blank line at the top and the bottom in order to
 	// help the user see when they are at the end of the log
 	int displines = (int)_lines.size() + 2;

@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,14 +14,12 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include <unistd.h>
 #include <stdint.h>
 #include "console/log.h"
 
-void Console::Log::layout(unsigned width)
-{
+void Console::Log::layout(unsigned width) {
 	if (_width == width) return;
 	_width = width;
 	_lines.clear();
@@ -32,8 +29,7 @@ void Console::Log::layout(unsigned width)
 	}
 }
 
-bool Console::Log::read(int fd)
-{
+bool Console::Log::read(int fd) {
 	bool got_bytes = false;
 	ssize_t actual = 0;
 	char buf[1024];
@@ -47,8 +43,7 @@ bool Console::Log::read(int fd)
 	return got_bytes;
 }
 
-void Console::Log::read_one(char ch)
-{
+void Console::Log::read_one(char ch) {
 	std::string &tail = _lines.back();
 	switch (ch) {
 		case '\n': {

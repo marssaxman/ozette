@@ -171,8 +171,8 @@ Tokens Syntax::parse(const Grammar &prods, const std::string &text) {
 const Grammar &Syntax::lookup(const std::string &path) {
 	std::string ext;
 	size_t dotpos = path.find_last_of('.');
+	size_t slashpos = path.find_last_of('/');
 	if (dotpos != std::string::npos) {
-		size_t slashpos = path.find_last_of('/');
 		if (slashpos == std::string::npos || slashpos < dotpos) {
 			ext = path.substr(dotpos+1);
 		}
@@ -180,6 +180,13 @@ const Grammar &Syntax::lookup(const std::string &path) {
 	auto iter = extensions.find(ext);
 	if (iter != extensions.end()) {
 		return iter->second;
+	}
+	if (slashpos != std::string::npos) {
+		if (path.substr(slashpos+1) == "Makefile") {
+			return make;
+		}
+	} else if (path == "Makefile") {
+		return make;
 	}
 	return generic;
 }

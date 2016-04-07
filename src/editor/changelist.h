@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #ifndef EDITOR_CHANGELIST_H
 #define EDITOR_CHANGELIST_H
@@ -27,8 +25,7 @@
 
 namespace Editor {
 class Document;
-class ChangeList
-{
+class ChangeList {
 public:
 	// Forget about all of the changes
 	void clear();
@@ -50,8 +47,7 @@ private:
 	bool combine_erase(const Range &loc, std::string text);
 	bool combine_insert(const Range &loc);
 	bool combine_split(location_t loc);
-	struct change_t
-	{
+	struct change_t {
 		location_t rollback(Document &doc, Update &update);
 		bool erase = false;
 		Range eraseloc;

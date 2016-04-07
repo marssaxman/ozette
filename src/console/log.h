@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #ifndef CONSOLE_LOG_H
 #define CONSOLE_LOG_H
@@ -24,8 +22,7 @@
 #include <vector>
 
 namespace Console {
-class Log
-{
+class Log {
 public:
 	Log(std::string command, unsigned width):
 		_command(command), _width(width), _lines(1) {}

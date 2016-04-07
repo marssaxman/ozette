@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #ifndef EDITOR_DOCUMENT_H
 #define EDITOR_DOCUMENT_H
@@ -31,8 +29,7 @@
 // A document breaks a text buffer into lines, then maps those lines onto an
 // infinite plane of equally sized character cells.
 namespace Editor {
-class Document
-{
+class Document {
 public:
 	Document(const Config &config);
 	Document(std::string path, const Config &config);

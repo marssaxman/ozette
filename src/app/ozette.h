@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #ifndef APP_OZETTE_H
 #define APP_OZETTE_H
@@ -28,8 +26,7 @@
 #include <vector>
 #include <map>
 
-class Ozette : public Controller
-{
+class Ozette : public Controller {
 public:
 	Ozette();
 	virtual void change_dir(std::string path) override;
@@ -43,14 +40,12 @@ public:
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) override;
 	virtual Config &config() override;
 	virtual void search(Search::spec query) override;
-
 	void run();
 private:
 	struct editor {
 		UI::Window *window;
 		Editor::View *view;
 	};
-
 	void show_browser();
 	void change_directory();
 	void new_file();
@@ -62,7 +57,6 @@ private:
 	int fix_control_quirks(int ch);
 	void exec(std::string command);
 	editor open_editor(std::string path);
-
 	UI::Shell _shell;
 	std::string _home_dir;
 	std::string _current_dir;

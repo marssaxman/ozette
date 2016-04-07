@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #ifndef EDITOR_DISPLAYLINE_H
 #define EDITOR_DISPLAYLINE_H
@@ -29,8 +27,7 @@
 
 namespace Editor {
 extern const unsigned kTabWidth;
-class DisplayLine
-{
+class DisplayLine {
 public:
 	DisplayLine(
 			const std::string &text,

@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "browser/dirtree.h"
 #include <dirent.h>
@@ -23,24 +21,18 @@
 #include <sys/stat.h>
 #include <queue>
 
-DirTree::DirTree(std::string path):
-	_path(path)
-{
+DirTree::DirTree(std::string path): _path(path) {
 }
 
 DirTree::DirTree(std::string dir, std::string name):
-	_path(dir + "/" + name),
-	_name(name)
-{
+		_path(dir + "/" + name), _name(name) {
 	_casefold_name = _name;
-	for_each(_casefold_name.begin(), _casefold_name.end(), [](char& in)
-	{
+	for_each(_casefold_name.begin(), _casefold_name.end(), [](char& in) {
 		in = ::toupper(in);
 	});
 }
 
-void DirTree::scan()
-{
+void DirTree::scan() {
 	struct stat st;
 	if (stat(_path.c_str(), &st)) {
 		_type = Type::None;
@@ -59,20 +51,17 @@ void DirTree::scan()
 	_scanned = true;
 }
 
-std::vector<DirTree> &DirTree::items()
-{
+std::vector<DirTree> &DirTree::items() {
 	initcheck();
 	if(!_iterated) iterate();
 	return _items;
 }
 
-static bool entry_order(const DirTree &a, const DirTree &b)
-{
+static bool entry_order(const DirTree &a, const DirTree &b) {
 	return a.casefold_name() < b.casefold_name();
 }
 
-void DirTree::iterate()
-{
+void DirTree::iterate() {
 	_items.clear();
 	_iterated = true;
 	DIR *pdir = opendir(_path.c_str());

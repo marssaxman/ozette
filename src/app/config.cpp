@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,40 +14,33 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "app/config.h"
 #include "inih/INIReader.h"
 
 Config::Config(std::string confdir, std::string workingdir):
 	_user(new INIReader(confdir + "/config")),
-	_dir(new INIReader(workingdir + "/.ozette/config"))
-{
+	_dir(new INIReader(workingdir + "/.ozette/config")) {
 }
 
-void Config::change_directory(std::string workingdir)
-{
+void Config::change_directory(std::string workingdir) {
 	_dir.reset(new INIReader(workingdir + "/.ozette/config"));
 }
 
-std::string Config::get(std::string key, std::string val) const
-{
+std::string Config::get(std::string key, std::string val) const {
 	return get("", key, val);
 }
 
-int Config::get_int(std::string key, int val) const
-{
+int Config::get_int(std::string key, int val) const {
 	return get_int("", key, val);
 }
 
-bool Config::get_bool(std::string key, bool val) const
-{
+bool Config::get_bool(std::string key, bool val) const {
 	return get_bool("", key, val);
 }
 
 std::string Config::get(
-		std::string group, std::string key, std::string val) const
-{
+		std::string group, std::string key, std::string val) const {
 	if (!_user->ParseError()) {
 		val = _user->Get(group, key, val);
 	}
@@ -58,8 +50,7 @@ std::string Config::get(
 	return val;
 }
 
-int Config::get_int(std::string group, std::string key, int val) const
-{
+int Config::get_int(std::string group, std::string key, int val) const {
 	if (!_user->ParseError()) {
 		val = (int)_user->GetInteger(group, key, (long)val);
 	}
@@ -69,8 +60,7 @@ int Config::get_int(std::string group, std::string key, int val) const
 	return val;
 }
 
-bool Config::get_bool(std::string group, std::string key, bool val) const
-{
+bool Config::get_bool(std::string group, std::string key, bool val) const {
 	if (!_user->ParseError()) {
 		val = _user->GetBoolean(group, key, val);
 	}

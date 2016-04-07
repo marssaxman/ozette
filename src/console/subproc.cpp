@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2015 Mars J. Saxman
+// Copyright (C) 2015-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "console/subproc.h"
 #include <cctype>
@@ -25,14 +23,12 @@
 #include "console/popenRWE.h"
 #include <assert.h>
 
-static void set_nonblocking(int fd)
-{
+static void set_nonblocking(int fd) {
 	int err = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
 	assert(0 == err);
 }
 
-Console::Subproc::Subproc(const char *exe, const char **argv)
-{
+Console::Subproc::Subproc(const char *exe, const char **argv) {
 	_pid = popenRWE(_rwepipe, exe, argv);
 	if (_pid > 0) {
 		set_nonblocking(_rwepipe[0]);
@@ -41,16 +37,14 @@ Console::Subproc::Subproc(const char *exe, const char **argv)
 	}
 }
 
-bool Console::Subproc::poll()
-{
+bool Console::Subproc::poll() {
 	if (waitpid(_pid, nullptr, WNOHANG) == _pid) {
 		close();
 	}
 	return _pid > 0;
 }
 
-void Console::Subproc::close()
-{
+void Console::Subproc::close() {
 	if (0 >= _pid) return;
 	kill(_pid, SIGTERM);
 	pcloseRWE(_pid, _rwepipe);

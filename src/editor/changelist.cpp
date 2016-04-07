@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,21 +14,18 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "editor/changelist.h"
 #include "editor/document.h"
 #include <assert.h>
 
-void Editor::ChangeList::clear()
-{
+void Editor::ChangeList::clear() {
 	while (!_done.empty()) _done.pop();
 	while (!_undone.empty()) _undone.pop();
 	_committed = false;
 }
 
-void Editor::ChangeList::erase(const Range &loc, std::string text)
-{
+void Editor::ChangeList::erase(const Range &loc, std::string text) {
 	while(!_undone.empty()) _undone.pop();
 	assert(!loc.empty());
 	if (combine_erase(loc, text)) return;
@@ -41,8 +37,7 @@ void Editor::ChangeList::erase(const Range &loc, std::string text)
 	_committed = false;
 }
 
-void Editor::ChangeList::insert(const Range &loc)
-{
+void Editor::ChangeList::insert(const Range &loc) {
 	while(!_undone.empty()) _undone.pop();
 	assert(!loc.empty());
 	if (combine_insert(loc)) return;
@@ -53,8 +48,7 @@ void Editor::ChangeList::insert(const Range &loc)
 	_committed = false;
 }
 
-void Editor::ChangeList::split(location_t loc)
-{
+void Editor::ChangeList::split(location_t loc) {
 	while(!_undone.empty()) _undone.pop();
 	if (combine_split(loc)) return;
 	change_t temp;
@@ -64,8 +58,7 @@ void Editor::ChangeList::split(location_t loc)
 	_committed = false;
 }
 
-Editor::location_t Editor::ChangeList::undo(Document &doc, Update &update)
-{
+Editor::location_t Editor::ChangeList::undo(Document &doc, Update &update) {
 	if (_done.empty()) return location_t();
 	std::stack<change_t> undone = std::move(_undone);
 	// Remove the last change from the done list, then reverse its effect.
@@ -85,8 +78,7 @@ Editor::location_t Editor::ChangeList::undo(Document &doc, Update &update)
 	return out;
 }
 
-Editor::location_t Editor::ChangeList::redo(Document &doc, Update &update)
-{
+Editor::location_t Editor::ChangeList::redo(Document &doc, Update &update) {
 	if (_undone.empty()) return location_t();
 	// Remove the most recent change from the undone list, then reverse its
 	// effect. This will re-implement whatever the original change was, which
@@ -101,15 +93,13 @@ Editor::location_t Editor::ChangeList::redo(Document &doc, Update &update)
 	return out;
 }
 
-void Editor::ChangeList::commit()
-{
+void Editor::ChangeList::commit() {
 	while (!_undone.empty()) _undone.pop();
 	if (_done.empty()) return;
 	_committed = true;
 }
 
-bool Editor::ChangeList::combine_erase(const Range &loc, std::string text)
-{
+bool Editor::ChangeList::combine_erase(const Range &loc, std::string text) {
 	if (_done.empty()) return false;
 	auto &top = _done.top();
 	if (_committed) return false;
@@ -137,8 +127,7 @@ bool Editor::ChangeList::combine_erase(const Range &loc, std::string text)
 	return true;
 }
 
-bool Editor::ChangeList::combine_insert(const Range &loc)
-{
+bool Editor::ChangeList::combine_insert(const Range &loc) {
 	if (_done.empty()) return false;
 	auto &top = _done.top();
 	if (_committed) return false;
@@ -158,8 +147,7 @@ bool Editor::ChangeList::combine_insert(const Range &loc)
 	return true;
 }
 
-bool Editor::ChangeList::combine_split(location_t loc)
-{
+bool Editor::ChangeList::combine_split(location_t loc) {
 	// Try to combine this split with the topmost change. If we cannot combine,
 	// return false so the caller knows it's time for a new change record.
 	if (_done.empty()) return false;
@@ -171,8 +159,8 @@ bool Editor::ChangeList::combine_split(location_t loc)
 	return true;
 }
 
-Editor::location_t Editor::ChangeList::change_t::rollback(Document &doc, Update &update)
-{
+Editor::location_t Editor::ChangeList::change_t::rollback(
+		Document &doc, Update &update) {
 	location_t out;
 	if (split) {
 		// We inserted a linebreak at the splitloc. Delete it.

@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #ifndef EDITOR_COORDINATES_H
 #define EDITOR_COORDINATES_H
@@ -68,35 +66,35 @@ struct position_t {
 
 } // namespace Editor
 
-inline bool operator==(const Editor::location_t &lhs, const Editor::location_t &rhs)
-{
+inline bool operator==(
+		const Editor::location_t &lhs, const Editor::location_t &rhs) {
 	return lhs.line == rhs.line && lhs.offset == rhs.offset;
 }
 
-inline bool operator!=(const Editor::location_t& lhs, const Editor::location_t& rhs)
-{
+inline bool operator!=(
+		const Editor::location_t& lhs, const Editor::location_t& rhs) {
 	return !operator==(lhs,rhs);
 }
 
-inline bool operator< (const Editor::location_t& lhs, const Editor::location_t& rhs)
-{
+inline bool operator< (
+		const Editor::location_t& lhs, const Editor::location_t& rhs) {
 	if (lhs.line < rhs.line) return true;
 	if (lhs.line > rhs.line) return false;
 	return lhs.offset < rhs.offset;
 }
 
-inline bool operator> (const Editor::location_t& lhs, const Editor::location_t& rhs)
-{
+inline bool operator> (
+		const Editor::location_t& lhs, const Editor::location_t& rhs) {
 	return  operator< (rhs,lhs);
 }
 
-inline bool operator<=(const Editor::location_t& lhs, const Editor::location_t& rhs)
-{
+inline bool operator<=(
+		const Editor::location_t& lhs, const Editor::location_t& rhs) {
 	return !operator> (lhs,rhs);
 }
 
-inline bool operator>=(const Editor::location_t& lhs, const Editor::location_t& rhs)
-{
+inline bool operator>=(
+		const Editor::location_t& lhs, const Editor::location_t& rhs) {
 	return !operator< (lhs,rhs);
 }
 

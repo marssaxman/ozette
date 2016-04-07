@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2015 Mars J. Saxman
+// Copyright (C) 2015-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,14 +14,12 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #ifndef CONSOLE_SUBPROC_H
 #define CONSOLE_SUBPROC_H
 
 namespace Console {
-class Subproc
-{
+class Subproc {
 public:
 	Subproc(const char *exe, const char **argv);
 	~Subproc() { close(); }

@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "ui/shell.h"
 #include "app/control.h"
@@ -25,24 +23,21 @@
 #include <cstring>
 
 UI::Window::Window(Controller &app, std::unique_ptr<View> &&view):
-	_app(app),
-	_view(std::move(view)),
-	_framewin(newwin(0, 0, 0, 0)),
-	_framepanel(new_panel(_framewin))
-{
+		_app(app),
+		_view(std::move(view)),
+		_framewin(newwin(0, 0, 0, 0)),
+		_framepanel(new_panel(_framewin)) {
 	_view->activate(*this);
 	paint();
 }
 
-UI::Window::~Window()
-{
+UI::Window::~Window() {
 	_view->deactivate(*this);
 	del_panel(_framepanel);
 	delwin(_framewin);
 }
 
-void UI::Window::layout(int xpos, int width)
-{
+void UI::Window::layout(int xpos, int width) {
 	clear_result();
 	// Windows are vertical slices of screen space.
 	// Given this column number and a width, compute the
@@ -88,8 +83,7 @@ void UI::Window::layout(int xpos, int width)
 	paint();
 }
 
-void UI::Window::set_focus()
-{
+void UI::Window::set_focus() {
 	_view->activate(*this);
 	_has_focus = true;
 	_dirty_chrome = true;
@@ -98,8 +92,7 @@ void UI::Window::set_focus()
 	paint();
 }
 
-void UI::Window::clear_focus()
-{
+void UI::Window::clear_focus() {
 	_view->deactivate(*this);
 	clear_result();
 	_has_focus = false;
@@ -109,8 +102,7 @@ void UI::Window::clear_focus()
 	paint();
 }
 
-void UI::Window::bring_forward(FocusRelative rel)
-{
+void UI::Window::bring_forward(FocusRelative rel) {
 	top_panel(_framepanel);
 	_view->bring_forward();
 	if (_dialog) _dialog->bring_forward();
@@ -122,8 +114,7 @@ void UI::Window::bring_forward(FocusRelative rel)
 	}
 }
 
-bool UI::Window::process(int ch)
-{
+bool UI::Window::process(int ch) {
 	clear_result();
 	// A signal to close the window implicitly cancels any open dialog.
 	if (ch == Control::Close && _dialog) {
@@ -141,8 +132,7 @@ bool UI::Window::process(int ch)
 	return more;
 }
 
-bool UI::Window::poll()
-{
+bool UI::Window::poll() {
 	bool more = true;
 	if (_dialog) {
 		std::unique_ptr<View> temp(std::move(_dialog));
@@ -159,20 +149,17 @@ bool UI::Window::poll()
 	return more;
 }
 
-void UI::Window::set_title(std::string text)
-{
+void UI::Window::set_title(std::string text) {
 	_title = text;
 	_dirty_chrome = true;
 }
 
-void UI::Window::set_status(std::string text)
-{
+void UI::Window::set_status(std::string text) {
 	_status = text;
 	_dirty_chrome = true;
 }
 
-void UI::Window::show_dialog(std::unique_ptr<View> &&host)
-{
+void UI::Window::show_dialog(std::unique_ptr<View> &&host) {
 	clear_result();
 	_dirty_chrome = true;
 	_dialog = std::move(host);
@@ -182,22 +169,20 @@ void UI::Window::show_dialog(std::unique_ptr<View> &&host)
 	_dirty_content = true;
 }
 
-void UI::Window::show_result(std::string message)
-{
+void UI::Window::show_result(std::string message) {
 	_result_text = message;
 	_dirty_content = true;
 }
 
-void UI::Window::clear_result()
-{
+void UI::Window::clear_result() {
 	if (_result_text.empty()) return;
 	_result_text.clear();
 	_view->clear_overlay();
 	_dirty_content = true;
 }
 
-void UI::Window::calculate_content(int &vpos, int &hpos, int &height, int &width)
-{
+void UI::Window::calculate_content(
+		int &vpos, int &hpos, int &height, int &width) {
 	// Compute the location and dimension of the content window,
 	// relative to the location and dimension of the frame window.
 	getmaxyx(_framewin, height, width);
@@ -220,8 +205,7 @@ void UI::Window::calculate_content(int &vpos, int &hpos, int &height, int &width
 	height -= _helpbar_height;
 }
 
-void UI::Window::layout_contentwin()
-{
+void UI::Window::layout_contentwin() {
 	int new_vpos, new_hpos, new_height, new_width;
 	calculate_content(new_vpos, new_hpos, new_height, new_width);
 	_view->layout(new_vpos, new_hpos, new_height, new_width);
@@ -232,8 +216,7 @@ void UI::Window::layout_contentwin()
 	}
 }
 
-void UI::Window::layout_helpbar()
-{
+void UI::Window::layout_helpbar() {
 	unsigned new_height = 0;
 	// The help panel occupies two lines
 	new_height += HelpBar::Panel::kHeight;
@@ -245,14 +228,12 @@ void UI::Window::layout_helpbar()
 	}
 }
 
-void UI::Window::paint()
-{
+void UI::Window::paint() {
 	if (_dirty_content) paint_content();
 	if (_dirty_chrome) paint_chrome();
 }
 
-void UI::Window::paint_content()
-{
+void UI::Window::paint_content() {
 	// We must draw the content from back to front: view, result, dialog.
 	View::State content_state = View::State::Focused;
 	if (_dialog) {
@@ -276,8 +257,7 @@ void UI::Window::paint_content()
 	_dirty_content = false;
 }
 
-void UI::Window::paint_chrome()
-{
+void UI::Window::paint_chrome() {
 	wattrset(_framewin, Colors::chrome(_has_focus && !_dialog));
 	int height, width;
 	getmaxyx(_framewin, height, width);
@@ -298,8 +278,7 @@ void UI::Window::paint_chrome()
 	wstandend(_framewin);
 }
 
-void UI::Window::paint_titlebar(int width)
-{
+void UI::Window::paint_titlebar(int width) {
 	// Draw corners and a horizontal line across the top.
 	mvwhline(_framewin, 0, 0, ACS_HLINE, width);
 	if (_lframe) {
@@ -345,8 +324,7 @@ void UI::Window::paint_titlebar(int width)
 	}
 }
 
-void UI::Window::paint_helpbar(int height, int width)
-{
+void UI::Window::paint_helpbar(int height, int width) {
 	HelpBar::Panel panel;
 	if (_dialog) {
 		_dialog->set_help(panel);
@@ -395,13 +373,11 @@ void UI::Window::paint_helpbar(int height, int width)
 	}
 }
 
-std::string UI::Window::ltrunc(const std::string &text, size_t surplus)
-{
+std::string UI::Window::ltrunc(const std::string &text, size_t surplus) {
 	return (text.size() > surplus)? text.substr(surplus): "";
 }
 
-void UI::Window::process_dialog(int ch)
-{
+void UI::Window::process_dialog(int ch) {
 	// A dialog may invoke actions which may result in its own replacement.
 	// We will temporarily move it into a local variable while it has
 	// control, so we don't delete the object while its methods are on the
@@ -422,8 +398,7 @@ void UI::Window::process_dialog(int ch)
 	}
 }
 
-void UI::Window::close_dialog()
-{
+void UI::Window::close_dialog() {
 	_dialog.reset(nullptr);
 	_view->activate(*this);
 	_dirty_content = true;

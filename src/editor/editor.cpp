@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "editor/editor.h"
 #include "app/control.h"
@@ -32,8 +30,7 @@
 Editor::View::View(const Config &config):
 	_doc(config),
 	_cursor(_doc, _update),
-	_settings(config)
-{
+	_settings(config) {
 	// new blank buffer
 }
 
@@ -41,20 +38,17 @@ Editor::View::View(std::string targetpath, const Config &config):
 	_targetpath(targetpath),
 	_doc(targetpath, config),
 	_cursor(_doc, _update),
-	_settings(config)
-{
+	_settings(config) {
 }
 
 Editor::View::View(std::string title, Document &&doc, const Config &config):
 	_targetpath(title),
 	_doc(std::move(doc)),
 	_cursor(_doc, _update),
-	_settings(config)
-{
+	_settings(config) {
 }
 
-void Editor::View::activate(UI::Frame &ctx)
-{
+void Editor::View::activate(UI::Frame &ctx) {
 	// Set the title according to the target path
 	if (_targetpath.empty()) {
 		ctx.set_title("Untitled");
@@ -64,13 +58,11 @@ void Editor::View::activate(UI::Frame &ctx)
 	set_status(ctx);
 }
 
-void Editor::View::deactivate(UI::Frame &ctx)
-{
+void Editor::View::deactivate(UI::Frame &ctx) {
 	_doc.commit();
 }
 
-void Editor::View::paint_into(WINDOW *dest, State state)
-{
+void Editor::View::paint_into(WINDOW *dest, State state) {
 	update_dimensions(dest);
 	if (state != _last_state || dest != _last_dest) {
 		_update.all();
@@ -90,13 +82,11 @@ void Editor::View::paint_into(WINDOW *dest, State state)
 	_update.reset();
 }
 
-void Editor::View::clear_overlay()
-{
+void Editor::View::clear_overlay() {
 	_update.all();
 }
 
-bool Editor::View::process(UI::Frame &ctx, int ch)
-{
+bool Editor::View::process(UI::Frame &ctx, int ch) {
 	if (ERR == ch) return true;
 	switch (ch) {
 		case Control::Cut: ctl_cut(ctx); break;
@@ -142,8 +132,7 @@ bool Editor::View::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-void Editor::View::set_help(UI::HelpBar::Panel &panel)
-{
+void Editor::View::set_help(UI::HelpBar::Panel &panel) {
 	if (!_doc.readonly()) {
 		panel.cut();
 		panel.copy();
@@ -157,8 +146,7 @@ void Editor::View::set_help(UI::HelpBar::Panel &panel)
 	if (_doc.can_undo()) panel.undo();
 }
 
-void Editor::View::select(UI::Frame &ctx, Range range)
-{
+void Editor::View::select(UI::Frame &ctx, Range range) {
 	_anchor = range.begin();
 	_selection = range;
 	_cursor.move_to(range.end());
@@ -166,8 +154,7 @@ void Editor::View::select(UI::Frame &ctx, Range range)
 	ctx.repaint();
 }
 
-void Editor::View::postprocess(UI::Frame &ctx)
-{
+void Editor::View::postprocess(UI::Frame &ctx) {
 	reveal_cursor();
 	if (_update.has_dirty()) {
 		ctx.repaint();
@@ -175,8 +162,7 @@ void Editor::View::postprocess(UI::Frame &ctx)
 	}
 }
 
-void Editor::View::paint_line(WINDOW *dest, row_t v, State state)
-{
+void Editor::View::paint_line(WINDOW *dest, row_t v, State state) {
 	size_t index = v + _scroll.v;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)v, 0);
@@ -202,8 +188,7 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, State state)
 	}
 }
 
-void Editor::View::reveal_cursor()
-{
+void Editor::View::reveal_cursor() {
 	if (_doc.readonly()) return;
 	// If the cursor is on a line which is not on screen, scroll vertically to
 	// position the line in the center of the window.
@@ -229,8 +214,7 @@ void Editor::View::reveal_cursor()
 	}
 }
 
-void Editor::View::update_dimensions(WINDOW *view)
-{
+void Editor::View::update_dimensions(WINDOW *view) {
 	int height, width;
 	getmaxyx(view, height, width);
 	if ((size_t)height != _height) {
@@ -250,8 +234,7 @@ void Editor::View::update_dimensions(WINDOW *view)
 	}
 }
 
-void Editor::View::set_status(UI::Frame &ctx)
-{
+void Editor::View::set_status(UI::Frame &ctx) {
 	std::string status = _doc.status();
 	if (!_doc.readonly()) {
 		if (!status.empty()) status.push_back(' ');
@@ -262,22 +245,19 @@ void Editor::View::set_status(UI::Frame &ctx)
 	ctx.set_status(status);
 }
 
-void Editor::View::ctl_cut(UI::Frame &ctx)
-{
+void Editor::View::ctl_cut(UI::Frame &ctx) {
 	ctl_copy(ctx);
 	delete_selection();
 	_doc.commit();
 }
 
-void Editor::View::ctl_copy(UI::Frame &ctx)
-{
+void Editor::View::ctl_copy(UI::Frame &ctx) {
 	if (_selection.empty()) return;
 	std::string clip = _doc.text(_selection);
 	ctx.app().set_clipboard(clip);
 }
 
-void Editor::View::ctl_paste(UI::Frame &ctx)
-{
+void Editor::View::ctl_paste(UI::Frame &ctx) {
 	std::string clip = ctx.app().get_clipboard();
 	if (clip.empty()) return;
 	delete_selection();
@@ -291,8 +271,7 @@ void Editor::View::ctl_paste(UI::Frame &ctx)
 	_doc.commit();
 }
 
-void Editor::View::ctl_close(UI::Frame &ctx)
-{
+void Editor::View::ctl_close(UI::Frame &ctx) {
 	if (_doc.readonly() || !_doc.modified()) {
 		// no formality needed, we're done
 		ctx.app().close_file(_targetpath);
@@ -301,22 +280,19 @@ void Editor::View::ctl_close(UI::Frame &ctx)
 	// ask the user if they want to save first
 	Dialog::Confirmation dialog;
 	dialog.text = "You have modified this file. Save changes before closing?";
-	dialog.yes = [this](UI::Frame &ctx)
-	{
+	dialog.yes = [this](UI::Frame &ctx) {
 		// save the file
 		_doc.Write(_targetpath);
 		ctx.app().close_file(_targetpath);
 	};
-	dialog.no = [this](UI::Frame &ctx)
-	{
+	dialog.no = [this](UI::Frame &ctx) {
 		// just close it
 		ctx.app().close_file(_targetpath);
 	};
 	dialog.show(ctx);
 }
 
-void Editor::View::ctl_save(UI::Frame &ctx)
-{
+void Editor::View::ctl_save(UI::Frame &ctx) {
 	if (!_doc.modified()) return;
 	if (_targetpath.empty()) {
 		ctl_save_as(ctx);
@@ -325,16 +301,14 @@ void Editor::View::ctl_save(UI::Frame &ctx)
 	save(ctx, _targetpath);
 }
 
-void Editor::View::ctl_save_as(UI::Frame &ctx)
-{
+void Editor::View::ctl_save_as(UI::Frame &ctx) {
 	if (_doc.readonly()) return;
 	_doc.commit();
 	Dialog::Form dialog;
 	dialog.fields = {
 		{"Save As", _targetpath, &Path::complete_file}
 	};
-	dialog.commit = [this](UI::Frame &ctx, Dialog::Form::Result &result)
-	{
+	dialog.commit = [this](UI::Frame &ctx, Dialog::Form::Result &result) {
 		std::string path = result.selected_value;
 		if (path.empty()) {
 			ctx.show_result("Cancelled");
@@ -350,21 +324,18 @@ void Editor::View::ctl_save_as(UI::Frame &ctx)
 	dialog.show(ctx);
 }
 
-void Editor::View::ctl_toline(UI::Frame &ctx)
-{
+void Editor::View::ctl_toline(UI::Frame &ctx) {
 	// illogical as it is, the rest of the world seems to think that it is
 	// a good idea for line numbers to start counting at 1, so we will
 	// accommodate their perverse desires in the name of compatibility.
 	Dialog::Form dialog;
-
 	dialog.fields = {
 		{
 			"Go to line (of " + std::to_string(_doc.maxline() + 1) + ")",
 			std::to_string(_cursor.location().line + 1)
 		}
 	};
-	dialog.commit = [this](UI::Frame &ctx, Dialog::Form::Result &result)
-	{
+	dialog.commit = [this](UI::Frame &ctx, Dialog::Form::Result &result) {
 		std::string value = result.selected_value;
 		if (value.empty()) return;
 		long valnum = std::stol(value) - 1;
@@ -376,49 +347,42 @@ void Editor::View::ctl_toline(UI::Frame &ctx)
 	dialog.show(ctx);
 }
 
-void Editor::View::ctl_find(UI::Frame &ctx)
-{
+void Editor::View::ctl_find(UI::Frame &ctx) {
 	Dialog::Form::Field find;
 	find.name = "Find";
 	find.value = _find_text;
 	location_t anchor = _selection.begin();
-	find.updater = [this, anchor, &ctx](std::string pattern)
-	{
+	find.updater = [this, anchor, &ctx](std::string pattern) {
 		_find_text = pattern;
 		this->find(ctx, anchor, pattern);
 	};
 	Dialog::Form dialog;
 	dialog.fields = {find};
-	dialog.commit = [this](UI::Frame& ctx, Dialog::Form::Result&)
-	{
+	dialog.commit = [this](UI::Frame& ctx, Dialog::Form::Result&) {
 		ctl_find_next(ctx);
 		ctl_find(ctx);
 	};
 	dialog.show(ctx);
 }
 
-void Editor::View::ctl_find_next(UI::Frame &ctx)
-{
+void Editor::View::ctl_find_next(UI::Frame &ctx) {
 	if (_find_text.empty()) return;
 	find(ctx, _selection.end(), _find_text);
 }
 
-void Editor::View::ctl_undo(UI::Frame &ctx)
-{
+void Editor::View::ctl_undo(UI::Frame &ctx) {
 	_cursor.move_to(_doc.undo(_update));
 	drop_selection();
 	postprocess(ctx);
 }
 
-void Editor::View::ctl_redo(UI::Frame &ctx)
-{
+void Editor::View::ctl_redo(UI::Frame &ctx) {
 	_cursor.move_to(_doc.redo(_update));
 	drop_selection();
 	postprocess(ctx);
 }
 
-void Editor::View::ctl_open_next(UI::Frame &ctx)
-{
+void Editor::View::ctl_open_next(UI::Frame &ctx) {
 	// If there is more than one file with the same base name as this one,
 	// open the next one, wrapping around after the last. For example, "open
 	// next" when editing "foo.c" would open "foo.h", and vice versa.
@@ -458,8 +422,7 @@ void Editor::View::ctl_open_next(UI::Frame &ctx)
 	ctx.app().edit_file(dirpath + "/" + match);
 }
 
-void Editor::View::key_up(bool extend)
-{
+void Editor::View::key_up(bool extend) {
 	if (_doc.readonly()) {
 		_scroll.v -= std::min(_scroll.v, 1U);
 		_update.all();
@@ -469,8 +432,7 @@ void Editor::View::key_up(bool extend)
 	}
 }
 
-void Editor::View::key_down(bool extend)
-{
+void Editor::View::key_down(bool extend) {
 	if (_doc.readonly()) {
 		_scroll.v = std::min(_scroll.v + 1, _maxscroll);
 		_update.all();
@@ -480,64 +442,55 @@ void Editor::View::key_down(bool extend)
 	}
 }
 
-void Editor::View::key_left(bool extend)
-{
+void Editor::View::key_left(bool extend) {
 	if (_doc.readonly()) return;
 	_cursor.left();
 	adjust_selection(extend);
 }
 
-void Editor::View::key_right(bool extend)
-{
+void Editor::View::key_right(bool extend) {
 	if (_doc.readonly()) return;
 	_cursor.right();
 	adjust_selection(extend);
 }
 
-void Editor::View::key_page_up()
-{
+void Editor::View::key_page_up() {
 	// move the cursor to the last line of the previous page
 	_cursor.move_to(_doc.home(_scroll.v - std::min(_scroll.v, 1U)));
 	drop_selection();
 }
 
-void Editor::View::key_page_down()
-{
+void Editor::View::key_page_down() {
 	// move the cursor to the first line of the next page
 	_cursor.move_to(_doc.home(_scroll.v + _height));
 	drop_selection();
 }
 
-void Editor::View::key_home()
-{
+void Editor::View::key_home() {
 	_cursor.home();
 	drop_selection();
 }
 
-void Editor::View::key_end()
-{
+void Editor::View::key_end() {
 	_cursor.end();
 	drop_selection();
 }
 
-void Editor::View::delete_selection()
-{
+void Editor::View::delete_selection() {
 	if (_selection.empty()) return;
 	_update.forward(_selection.begin());
 	_cursor.move_to(_doc.erase(_selection));
 	drop_selection();
 }
 
-void Editor::View::key_insert(char ch)
-{
+void Editor::View::key_insert(char ch) {
 	delete_selection();
 	_cursor.move_to(_doc.insert(_cursor.location(), ch));
 	_anchor = _cursor.location();
 	_selection.reset(_anchor);
 }
 
-void Editor::View::key_tab(UI::Frame &ctx)
-{
+void Editor::View::key_tab(UI::Frame &ctx) {
 	if (_selection.empty()) {
 		// move the cursor forward to the next tab stop, using either a tab
 		// character or a series of spaces, as the user requires
@@ -568,8 +521,7 @@ void Editor::View::key_tab(UI::Frame &ctx)
 	}
 }
 
-void Editor::View::key_btab(UI::Frame &ctx)
-{
+void Editor::View::key_btab(UI::Frame &ctx) {
 	// Shift-tab unindents the selection, if present, or simply the current
 	// line if there is no selection.
 	// Remove the leftmost tab character or indent-sized sequence of spaces
@@ -602,21 +554,18 @@ void Editor::View::key_btab(UI::Frame &ctx)
 	_update.range(_selection);
 }
 
-void Editor::View::key_escape(UI::Frame &ctx)
-{
+void Editor::View::key_escape(UI::Frame &ctx) {
 	drop_selection();
 }
 
-void Editor::View::key_enter(UI::Frame &ctx)
-{
+void Editor::View::key_enter(UI::Frame &ctx) {
 	// Split the line at the cursor position, but don't move the cursor.
 	delete_selection();
 	_doc.split(_cursor.location());
 	_update.forward(_cursor.location());
 }
 
-void Editor::View::key_return(UI::Frame &ctx)
-{
+void Editor::View::key_return(UI::Frame &ctx) {
 	// Split the line at the cursor position and move the cursor to the new line.
 	delete_selection();
 	line_t old_index = _cursor.location().line;
@@ -629,20 +578,17 @@ void Editor::View::key_return(UI::Frame &ctx)
 	_update.forward(_cursor.location());
 }
 
-void Editor::View::key_backspace(UI::Frame &ctx)
-{
+void Editor::View::key_backspace(UI::Frame &ctx) {
 	if (_selection.empty()) key_left(true);
 	delete_selection();
 }
 
-void Editor::View::key_delete(UI::Frame &ctx)
-{
+void Editor::View::key_delete(UI::Frame &ctx) {
 	if (_selection.empty()) key_right(true);
 	delete_selection();
 }
 
-void Editor::View::drop_selection()
-{
+void Editor::View::drop_selection() {
 	// The selection is no longer interesting. Move the anchor to the
 	// current cursor location and reset the selection around it.
 	_update.range(_selection);
@@ -650,8 +596,7 @@ void Editor::View::drop_selection()
 	_selection.reset(_anchor);
 }
 
-void Editor::View::adjust_selection(bool extend)
-{
+void Editor::View::adjust_selection(bool extend) {
 	if (extend) {
 		// The cursor has moved in range-selection mode.
 		// Leave the anchor where it is, then extend the
@@ -663,8 +608,7 @@ void Editor::View::adjust_selection(bool extend)
 	}
 }
 
-void Editor::View::save(UI::Frame &ctx, std::string dest)
-{
+void Editor::View::save(UI::Frame &ctx, std::string dest) {
 	_doc.commit();
 	_doc.Write(dest);
 	ctx.set_status(_doc.status());
@@ -673,8 +617,8 @@ void Editor::View::save(UI::Frame &ctx, std::string dest)
 	ctx.show_result(stat);
 }
 
-void Editor::View::find(UI::Frame &ctx, location_t anchor, std::string pattern)
-{
+void Editor::View::find(
+		UI::Frame &ctx, location_t anchor, std::string pattern) {
 	// Look for the pattern after the anchor point.
 	Range match = _doc.find(pattern, anchor);
 	if (match.empty()) {

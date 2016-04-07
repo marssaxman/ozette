@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2015 Mars J. Saxman
+// Copyright (C) 2015-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,22 +14,19 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "search/dialog.h"
 #include "dialog/form.h"
 #include "app/path.h"
 
-void Search::Dialog::show(UI::Frame &ctx, spec job)
-{
+void Search::Dialog::show(UI::Frame &ctx, spec job) {
 	::Dialog::Form dialog;
 	dialog.fields = {
 		{"Search for", job.needle},
 		{"Filenames", job.filter.empty()? "*": job.filter},
 		{"Directory", job.haystack, &Path::complete_dir}
 	};
-	dialog.commit = [](UI::Frame &ctx, ::Dialog::Form::Result &result)
-	{
+	dialog.commit = [](UI::Frame &ctx, ::Dialog::Form::Result &result) {
 		spec job = {
 			result.fields["Search for"],
 			result.fields["Directory"],

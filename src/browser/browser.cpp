@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "browser/browser.h"
 #include "app/path.h"
@@ -27,13 +25,11 @@
 Browser::View *Browser::View::_instance;
 static std::string kExpansionStateKey = "expanded_dirs";
 
-void Browser::View::change_directory(std::string path)
-{
+void Browser::View::change_directory(std::string path) {
 	if (_instance) _instance->view(path);
 }
 
-void Browser::View::open(std::string path, UI::Shell &shell)
-{
+void Browser::View::open(std::string path, UI::Shell &shell) {
 	if (_instance) {
 		shell.make_active(_instance->_window);
 		_instance->view(path);
@@ -44,14 +40,11 @@ void Browser::View::open(std::string path, UI::Shell &shell)
 	}
 }
 
-Browser::View::View(std::string path):
-	_tree(path)
-{
+Browser::View::View(std::string path): _tree(path) {
 	assert(_instance == nullptr);
 }
 
-void Browser::View::activate(UI::Frame &ctx)
-{
+void Browser::View::activate(UI::Frame &ctx) {
 	set_title(ctx);
 	if (_expanded_items.empty()) {
 		std::vector<std::string> paths;
@@ -66,8 +59,7 @@ void Browser::View::activate(UI::Frame &ctx)
 	check_rebuild(ctx);
 }
 
-void Browser::View::deactivate(UI::Frame &ctx)
-{
+void Browser::View::deactivate(UI::Frame &ctx) {
 	std::vector<std::string> paths;
 	for (auto &line: _expanded_items) {
 		paths.push_back(line);
@@ -76,8 +68,7 @@ void Browser::View::deactivate(UI::Frame &ctx)
 	clear_filter(ctx);
 }
 
-void Browser::View::check_rebuild(UI::Frame &ctx)
-{
+void Browser::View::check_rebuild(UI::Frame &ctx) {
 	if (!_rebuild_list) return;
 	build_list();
 	set_title(ctx);
@@ -85,8 +76,7 @@ void Browser::View::check_rebuild(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-void Browser::View::paint_into(WINDOW *view, State state)
-{
+void Browser::View::paint_into(WINDOW *view, State state) {
 	int width;
 	getmaxyx(view, _height, width);
 
@@ -113,8 +103,7 @@ void Browser::View::paint_into(WINDOW *view, State state)
 	}
 }
 
-bool Browser::View::process(UI::Frame &ctx, int ch)
-{
+bool Browser::View::process(UI::Frame &ctx, int ch) {
 	switch (ch) {
 		case Control::Return: key_return(ctx); break;
 		case Control::Close: return false; break;
@@ -137,14 +126,12 @@ bool Browser::View::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-bool Browser::View::poll(UI::Frame &ctx)
-{
+bool Browser::View::poll(UI::Frame &ctx) {
 	check_rebuild(ctx);
 	return true;
 }
 
-void Browser::View::set_help(UI::HelpBar::Panel &panel)
-{
+void Browser::View::set_help(UI::HelpBar::Panel &panel) {
 	panel.open();
 	panel.new_file();
 	panel.search();
@@ -154,8 +141,7 @@ void Browser::View::set_help(UI::HelpBar::Panel &panel)
 	panel.build();
 }
 
-void Browser::View::view(std::string path)
-{
+void Browser::View::view(std::string path) {
 	if (path == _tree.path()) return;
 	_list.clear();
 	_tree = DirTree(path);
@@ -163,8 +149,8 @@ void Browser::View::view(std::string path)
 	_rebuild_list = true;
 }
 
-void Browser::View::paint_row(WINDOW *view, int vpos, row_t &display, int width)
-{
+void Browser::View::paint_row(
+		WINDOW *view, int vpos, row_t &display, int width) {
 	int rowchars = width;
 	for (unsigned tab = 0; tab < display.indent; tab++) {
 		waddnstr(view, "    ", rowchars);
@@ -206,8 +192,7 @@ void Browser::View::paint_row(WINDOW *view, int vpos, row_t &display, int width)
 	mvwaddnstr(view, vpos, width-drawch, buf, drawch);
 }
 
-void Browser::View::key_return(UI::Frame &ctx)
-{
+void Browser::View::key_return(UI::Frame &ctx) {
 	switch (sel_entry()->type()) {
 		case DirTree::Type::Directory: toggle(ctx); break;
 		case DirTree::Type::File: edit_file(ctx); break;
@@ -215,8 +200,7 @@ void Browser::View::key_return(UI::Frame &ctx)
 	}
 }
 
-void Browser::View::key_left(UI::Frame &ctx)
-{
+void Browser::View::key_left(UI::Frame &ctx) {
 	clear_filter(ctx);
 	std::string path = Path::current_dir();
 	// Make sure the current directory will still be expanded after the shift.
@@ -232,8 +216,7 @@ void Browser::View::key_left(UI::Frame &ctx)
 	ctx.app().change_dir(path);
 }
 
-void Browser::View::key_right(UI::Frame &ctx)
-{
+void Browser::View::key_right(UI::Frame &ctx) {
 	clear_filter(ctx);
 	// Change dir inward to the outermost directory containing the selection.
 	std::string trunk = Path::current_dir();
@@ -242,8 +225,7 @@ void Browser::View::key_right(UI::Frame &ctx)
 	ctx.app().change_dir(leaf.substr(0, preslash));
 }
 
-void Browser::View::key_alt_left(UI::Frame &ctx)
-{
+void Browser::View::key_alt_left(UI::Frame &ctx) {
 	clear_filter(ctx);
 	std::string path = _tree.path();
 	if (path == Path::current_dir()) {
@@ -258,8 +240,7 @@ void Browser::View::key_alt_left(UI::Frame &ctx)
 	view(path);
 }
 
-void Browser::View::key_alt_right(UI::Frame &ctx)
-{
+void Browser::View::key_alt_right(UI::Frame &ctx) {
 	clear_filter(ctx);
 	std::string trunk = _tree.path();
 	std::string leaf = sel_entry()->path();
@@ -267,8 +248,7 @@ void Browser::View::key_alt_right(UI::Frame &ctx)
 	view(leaf.substr(0, preslash));
 }
 
-void Browser::View::key_up(UI::Frame &ctx)
-{
+void Browser::View::key_up(UI::Frame &ctx) {
 	// Move to previous line in the listbox.
 	if (0 == _selection) return;
 	_selection--;
@@ -276,8 +256,7 @@ void Browser::View::key_up(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-void Browser::View::key_down(UI::Frame &ctx)
-{
+void Browser::View::key_down(UI::Frame &ctx) {
 	// Move to next line in the listbox.
 	if (_selection + 1 == _list.size()) return;
 	_selection++;
@@ -285,24 +264,21 @@ void Browser::View::key_down(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-void Browser::View::key_page_up(UI::Frame &ctx)
-{
+void Browser::View::key_page_up(UI::Frame &ctx) {
 	// Move to last line of previous page.
 	_selection = _scrollpos > 0? _scrollpos-1: 0;
 	_selected_path = sel_entry()->path();
 	ctx.repaint();
 }
 
-void Browser::View::key_page_down(UI::Frame &ctx)
-{
+void Browser::View::key_page_down(UI::Frame &ctx) {
 	// Move to first line of next page.
 	_selection = std::min(_scrollpos + _height, _list.size()-1);
 	_selected_path = sel_entry()->path();
 	ctx.repaint();
 }
 
-void Browser::View::key_tab(UI::Frame &ctx)
-{
+void Browser::View::key_tab(UI::Frame &ctx) {
 	// If there is a name filter, collect all the names which match,
 	// then extend the name filter to the common prefix of all names
 	if (_path_filter.empty()) return;
@@ -320,21 +296,18 @@ void Browser::View::key_tab(UI::Frame &ctx)
 	update_filter(ctx);
 }
 
-void Browser::View::key_backspace(UI::Frame &ctx)
-{
+void Browser::View::key_backspace(UI::Frame &ctx) {
 	if (_path_filter.empty()) return;
 	_path_filter.pop_back();
 	update_filter(ctx);
 }
 
-void Browser::View::key_char(UI::Frame &ctx, char ch)
-{
+void Browser::View::key_char(UI::Frame &ctx, char ch) {
 	_path_filter.push_back(ch);
 	update_filter(ctx);
 }
 
-void Browser::View::update_filter(UI::Frame &ctx)
-{
+void Browser::View::update_filter(UI::Frame &ctx) {
 	_name_filter.clear();
 	size_t lastslash = _path_filter.find_last_of('/');
 	if (lastslash != std::string::npos) {
@@ -363,15 +336,13 @@ void Browser::View::update_filter(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-void Browser::View::clear_filter(UI::Frame &ctx)
-{
+void Browser::View::clear_filter(UI::Frame &ctx) {
 	if (_path_filter.empty()) return;
 	_path_filter.clear();
 	update_filter(ctx);
 }
 
-bool Browser::View::matches_filter(size_t index)
-{
+bool Browser::View::matches_filter(size_t index) {
 	if (index >= _list.size()) return false;
 	DirTree *entry = _list[index].entry;
 	std::string path = entry->path();
@@ -386,8 +357,7 @@ bool Browser::View::matches_filter(size_t index)
 }
 
 bool Browser::View::scan_filter(
-		size_t index, unsigned &leadskip, unsigned &totalskips)
-{
+		size_t index, unsigned &leadskip, unsigned &totalskips) {
 	if (index >= _list.size()) return false;
 	auto &entry = _list[index].entry;
 	std::string path = entry->name();
@@ -413,8 +383,7 @@ bool Browser::View::scan_filter(
 	return true;
 }
 
-void Browser::View::set_title(UI::Frame &ctx)
-{
+void Browser::View::set_title(UI::Frame &ctx) {
 	// Show the current working directory, annotated with the current
 	// view directory if we have focused in on a subtree.
 	std::string workingdir = Path::current_dir();
@@ -426,8 +395,7 @@ void Browser::View::set_title(UI::Frame &ctx)
 	ctx.set_title(title);
 }
 
-void Browser::View::build_list()
-{
+void Browser::View::build_list() {
 	_list.clear();
 	insert_rows(0, 0, &_tree);
 	if (_list.empty()) {
@@ -445,8 +413,7 @@ void Browser::View::build_list()
 	_selected_path = sel_entry()->path();
 }
 
-void Browser::View::toggle(UI::Frame &ctx)
-{
+void Browser::View::toggle(UI::Frame &ctx) {
 	auto &display = _list[_selection];
 	auto entry = display.entry;
 	if (!entry->is_directory()) return;
@@ -468,15 +435,14 @@ void Browser::View::toggle(UI::Frame &ctx)
 	ctx.repaint();
 }
 
-void Browser::View::edit_file(UI::Frame &ctx)
-{
+void Browser::View::edit_file(UI::Frame &ctx) {
 	auto &display = _list[_selection];
 	clear_filter(ctx);
 	ctx.app().edit_file(display.entry->path());
 }
 
-size_t Browser::View::insert_rows(size_t index, unsigned indent, DirTree *entry)
-{
+size_t Browser::View::insert_rows(
+		size_t index, unsigned indent, DirTree *entry) {
 	entry->scan();
 	for (auto &item: entry->items()) {
 		bool expand = _expanded_items.count(item.path()) > 0;
@@ -489,8 +455,7 @@ size_t Browser::View::insert_rows(size_t index, unsigned indent, DirTree *entry)
 	return index;
 }
 
-void Browser::View::remove_rows(size_t index, unsigned indent)
-{
+void Browser::View::remove_rows(size_t index, unsigned indent) {
 	auto begin = _list.begin() + index;
 	auto iter = begin;
 	while (iter != _list.end() && iter->indent >= indent) {

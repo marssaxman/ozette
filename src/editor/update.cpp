@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,32 +14,27 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "editor/update.h"
 #include <climits>
 
-void Editor::Update::reset()
-{
+void Editor::Update::reset() {
 	_dirty = false;
 	_start = 0;
 	_end = 0;
 }
 
-void Editor::Update::at(location_t loc)
-{
+void Editor::Update::at(location_t loc) {
 	at(loc.line);
 }
 
-void Editor::Update::at(line_t index)
-{
+void Editor::Update::at(line_t index) {
 	_start = _dirty? std::min(_start, index): index;
 	_end = _dirty? std::max(_end, index): index;
 	_dirty = true;
 }
 
-void Editor::Update::range(const Range &range)
-{
+void Editor::Update::range(const Range &range) {
 	line_t a = range.begin().line;
 	line_t b = range.end().line;
 	line_t from = std::min(a, b);
@@ -50,21 +44,18 @@ void Editor::Update::range(const Range &range)
 	_dirty = true;
 }
 
-void Editor::Update::forward(location_t loc)
-{
+void Editor::Update::forward(location_t loc) {
 	_start = _dirty? std::min(_start, loc.line): loc.line;
 	_end = SIZE_MAX;
 	_dirty = true;
 }
 
-void Editor::Update::all()
-{
+void Editor::Update::all() {
 	_dirty = true;
 	_start = 0;
 	_end = SIZE_MAX;
 }
 
-bool Editor::Update::is_dirty(line_t index) const
-{
+bool Editor::Update::is_dirty(line_t index) const {
 	return _dirty && (index >= _start) && (index <= _end);
 }

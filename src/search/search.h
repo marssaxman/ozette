@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #ifndef SEARCH_SEARCH_H
 #define SEARCH_SEARCH_H
@@ -28,8 +26,7 @@
 #include <set>
 
 namespace Search {
-class View : public UI::View
-{
+class View : public UI::View {
 public:
 	static void exec(spec job, UI::Shell &shell);
 	virtual void activate(UI::Frame &ctx) override;

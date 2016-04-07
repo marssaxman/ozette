@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2015 Mars J. Saxman
+// Copyright (C) 2015-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "dialog/form.h"
 #include "ui/colors.h"
@@ -27,8 +25,7 @@
 namespace {
 // Inputs for form fields fill the window width, but have a name caption
 // on the left.
-class FormInput
-{
+class FormInput {
 public:
 	FormInput(const Dialog::Form::Field &field);
 	void process(UI::Frame &ctx, int ch);
@@ -44,8 +41,7 @@ private:
 };
 
 // View managing the active representation of the form
-class FormView : public UI::View
-{
+class FormView : public UI::View {
 	typedef UI::View inherited;
 public:
 	FormView(const Dialog::Form &form);
@@ -66,16 +62,12 @@ private:
 
 } // namespace
 
-void Dialog::Form::show(UI::Frame &ctx)
-{
+void Dialog::Form::show(UI::Frame &ctx) {
 	std::unique_ptr<UI::View> dptr(new FormView(*this));
 	ctx.show_dialog(std::move(dptr));
 }
 
-FormView::FormView(const Dialog::Form &form):
-	inherited(),
-	_form(form)
-{
+FormView::FormView(const Dialog::Form &form): inherited(), _form(form) {
 	size_t max_caption = 0;
 	for (auto &field: _form.fields) {
 		_inputs.emplace_back(field);
@@ -87,15 +79,13 @@ FormView::FormView(const Dialog::Form &form):
 	}
 }
 
-void FormView::layout(int vpos, int hpos, int height, int width)
-{
+void FormView::layout(int vpos, int hpos, int height, int width) {
 	int new_height = std::min((int)_inputs.size(), height / 2);
 	int new_vpos = vpos + height - new_height;
 	inherited::layout(new_vpos, hpos, new_height, width);
 }
 
-bool FormView::process(UI::Frame &ctx, int ch)
-{
+bool FormView::process(UI::Frame &ctx, int ch) {
 	switch (ch) {
 		case Control::Escape: ctx.show_result("Cancelled"); return false;
 		case Control::Return:
@@ -110,13 +100,11 @@ bool FormView::process(UI::Frame &ctx, int ch)
 	return true;
 }
 
-void FormView::set_help(UI::HelpBar::Panel &panel)
-{
+void FormView::set_help(UI::HelpBar::Panel &panel) {
 	_inputs[_selected].set_help(panel);
 }
 
-void FormView::paint_into(WINDOW *view, State state)
-{
+void FormView::paint_into(WINDOW *view, State state) {
 	wattrset(view, UI::Colors::dialog(state == State::Focused));
 	// Draw each field, below the title bar but above the help text.
 	// Skip the selected field; we will draw it last, so it can set its
@@ -132,8 +120,7 @@ void FormView::paint_into(WINDOW *view, State state)
 	paint_line(view, _selected, state);
 }
 
-void FormView::paint_line(WINDOW *view, size_t i, State state)
-{
+void FormView::paint_line(WINDOW *view, size_t i, State state) {
 	int height, width;
 	getmaxyx(view, height, width);
 	(void)height;
@@ -142,22 +129,19 @@ void FormView::paint_line(WINDOW *view, size_t i, State state)
 	_inputs[i].paint(view, i, state);
 }
 
-void FormView::key_up(UI::Frame &ctx)
-{
+void FormView::key_up(UI::Frame &ctx) {
 	if (_selected == 0) return;
 	_selected--;
 	ctx.repaint();
 }
 
-void FormView::key_down(UI::Frame &ctx)
-{
+void FormView::key_down(UI::Frame &ctx) {
 	if (_selected + 1 >= _inputs.size()) return;
 	_selected++;
 	ctx.repaint();
 }
 
-bool FormView::commit(UI::Frame &ctx, Dialog::Form::action_t action)
-{
+bool FormView::commit(UI::Frame &ctx, Dialog::Form::action_t action) {
 	if (!action) return true;
 	Dialog::Form::Result result;
 	for (auto &input: _inputs) {
@@ -170,14 +154,11 @@ bool FormView::commit(UI::Frame &ctx, Dialog::Form::action_t action)
 }
 
 FormInput::FormInput(const Dialog::Form::Field &field):
-	_field(field),
-	_input(field.value, field.completer, nullptr)
-{
+		_field(field), _input(field.value, field.completer, nullptr) {
 	set_indent(0);
 }
 
-void FormInput::process(UI::Frame &ctx, int ch)
-{
+void FormInput::process(UI::Frame &ctx, int ch) {
 	std::string old_value = _input.value();
 	_input.process(ctx, ch);
 	if (_field.updater && _input.value() != old_value) {
@@ -185,8 +166,7 @@ void FormInput::process(UI::Frame &ctx, int ch)
 	}
 }
 
-void FormInput::paint(WINDOW *view, int row, UI::View::State state)
-{
+void FormInput::paint(WINDOW *view, int row, UI::View::State state) {
 	int height, width;
 	getmaxyx(view, height, width);
 	(void)height;
@@ -198,13 +178,11 @@ void FormInput::paint(WINDOW *view, int row, UI::View::State state)
 	_input.paint(view, row, column, width, state);
 }
 
-void FormInput::set_help(UI::HelpBar::Panel &panel)
-{
+void FormInput::set_help(UI::HelpBar::Panel &panel) {
 	_input.set_help(panel);
 }
 
-void FormInput::set_indent(int i)
-{
+void FormInput::set_indent(int i) {
 	std::string spacer(i, ' ');
 	_caption = spacer + _field.name + ": ";
 }

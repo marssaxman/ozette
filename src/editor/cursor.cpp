@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2014-2015 Mars J. Saxman
+// Copyright (C) 2014-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "editor/cursor.h"
 #include <climits>
@@ -28,12 +26,10 @@
 
 Editor::Cursor::Cursor(Document &doc, Update &update):
 	_doc(doc),
-	_update(update)
-{
+	_update(update) {
 }
 
-void Editor::Cursor::up()
-{
+void Editor::Cursor::up() {
 	// Move up the screen by the specified number of rows,
 	// stopping when we reach zero. Do not move the column.
 	// If the cursor was already positioned on the top row,
@@ -48,8 +44,7 @@ void Editor::Cursor::up()
 	}
 }
 
-void Editor::Cursor::down()
-{
+void Editor::Cursor::down() {
 	// Move to the next row down the screen, stopping at the maximum row. 
 	// Do not move the column. If the cursor was already positioned on the
 	// maximum row, move the cursor right to the end of the line.
@@ -63,8 +58,7 @@ void Editor::Cursor::down()
 	}
 }
 
-void Editor::Cursor::left()
-{
+void Editor::Cursor::left() {
 	// Move left by one character. This may wrap us around to the end of the
 	// previous line. If we are now positioned on a space character which is
 	// not aligned to a tab stop, and the previous character is also a space,
@@ -80,8 +74,7 @@ void Editor::Cursor::left()
 	}
 }
 
-void Editor::Cursor::right()
-{
+void Editor::Cursor::right() {
 	// Move right by one character. This may wrap around to the beginning of
 	// the next line. If the target character was a space, keep moving until
 	// we reach a non-space character or we reach tab-stop alignment.
@@ -95,39 +88,34 @@ void Editor::Cursor::right()
 	}
 }
 
-void Editor::Cursor::home()
-{
+void Editor::Cursor::home() {
 	// Put the cursor at the beginning of its line.
 	begin_move();
 	_location.offset = 0;
 	commit_location();
 }
 
-void Editor::Cursor::end()
-{
+void Editor::Cursor::end() {
 	// Put the cursor at the end of its line.
 	begin_move();
 	_location.offset = _doc.line(_location.line).size();
 	commit_location();
 }
 
-void Editor::Cursor::move_to(location_t loc)
-{
+void Editor::Cursor::move_to(location_t loc) {
 	// Place the cursor at an absolute document location.
 	begin_move();
 	_location = loc;
 	commit_location();
 }
 
-void Editor::Cursor::begin_move()
-{
+void Editor::Cursor::begin_move() {
 	// Mark the old location of the cursor as dirty so the
 	// viewer will redraw that cell.
 	_update.at(_location);
 }
 
-void Editor::Cursor::commit_location()
-{
+void Editor::Cursor::commit_location() {
 	// We have updated the cursor's location in the document.
 	// Tell the viewer what to redraw, then update the display
 	// position according to the new location.
@@ -135,8 +123,7 @@ void Editor::Cursor::commit_location()
 	_display = _position = _doc.position(_location);
 }
 
-void Editor::Cursor::commit_position()
-{
+void Editor::Cursor::commit_position() {
 	// We have moved the cursor to a different screen position.
 	// Update the location based on that position, tell the
 	// viewer what it needs to redraw, then copy the position for
