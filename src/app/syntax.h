@@ -64,6 +64,7 @@ typedef std::list<Token> Tokens;
 struct Rule {
 	Rule(const char *p, Token::Type t): pattern(std::string(p)), token(t) {}
 	Rule(const std::string &p, Token::Type t): pattern(p), token(t) {}
+	static Rule keywords(std::list<std::string>);
 	Regex pattern;
 	Token::Type token;
 };

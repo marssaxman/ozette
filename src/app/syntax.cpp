@@ -18,87 +18,93 @@
 #include "app/syntax.h"
 #include "ui/colors.h"
 #include <map>
+#include <sstream>
 
 namespace Syntax {
-Rule cpreproc{"^#[A-Za-z]+", Token::Type::Keyword};
-Rule strdq{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String};
-Rule strsq{"\\\'([^\\\']|(\\\\.))*\\\'", Token::Type::String};
-Rule cident{"[A-Za-z_][A-Za-z0-9_]*", Token::Type::Identifier};
-Rule slashcomment{"//(.*)$", Token::Type::Comment};
-Rule hashcomment{"#(.*)$", Token::Type::Comment};
+const Rule cpreproc{"^#[A-Za-z]+", Token::Type::Keyword};
+const Rule strdq{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String};
+const Rule strsq{"\\\'([^\\\']|(\\\\.))*\\\'", Token::Type::String};
+const Rule cident{"[A-Za-z_][A-Za-z0-9_]*", Token::Type::Identifier};
+const Rule cnumber{"(0([Xx][0-9A-Fa-f]+)?)|([1-9]+)", Token::Type::Literal};
+const Rule slashcomment{"//(.*)$", Token::Type::Comment};
+const Rule hashcomment{"#(.*)$", Token::Type::Comment};
 
-Grammar generic = {};
-Grammar c = {
-	{"\\<("
-		"auto|break|case|char|const|continue|default|do|double|else|enum"
-		"|extern|float|for|goto|if|inline|int|long|register|restrict|return"
-		"|short|signed|sizeof|static|struct|switch|typedef|union|unsigned"
-		"|void|volatile|while|_Alignas|_Alignof|_Atomic|_Bool|_Complex"
-		"|_Generic|_Imaginary|_Noreturn|_Static_assert|_Thread_local"
-	")\\>", Token::Type::Keyword},
-	cpreproc,
-	strdq, strsq,
-	cident,
-	{"0", Token::Type::Literal},
-	{"[1-9]+", Token::Type::Literal},
-	{"0[Xx][0-9A-Fa-f]+", Token::Type::Literal},
-	slashcomment,
+const Grammar generic = {};
+
+const Grammar c = {
+	Rule::keywords({
+		"auto", "break", "case", "char", "const", "continue", "default", "do",
+		"double", "else", "enum", "extern", "float", "for", "goto", "if",
+		"inline", "int", "long", "register", "restrict", "return", "short",
+		"signed", "sizeof", "static", "struct", "switch", "typedef", "union",
+		"unsigned", "void", "volatile", "while", "_Alignas", "_Alignof",
+		"_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary", "_Noreturn",
+		"_Static_assert", "_Thread_local"
+	}),
+	cpreproc, strdq, strsq, cident, cnumber, slashcomment,
 };
-Grammar cxx = {
-	{"\\<("
-		"alignas|alignof|and|and_eq|asm|auto|bitand|bitor|bool|break|case"
-		"|catch|char|char16_t|char32_t|class|compl|const|constexpr|const_cast"
-		"|continue|decltype|default|delete|do|double|dynamic_cast|else|enum"
-		"|explicit|export|extern|false|float|for|friend|goto|if|inline|int"
-		"|long|mutable|namespace|new|noexcept|not|not_eq|nullptr|operator|or"
-		"|or_eq|private|protected|public|register|reinterpret_cast|return"
-		"|short|signed|sizeof|static|static_assert|static_cast|struct|switch"
-		"|template|this|thread_local|throw|true|try|typedef|typeid|typename"
-		"|union|unsigned|using|virtual|void|volatile|wchar_t|while|xor|xor_eq"
-	")\\>", Token::Type::Keyword},
-	cpreproc,
-	strdq, strsq,
-	cident,
-	{"0", Token::Type::Literal},
-	{"[1-9]+", Token::Type::Literal},
-	{"0[Xx][0-9A-Fa-f]+", Token::Type::Literal},
-	slashcomment,
+
+const Grammar cxx = {
+	Rule::keywords({
+		"alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand",
+		"bitor", "bool", "break", "case", "catch", "char", "char16_t",
+		"char32_t", "class", "compl", "const", "constexpr", "const_cast",
+		"continue", "decltype", "default", "delete", "do", "double",
+		"dynamic_cast", "else", "enum", "explicit", "export", "extern",
+		"false", "float", "for", "friend", "goto", "if", "inline", "int",
+		"long", "mutable", "namespace", "new", "noexcept", "not", "not_eq",
+		"nullptr", "operator", "or", "or_eq", "private", "protected", "public",
+		"register", "reinterpret_cast", "return", "short", "signed", "sizeof",
+		"static", "static_assert", "static_cast", "struct", "switch",
+		"template", "this", "thread_local", "throw", "true", "try", "typedef",
+		"typeid", "typename", "union", "unsigned", "using", "virtual", "void",
+		"volatile", "wchar_t", "while", "xor", "xor_eq"
+	}),
+	cpreproc, strdq, strsq, cident, cnumber, slashcomment,
 };
-Grammar ruby = {
-	{"\\<("
-		"alias|and|begin|break|case|class|def|defined?|do|else|elsif|end"
-		"|ensure|false|for|if|in|module|next|nil|not|or|redo|rescue|retry"
-		"|return|self|super|then|true|undef|unless|until|when|while|yield"
-		"|BEGIN|END"
-	")\\>", Token::Type::Keyword},
+
+const Grammar ruby = {
+	Rule::keywords({
+		"alias", "and", "begin", "break", "case", "class", "def", "defined?",
+		"do", "else", "elsif", "end", "ensure", "false", "for", "if", "in",
+		"module", "next", "nil", "not", "or", "redo", "rescue", "retry",
+		"return", "self", "super", "then", "true", "undef", "unless", "until",
+		"when", "while", "yield"
+	}),
 	strdq, strsq,
 	{"\\`([^\\']|(\\\\.))*\\`", Token::Type::String},
+	{"[:]?[A-Za-z_][A-Za-z0-9_]*[?]?", Token::Type::Identifier},
+	cnumber, hashcomment,
+};
+
+const Grammar make = {
 	hashcomment,
 };
-Grammar make = {
-	hashcomment,
-};
-Grammar assembly = {
+
+const Grammar assembly = {
 	{"\\.[A-Za-z0-9]+", Token::Type::Keyword},
 	hashcomment,
 };
-Grammar python = {
-	{"\\<("
-		"as|assert|break|class|continue|def|del|elif|else|except|exec|finally"
-		"|for|from|global|if|import|lambda|pass|print|raise|return|try|while"
-		"|with|yield|yield from"
-	")\\>", Token::Type::Keyword},
-	strdq, strsq,
-	hashcomment,
+
+const Grammar python = {
+	Rule::keywords({
+		"as", "assert", "break", "class", "continue", "def", "del", "elif",
+		"else", "except", "exec", "finally", "for", "from", "global", "if",
+		"import", "lambda", "pass", "print", "raise", "return", "try", "while",
+		"with", "yield", "yield from",
+	}),
+	strdq, strsq, cident, cnumber, hashcomment,
 };
-Grammar js = {
-	{"\\<("
-		"break|case|class|catch|const|continue|debugger|default|delete|do|else"
-		"|enum|export|extends|finally|for|function|if|import|in|instanceof|new"
-		"|return|super|switch|this|throw|try|typeof|var|void|while|with|yield"
-	")\\>", Token::Type::Keyword},
-	strdq, strsq,
-	slashcomment,
+
+const Grammar js = {
+	Rule::keywords({
+		"break", "case", "class", "catch", "const", "continue", "debugger",
+		"default", "delete", "do", "else", "enum", "export", "extends",
+		"finally", "for", "function", "if", "import", "in", "instanceof",
+		"new", "return", "super", "switch", "this", "throw", "try", "typeof",
+		"var", "void", "while", "with", "yield",
+	}),
+	strdq, strsq, cident, cnumber, slashcomment,
 };
 
 const std::map<std::string, const Grammar&> extensions = {
@@ -171,6 +177,18 @@ int Token::style() const {
 		case Type::Error: return UI::Colors::error();
 		default: return 0;
 	}
+}
+
+Rule Rule::keywords(std::list<std::string> words) {
+	std::stringstream buf;
+	std::string delim;
+	buf << "\\<(";
+	for (auto &word: words) {
+		buf << word << delim;
+		delim = "|";
+	}
+	buf << ")\\>";
+	return Rule(buf.str(), Token::Type::Keyword);
 }
 
 Tokens Syntax::parse(const Grammar &prods, const std::string &text) {
