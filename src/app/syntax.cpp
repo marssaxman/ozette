@@ -20,6 +20,13 @@
 #include <map>
 
 namespace Syntax {
+Rule cpreproc{"^#[A-Za-z]+", Token::Type::Keyword};
+Rule strdq{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String};
+Rule strsq{"\\\'([^\\\']|(\\\\.))*\\\'", Token::Type::String};
+Rule cident{"[A-Za-z_][A-Za-z0-9_]*", Token::Type::Identifier};
+Rule slashcomment{"//(.*)$", Token::Type::Comment};
+Rule hashcomment{"#(.*)$", Token::Type::Comment};
+
 Grammar generic = {};
 Grammar c = {
 	{"\\<("
@@ -29,14 +36,13 @@ Grammar c = {
 		"|void|volatile|while|_Alignas|_Alignof|_Atomic|_Bool|_Complex"
 		"|_Generic|_Imaginary|_Noreturn|_Static_assert|_Thread_local"
 	")\\>", Token::Type::Keyword},
-	{"^#[A-Za-z]+", Token::Type::Keyword},
-	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
-	{"\\\'([^\\\']|(\\\\.))*\\\'", Token::Type::String},
-	{"[A-Za-z_][A-Za-z0-9_]*", Token::Type::Identifier},
+	cpreproc,
+	strdq, strsq,
+	cident,
 	{"0", Token::Type::Literal},
 	{"[1-9]+", Token::Type::Literal},
 	{"0[Xx][0-9A-Fa-f]+", Token::Type::Literal},
-	{"//(.*)$", Token::Type::Comment},
+	slashcomment,
 };
 Grammar cxx = {
 	{"\\<("
@@ -50,32 +56,31 @@ Grammar cxx = {
 		"|template|this|thread_local|throw|true|try|typedef|typeid|typename"
 		"|union|unsigned|using|virtual|void|volatile|wchar_t|while|xor|xor_eq"
 	")\\>", Token::Type::Keyword},
-	{"^#[A-Za-z]+", Token::Type::Keyword},
-	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
-	{"\\\'([^\\\']|(\\\\.))*\\\'", Token::Type::String},
-	{"[A-Za-z_][A-Za-z0-9_]*", Token::Type::Identifier},
+	cpreproc,
+	strdq, strsq,
+	cident,
 	{"0", Token::Type::Literal},
 	{"[1-9]+", Token::Type::Literal},
 	{"0[Xx][0-9A-Fa-f]+", Token::Type::Literal},
-	{"//(.*)$", Token::Type::Comment},
+	slashcomment,
 };
 Grammar ruby = {
 	{"\\<("
-		"do|begin|end|undef|alias|if|while|unless|until|return|yield|and|or"
-		"|not|super|defined?|elsif|else|case|when|rescue|ensure|class|module"
-		"|def|then|nil|self|true|false"
+		"alias|and|begin|break|case|class|def|defined?|do|else|elsif|end"
+		"|ensure|false|for|if|in|module|next|nil|not|or|redo|rescue|retry"
+		"|return|self|super|then|true|undef|unless|until|when|while|yield"
+		"|BEGIN|END"
 	")\\>", Token::Type::Keyword},
-	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
-	{"\\'([^\\']|(\\\\.))*\\'", Token::Type::String},
+	strdq, strsq,
 	{"\\`([^\\']|(\\\\.))*\\`", Token::Type::String},
-	{"#(.*)$", Token::Type::Comment},
+	hashcomment,
 };
 Grammar make = {
-	{"#(.*)$", Token::Type::Comment},
+	hashcomment,
 };
 Grammar assembly = {
 	{"\\.[A-Za-z0-9]+", Token::Type::Keyword},
-	{"#(.*)$", Token::Type::Comment},
+	hashcomment,
 };
 Grammar python = {
 	{"\\<("
@@ -83,9 +88,8 @@ Grammar python = {
 		"|for|from|global|if|import|lambda|pass|print|raise|return|try|while"
 		"|with|yield|yield from"
 	")\\>", Token::Type::Keyword},
-	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
-	{"\\'([^\\']|(\\\\.))*\\'", Token::Type::String},
-	{"#(.*)$", Token::Type::Comment},
+	strdq, strsq,
+	hashcomment,
 };
 Grammar js = {
 	{"\\<("
@@ -93,9 +97,8 @@ Grammar js = {
 		"|enum|export|extends|finally|for|function|if|import|in|instanceof|new"
 		"|return|super|switch|this|throw|try|typeof|var|void|while|with|yield"
 	")\\>", Token::Type::Keyword},
-	{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String},
-	{"\\'([^\\']|(\\\\.))*\\'", Token::Type::String},
-	{"//(.*)$", Token::Type::Comment},
+	strdq, strsq,
+	slashcomment,
 };
 
 const std::map<std::string, const Grammar&> extensions = {
