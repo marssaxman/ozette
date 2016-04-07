@@ -1,6 +1,5 @@
-//
 // ozette
-// Copyright (C) 2015 Mars J. Saxman
+// Copyright (C) 2015-2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +14,6 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
 
 #include "app/path.h"
 #include <unistd.h>
@@ -24,22 +22,21 @@
 #include <cstring>
 #include <assert.h>
 
-std::string Path::home_dir()
-{
+std::string Path::home_dir() {
 	return std::string(getenv("HOME"));
 }
 
-std::string Path::current_dir()
-{
+std::string Path::current_dir() {
+	std::string out;
 	char *cwd = getcwd(NULL, 0);
-	assert(cwd);
-	std::string out = std::string(cwd);
-	free(cwd);
+	if (cwd) {
+		out = std::string(cwd);
+		free(cwd);
+	}
 	return out;
 }
 
-static std::string complete_path(std::string path, bool only_dirs)
-{
+static std::string complete_path(std::string path, bool only_dirs) {
 	// Figure out whether this string contains a directory path or just a name
 	// fragment. If it's just a fragment, it is implicitly based in the current
 	// working directory; otherwise, we'll search in the specified directory.
@@ -92,18 +89,15 @@ static std::string complete_path(std::string path, bool only_dirs)
 	return path + suffix;
 }
 
-std::string Path::complete_file(std::string partial_path)
-{
+std::string Path::complete_file(std::string partial_path) {
 	return complete_path(partial_path, /*only_dirs*/false);
 }
 
-std::string Path::complete_dir(std::string partial_path)
-{
+std::string Path::complete_dir(std::string partial_path) {
 	return complete_path(partial_path, /*only_dirs*/true);
 }
 
-std::string Path::absolute(std::string path)
-{
+std::string Path::absolute(std::string path) {
 	// Canonicalize this path and expand it as necessary to produce
 	// a full path relative to the filesystem root.
 	if (path.empty()) {
@@ -144,8 +138,7 @@ std::string Path::absolute(std::string path)
 	return out;
 }
 
-std::string Path::display(std::string path)
-{
+std::string Path::display(std::string path) {
 	std::string cwd = current_dir();
 	size_t cwdsize = cwd.size();
 	if (path.size() > cwdsize && path.substr(0, cwdsize) == cwd) {
