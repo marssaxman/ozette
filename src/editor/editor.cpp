@@ -613,7 +613,7 @@ void Editor::View::save(UI::Frame &ctx, std::string dest) {
 	_doc.Write(dest);
 	ctx.set_status(_doc.status());
 	std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
-	stat += (_doc.maxline() > 1) ? " lines" : " line";
+	stat += (_doc.maxline() >= 1) ? " lines" : " line";
 	ctx.show_result(stat);
 }
 
