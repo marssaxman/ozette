@@ -206,11 +206,23 @@ void Ozette::change_directory() {
 }
 
 void Ozette::new_file() {
-	editor edrec;
-	edrec.view = new Editor::View(_config);
-	std::unique_ptr<UI::View> edptr(edrec.view);
-	edrec.window = _shell.open_window(std::move(edptr));
-	_editors[Path::absolute("")] = edrec;
+	Dialog::Form dialog;
+	dialog.fields = {
+		{"New File", Path::display(_current_dir) + "/", &Path::complete_file}
+	};
+	dialog.commit = [this](UI::Frame &ctx, Dialog::Form::Result &result) {
+		std::string path = Path::absolute(result.selected_value);
+		if (path.empty()) {
+			ctx.show_result("Cancelled");
+			return;
+		}
+		editor edrec;
+		edrec.view = new Editor::View(path, _config);
+		std::unique_ptr<UI::View> edptr(edrec.view);
+		edrec.window = _shell.open_window(std::move(edptr));
+		_editors[path] = edrec;
+	};
+	dialog.show(*_shell.active());
 }
 
 void Ozette::open_file() {

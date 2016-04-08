@@ -55,7 +55,7 @@ Editor::Document::Document(std::string path, const Config &config):
 }
 
 void Editor::Document::Write(std::string path) {
-	std::ofstream file(path, std::ios::trunc);
+	std::ofstream file(path, std::ios::trunc | std::ios::out);
 	for (auto &line: _lines) {
 		file << line << std::endl;
 	}
