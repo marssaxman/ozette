@@ -173,18 +173,23 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, State state) {
 	if (_selection.empty()) return;
 	column_t selbegin = 0;
 	unsigned selcount = 0;
-	if (_selection.begin().line < index && _selection.end().line > index) {
+	line_t begin_line = _selection.begin().line;
+	line_t end_line = _selection.end().line;
+	if (begin_line < index && end_line > index) {
 		selcount = _width;
-	} else if (_selection.begin().line < index && _selection.end().line == index) {
+	} else if (begin_line < index && end_line == index) {
 		selcount = line.column(_selection.end().offset);
-	} else if (_selection.begin().line == index && _selection.end().line > index) {
+	} else if (begin_line == index && end_line > index) {
 		selbegin = line.column(_selection.begin().offset);
 		selcount = _width - selbegin;
-	} else if (_selection.begin().line == index && _selection.end().line == index) {
+	} else if (begin_line == index && end_line == index) {
 		selbegin = line.column(_selection.begin().offset);
 		selcount = line.column(_selection.end().offset) - selbegin;
 	}
 	if (selcount > 0) {
+		// DisplayLine should probably be responsible for this, since setting
+		// A_REVERSE also clears A_ALTCHARSET, which leaves our tab bullets
+		// looking a little strange.
 		mvwchgat(dest, v, selbegin, selcount, A_REVERSE, 0, NULL);
 	}
 }

@@ -84,15 +84,13 @@ void Editor::DisplayLine::paint(
 		if (active) {
 			wattrset(d, _style[i++]);
 		}
-		// If it's a normal character, just draw it; if it's a tab, we will add
-		// some spaces up to the next tab stop instead.
+		// If it's a normal character, just draw it. If it's a tab, draw a
+		// bullet, then add spaces up til the next tab stop.
 		if (ch != '\t') {
 			if (h >= hoff) waddch(d, ch);
 			h++;
 		} else {
-			// If we're indenting with tabs, draw them normally. Otherwise,
-			// tab characters are unexpected, so we will mark them.
-			chtype bullet = _settings.indent_with_tabs()? ' ': ACS_BULLET;
+			chtype bullet = ACS_BULLET;
 			do {
 				if (h >= hoff) waddch(d, bullet);
 				h++;

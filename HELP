@@ -11,7 +11,7 @@ Global commands:
     ^-up arrow - open the directory browser or bring it frontmost
     ^-left arrow - move to the next window leftward
     ^-right arrow - move to the next window rightward
-	^-down arrow - open the next file in the directory with the same base name
+    ^-down arrow - open the next file in the directory with the same base name
 
 == Directory browser
 
@@ -26,11 +26,11 @@ back out toward the root of the working directory with the left arrow.
 
 Browser commands:
     ^O - Open - open a file in an editor window
-    ^N - New - open an editor for a new, nameless file
+    ^N - New - ask for path and name, then open a new, empty editor
     ^D - Directory - change the current working directory
     ^E - Execute - run some command and log output to the console
     ^F - Find - search for text across all files in the directory
-	F5 - Build - save all open files and run make in the working directory
+    F5 - Build - save all open files and run make in the working directory
 
 
 == Text editor
@@ -54,10 +54,11 @@ Editor commands:
     ^C - Copy - place selected text on the clipboard
     ^V - Paste - insert clipboard text at cursor location
     ^F - Find - move the cursor to the next occurrence of some string
-	^G - Find Next - find next occurrence of previously found string
+    ^G - Find Next - find next occurrence of previously found string
+    ^R - Replace - find one string and replace it with another
     ^L - To Line - move the cursor to the beginning of the specified line
     ^S - Save - write the contents of the buffer back to disk
-	^A - Save As - write the buffer to disk under a new name/location
+    ^A - Save As - write the buffer to disk under a new name/location
     ^Z - Undo - roll back the last change to the document
     ^Y - Redo - reapply the last change which was rolled back
 
@@ -69,5 +70,5 @@ directory. These may be built-in commands like Find or shell commands invoked
 with Execute.
 
 Console commands:
-	^K - Kill - terminate the running command
+    ^K - Kill - terminate the running command
 
