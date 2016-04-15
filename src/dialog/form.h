@@ -43,12 +43,12 @@ struct Form {
 		std::string selected_value;
 	};
 
-	// If the user commits rather than canceling, the form will invoke a
-	// completion action.
+	// Return/enter invokes the commit action; escape invokes the cancel
+	// action (which is generally omitted as the default is to do nothing).
 	typedef std::function<void(UI::Frame&, Result&)> action_t;
-
-	// The commit action is invoked by return/enter.
 	action_t commit = nullptr;
+	typedef std::function<void(UI::Frame&)> restore_t;
+	restore_t cancel = nullptr;
 
 	// Once the form is configured, show it within a host window.
 	void show(UI::Frame &ctx);

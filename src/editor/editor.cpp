@@ -351,16 +351,19 @@ void Editor::View::ctl_find(UI::Frame &ctx) {
 	Dialog::Form::Field find;
 	find.name = "Find";
 	find.value = _find_text;
-	location_t anchor = _selection.begin();
+	Range anchor = _selection;
 	find.updater = [this, anchor, &ctx](std::string pattern) {
+		// Search for the current field text; this will move the selection
+		// to the next found instance.
 		_find_text = pattern;
-		this->find(ctx, anchor, pattern);
+		this->find(ctx, anchor.begin(), pattern);
 	};
 	Dialog::Form dialog;
 	dialog.fields = {find};
-	dialog.commit = [this](UI::Frame& ctx, Dialog::Form::Result&) {
-		ctl_find_next(ctx);
-		ctl_find(ctx);
+	dialog.commit = [this](UI::Frame& ctx, Dialog::Form::Result&) {};
+	dialog.cancel = [this, anchor](UI::Frame& ctx) {
+		// Restore the selection to whatever it was previously.
+		select(ctx, anchor);
 	};
 	dialog.show(ctx);
 }

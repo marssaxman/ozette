@@ -54,6 +54,7 @@ protected:
 	void key_up(UI::Frame &ctx);
 	void key_down(UI::Frame &ctx);
 	bool commit(UI::Frame &ctx, Dialog::Form::action_t action);
+	bool cancel(UI::Frame &ctx, Dialog::Form::restore_t restore);
 private:
 	Dialog::Form _form;
 	std::vector<FormInput> _inputs;
@@ -87,7 +88,7 @@ void FormView::layout(int vpos, int hpos, int height, int width) {
 
 bool FormView::process(UI::Frame &ctx, int ch) {
 	switch (ch) {
-		case Control::Escape: ctx.show_result("Cancelled"); return false;
+		case Control::Escape: return cancel(ctx, _form.cancel);
 		case Control::Return:
 		case Control::Enter: return commit(ctx, _form.commit);
 		case KEY_UP: key_up(ctx); break;
@@ -150,6 +151,15 @@ bool FormView::commit(UI::Frame &ctx, Dialog::Form::action_t action) {
 	result.selection = _selected;
 	result.selected_value = _inputs[_selected].value();
 	action(ctx, result);
+	return false;
+}
+
+bool FormView::cancel(UI::Frame &ctx, Dialog::Form::restore_t restore) {
+	if (restore) {
+		restore(ctx);
+	} else {
+		ctx.show_result("Cancelled");
+	}
 	return false;
 }
 
