@@ -97,6 +97,7 @@ bool Editor::View::process(UI::Frame &ctx, int ch) {
 		case Control::SaveAs: ctl_save_as(ctx); break;
 		case Control::ToLine: ctl_toline(ctx); break;
 		case Control::Find: ctl_find(ctx); break;
+		case Control::Replace: ctl_replace(ctx); break;
 		case Control::FindNext: ctl_find_next(ctx); break;
 		case Control::Undo: ctl_undo(ctx); break;
 		case Control::Redo: ctl_redo(ctx); break;
@@ -260,15 +261,7 @@ void Editor::View::ctl_copy(UI::Frame &ctx) {
 void Editor::View::ctl_paste(UI::Frame &ctx) {
 	std::string clip = ctx.app().get_clipboard();
 	if (clip.empty()) return;
-	delete_selection();
-	location_t oldloc = _cursor.location();
-	location_t newloc = _doc.insert(oldloc, clip);
-	if (oldloc.line != newloc.line) {
-		_update.forward(oldloc);
-	}
-	_cursor.move_to(newloc);
-	drop_selection();
-	_doc.commit();
+	replace_selection(clip);
 }
 
 void Editor::View::ctl_close(UI::Frame &ctx) {
@@ -353,24 +346,66 @@ void Editor::View::ctl_find(UI::Frame &ctx) {
 	find.value = _find_text;
 	Range anchor = _selection;
 	find.updater = [this, anchor, &ctx](std::string pattern) {
-		// Search for the current field text; this will move the selection
-		// to the next found instance.
-		_find_text = pattern;
 		this->find(ctx, anchor.begin(), pattern);
 	};
 	Dialog::Form dialog;
 	dialog.fields = {find};
-	dialog.commit = [this](UI::Frame& ctx, Dialog::Form::Result&) {};
+	dialog.commit = [this, anchor](UI::Frame& ctx, Dialog::Form::Result& res) {
+		_find_text = res.fields["Find"];
+		_replace_text.clear();
+		if (_find_text.empty()) return;
+		if (this->find(ctx, anchor.begin(), _find_text)) {
+			_find_next_action = FindNextAction::Find;
+		} else {
+			ctx.show_result("\"" + _find_text + "\" not found");
+		}
+	};
 	dialog.cancel = [this, anchor](UI::Frame& ctx) {
-		// Restore the selection to whatever it was previously.
 		select(ctx, anchor);
 	};
+	_find_next_action = FindNextAction::Nothing;
+	dialog.show(ctx);
+}
+
+void Editor::View::ctl_replace(UI::Frame &ctx) {
+	Dialog::Form::Field find;
+	find.name = "Find";
+	find.value = _find_text;
+	Range anchor = _selection;
+	find.updater = [this, anchor, &ctx](std::string pattern) {
+		this->find(ctx, anchor.begin(), pattern);
+	};
+	Dialog::Form::Field repl;
+	repl.name = "Replace";
+	repl.value = _replace_text;
+	Dialog::Form dialog;
+	dialog.fields = {find, repl};
+	dialog.commit = [this, anchor](UI::Frame& ctx, Dialog::Form::Result& res) {
+		_find_text = res.fields["Find"];
+		_replace_text = res.fields["Replace"];
+		if (_find_text.empty()) return;
+		if (this->find(ctx, anchor.begin(), _find_text)) {
+			replace_selection(_replace_text);
+			_find_next_action = FindNextAction::Replace;
+		} else {
+			ctx.show_result("\"" + _find_text + "\" not found");
+		}
+	};
+	dialog.cancel = [this, anchor](UI::Frame& ctx) {
+		select(ctx, anchor);
+	};
+	_find_next_action = FindNextAction::Nothing;
 	dialog.show(ctx);
 }
 
 void Editor::View::ctl_find_next(UI::Frame &ctx) {
-	if (_find_text.empty()) return;
-	find(ctx, _selection.end(), _find_text);
+	if (_find_next_action == FindNextAction::Nothing) return;
+	if (_find_text.empty() || !find(ctx, _selection.end(), _find_text)) {
+		_find_next_action = FindNextAction::Nothing;
+		return;
+	}
+	if (_find_next_action != FindNextAction::Replace) return;
+	replace_selection(_replace_text);
 }
 
 void Editor::View::ctl_undo(UI::Frame &ctx) {
@@ -484,6 +519,18 @@ void Editor::View::delete_selection() {
 	_update.forward(_selection.begin());
 	_cursor.move_to(_doc.erase(_selection));
 	drop_selection();
+}
+
+void Editor::View::replace_selection(std::string clip) {
+	delete_selection();
+	location_t oldloc = _cursor.location();
+	location_t newloc = _doc.insert(oldloc, clip);
+	if (oldloc.line != newloc.line) {
+		_update.forward(oldloc);
+	}
+	_cursor.move_to(newloc);
+	drop_selection();
+	_doc.commit();
 }
 
 void Editor::View::key_insert(char ch) {
@@ -620,7 +667,7 @@ void Editor::View::save(UI::Frame &ctx, std::string dest) {
 	ctx.show_result(stat);
 }
 
-void Editor::View::find(
+bool Editor::View::find(
 		UI::Frame &ctx, location_t anchor, std::string pattern) {
 	// Look for the pattern after the anchor point.
 	Range match = _doc.find(pattern, anchor);
@@ -633,4 +680,5 @@ void Editor::View::find(
 		}
 	}
 	select(ctx, match);
+	return !match.empty();
 }

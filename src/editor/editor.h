@@ -54,6 +54,7 @@ private:
 	void ctl_save_as(UI::Frame &ctx);
 	void ctl_toline(UI::Frame &ctx);
 	void ctl_find(UI::Frame &ctx);
+	void ctl_replace(UI::Frame &ctx);
 	void ctl_find_next(UI::Frame &ctx);
 	void ctl_undo(UI::Frame &ctx);
 	void ctl_redo(UI::Frame &ctx);
@@ -72,6 +73,7 @@ private:
 	// Data-entry keystrokes generally begin by deleting whatever was
 	// previously selected and possibly replacing it with something else.
 	void delete_selection();
+	void replace_selection(std::string);
 	void key_insert(char ch);
 	void key_tab(UI::Frame &ctx);
 	void key_btab(UI::Frame &ctx);
@@ -89,7 +91,7 @@ private:
 	void adjust_selection(bool extend);
 
 	void save(UI::Frame &ctx, std::string dest);
-	void find(UI::Frame &ctx, location_t anchor, std::string pattern);
+	bool find(UI::Frame &ctx, location_t anchor, std::string pattern);
 
 	// Information about the file being edited
 	std::string _targetpath;
@@ -102,6 +104,12 @@ private:
 	Range _selection;
 	Settings _settings;
 	std::string _find_text;
+	std::string _replace_text;
+	enum class FindNextAction {
+		Nothing,
+		Find,
+		Replace
+	} _find_next_action;
 
 	// Update status: must we perform a full repaint?
 	State _last_state = State::Inactive;
