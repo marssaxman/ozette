@@ -1,45 +1,27 @@
-default: ozette
+# ozette-specific settings
+TARGET:=ozette
+CCFLAGS:=-Werror -Wall -g
+LDFLAGS:=-lpanel -lncurses -lpthread -lstdc++
 
-include srctree.mk
--include $(call findtype, d, obj)
-
-FLAGS:=-MD -MP -Wall -Wno-endif-labels -g -Werror -Isrc
-CXXFLAGS:=$(FLAGS) -std=c++11
-CFLAGS:=$(FLAGS) -std=c99
-
-LDLIBS=-lpanel -lncurses -lpthread -lstdc++
-
-ozette: $(call cxx_objs, src, obj)
+# boilerplate rules
+SOURCES:=$(shell find src -name *.c -o -name *.cpp)
+OBJECTS:=$(addsuffix .o,$(basename $(patsubst src/%,bin/%,$(SOURCES))))
+CCFLAGS+=-Isrc -MD -MP
+$(TARGET): bin/$(TARGET)
+default: $(TARGET)
+bin/$(TARGET): $(OBJECTS)
 	@mkdir -p $(@D)
-	g++ $^ $(LDLIBS) -o $@
-
-obj/%.o: src/%.cpp
+	g++ -o $@ $^ $(LDFLAGS)
+bin/%.o: src/%.cpp
 	@mkdir -p $(@D)
-	$(CC) $(CXXFLAGS) -c $< -o $@
-
-obj/%.o: src/%.c
+	$(CC) -std=c++11 $(CCFLAGS) -c $< -o $@
+bin/%.o: src/%.c
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-obj:
-	mkdir -p $@
-
-src/app/help.cpp: HELP
-	xxd -i HELP src/app/help.cpp
-
+	$(CC) -std=c99 $(CCFLAGS) -c $< -o $@
 clean:
-	@rm -rf bin obj
-
-install: ozette
-	cp ozette /usr/bin/
-
-.PHONY: clean install
-
-
-
-
-
-
-
-
+	-rm -rf bin
+install:
+	cp bin/$(TARGET) /usr/bin/$(TARGET)
+.PHONY: clean $(TARGET) install
+-include $(shell find bin -name *.d)
 
