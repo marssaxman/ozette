@@ -304,8 +304,10 @@ int Ozette::fix_control_quirks(int ch) {
 	case 0x22C:
 	case 0x230:
 	case 0x22F: return Control::RightArrow;
-	case 0x20C: return Control::DownArrow;
-	case 0x235: return Control::UpArrow;
+	case 0x20C:
+	case 0x20D: return Control::DownArrow;
+	case 0x235:
+	case 0x236: return Control::UpArrow;
 
 	default:
 	return ch;
