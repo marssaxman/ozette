@@ -34,6 +34,7 @@ Editor::Document::Document(std::string path, const Config &config):
 	struct stat sb;
 	if (stat(path.c_str(), &sb)) {
 		_status = "New";
+		_maxline = append_line("");
 	} else if (S_ISDIR(sb.st_mode)) {
 		_status = "Directory!";
 		_read_only = true;
@@ -90,6 +91,7 @@ Editor::location_t Editor::Document::home(line_t index) {
 
 Editor::location_t Editor::Document::end(line_t index) {
 	if (index > _maxline) index = _maxline;
+	assert(index < _lines.size());
 	location_t loc = {index, _lines[index].size()};
 	return loc;
 }
