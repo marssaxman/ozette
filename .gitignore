@@ -1,5 +1,6 @@
 # compiler output lives under ./bin
 bin/
+obj/
 
 # help.cpp is generated from the HELP file
 src/app/help.cpp
