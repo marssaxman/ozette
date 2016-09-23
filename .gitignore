@@ -1,8 +1,5 @@
-# compiled .o files live under obj
-obj/
-
-# ozette is the linked executable
-ozette
+# compiler output lives under ./bin
+bin/
 
 # help.cpp is generated from the HELP file
 src/app/help.cpp
