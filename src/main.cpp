@@ -18,6 +18,7 @@
 #include "app/ozette.h"
 #include <signal.h>
 #include <stdlib.h>
+#include <locale.h>
 
 static std::unique_ptr<Ozette> s_app;
 
@@ -27,6 +28,7 @@ static void handle_sigint(int) {
 }
 
 int main(int argc, char **argv) {
+	setlocale(LC_ALL, "");
 	(void)signal(SIGINT, handle_sigint);
 	(void)signal(SIGPIPE, SIG_IGN);
 	s_app.reset(new Ozette);
