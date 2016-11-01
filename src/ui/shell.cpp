@@ -85,6 +85,12 @@ bool UI::Shell::process(int ch) {
 	return !_tabs.empty();
 }
 
+void UI::Shell::poll() {
+	for (size_t index = _tabs.size(); index > 0; --index) {
+		_tabs[index - 1]->poll();
+	}
+}
+
 void UI::Shell::key_left() {
 	if (_focus > 0) {
 		set_focus(_focus - 1);

@@ -26,6 +26,7 @@
 #include <vector>
 #include <map>
 
+
 class Ozette : public Controller {
 public:
 	Ozette();
@@ -41,6 +42,7 @@ public:
 	virtual Config &config() override;
 	virtual void search(Search::spec query) override;
 	void run();
+	void sig_io();
 private:
 	struct editor {
 		UI::Window *window;

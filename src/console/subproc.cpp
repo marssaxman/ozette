@@ -22,18 +22,19 @@
 #include <sys/wait.h>
 #include "console/popenRWE.h"
 #include <assert.h>
-
-static void set_nonblocking(int fd) {
-	int err = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
-	assert(0 == err);
-}
+#include <unistd.h>
 
 Console::Subproc::Subproc(const char *exe, const char **argv) {
 	_pid = popenRWE(_rwepipe, exe, argv);
 	if (_pid > 0) {
-		set_nonblocking(_rwepipe[0]);
-		set_nonblocking(_rwepipe[1]);
-		set_nonblocking(_rwepipe[2]);
+		int ourpid = getpid();
+		for (unsigned i = 0; i <= 2; ++i) {
+			int fd = _rwepipe[i];
+			assert(-1 != fcntl(fd, F_SETOWN, ourpid));
+			int fl = fcntl(fd, F_GETFL);
+			assert(fl >= 0);
+			assert(-1 != fcntl(fd, F_SETFL, fl | O_ASYNC | O_NONBLOCK));
+		}
 	}
 }
 

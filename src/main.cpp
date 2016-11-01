@@ -27,10 +27,15 @@ static void handle_sigint(int) {
 	exit(EXIT_SUCCESS);
 }
 
+static void handle_sigio(int) {
+	s_app->sig_io();
+}
+
 int main(int argc, char **argv) {
 	setlocale(LC_ALL, "");
 	(void)signal(SIGINT, handle_sigint);
 	(void)signal(SIGPIPE, SIG_IGN);
+	(void)signal(SIGIO, handle_sigio);
 	s_app.reset(new Ozette);
 	for (int i = 1; i < argc; ++i) {
 		s_app->edit_file(argv[i]);

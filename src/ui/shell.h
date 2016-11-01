@@ -28,6 +28,7 @@ public:
 	Shell(Controller &app);
 	~Shell();
 	bool process(int ch);
+	void poll();
 	Window *open_window(std::unique_ptr<View> &&view);
 	void close_window(Window *window);
 	void make_active(Window *window);

@@ -28,6 +28,9 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <assert.h>
+#include <atomic>
+
+std::atomic_bool sig_io_flag;
 
 Ozette::Ozette():
 	_shell(*this),
@@ -169,10 +172,11 @@ void Ozette::search(Search::spec query) {
 
 void Ozette::run() {
 	if (_editors.empty()) show_browser();
-	timeout(20);
+	timeout(100);
 	do {
-		update_panels();
-		doupdate();
+		if (sig_io_flag.exchange(false)) {
+			_shell.poll();
+		}
 		int ch = fix_control_quirks(getch());
 		switch (ch) {
 			case Control::UpArrow: show_browser(); break;
@@ -185,7 +189,13 @@ void Ozette::run() {
 			case KEY_F(5): build(); break;
 			default: _done |= !_shell.process(ch);
 		}
+		update_panels();
+		doupdate();
 	} while (!_done);
+}
+
+void Ozette::sig_io() {
+	sig_io_flag.store(true);
 }
 
 void Ozette::show_browser() {
