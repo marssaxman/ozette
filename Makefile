@@ -25,3 +25,6 @@ install:
 .PHONY: clean $(TARGET) install
 -include $(shell find bin -name *.d)
 
+# regenerate the help file
+src/app/help.cpp: HELP
+	xxd -i $^ $@
