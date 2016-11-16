@@ -49,6 +49,8 @@ bool Console::View::process(UI::Frame &ctx, int ch) {
 		case Control::Kill: ctl_kill(ctx); break;
 		case KEY_UP: key_up(ctx); break;
 		case KEY_DOWN: key_down(ctx); break;
+		case KEY_NPAGE: key_page_down(ctx); break;
+		case KEY_PPAGE: key_page_up(ctx); break;
 	}
 	set_title(ctx);
 	return true;
@@ -141,6 +143,18 @@ void Console::View::key_up(UI::Frame &ctx) {
 		_scrollpos--;
 		ctx.repaint();
 	}
+}
+
+void Console::View::key_page_down(UI::Frame &ctx) {
+	size_t halfpage = _height/2;
+	_scrollpos = std::min(_scrollpos + halfpage, (size_t)maxscroll());
+	ctx.repaint();
+}
+
+void Console::View::key_page_up(UI::Frame &ctx) {
+	size_t halfpage = _height/2;
+	_scrollpos = std::max(_scrollpos + halfpage, (size_t)0);
+	ctx.repaint();
 }
 
 void Console::View::set_title(UI::Frame &ctx) {
