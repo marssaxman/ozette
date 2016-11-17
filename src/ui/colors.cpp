@@ -18,42 +18,6 @@
 #include "ui/colors.h"
 #include <ncurses.h>
 
-namespace {
-// these are attribute values, not color pair indexes
-int sContent = A_NORMAL;
-int sChrome = A_NORMAL;
-int sDialog = A_NORMAL;
-int sInactive = A_DIM;
-
-int sKeyword = A_BOLD;
-int sString = A_BOLD;
-int sLiteral = A_BOLD;
-int sComment = A_NORMAL;
-int sError = A_REVERSE;
-} // namespace
-
-int UI::Colors::content(bool active) {
-	return active? sContent: sInactive;
-}
-
-int UI::Colors::chrome(bool active) {
-	return active? sChrome: sInactive;
-}
-
-int UI::Colors::dialog(bool active) {
-	return active? (A_REVERSE|sDialog): sInactive;
-}
-
-int UI::Colors::result(bool active) {
-	return active? (A_REVERSE|sChrome): sInactive;
-}
-
-int UI::Colors::keyword() { return sKeyword; }
-int UI::Colors::string() { return sString; }
-int UI::Colors::literal() { return sLiteral; }
-int UI::Colors::comment() { return sComment; }
-int UI::Colors::error() { return sError; }
-
 void UI::Colors::init() {
 	// Tell ncurses we want to use color if the terminal supports it.
 	start_color();
@@ -65,21 +29,21 @@ void UI::Colors::init() {
 	// I guess we just have to specify colors uniquely for this app, instead of
 	// trying to adapt to the user's terminal settings, which seems... bad.
 	use_default_colors();
-	init_pair(1, COLOR_WHITE, -1);
+	init_pair(1, COLOR_GREEN, -1);
 	init_pair(2, COLOR_YELLOW, -1);
 	init_pair(3, COLOR_CYAN, -1);
 	init_pair(4, COLOR_RED, -1);
 	init_pair(5, COLOR_MAGENTA, -1);
-
-	sContent = COLOR_PAIR(0);
-	sChrome = COLOR_PAIR(0);
-	sDialog = COLOR_PAIR(0);
-	sInactive = COLOR_PAIR(1);
-
-	sKeyword |= COLOR_PAIR(0);
-	sString |= COLOR_PAIR(2);
-	sLiteral |= COLOR_PAIR(5);
-	sComment |= COLOR_PAIR(3);
-	sError |= COLOR_PAIR(4);
 }
+
+int UI::Colors::content(bool active) { return active? A_NORMAL: A_DIM; }
+int UI::Colors::chrome(bool active) { return active? A_NORMAL: A_DIM; }
+int UI::Colors::dialog(bool active) { return active? A_REVERSE: A_DIM; }
+int UI::Colors::result(bool active) { return active? A_REVERSE: A_DIM; }
+
+int UI::Colors::keyword() { return A_BOLD | COLOR_PAIR(1); }
+int UI::Colors::string() { return A_BOLD | COLOR_PAIR(2); }
+int UI::Colors::literal() { return A_BOLD | COLOR_PAIR(3); }
+int UI::Colors::comment() { return A_NORMAL | COLOR_PAIR(4); }
+int UI::Colors::error() { return A_REVERSE | COLOR_PAIR(5); }
 
