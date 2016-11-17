@@ -26,7 +26,7 @@
 namespace Editor {
 class Cursor {
 public:
-	Cursor(Document &doc, Update &update);
+	Cursor(Document&, Update&, Settings&);
 	const location_t location() const { return _location; }
 	const position_t position() const { return _display; }
 	void up();
@@ -42,6 +42,7 @@ private:
 	void commit_position();
 	Document &_doc;
 	Update &_update;
+	Settings &_settings;
 	location_t _location;
 	// We use this internal position record to keep the cursor
 	// located on the same column when moving up and down, as

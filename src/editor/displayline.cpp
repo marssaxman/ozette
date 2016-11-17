@@ -18,8 +18,6 @@
 #include "editor/displayline.h"
 #include "ui/colors.h"
 
-const unsigned Editor::kTabWidth = 4;
-
 Editor::DisplayLine::DisplayLine(
 		const std::string &text,
 		const Settings &settings,
@@ -71,7 +69,7 @@ Editor::offset_t Editor::DisplayLine::offset(column_t h) const {
 void Editor::DisplayLine::advance(char ch, column_t &h) const {
 	do {
 		h++;
-	} while (ch == '\t' && h % kTabWidth);
+	} while (ch == '\t' && h % _settings.indent_size());
 }
 
 void Editor::DisplayLine::paint(
@@ -95,7 +93,7 @@ void Editor::DisplayLine::paint(
 				if (h >= hoff) waddch(d, bullet);
 				h++;
 				bullet = ' ';
-			} while (h < width && 0 != h % kTabWidth);
+			} while (h < width && 0 != h % _settings.indent_size());
 		}
 	}
 	wattrset(d, UI::Colors::content(active));

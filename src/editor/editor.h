@@ -98,11 +98,11 @@ private:
 	Document _doc;
 
 	// Information about the editor window
+	Settings _settings;
 	Update _update;
 	Cursor _cursor;
 	location_t _anchor;
 	Range _selection;
-	Settings _settings;
 	std::string _find_text;
 	std::string _replace_text;
 	enum class FindNextAction {

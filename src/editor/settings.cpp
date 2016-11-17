@@ -20,5 +20,6 @@
 
 Editor::Settings::Settings(const Config &config) {
 	_indent_with_tabs = config.get_bool("indent-with-tabs", _indent_with_tabs);
+	_indent_size = config.get_int("indent-size", _indent_size);
 }
 

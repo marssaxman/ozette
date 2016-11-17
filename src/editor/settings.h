@@ -26,8 +26,10 @@ public:
 	Settings() {}
 	Settings(const Config &config);
 	bool indent_with_tabs() const { return _indent_with_tabs; }
+	unsigned indent_size() const { return _indent_size; }
 private:
 	bool _indent_with_tabs = true;
+	unsigned _indent_size = 4;
 };
 } // namespace Editor
 

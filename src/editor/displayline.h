@@ -26,7 +26,6 @@
 #include "app/syntax.h"
 
 namespace Editor {
-extern const unsigned kTabWidth;
 class DisplayLine {
 public:
 	DisplayLine(

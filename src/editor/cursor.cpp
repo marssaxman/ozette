@@ -24,9 +24,10 @@
 // are behaviors with decades of history, and users expect
 // things to work in a certain way, so we just have to deal.
 
-Editor::Cursor::Cursor(Document &doc, Update &update):
+Editor::Cursor::Cursor(Document &doc, Update &update, Settings &settings):
 	_doc(doc),
-	_update(update) {
+	_update(update),
+	_settings(settings) {
 }
 
 void Editor::Cursor::up() {
@@ -66,7 +67,7 @@ void Editor::Cursor::left() {
 	// they are composed of tab or space characters.
 	location_t begin = _location;
 	move_to(_doc.prev(_location));
-	while (_position.h % kTabWidth) {
+	while (_position.h % _settings.indent_size()) {
 		location_t pprev = _doc.prev(_location);
 		if ("  " != _doc.text(Range(pprev, begin))) return;
 		begin = _location;
@@ -80,7 +81,7 @@ void Editor::Cursor::right() {
 	// we reach a non-space character or we reach tab-stop alignment.
 	location_t begin = _location;
 	move_to(_doc.next(_location));
-	while (_position.h % kTabWidth) {
+	while (_position.h % _settings.indent_size()) {
 		location_t next = _doc.next(_location);
 		if ("  " != _doc.text(Range(begin, next))) return;
 		begin = _location;

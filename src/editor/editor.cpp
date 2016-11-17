@@ -29,23 +29,23 @@
 
 Editor::View::View(const Config &config):
 	_doc(config),
-	_cursor(_doc, _update),
-	_settings(config) {
+	_settings(config),
+	_cursor(_doc, _update, _settings) {
 	// new blank buffer
 }
 
 Editor::View::View(std::string targetpath, const Config &config):
 	_targetpath(targetpath),
 	_doc(targetpath, config),
-	_cursor(_doc, _update),
-	_settings(config) {
+	_settings(config),
+	_cursor(_doc, _update, _settings) {
 }
 
 Editor::View::View(std::string title, Document &&doc, const Config &config):
 	_targetpath(title),
 	_doc(std::move(doc)),
-	_cursor(_doc, _update),
-	_settings(config) {
+	_settings(config),
+	_cursor(_doc, _update, _settings) {
 }
 
 void Editor::View::activate(UI::Frame &ctx) {
@@ -553,7 +553,7 @@ void Editor::View::key_tab(UI::Frame &ctx) {
 			key_insert('\t');
 		} else do {
 			key_insert(' ');
-		} while (0 != _cursor.location().offset % kTabWidth);
+		} while (0 != _cursor.location().offset % _settings.indent_size());
 	} else {
 		// indent all lines touched by the selection one more tab then extend
 		// the selection to encompass all of those lines, because that's what
@@ -561,7 +561,7 @@ void Editor::View::key_tab(UI::Frame &ctx) {
 		line_t begin = _selection.begin().line;
 		line_t end = _selection.end().line;
 		if (end > begin && 0 == _selection.end().offset) end--;
-		std::string indent_spaces(kTabWidth, ' ');
+		std::string indent_spaces(_settings.indent_size(), ' ');
 		for (line_t index = begin; index <= end; ++index) {
 			if (_settings.indent_with_tabs()) {
 				_doc.insert(_doc.home(index), '\t');
@@ -582,7 +582,7 @@ void Editor::View::key_btab(UI::Frame &ctx) {
 	// Remove the leftmost tab character or indent-sized sequence of spaces
 	// from each of the selected lines, then extend the selection to encompass
 	// all of those lines.
-	std::string spaceindent(' ', kTabWidth);
+	std::string spaceindent(' ', _settings.indent_size());
 	line_t begin = _selection.begin().line;
 	line_t end = _selection.end().line;
 	if (end > begin && 0 == _selection.end().offset) end--;
@@ -595,7 +595,7 @@ void Editor::View::key_btab(UI::Frame &ctx) {
 			posttab = _doc.next(pretab);
 		} else for (auto ch: text) {
 			if (' ' != ch) break;
-			if (posttab.offset >= kTabWidth) break;
+			if (posttab.offset >= _settings.indent_size()) break;
 			posttab.offset++;
 		}
 		Range indent(pretab, posttab);
