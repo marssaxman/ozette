@@ -30,6 +30,8 @@ const Rule cnumber{"(0([Xx][0-9A-Fa-f]+)?)|([1-9]+)", Token::Type::Literal};
 const Rule slashcomment{"//(.*)$", Token::Type::Comment};
 const Rule hashcomment{"#(.*)$", Token::Type::Comment};
 
+// Keyword lists must be alphabetized.
+
 const Grammar generic = {
 };
 
@@ -109,6 +111,18 @@ const Grammar js = {
 	strdq, strsq, cident, cnumber, slashcomment,
 };
 
+const Grammar protobuf = {
+	Rule::keywords({
+		"default", "deprecated", "enum", "extend", "extensions", "false",
+		"group", "import", "map", "max", "message", "oneof", "option",
+		"optional", "package", "packed", "repeated", "required", "reserved",
+		"returns", "rpc", "service", "stream", "syntax", "to", "true",
+		// types: bool float double string bytes int32 int64 sint32 sint64
+		//        uint64 fixed32 fixed64 sfixed32 sfixed64
+	}),
+	strdq, strsq, cident, cnumber, slashcomment,
+};
+
 const std::map<std::string, const Grammar&> extensions = {
 	{"c", c}, {"C", c},
 	{"h", cxx}, {"H", cxx},
@@ -119,6 +133,7 @@ const std::map<std::string, const Grammar&> extensions = {
 	{"s", assembly},
 	{"py", python},
 	{"js", js},
+	{"proto", protobuf},
 };
 }
 
