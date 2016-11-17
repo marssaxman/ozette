@@ -20,11 +20,11 @@
 
 Config::Config(std::string confdir, std::string workingdir):
 	_user(new INIReader(confdir + "/config")),
-	_dir(new INIReader(workingdir + "/.ozette/config")) {
+	_dir(new INIReader(workingdir + "/.ozetteconfig")) {
 }
 
 void Config::change_directory(std::string workingdir) {
-	_dir.reset(new INIReader(workingdir + "/.ozette/config"));
+	_dir.reset(new INIReader(workingdir + "/.ozetteconfig"));
 }
 
 std::string Config::get(std::string key, std::string val) const {
