@@ -123,6 +123,16 @@ const Grammar protobuf = {
 	strdq, strsq, cident, cnumber, slashcomment,
 };
 
+const Grammar golang = {
+	Rule::keywords({
+		"break", "case", "chan", "const", "continue", "default", "defer",
+		"else", "fallthrough", "false", "for", "func", "go", "goto", "if",
+		"import", "interface", "iota", "map", "nil", "package", "range",
+		"return", "select", "struct", "switch", "true", "type", "var",
+	}),
+	strdq, strsq, cident, cnumber, slashcomment,
+};
+
 const std::map<std::string, const Grammar&> extensions = {
 	{"c", c}, {"C", c},
 	{"h", cxx}, {"H", cxx},
@@ -134,6 +144,7 @@ const std::map<std::string, const Grammar&> extensions = {
 	{"py", python},
 	{"js", js},
 	{"proto", protobuf},
+	{"go", golang},
 };
 }
 
