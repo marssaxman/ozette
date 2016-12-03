@@ -18,10 +18,11 @@
 #ifndef DIALOG_FORM_H
 #define DIALOG_FORM_H
 
-#include <vector>
-#include <memory>
 #include <functional>
 #include <initializer_list>
+#include <map>
+#include <memory>
+#include <vector>
 #include "ui/frame.h"
 #include "ui/helpbar.h"
 

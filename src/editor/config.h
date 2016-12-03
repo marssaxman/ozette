@@ -15,11 +15,20 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#include "editor/settings.h"
-#include <assert.h>
+#ifndef EDITOR_CONFIG_H
+#define EDITOR_CONFIG_H
 
-Editor::Settings::Settings(const Config &config) {
-	_indent_with_tabs = config.get_bool("indent-with-tabs", _indent_with_tabs);
-	_indent_size = config.get_int("indent-size", _indent_size);
-}
+namespace Editor {
+class Config {
+public:
+	Config() {}
+	bool indent_with_tabs() const { return _indent_with_tabs; }
+	unsigned indent_size() const { return _indent_size; }
+private:
+	bool _indent_with_tabs = true;
+	unsigned _indent_size = 4;
+};
+} // namespace Editor
+
+#endif //EDITOR_CONFIG_H
 

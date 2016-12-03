@@ -18,19 +18,18 @@
 #ifndef EDITOR_EDITOR_H
 #define EDITOR_EDITOR_H
 
-#include "app/config.h"
 #include "app/syntax.h"
 #include "ui/view.h"
 #include "editor/document.h"
 #include "editor/update.h"
-#include "editor/settings.h"
+#include "editor/config.h"
 
 namespace Editor {
 class View : public UI::View {
 public:
-	View(const Config &config);
-	View(std::string targetpath, const Config &config);
-	View(std::string title, Document &&doc, const Config &config);
+	View();
+	View(std::string targetpath);
+	View(std::string title, Document &&doc);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;
@@ -112,7 +111,7 @@ private:
 	const Syntax::Grammar &_syntax;
 
 	// Information about the editor window
-	Settings _settings;
+	Config _config;
 	Update _update;
 	location_t _anchor;
 	Range _selection;

@@ -15,28 +15,25 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#include "app/ozette.h"
-#include "app/path.h"
-#include "browser/browser.h"
-#include "editor/editor.h"
-#include "console/console.h"
-#include "search/search.h"
-#include "search/dialog.h"
-#include "app/control.h"
-#include "app/help.h"
-#include <unistd.h>
-#include <fstream>
-#include <sys/stat.h>
 #include <assert.h>
 #include <atomic>
+#include <fstream>
+#include <sys/stat.h>
+#include <unistd.h>
+#include "app/control.h"
+#include "app/help.h"
+#include "app/ozette.h"
+#include "app/path.h"
+#include "console/console.h"
+#include "search/dialog.h"
+#include "search/search.h"
 
 std::atomic_bool sig_io_flag;
 
 Ozette::Ozette():
-	_shell(*this),
-	_home_dir(getenv("HOME")),
-	_config_dir(_home_dir + "/.ozette"),
-	_config(_config_dir, ".") {
+		_shell(*this),
+		_home_dir(getenv("HOME")),
+		_cache_dir(_home_dir + "/.ozette") {
 	char *cwd = getcwd(NULL, 0);
 	if (cwd) {
 		_current_dir = cwd;
@@ -44,7 +41,6 @@ Ozette::Ozette():
 	} else {
 		_current_dir = _home_dir;
 	}
-	_config.change_directory(_current_dir);
 }
 
 void Ozette::change_dir(std::string path) {
@@ -58,7 +54,6 @@ void Ozette::change_dir(std::string path) {
 		return;
 	}
 	_current_dir = path;
-	_config.change_directory(path);
 	Browser::View::change_directory(path);
 }
 
@@ -111,7 +106,7 @@ std::string Ozette::get_clipboard() {
 void Ozette::cache_read(std::string name, std::vector<std::string> &lines) {
 	lines.clear();
 	std::string str;
-	std::ifstream file(_config_dir + "/" + name);
+	std::ifstream file(_cache_dir + "/" + name);
 	while (std::getline(file, str)) {
 		lines.push_back(str);
 	}
@@ -121,19 +116,15 @@ void Ozette::cache_read(std::string name, std::vector<std::string> &lines) {
 void Ozette::cache_write(std::string name, const std::vector<std::string> &l) {
 	// if the ozette directory doesn't exist yet, create it
 	struct stat st;
-	if (stat(_config_dir.c_str(), &st)) {
-		int err = mkdir(_config_dir.c_str(), S_IRWXU);
+	if (stat(_cache_dir.c_str(), &st)) {
+		int err = mkdir(_cache_dir.c_str(), S_IRWXU);
 		assert(0 == err);
 	}
-	std::ofstream file(_config_dir + "/" + name, std::ios::trunc);
+	std::ofstream file(_cache_dir + "/" + name, std::ios::trunc);
 	for (auto &line: l) {
 		file << line << std::endl;
 	}
 	file.close();
-}
-
-Config &Ozette::config() {
-	return _config;
 }
 
 void Ozette::exec(std::string command) {
@@ -151,7 +142,7 @@ Ozette::editor Ozette::open_editor(std::string path) {
 	}
 	// We don't have an editor for this file, so we should create one.
 	editor edrec;
-	edrec.view = new Editor::View(path, _config);
+	edrec.view = new Editor::View(path);
 	std::unique_ptr<UI::View> edptr(edrec.view);
 	edrec.window = _shell.open_window(std::move(edptr));
 	_editors[path] = edrec;
@@ -227,7 +218,7 @@ void Ozette::new_file() {
 			return;
 		}
 		editor edrec;
-		edrec.view = new Editor::View(path, _config);
+		edrec.view = new Editor::View(path);
 		std::unique_ptr<UI::View> edptr(edrec.view);
 		edrec.window = _shell.open_window(std::move(edptr));
 		_editors[path] = edrec;
@@ -261,7 +252,7 @@ void Ozette::show_help() {
 	Editor::Document doc;
 	doc.View(helptext);
 	editor edrec;
-	edrec.view = new Editor::View(help_key, std::move(doc), _config);
+	edrec.view = new Editor::View(help_key, std::move(doc));
 	std::unique_ptr<UI::View> edptr(edrec.view);
 	edrec.window = _shell.open_window(std::move(edptr));
 	_editors[abs_help] = edrec;
@@ -283,8 +274,7 @@ void Ozette::build() {
 	for (auto &edit_pair: _editors) {
 		edit_pair.second.window->process(Control::Save);
 	}
-	std::string command = _config.get("build-command", "make");
-	exec(command);
+	exec("make");
 }
 
 void Ozette::search() {

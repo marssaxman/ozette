@@ -20,11 +20,11 @@
 
 Editor::DisplayLine::DisplayLine(
 		const std::string &text,
-		const Settings &settings,
+		const Config &config,
 		const Syntax::Grammar &syntax):
 		_text(text),
 		_style(text.size()),
-		_settings(settings),
+		_config(config),
 		_syntax(syntax) {
 	static Regex trailing_space("[[:space:]]+$");
 	Regex::Match m = trailing_space.find(text);
@@ -69,7 +69,7 @@ Editor::offset_t Editor::DisplayLine::offset(column_t h) const {
 void Editor::DisplayLine::advance(char ch, column_t &h) const {
 	do {
 		h++;
-	} while (ch == '\t' && h % _settings.indent_size());
+	} while (ch == '\t' && h % _config.indent_size());
 }
 
 void Editor::DisplayLine::paint(
@@ -93,7 +93,7 @@ void Editor::DisplayLine::paint(
 				if (h >= hoff) waddch(d, bullet);
 				h++;
 				bullet = ' ';
-			} while (h < width && 0 != h % _settings.indent_size());
+			} while (h < width && 0 != h % _config.indent_size());
 		}
 	}
 	wattrset(d, UI::Colors::content(active));

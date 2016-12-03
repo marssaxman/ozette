@@ -28,24 +28,21 @@
 #include <dirent.h>
 #include <cctype>
 
-Editor::View::View(const Config &config):
-	_syntax(Syntax::lookup("")),
-	_settings(config) {
+Editor::View::View():
+		_syntax(Syntax::lookup("")) {
 	// new blank buffer
 }
 
-Editor::View::View(std::string targetpath, const Config &config):
+Editor::View::View(std::string targetpath):
 	_targetpath(targetpath),
 	_doc(targetpath),
-	_syntax(Syntax::lookup(targetpath)),
-	_settings(config) {
+	_syntax(Syntax::lookup(targetpath)) {
 }
 
-Editor::View::View(std::string title, Document &&doc, const Config &config):
+Editor::View::View(std::string title, Document &&doc):
 	_targetpath(title),
 	_doc(std::move(doc)),
-	_syntax(Syntax::lookup(title)),
-	_settings(config) {
+	_syntax(Syntax::lookup(title)) {
 }
 
 void Editor::View::activate(UI::Frame &ctx) {
@@ -167,7 +164,7 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, State state) {
 	size_t index = v + _scroll.v;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)v, 0);
-	DisplayLine line(_doc.line(index), _settings, _syntax);
+	DisplayLine line(_doc.line(index), _config, _syntax);
 	line.paint(dest, _scroll.h, _width, state != State::Inactive);
 	if (state == State::Inactive) return;
 	if (_selection.empty()) return;
@@ -517,7 +514,7 @@ void Editor::View::key_left(bool extend) {
 	// they are composed of tab or space characters.
 	location_t begin = _cursor_location;
 	cursor_move_to(_doc.prev(_cursor_location));
-	while (_cursor_position.h % _settings.indent_size()) {
+	while (_cursor_position.h % _config.indent_size()) {
 		location_t pprev = _doc.prev(_cursor_location);
 		if ("  " != _doc.text(Range(pprev, begin))) return;
 		begin = _cursor_location;
@@ -533,7 +530,7 @@ void Editor::View::key_right(bool extend) {
 	// we reach a non-space character or we reach tab-stop alignment.
 	location_t begin = _cursor_location;
 	cursor_move_to(_doc.next(_cursor_location));
-	while (_cursor_position.h % _settings.indent_size()) {
+	while (_cursor_position.h % _config.indent_size()) {
 		location_t next = _doc.next(_cursor_location);
 		if ("  " != _doc.text(Range(begin, next))) return;
 		begin = _cursor_location;
@@ -594,11 +591,11 @@ void Editor::View::key_tab(UI::Frame &ctx) {
 	if (_selection.empty()) {
 		// move the cursor forward to the next tab stop, using either a tab
 		// character or a series of spaces, as the user requires
-		if (_settings.indent_with_tabs()) {
+		if (_config.indent_with_tabs()) {
 			key_insert('\t');
 		} else do {
 			key_insert(' ');
-		} while (0 != _cursor_location.offset % _settings.indent_size());
+		} while (0 != _cursor_location.offset % _config.indent_size());
 	} else {
 		// indent all lines touched by the selection one more tab then extend
 		// the selection to encompass all of those lines, because that's what
@@ -606,9 +603,9 @@ void Editor::View::key_tab(UI::Frame &ctx) {
 		line_t begin = _selection.begin().line;
 		line_t end = _selection.end().line;
 		if (end > begin && 0 == _selection.end().offset) end--;
-		std::string indent_spaces(_settings.indent_size(), ' ');
+		std::string indent_spaces(_config.indent_size(), ' ');
 		for (line_t index = begin; index <= end; ++index) {
-			if (_settings.indent_with_tabs()) {
+			if (_config.indent_with_tabs()) {
 				_doc.insert(_doc.home(index), '\t');
 			} else {
 				_doc.insert(_doc.home(index), indent_spaces);
@@ -627,7 +624,7 @@ void Editor::View::key_btab(UI::Frame &ctx) {
 	// Remove the leftmost tab character or indent-sized sequence of spaces
 	// from each of the selected lines, then extend the selection to encompass
 	// all of those lines.
-	std::string spaceindent(' ', _settings.indent_size());
+	std::string spaceindent(' ', _config.indent_size());
 	line_t begin = _selection.begin().line;
 	line_t end = _selection.end().line;
 	if (end > begin && 0 == _selection.end().offset) end--;
@@ -640,7 +637,7 @@ void Editor::View::key_btab(UI::Frame &ctx) {
 			posttab = _doc.next(pretab);
 		} else for (auto ch: text) {
 			if (' ' != ch) break;
-			if (posttab.offset >= _settings.indent_size()) break;
+			if (posttab.offset >= _config.indent_size()) break;
 			posttab.offset++;
 		}
 		Range indent(pretab, posttab);
@@ -723,7 +720,7 @@ Editor::position_t Editor::View::to_position(const location_t &loc) {
 	// Compute the screen position for this document location.
 	position_t out;
 	out.v = std::min(_doc.maxline(), loc.line);
-	DisplayLine line(_doc.line(loc.line), _settings, _syntax);
+	DisplayLine line(_doc.line(loc.line), _config, _syntax);
 	out.h = line.column(loc.offset);
 	return out;
 }

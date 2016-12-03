@@ -15,23 +15,5 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#ifndef EDITOR_SETTINGS_H
-#define EDITOR_SETTINGS_H
-
-#include "app/config.h"
-
-namespace Editor {
-class Settings {
-public:
-	Settings() {}
-	Settings(const Config &config);
-	bool indent_with_tabs() const { return _indent_with_tabs; }
-	unsigned indent_size() const { return _indent_size; }
-private:
-	bool _indent_with_tabs = true;
-	unsigned _indent_size = 4;
-};
-} // namespace Editor
-
-#endif //EDITOR_SETTINGS_H
+#include "editor/config.h"
 

@@ -18,14 +18,13 @@
 #ifndef APP_OZETTE_H
 #define APP_OZETTE_H
 
-#include "app/controller.h"
-#include "ui/shell.h"
-#include "browser/browser.h"
-#include "editor/editor.h"
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-
+#include "app/controller.h"
+#include "browser/browser.h"
+#include "editor/editor.h"
+#include "ui/shell.h"
 
 class Ozette : public Controller {
 public:
@@ -39,7 +38,6 @@ public:
 	virtual std::string get_clipboard() override;
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) override;
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) override;
-	virtual Config &config() override;
 	virtual void search(Search::spec query) override;
 	void run();
 	void sig_io();
@@ -62,8 +60,7 @@ private:
 	UI::Shell _shell;
 	std::string _home_dir;
 	std::string _current_dir;
-	std::string _config_dir;
-	Config _config;
+    std::string _cache_dir;
 	std::map<std::string, editor> _editors;
 	std::string _clipboard;
 	bool _done = false;

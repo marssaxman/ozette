@@ -22,7 +22,7 @@
 #include <ncurses.h>
 #include <vector>
 #include "editor/coordinates.h"
-#include "editor/settings.h"
+#include "editor/config.h"
 #include "app/syntax.h"
 
 namespace Editor {
@@ -30,7 +30,7 @@ class DisplayLine {
 public:
 	DisplayLine(
 			const std::string &text,
-			const Settings &settings,
+			const Config &settings,
 			const Syntax::Grammar &syntax);
 	// Unformatted bytes
 	const std::string &text() const { return _text; }
@@ -48,7 +48,7 @@ private:
 	void advance(char ch, column_t &h) const;
 	const std::string &_text;
 	std::vector<int> _style;
-	const Settings &_settings;
+	const Config &_config;
 	const Syntax::Grammar &_syntax;
 };
 } // namespace Editor

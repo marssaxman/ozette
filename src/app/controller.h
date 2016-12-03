@@ -20,7 +20,6 @@
 
 #include <string>
 #include <vector>
-#include "app/config.h"
 #include "search/engine.h"
 
 // Abstract interface for centralized application actions.
@@ -37,7 +36,6 @@ public:
 	virtual std::string get_clipboard() = 0;
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) = 0;
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) = 0;
-	virtual Config &config() = 0;
 };
 
 #endif //APP_CONTROLLER_H
