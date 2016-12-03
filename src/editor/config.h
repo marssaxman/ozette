@@ -18,10 +18,13 @@
 #ifndef EDITOR_CONFIG_H
 #define EDITOR_CONFIG_H
 
+#include <string>
+
 namespace Editor {
 class Config {
 public:
 	Config() {}
+	void load(std::string path) {} // load config settings for this file
 	bool indent_with_tabs() const { return _indent_with_tabs; }
 	unsigned indent_size() const { return _indent_size; }
 private:

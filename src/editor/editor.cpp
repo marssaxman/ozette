@@ -34,9 +34,10 @@ Editor::View::View():
 }
 
 Editor::View::View(std::string targetpath):
-	_targetpath(targetpath),
-	_doc(targetpath),
-	_syntax(Syntax::lookup(targetpath)) {
+		_targetpath(targetpath),
+		_doc(targetpath),
+		_syntax(Syntax::lookup(targetpath)) {
+	_config.load(targetpath);
 }
 
 Editor::View::View(std::string title, Document &&doc):
@@ -699,6 +700,7 @@ Editor::position_t Editor::View::to_position(const location_t &loc) {
 void Editor::View::save(UI::Frame &ctx, std::string dest) {
 	_doc.commit();
 	_doc.Write(dest);
+	_config.load(dest);
 	ctx.set_status(_doc.status());
 	std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
 	stat += (_doc.maxline() >= 1) ? " lines" : " line";
