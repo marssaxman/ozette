@@ -158,8 +158,8 @@ Editor::location_t Editor::Document::erase(const Range &chars) {
 }
 
 Editor::location_t Editor::Document::insert(location_t begin, char ch) {
+	sanitize(&begin);
 	location_t loc = begin;
-	sanitize(loc);
 	if (!attempt_modify()) return loc;
 	if (loc.line < _lines.size()) {
 		std::string text = _lines[loc.line];
@@ -175,8 +175,8 @@ Editor::location_t Editor::Document::insert(location_t begin, char ch) {
 }
 
 Editor::location_t Editor::Document::insert(location_t cur, std::string text) {
+	sanitize(&cur);
 	location_t loc = cur;
-	sanitize(loc);
 	if (!attempt_modify()) return loc;
 
 	std::string suffix;
@@ -216,7 +216,7 @@ Editor::location_t Editor::Document::insert(location_t cur, std::string text) {
 
 Editor::location_t Editor::Document::split(location_t loc) {
 	if (!attempt_modify()) return loc;
-	sanitize(loc);
+	sanitize(&loc);
 	_edits.split(loc);
 	std::string text = line(loc.line);
 	update_line(loc.line, text.substr(0, loc.offset));
