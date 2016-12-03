@@ -24,15 +24,14 @@
 #include "app/syntax.h"
 #include "editor/coordinates.h"
 #include "editor/changelist.h"
-#include "editor/settings.h"
 
 // A document breaks a text buffer into lines, then maps those lines onto an
 // infinite plane of equally sized character cells.
 namespace Editor {
 class Document {
 public:
-	Document(const Config &config);
-	Document(std::string path, const Config &config);
+	Document();
+	Document(std::string path);
 	void Write(std::string path);
 	void View(std::string text);
 	std::string status() const { return _status; }
@@ -88,8 +87,6 @@ private:
 	bool attempt_modify();
 	void clear_modify();
 
-	// Editor settings for the current working directory
-	Settings _settings;
 	// Syntax for this document's file type
 	const Syntax::Grammar &_syntax;
 

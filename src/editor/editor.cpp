@@ -29,7 +29,6 @@
 #include <cctype>
 
 Editor::View::View(const Config &config):
-	_doc(config),
 	_settings(config),
 	_cursor(_doc, _update, _settings) {
 	// new blank buffer
@@ -37,7 +36,7 @@ Editor::View::View(const Config &config):
 
 Editor::View::View(std::string targetpath, const Config &config):
 	_targetpath(targetpath),
-	_doc(targetpath, config),
+	_doc(targetpath),
 	_settings(config),
 	_cursor(_doc, _update, _settings) {
 }

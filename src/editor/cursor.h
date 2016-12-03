@@ -20,6 +20,7 @@
 
 #include "editor/document.h"
 #include "editor/update.h"
+#include "editor/settings.h"
 
 // A cursor points at a location in a document and
 // navigates to other locations relative to it.

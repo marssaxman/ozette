@@ -21,12 +21,12 @@
 #include <assert.h>
 #include <sys/stat.h>
 
-Editor::Document::Document(const Config &config):
-		_settings(config), _syntax(Syntax::lookup("")) {
+Editor::Document::Document():
+		_syntax(Syntax::lookup("")) {
 }
 
-Editor::Document::Document(std::string path, const Config &config):
-		_settings(config), _syntax(Syntax::lookup(path)) {
+Editor::Document::Document(std::string path):
+		_syntax(Syntax::lookup(path)) {
 	_lines.clear();
 	_edits.clear();
 	_modified = false;

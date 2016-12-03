@@ -258,7 +258,7 @@ void Ozette::show_help() {
 	}
 	std::string helptext((const char*)HELP, HELP_len);
 	helptext += "\n";
-	Editor::Document doc(_config);
+	Editor::Document doc;
 	doc.View(helptext);
 	editor edrec;
 	edrec.view = new Editor::View(help_key, std::move(doc), _config);
