@@ -15,18 +15,18 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#include "editor/editor.h"
-#include "editor/displayline.h"
+#include <assert.h>
+#include <cctype>
+#include <dirent.h>
+#include <sys/stat.h>
 #include "app/control.h"
 #include "app/path.h"
-#include "dialog/form.h"
 #include "dialog/confirmation.h"
+#include "dialog/form.h"
+#include "editor/displayline.h"
+#include "editor/editor.h"
 #include "ui/colors.h"
 #include "search/dialog.h"
-#include <assert.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <cctype>
 
 Editor::View::View():
 		_syntax(Syntax::lookup("")) {
@@ -69,7 +69,7 @@ void Editor::View::paint_into(WINDOW *dest, State state) {
 	for (unsigned i = 0; i < _height; ++i) {
 		paint_line(dest, i, state);
 	}
-	position_t curs = _cursor_display;
+	position_t curs = _cursor_position;
 	curs.h -= std::min(curs.h, _scroll.h);
 	curs.v -= std::min(curs.v, _scroll.v);
 	wmove(dest, curs.v, curs.h);
@@ -205,8 +205,8 @@ void Editor::View::reveal_cursor() {
 	}
 	// Try to keep the view scrolled left if possible, but if that would put the
 	// cursor offscreen, scroll right by the cursor position plus a few extra.
-	if (_cursor_display.h >= _width) {
-		column_t newh = _cursor_display.h + 4 - _width;
+	if (_cursor_position.h >= _width) {
+		column_t newh = _cursor_position.h + 4 - _width;
 		if (newh != _scroll.h) {
 			_scroll.h = newh;
 			_update.all();
@@ -468,16 +468,12 @@ void Editor::View::key_up(bool extend) {
 		_update.all();
 		return;
 	}
-	// Move up the screen by the specified number of rows,
-	// stopping when we reach zero. Do not move the column.
-	// If the cursor was already positioned on the top row,
-	// move the cursor left to the beginning of the line.
+	// Move up the screen by the specified number of rows, stopping when we
+	// reach zero. If the cursor was already positioned on the top row, move
+	// the cursor left to the beginning of the line.
 	if (_cursor_location.line) {
-		_update.at(_cursor_location);
-		_cursor_location.line--;
-		_update.at(_cursor_location);
-		_cursor_display = to_position(_cursor_location);
-		_cursor_position.v = _cursor_display.v;
+		location_t dest{_cursor_location.line - 1, _cursor_location.offset};
+		cursor_move_to(dest);
 	} else {
 		cursor_move_to(_doc.home());
 	}
@@ -491,14 +487,11 @@ void Editor::View::key_down(bool extend) {
 		return;
 	}
 	// Move to the next row down the screen, stopping at the maximum row. 
-	// Do not move the column. If the cursor was already positioned on the
-	// maximum row, move the cursor right to the end of the line.
+	// If the cursor was already positioned on the maximum row, move the cursor
+	// right to the end of the line.
 	if (_cursor_location.line < _doc.maxline()) {
-		_update.at(_cursor_location);
-		_cursor_location.line++;
-		_update.at(_cursor_location);
-		_cursor_display = to_position(_cursor_location);
-		_cursor_position.v = _cursor_display.v;
+		location_t dest{_cursor_location.line + 1, _cursor_location.offset};
+		cursor_move_to(dest);
 	} else {
 		cursor_move_to(_doc.end());
 	}
@@ -507,35 +500,13 @@ void Editor::View::key_down(bool extend) {
 
 void Editor::View::key_left(bool extend) {
 	if (_doc.readonly()) return;
-	// Move left by one character. This may wrap us around to the end of the
-	// previous line. If we are now positioned on a space character which is
-	// not aligned to a tab stop, and the previous character is also a space,
-	// move left again. Thus we move across indentations identically whether
-	// they are composed of tab or space characters.
-	location_t begin = _cursor_location;
 	cursor_move_to(_doc.prev(_cursor_location));
-	while (_cursor_position.h % _config.indent_size()) {
-		location_t pprev = _doc.prev(_cursor_location);
-		if ("  " != _doc.text(Range(pprev, begin))) return;
-		begin = _cursor_location;
-		cursor_move_to(pprev);
-	}
 	adjust_selection(extend);
 }
 
 void Editor::View::key_right(bool extend) {
 	if (_doc.readonly()) return;
-	// Move right by one character. This may wrap around to the beginning of
-	// the next line. If the target character was a space, keep moving until
-	// we reach a non-space character or we reach tab-stop alignment.
-	location_t begin = _cursor_location;
 	cursor_move_to(_doc.next(_cursor_location));
-	while (_cursor_position.h % _config.indent_size()) {
-		location_t next = _doc.next(_cursor_location);
-		if ("  " != _doc.text(Range(begin, next))) return;
-		begin = _cursor_location;
-		cursor_move_to(next);
-	}
 	adjust_selection(extend);
 }
 
@@ -713,7 +684,7 @@ void Editor::View::cursor_move_to(location_t loc) {
 	// Tell the viewer what to redraw, then update the display
 	// position according to the new location.
 	_update.at(_cursor_location);
-	_cursor_display = _cursor_position = to_position(_cursor_location);
+	_cursor_position = to_position(_cursor_location);
 }
 
 Editor::position_t Editor::View::to_position(const location_t &loc) {

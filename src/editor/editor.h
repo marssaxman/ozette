@@ -19,10 +19,10 @@
 #define EDITOR_EDITOR_H
 
 #include "app/syntax.h"
-#include "ui/view.h"
+#include "editor/config.h"
 #include "editor/document.h"
 #include "editor/update.h"
-#include "editor/config.h"
+#include "ui/view.h"
 
 namespace Editor {
 class View : public UI::View {
@@ -96,8 +96,6 @@ private:
 	position_t to_position(const location_t &in_document);
 	// Where is the cursor relative to the document?
 	location_t _cursor_location;
-	// Where are we displaying the cursor?
-	position_t _cursor_display = {0,0};
 	// What is the nominal, non-column-adjusted cursor position?
 	position_t _cursor_position = {0,0};
 
