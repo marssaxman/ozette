@@ -21,7 +21,7 @@
 #include "ui/view.h"
 #include "editor/document.h"
 #include "editor/update.h"
-#include "editor/cursor.h"
+#include "editor/settings.h"
 #include "app/config.h"
 
 namespace Editor {
@@ -90,6 +90,18 @@ private:
 	void drop_selection();
 	void adjust_selection(bool extend);
 
+	// Cursor management
+	void cursor_move_to(location_t loc);
+	// Convert back and forth between document and screen coordinates.
+	position_t to_position(const location_t &in_document);
+	location_t to_location(const position_t &on_display);
+	// Where is the cursor relative to the document?
+	location_t _cursor_location;
+	// Where are we displaying the cursor?
+	position_t _cursor_display = {0,0};
+	// What is the nominal, non-column-adjusted cursor position?
+	position_t _cursor_position = {0,0};
+
 	void save(UI::Frame &ctx, std::string dest);
 	bool find(UI::Frame &ctx, location_t anchor, std::string pattern);
 
@@ -100,7 +112,6 @@ private:
 	// Information about the editor window
 	Settings _settings;
 	Update _update;
-	Cursor _cursor;
 	location_t _anchor;
 	Range _selection;
 	std::string _find_text;
