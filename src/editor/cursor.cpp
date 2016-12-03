@@ -16,6 +16,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include "editor/cursor.h"
+#include "editor/displayline.h"
 #include <climits>
 
 // A cursor is a navigation implement with some semantics
@@ -141,7 +142,8 @@ Editor::position_t Editor::Cursor::to_position(const location_t &loc) {
 	// Compute the screen position for this document location.
 	position_t out;
 	out.v = std::min(_doc.maxline(), loc.line);
-	out.h = _doc.display(loc.line).column(loc.offset);
+	DisplayLine line(_doc.line(loc.line), _settings, _doc.syntax());
+	out.h = line.column(loc.offset);
 	return out;
 }
 
@@ -150,7 +152,8 @@ Editor::location_t Editor::Cursor::to_location(const position_t &loc) {
 	// given screen position.
 	location_t out;
 	out.line = loc.v;
-	out.offset = _doc.display(out.line).offset(loc.h);
+	DisplayLine line(_doc.line(out.line), _settings, _doc.syntax());
+	out.offset = line.offset(loc.h);
 	return out;
 }
 

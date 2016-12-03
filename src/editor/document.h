@@ -21,8 +21,8 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include "app/syntax.h"
 #include "editor/coordinates.h"
-#include "editor/displayline.h"
 #include "editor/changelist.h"
 #include "editor/settings.h"
 
@@ -61,8 +61,6 @@ public:
 
 	// Get the raw text of the indexed source line.
 	const std::string &line(line_t index) const;
-	// Get a display version of the indexed source line.
-	DisplayLine display(line_t index) const;
 	// Retrieve the text within the range as a contiguous string.
 	std::string text(const Range &span) const;
 
@@ -76,6 +74,7 @@ public:
 	// the beginning of the newly-created following line.
 	location_t split(location_t loc);
 
+	const Syntax::Grammar &syntax() const { return _syntax; }
 private:
 	std::string substr_to_end(const location_t &loc) const;
 	std::string substr_from_home(const location_t &loc);

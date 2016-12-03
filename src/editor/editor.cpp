@@ -16,6 +16,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include "editor/editor.h"
+#include "editor/displayline.h"
 #include "app/control.h"
 #include "app/path.h"
 #include "dialog/form.h"
@@ -167,7 +168,7 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, State state) {
 	size_t index = v + _scroll.v;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)v, 0);
-	DisplayLine line = _doc.display(index);
+	DisplayLine line(_doc.line(index), _settings, _doc.syntax());
 	line.paint(dest, _scroll.h, _width, state != State::Inactive);
 	if (state == State::Inactive) return;
 	if (_selection.empty()) return;

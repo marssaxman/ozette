@@ -132,10 +132,6 @@ const std::string &Editor::Document::line(line_t index) const {
 	return index < _lines.size()? _lines[index]: _blank;
 }
 
-Editor::DisplayLine Editor::Document::display(line_t index) const {
-	return DisplayLine(line(index), _settings, _syntax);
-}
-
 std::string Editor::Document::text(const Range &span) const {
 	std::stringstream out;
 	location_t loc = span.begin();
