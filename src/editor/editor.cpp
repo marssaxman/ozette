@@ -29,6 +29,7 @@
 #include <cctype>
 
 Editor::View::View(const Config &config):
+	_syntax(Syntax::lookup("")),
 	_settings(config) {
 	// new blank buffer
 }
@@ -36,12 +37,14 @@ Editor::View::View(const Config &config):
 Editor::View::View(std::string targetpath, const Config &config):
 	_targetpath(targetpath),
 	_doc(targetpath),
+	_syntax(Syntax::lookup(targetpath)),
 	_settings(config) {
 }
 
 Editor::View::View(std::string title, Document &&doc, const Config &config):
 	_targetpath(title),
 	_doc(std::move(doc)),
+	_syntax(Syntax::lookup(title)),
 	_settings(config) {
 }
 
@@ -164,7 +167,7 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, State state) {
 	size_t index = v + _scroll.v;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)v, 0);
-	DisplayLine line(_doc.line(index), _settings, _doc.syntax());
+	DisplayLine line(_doc.line(index), _settings, _syntax);
 	line.paint(dest, _scroll.h, _width, state != State::Inactive);
 	if (state == State::Inactive) return;
 	if (_selection.empty()) return;
@@ -720,7 +723,7 @@ Editor::position_t Editor::View::to_position(const location_t &loc) {
 	// Compute the screen position for this document location.
 	position_t out;
 	out.v = std::min(_doc.maxline(), loc.line);
-	DisplayLine line(_doc.line(loc.line), _settings, _doc.syntax());
+	DisplayLine line(_doc.line(loc.line), _settings, _syntax);
 	out.h = line.column(loc.offset);
 	return out;
 }
@@ -730,7 +733,7 @@ Editor::location_t Editor::View::to_location(const position_t &loc) {
 	// given screen position.
 	location_t out;
 	out.line = loc.v;
-	DisplayLine line(_doc.line(out.line), _settings, _doc.syntax());
+	DisplayLine line(_doc.line(out.line), _settings, _syntax);
 	out.offset = line.offset(loc.h);
 	return out;
 }

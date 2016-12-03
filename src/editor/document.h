@@ -21,7 +21,6 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include "app/syntax.h"
 #include "editor/coordinates.h"
 #include "editor/changelist.h"
 
@@ -30,7 +29,7 @@
 namespace Editor {
 class Document {
 public:
-	Document();
+	Document() {}
 	Document(std::string path);
 	void Write(std::string path);
 	void View(std::string text);
@@ -73,7 +72,6 @@ public:
 	// the beginning of the newly-created following line.
 	location_t split(location_t loc);
 
-	const Syntax::Grammar &syntax() const { return _syntax; }
 private:
 	std::string substr_to_end(const location_t &loc) const;
 	std::string substr_from_home(const location_t &loc);
@@ -86,9 +84,6 @@ private:
 	location_t sanitize(const location_t &loc);
 	bool attempt_modify();
 	void clear_modify();
-
-	// Syntax for this document's file type
-	const Syntax::Grammar &_syntax;
 
 	std::string _blank;
 	std::vector<std::string> _lines;

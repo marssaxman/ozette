@@ -18,11 +18,12 @@
 #ifndef EDITOR_EDITOR_H
 #define EDITOR_EDITOR_H
 
+#include "app/config.h"
+#include "app/syntax.h"
 #include "ui/view.h"
 #include "editor/document.h"
 #include "editor/update.h"
 #include "editor/settings.h"
-#include "app/config.h"
 
 namespace Editor {
 class View : public UI::View {
@@ -108,6 +109,8 @@ private:
 	// Information about the file being edited
 	std::string _targetpath;
 	Document _doc;
+	// Syntax for this document's file type
+	const Syntax::Grammar &_syntax;
 
 	// Information about the editor window
 	Settings _settings;
