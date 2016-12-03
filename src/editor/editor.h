@@ -95,7 +95,6 @@ private:
 	void cursor_move_to(location_t loc);
 	// Convert back and forth between document and screen coordinates.
 	position_t to_position(const location_t &in_document);
-	location_t to_location(const position_t &on_display);
 	// Where is the cursor relative to the document?
 	location_t _cursor_location;
 	// Where are we displaying the cursor?

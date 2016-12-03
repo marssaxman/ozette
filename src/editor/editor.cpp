@@ -469,43 +469,43 @@ void Editor::View::key_up(bool extend) {
 	if (_doc.readonly()) {
 		_scroll.v -= std::min(_scroll.v, 1U);
 		_update.all();
-	} else {
-		// Move up the screen by the specified number of rows,
-		// stopping when we reach zero. Do not move the column.
-		// If the cursor was already positioned on the top row,
-		// move the cursor left to the beginning of the line.
-		if (_cursor_position.v) {
-			_update.at(_cursor_location);
-			_cursor_position.v--;
-			_cursor_location = to_location(_cursor_position);
-			_update.at(_cursor_location);
-			_cursor_display = to_position(_cursor_location);
-		} else {
-			cursor_move_to(_doc.home());
-		}
-		adjust_selection(extend);
+		return;
 	}
+	// Move up the screen by the specified number of rows,
+	// stopping when we reach zero. Do not move the column.
+	// If the cursor was already positioned on the top row,
+	// move the cursor left to the beginning of the line.
+	if (_cursor_location.line) {
+		_update.at(_cursor_location);
+		_cursor_location.line--;
+		_update.at(_cursor_location);
+		_cursor_display = to_position(_cursor_location);
+		_cursor_position.v = _cursor_display.v;
+	} else {
+		cursor_move_to(_doc.home());
+	}
+	adjust_selection(extend);
 }
 
 void Editor::View::key_down(bool extend) {
 	if (_doc.readonly()) {
 		_scroll.v = std::min(_scroll.v + 1, _maxscroll);
 		_update.all();
-	} else {
-		// Move to the next row down the screen, stopping at the maximum row. 
-		// Do not move the column. If the cursor was already positioned on the
-		// maximum row, move the cursor right to the end of the line.
-		if (_cursor_position.v < _doc.maxline()) {
-			_update.at(_cursor_location);
-			_cursor_position.v++;
-			_cursor_location = to_location(_cursor_position);
-			_update.at(_cursor_location);
-			_cursor_display = to_position(_cursor_location);
-		} else {
-			cursor_move_to(_doc.end());
-		}
-		adjust_selection(extend);
+		return;
 	}
+	// Move to the next row down the screen, stopping at the maximum row. 
+	// Do not move the column. If the cursor was already positioned on the
+	// maximum row, move the cursor right to the end of the line.
+	if (_cursor_location.line < _doc.maxline()) {
+		_update.at(_cursor_location);
+		_cursor_location.line++;
+		_update.at(_cursor_location);
+		_cursor_display = to_position(_cursor_location);
+		_cursor_position.v = _cursor_display.v;
+	} else {
+		cursor_move_to(_doc.end());
+	}
+	adjust_selection(extend);
 }
 
 void Editor::View::key_left(bool extend) {
@@ -725,16 +725,6 @@ Editor::position_t Editor::View::to_position(const location_t &loc) {
 	out.v = std::min(_doc.maxline(), loc.line);
 	DisplayLine line(_doc.line(loc.line), _settings, _syntax);
 	out.h = line.column(loc.offset);
-	return out;
-}
-
-Editor::location_t Editor::View::to_location(const position_t &loc) {
-	// Locate the character in the document corresponding to the
-	// given screen position.
-	location_t out;
-	out.line = loc.v;
-	DisplayLine line(_doc.line(out.line), _settings, _syntax);
-	out.offset = line.offset(loc.h);
 	return out;
 }
 
