@@ -52,8 +52,8 @@ public:
 	line_t maxline() const { return _maxline; }
 
 	// Where is the character which follows or precedes this one?
-	location_t next(location_t loc);
-	location_t prev(location_t loc);
+	location_t next_char(location_t loc);
+	location_t prev_char(location_t loc);
 	// Where is the next occurrence of the specified string?
 	Range find(std::string text, location_t begin);
 

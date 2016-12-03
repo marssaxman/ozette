@@ -69,7 +69,7 @@ void Editor::View::paint_into(WINDOW *dest, State state) {
 	for (unsigned i = 0; i < _height; ++i) {
 		paint_line(dest, i, state);
 	}
-	position_t curs = _cursor_position;
+	position_t curs = to_position(_cursor);
 	curs.h -= std::min(curs.h, _scroll.h);
 	curs.v -= std::min(curs.v, _scroll.v);
 	wmove(dest, curs.v, curs.h);
@@ -147,7 +147,7 @@ void Editor::View::set_help(UI::HelpBar::Panel &panel) {
 void Editor::View::select(UI::Frame &ctx, Range range) {
 	_anchor = range.begin();
 	_selection = range;
-	cursor_move_to(range.end());
+	move_cursor(range.end());
 	reveal_cursor();
 	ctx.repaint();
 }
@@ -195,7 +195,7 @@ void Editor::View::reveal_cursor() {
 	if (_doc.readonly()) return;
 	// If the cursor is on a line which is not on screen, scroll vertically to
 	// position the line in the center of the window.
-	line_t line = _cursor_location.line;
+	line_t line = _cursor.line;
 	if (line < _scroll.v || (line - _scroll.v) >= _height) {
 		// Try to center the viewport over the cursor.
 		_scroll.v = (line > _halfheight) ? (line - _halfheight) : 0;
@@ -205,8 +205,9 @@ void Editor::View::reveal_cursor() {
 	}
 	// Try to keep the view scrolled left if possible, but if that would put the
 	// cursor offscreen, scroll right by the cursor position plus a few extra.
-	if (_cursor_position.h >= _width) {
-		column_t newh = _cursor_position.h + 4 - _width;
+	position_t pos = to_position(_cursor);
+	if (pos.h >= _width) {
+		column_t newh = pos.h + 4 - _width;
 		if (newh != _scroll.h) {
 			_scroll.h = newh;
 			_update.all();
@@ -243,7 +244,7 @@ void Editor::View::set_status(UI::Frame &ctx) {
 		if (!status.empty()) status.push_back(' ');
 		status.push_back('@');
 		// humans use weird 1-based line numbers
-		status += std::to_string(1 + _cursor_location.line);
+		status += std::to_string(1 + _cursor.line);
 	}
 	ctx.set_status(status);
 }
@@ -327,7 +328,7 @@ void Editor::View::ctl_toline(UI::Frame &ctx) {
 	dialog.fields = {
 		{
 			"Go to line (of " + std::to_string(_doc.maxline() + 1) + ")",
-			std::to_string(_cursor_location.line + 1)
+			std::to_string(_cursor.line + 1)
 		}
 	};
 	dialog.commit = [this](UI::Frame &ctx, Dialog::Form::Result &result) {
@@ -335,7 +336,7 @@ void Editor::View::ctl_toline(UI::Frame &ctx) {
 		if (value.empty()) return;
 		long valnum = std::stol(value) - 1;
 		size_t index = (valnum >= 0) ? valnum : 0;
-		cursor_move_to(_doc.home(index));
+		move_cursor(_doc.home(index));
 		drop_selection();
 		postprocess(ctx);
 	};
@@ -411,13 +412,13 @@ void Editor::View::ctl_find_next(UI::Frame &ctx) {
 }
 
 void Editor::View::ctl_undo(UI::Frame &ctx) {
-	cursor_move_to(_doc.undo(_update));
+	move_cursor(_doc.undo(_update));
 	drop_selection();
 	postprocess(ctx);
 }
 
 void Editor::View::ctl_redo(UI::Frame &ctx) {
-	cursor_move_to(_doc.redo(_update));
+	move_cursor(_doc.redo(_update));
 	drop_selection();
 	postprocess(ctx);
 }
@@ -471,11 +472,11 @@ void Editor::View::key_up(bool extend) {
 	// Move up the screen by the specified number of rows, stopping when we
 	// reach zero. If the cursor was already positioned on the top row, move
 	// the cursor left to the beginning of the line.
-	if (_cursor_location.line) {
-		location_t dest{_cursor_location.line - 1, _cursor_location.offset};
-		cursor_move_to(dest);
+	if (_cursor.line) {
+		location_t dest{_cursor.line - 1, _cursor.offset};
+		move_cursor(dest);
 	} else {
-		cursor_move_to(_doc.home());
+		move_cursor(_doc.home());
 	}
 	adjust_selection(extend);
 }
@@ -489,72 +490,72 @@ void Editor::View::key_down(bool extend) {
 	// Move to the next row down the screen, stopping at the maximum row. 
 	// If the cursor was already positioned on the maximum row, move the cursor
 	// right to the end of the line.
-	if (_cursor_location.line < _doc.maxline()) {
-		location_t dest{_cursor_location.line + 1, _cursor_location.offset};
-		cursor_move_to(dest);
+	if (_cursor.line < _doc.maxline()) {
+		location_t dest{_cursor.line + 1, _cursor.offset};
+		move_cursor(dest);
 	} else {
-		cursor_move_to(_doc.end());
+		move_cursor(_doc.end());
 	}
 	adjust_selection(extend);
 }
 
 void Editor::View::key_left(bool extend) {
 	if (_doc.readonly()) return;
-	cursor_move_to(_doc.prev(_cursor_location));
+	move_cursor(_doc.prev_char(_cursor));
 	adjust_selection(extend);
 }
 
 void Editor::View::key_right(bool extend) {
 	if (_doc.readonly()) return;
-	cursor_move_to(_doc.next(_cursor_location));
+	move_cursor(_doc.next_char(_cursor));
 	adjust_selection(extend);
 }
 
 void Editor::View::key_page_up() {
 	// move the cursor to the last line of the previous page
-	cursor_move_to(_doc.home(_scroll.v - std::min(_scroll.v, 1U)));
+	move_cursor(_doc.home(_scroll.v - std::min(_scroll.v, 1U)));
 	drop_selection();
 }
 
 void Editor::View::key_page_down() {
 	// move the cursor to the first line of the next page
-	cursor_move_to(_doc.home(_scroll.v + _height));
+	move_cursor(_doc.home(_scroll.v + _height));
 	drop_selection();
 }
 
 void Editor::View::key_home() {
-	cursor_move_to(_doc.home(_cursor_location.line));
+	move_cursor(_doc.home(_cursor.line));
 	drop_selection();
 }
 
 void Editor::View::key_end() {
-	cursor_move_to(_doc.end(_cursor_location.line));
+	move_cursor(_doc.end(_cursor.line));
 	drop_selection();
 }
 
 void Editor::View::delete_selection() {
 	if (_selection.empty()) return;
 	_update.forward(_selection.begin());
-	cursor_move_to(_doc.erase(_selection));
+	move_cursor(_doc.erase(_selection));
 	drop_selection();
 }
 
 void Editor::View::replace_selection(std::string clip) {
 	delete_selection();
-	location_t oldloc = _cursor_location;
+	location_t oldloc = _cursor;
 	location_t newloc = _doc.insert(oldloc, clip);
 	if (oldloc.line != newloc.line) {
 		_update.forward(oldloc);
 	}
-	cursor_move_to(newloc);
+	move_cursor(newloc);
 	drop_selection();
 	_doc.commit();
 }
 
 void Editor::View::key_insert(char ch) {
 	delete_selection();
-	cursor_move_to(_doc.insert(_cursor_location, ch));
-	_anchor = _cursor_location;
+	move_cursor(_doc.insert(_cursor, ch));
+	_anchor = _cursor;
 	_selection.reset(_anchor);
 }
 
@@ -566,7 +567,7 @@ void Editor::View::key_tab(UI::Frame &ctx) {
 			key_insert('\t');
 		} else do {
 			key_insert(' ');
-		} while (0 != _cursor_location.offset % _config.indent_size());
+		} while (0 != _cursor.offset % _config.indent_size());
 	} else {
 		// indent all lines touched by the selection one more tab then extend
 		// the selection to encompass all of those lines, because that's what
@@ -583,8 +584,8 @@ void Editor::View::key_tab(UI::Frame &ctx) {
 			}
 		}
 		_anchor = _doc.home(begin);
-		cursor_move_to(_doc.end(end));
-		_selection.reset(_anchor, _cursor_location);
+		move_cursor(_doc.end(end));
+		_selection.reset(_anchor, _cursor);
 		_update.range(_selection);
 	}
 }
@@ -605,7 +606,7 @@ void Editor::View::key_btab(UI::Frame &ctx) {
 		location_t pretab = _doc.home(index);
 		location_t posttab = pretab;
 		if ('\t' == text.front()) {
-			posttab = _doc.next(pretab);
+			posttab = _doc.next_char(pretab);
 		} else for (auto ch: text) {
 			if (' ' != ch) break;
 			if (posttab.offset >= _config.indent_size()) break;
@@ -617,8 +618,8 @@ void Editor::View::key_btab(UI::Frame &ctx) {
 		}
 	}
 	_anchor = _doc.home(begin);
-	cursor_move_to(_doc.end(end));
-	_selection.reset(_anchor, _cursor_location);
+	move_cursor(_doc.end(end));
+	_selection.reset(_anchor, _cursor);
 	_update.range(_selection);
 }
 
@@ -629,21 +630,21 @@ void Editor::View::key_escape(UI::Frame &ctx) {
 void Editor::View::key_enter(UI::Frame &ctx) {
 	// Split the line at the cursor position, but don't move the cursor.
 	delete_selection();
-	_doc.split(_cursor_location);
-	_update.forward(_cursor_location);
+	_doc.split(_cursor);
+	_update.forward(_cursor);
 }
 
 void Editor::View::key_return(UI::Frame &ctx) {
 	// Split the line at the cursor position and move the cursor to the new line.
 	delete_selection();
-	line_t old_index = _cursor_location.line;
-	cursor_move_to(_doc.split(_cursor_location));
+	line_t old_index = _cursor.line;
+	move_cursor(_doc.split(_cursor));
 	// Add whatever string of whitespace characters begins the previous line.
 	for (char ch: _doc.line(old_index)) {
 		if (!isspace(ch)) break;
 		key_insert(ch);
 	}
-	_update.forward(_cursor_location);
+	_update.forward(_cursor);
 }
 
 void Editor::View::key_backspace(UI::Frame &ctx) {
@@ -660,7 +661,7 @@ void Editor::View::drop_selection() {
 	// The selection is no longer interesting. Move the anchor to the
 	// current cursor location and reset the selection around it.
 	_update.range(_selection);
-	_anchor = _cursor_location;
+	_anchor = _cursor;
 	_selection.reset(_anchor);
 }
 
@@ -669,22 +670,21 @@ void Editor::View::adjust_selection(bool extend) {
 		// The cursor has moved in range-selection mode.
 		// Leave the anchor where it is, then extend the
 		// selection to include the new cursor point.
-		_selection.reset(_anchor, _cursor_location);
+		_selection.reset(_anchor, _cursor);
 	} else {
 		// The cursor moved but did not extend the selection.
 		drop_selection();
 	}
 }
 
-void Editor::View::cursor_move_to(location_t loc) {
+void Editor::View::move_cursor(location_t loc) {
 	// Place the cursor at an absolute document location.
-	_update.at(_cursor_location);
-	_cursor_location = loc;
+	_update.at(_cursor);
+	_cursor = loc;
 	// We have updated the cursor's location in the document.
 	// Tell the viewer what to redraw, then update the display
 	// position according to the new location.
-	_update.at(_cursor_location);
-	_cursor_position = to_position(_cursor_location);
+	_update.at(_cursor);
 }
 
 Editor::position_t Editor::View::to_position(const location_t &loc) {

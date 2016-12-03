@@ -164,7 +164,7 @@ Editor::location_t Editor::ChangeList::change_t::rollback(
 	location_t out;
 	if (split) {
 		// We inserted a linebreak at the splitloc. Delete it.
-		Range span(splitloc, doc.next(splitloc));
+		Range span(splitloc, doc.next_char(splitloc));
 		doc.erase(span);
 		update.range(span);
 		out = splitloc;
