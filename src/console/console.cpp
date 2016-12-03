@@ -153,7 +153,7 @@ void Console::View::key_page_down(UI::Frame &ctx) {
 
 void Console::View::key_page_up(UI::Frame &ctx) {
 	size_t halfpage = _height/2;
-	_scrollpos = std::max(_scrollpos + halfpage, (size_t)0);
+	_scrollpos = (_scrollpos > halfpage)? (_scrollpos - halfpage): 0;
 	ctx.repaint();
 }
 
