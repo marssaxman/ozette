@@ -96,23 +96,6 @@ Editor::location_t Editor::Document::end(line_t index) {
 	return loc;
 }
 
-Editor::position_t Editor::Document::position(const location_t &loc) {
-	// Compute the screen position for this document location.
-	position_t out;
-	out.v = std::min(_maxline, loc.line);
-	out.h = display(loc.line).column(loc.offset);
-	return out;
-}
-
-Editor::location_t Editor::Document::location(const position_t &loc) {
-	// Locate the character in the document corresponding to the
-	// given screen position.
-	location_t out;
-	out.line = loc.v;
-	out.offset = display(out.line).offset(loc.h);
-	return out;
-}
-
 Editor::location_t Editor::Document::next(location_t loc) {
 	if (loc.offset < _lines[loc.line].size()) {
 		loc.offset++;

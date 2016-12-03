@@ -40,6 +40,9 @@ private:
 	void begin_move();
 	void commit_location();
 	void commit_position();
+	// Convert back and forth between document and screen coordinates.
+	position_t to_position(const location_t &in_document);
+	location_t to_location(const position_t &on_display);
 	Document &_doc;
 	Update &_update;
 	Settings &_settings;

@@ -121,7 +121,7 @@ void Editor::Cursor::commit_location() {
 	// Tell the viewer what to redraw, then update the display
 	// position according to the new location.
 	_update.at(_location);
-	_display = _position = _doc.position(_location);
+	_display = _position = to_position(_location);
 }
 
 void Editor::Cursor::commit_position() {
@@ -132,7 +132,25 @@ void Editor::Cursor::commit_position() {
 	// internal bookkeeping position, because we want to remember
 	// what column the user began moving from even if the current
 	// line does not actually have a character at that column.
-	_location = _doc.location(_position);
+	_location = to_location(_position);
 	_update.at(_location);
-	_display = _doc.position(_location);
+	_display = to_position(_location);
 }
+
+Editor::position_t Editor::Cursor::to_position(const location_t &loc) {
+	// Compute the screen position for this document location.
+	position_t out;
+	out.v = std::min(_doc.maxline(), loc.line);
+	out.h = _doc.display(loc.line).column(loc.offset);
+	return out;
+}
+
+Editor::location_t Editor::Cursor::to_location(const position_t &loc) {
+	// Locate the character in the document corresponding to the
+	// given screen position.
+	location_t out;
+	out.line = loc.v;
+	out.offset = _doc.display(out.line).offset(loc.h);
+	return out;
+}
+

@@ -53,10 +53,6 @@ public:
 	// Which is the last valid line index in the document?
 	line_t maxline() const { return _maxline; }
 
-	// Convert back and forth between document and screen coordinates.
-	position_t position(const location_t &in_document);
-	location_t location(const position_t &on_display);
-
 	// Where is the character which follows or precedes this one?
 	location_t next(location_t loc);
 	location_t prev(location_t loc);
