@@ -103,16 +103,16 @@ bool Editor::View::process(UI::Frame &ctx, int ch) {
 
 		case KEY_DOWN: key_down(false); break;
 		case KEY_UP: key_up(false); break;
-		case KEY_LEFT: key_left(false); break;
-		case KEY_RIGHT: key_right(false); break;
+		case KEY_LEFT: key_left(); break;
+		case KEY_RIGHT: key_right(); break;
 		case KEY_NPAGE: key_page_down(); break;
 		case KEY_PPAGE: key_page_up(); break;
 		case KEY_HOME: key_home(); break; // move to beginning of line
 		case KEY_END: key_end(); break; // move to end of line
 		case KEY_SF: key_down(true); break; // shifted down-arrow
 		case KEY_SR: key_up(true); break; // shifted up-arrow
-		case KEY_SLEFT: key_left(true); break;
-		case KEY_SRIGHT: key_right(true); break;
+		case KEY_SLEFT: key_shift_left(); break;
+		case KEY_SRIGHT: key_shift_right(); break;
 
 		case Control::Tab: key_tab(ctx); break;
 		case Control::Enter: key_enter(ctx); break;
@@ -500,16 +500,28 @@ void Editor::View::key_down(bool extend) {
 	adjust_selection(extend);
 }
 
-void Editor::View::key_left(bool extend) {
+void Editor::View::key_left() {
 	if (_doc.readonly()) return;
 	move_cursor(_doc.prev_char(_cursor));
-	adjust_selection(extend);
+	drop_selection();
 }
 
-void Editor::View::key_right(bool extend) {
+void Editor::View::key_right() {
 	if (_doc.readonly()) return;
 	move_cursor(_doc.next_char(_cursor));
-	adjust_selection(extend);
+	drop_selection();
+}
+
+void Editor::View::key_shift_left() {
+	if (_doc.readonly()) return;
+	move_cursor(_doc.prev_char(_cursor));
+	_selection.reset(_anchor, _cursor);
+}
+
+void Editor::View::key_shift_right() {
+	if (_doc.readonly()) return;
+	move_cursor(_doc.next_char(_cursor));
+	_selection.reset(_anchor, _cursor);
 }
 
 void Editor::View::key_page_up() {
@@ -649,13 +661,21 @@ void Editor::View::key_return(UI::Frame &ctx) {
 }
 
 void Editor::View::key_backspace(UI::Frame &ctx) {
-	if (_selection.empty()) key_left(true);
-	delete_selection();
+	if (_selection.empty()) {
+		move_cursor(_doc.erase(Range(_doc.prev_char(_cursor), _cursor)));
+		_update.forward(_cursor);
+	} else {
+		delete_selection();
+	}
 }
 
 void Editor::View::key_delete(UI::Frame &ctx) {
-	if (_selection.empty()) key_right(true);
-	delete_selection();
+	if (_selection.empty()) {
+		move_cursor(_doc.erase(Range(_cursor, _doc.next_char(_cursor))));
+		_update.forward(_cursor);
+	} else {
+		delete_selection();
+	}
 }
 
 void Editor::View::drop_selection() {

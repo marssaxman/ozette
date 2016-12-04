@@ -63,8 +63,10 @@ private:
 	// Navigation keystrokes move the cursor around the document.
 	void key_up(bool extend);
 	void key_down(bool extend);
-	void key_left(bool extend);
-	void key_right(bool extend);
+	void key_left();
+	void key_right();
+	void key_shift_left();
+	void key_shift_right();
 	void key_page_up();
 	void key_page_down();
 	void key_home();
