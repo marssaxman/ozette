@@ -29,7 +29,6 @@ class View : public UI::View {
 public:
 	View();
 	View(std::string targetpath);
-	View(std::string title, Document &&doc);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
 	virtual bool process(UI::Frame &ctx, int ch) override;

@@ -21,10 +21,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "app/control.h"
-#include "app/help.h"
 #include "app/ozette.h"
 #include "app/path.h"
 #include "console/console.h"
+#include "help/view.h"
 #include "search/dialog.h"
 #include "search/search.h"
 
@@ -240,22 +240,7 @@ void Ozette::open_file() {
 }
 
 void Ozette::show_help() {
-	static const std::string help_key = " Help ";
-	static const std::string abs_help = Path::absolute(help_key);
-	auto existing = _editors.find(abs_help);
-	if (existing != _editors.end()) {
-		_shell.make_active(existing->second.window);
-		return;
-	}
-	std::string helptext((const char*)HELP, HELP_len);
-	helptext += "\n";
-	Editor::Document doc;
-	doc.View(helptext);
-	editor edrec;
-	edrec.view = new Editor::View(help_key, std::move(doc));
-	std::unique_ptr<UI::View> edptr(edrec.view);
-	edrec.window = _shell.open_window(std::move(edptr));
-	_editors[abs_help] = edrec;
+	Help::View::show(_shell);
 }
 
 void Ozette::execute() {

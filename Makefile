@@ -26,5 +26,5 @@ install:
 -include $(shell find bin -name *.d)
 
 # regenerate the help file
-src/app/help.cpp: HELP
+src/help/text.cpp: HELP
 	xxd -i $^ $@

@@ -40,12 +40,6 @@ Editor::View::View(std::string targetpath):
 	_config.load(targetpath);
 }
 
-Editor::View::View(std::string title, Document &&doc):
-	_targetpath(title),
-	_doc(std::move(doc)),
-	_syntax(Syntax::lookup(title)) {
-}
-
 void Editor::View::activate(UI::Frame &ctx) {
 	// Set the title according to the target path
 	if (_targetpath.empty()) {
@@ -75,7 +69,6 @@ void Editor::View::paint_into(WINDOW *dest, State state) {
 	curs.v -= std::min(curs.v, _scroll.v);
 	wmove(dest, curs.v, curs.h);
 	bool show_cursor = (state == State::Focused) && _selection.empty();
-	show_cursor &= !_doc.readonly();
 	curs_set(show_cursor ? 1 : 0);
 	_update.reset();
 }
@@ -132,11 +125,9 @@ bool Editor::View::process(UI::Frame &ctx, int ch) {
 }
 
 void Editor::View::set_help(UI::HelpBar::Panel &panel) {
-	if (!_doc.readonly()) {
-		panel.cut();
-		panel.copy();
-		panel.paste();
-	}
+	panel.cut();
+	panel.copy();
+	panel.paste();
 	panel.to_line();
 	panel.find();
 	if (_doc.modified()) panel.save();
@@ -193,7 +184,6 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, State state) {
 }
 
 void Editor::View::reveal_cursor() {
-	if (_doc.readonly()) return;
 	// If the cursor is on a line which is not on screen, scroll vertically to
 	// position the line in the center of the window.
 	line_t line = _cursor.line;
@@ -241,12 +231,10 @@ void Editor::View::update_dimensions(WINDOW *view) {
 
 void Editor::View::set_status(UI::Frame &ctx) {
 	std::string status = _doc.status();
-	if (!_doc.readonly()) {
-		if (!status.empty()) status.push_back(' ');
-		status.push_back('@');
-		// humans use weird 1-based line numbers
-		status += std::to_string(1 + _cursor.line);
-	}
+	if (!status.empty()) status.push_back(' ');
+	status.push_back('@');
+	// humans use weird 1-based line numbers
+	status += std::to_string(1 + _cursor.line);
 	ctx.set_status(status);
 }
 
@@ -269,7 +257,7 @@ void Editor::View::ctl_paste(UI::Frame &ctx) {
 }
 
 void Editor::View::ctl_close(UI::Frame &ctx) {
-	if (_doc.readonly() || !_doc.modified()) {
+	if (!_doc.modified()) {
 		// no formality needed, we're done
 		ctx.app().close_file(_targetpath);
 		return;
@@ -299,7 +287,6 @@ void Editor::View::ctl_save(UI::Frame &ctx) {
 }
 
 void Editor::View::ctl_save_as(UI::Frame &ctx) {
-	if (_doc.readonly()) return;
 	_doc.commit();
 	Dialog::Form dialog;
 	dialog.fields = {
@@ -465,11 +452,6 @@ void Editor::View::ctl_open_next(UI::Frame &ctx) {
 }
 
 void Editor::View::key_up(bool extend) {
-	if (_doc.readonly()) {
-		_scroll.v -= std::min(_scroll.v, 1U);
-		_update.all();
-		return;
-	}
 	// Move up the screen by the specified number of rows, stopping when we
 	// reach zero. If the cursor was already positioned on the top row, move
 	// the cursor left to the beginning of the line.
@@ -483,11 +465,6 @@ void Editor::View::key_up(bool extend) {
 }
 
 void Editor::View::key_down(bool extend) {
-	if (_doc.readonly()) {
-		_scroll.v = std::min(_scroll.v + 1, _maxscroll);
-		_update.all();
-		return;
-	}
 	// Move to the next row down the screen, stopping at the maximum row. 
 	// If the cursor was already positioned on the maximum row, move the cursor
 	// right to the end of the line.
@@ -501,25 +478,21 @@ void Editor::View::key_down(bool extend) {
 }
 
 void Editor::View::key_left() {
-	if (_doc.readonly()) return;
 	move_cursor(_doc.prev_char(_cursor));
 	drop_selection();
 }
 
 void Editor::View::key_right() {
-	if (_doc.readonly()) return;
 	move_cursor(_doc.next_char(_cursor));
 	drop_selection();
 }
 
 void Editor::View::key_shift_left() {
-	if (_doc.readonly()) return;
 	move_cursor(_doc.prev_char(_cursor));
 	_selection.reset(_anchor, _cursor);
 }
 
 void Editor::View::key_shift_right() {
-	if (_doc.readonly()) return;
 	move_cursor(_doc.next_char(_cursor));
 	_selection.reset(_anchor, _cursor);
 }

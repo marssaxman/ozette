@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2016 Mars J. Saxman
+// Copyright (C) 2016 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,10 +15,33 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#ifndef APP_HELP_H
-#define APP_HELP_H
+#ifndef HELP_VIEW_H
+#define HELP_VIEW_H
 
-extern const unsigned char HELP[];
-extern unsigned int HELP_len;
+#include "ui/shell.h"
+#include "ui/view.h"
 
-#endif //APP_HELP_H
+namespace Help {
+class View : public UI::View {
+public:
+	static void show(UI::Shell &shell);
+	virtual bool process(UI::Frame &ctx, int ch) override;
+protected:
+	View();
+	~View();
+	static View *_instance;
+	UI::Window *_window = nullptr;
+	virtual void paint_into(WINDOW *view, State state) override;
+private:
+	void key_up(UI::Frame &ctx);
+	void key_down(UI::Frame &ctx);
+	void key_page_up(UI::Frame &ctx);
+	void key_page_down(UI::Frame &ctx);
+	void scrollby(int delta, UI::Frame &ctx);
+	unsigned _scrollpos = 0;
+	int _height = 0;
+	int _width = 0;
+};
+} // namespace Help
+
+#endif // HELP_VIEW_H
