@@ -96,18 +96,18 @@ bool Editor::View::process(UI::Frame &ctx, int ch) {
 		case Control::Redo: ctl_redo(ctx); break;
 		case Control::DownArrow: ctl_open_next(ctx); break;
 
-		case KEY_DOWN: key_down(); break;
-		case KEY_UP: key_up(); break;
-		case KEY_LEFT: key_left(); break;
-		case KEY_RIGHT: key_right(); break;
-		case KEY_NPAGE: key_page_down(); break;
-		case KEY_PPAGE: key_page_up(); break;
-		case KEY_HOME: key_home(); break;
-		case KEY_END: key_end(); break;
-		case KEY_SF: key_shift_down(); break;
-		case KEY_SR: key_shift_up(); break;
-		case KEY_SLEFT: key_shift_left(); break;
-		case KEY_SRIGHT: key_shift_right(); break;
+		case KEY_DOWN: move_cursor(arrow_down()); break;
+		case KEY_UP: move_cursor(arrow_up()); break;
+		case KEY_LEFT: move_cursor(arrow_left()); break;
+		case KEY_RIGHT: move_cursor(arrow_right()); break;
+		case KEY_NPAGE: move_cursor(page_down()); break;
+		case KEY_PPAGE: move_cursor(page_up()); break;
+		case KEY_HOME: move_cursor(_doc.home(_cursor)); break;
+		case KEY_END: move_cursor(_doc.end(_cursor)); break;
+		case KEY_SF: extend_selection(arrow_down()); break;
+		case KEY_SR: extend_selection(arrow_up()); break;
+		case KEY_SLEFT: extend_selection(arrow_left()); break;
+		case KEY_SRIGHT: extend_selection(arrow_right()); break;
 
 		case Control::Tab: key_tab(ctx); break;
 		case Control::Enter: key_enter(ctx); break;
@@ -452,85 +452,6 @@ void Editor::View::ctl_open_next(UI::Frame &ctx) {
 	ctx.app().edit_file(dirpath + "/" + match);
 }
 
-void Editor::View::key_up() {
-	// Move up the screen by the specified number of rows, stopping when we
-	// reach zero. If the cursor was already positioned on the top row, move
-	// the cursor left to the beginning of the line.
-	column_t h = column(_cursor);
-	location_t dest = _doc.prev_char(_doc.home(_cursor));
-	while (column(dest) > h) {
-		dest = _doc.prev_char(dest);
-	}
-	move_cursor(dest);
-}
-
-void Editor::View::key_down() {
-	// Move to the next row down the screen, stopping at the maximum row. 
-	// If the cursor was already positioned on the maximum row, move the cursor
-	// right to the end of the line.
-	column_t h = column(_cursor);
-	location_t dest = _doc.end(_doc.next_char(_doc.end(_cursor)));
-	while (column(dest) > h) {
-		dest = _doc.prev_char(dest);
-	}
-	move_cursor(dest);
-}
-
-void Editor::View::key_left() {
-	move_cursor(_doc.prev_char(_cursor));
-}
-
-void Editor::View::key_right() {
-	move_cursor(_doc.next_char(_cursor));
-}
-
-void Editor::View::key_shift_up() {
-	// Move up the screen by the specified number of rows, stopping when we
-	// reach zero. If the cursor was already positioned on the top row, move
-	// the cursor left to the beginning of the line.
-	if (_cursor.line) {
-		location_t dest{_cursor.line - 1, _cursor.offset};
-		extend_selection(dest);
-	} else {
-		extend_selection(_doc.home());
-	}
-}
-
-void Editor::View::key_shift_down() {
-	if (_cursor.line < _doc.maxline()) {
-		location_t dest{_cursor.line + 1, _cursor.offset};
-		extend_selection(dest);
-	} else {
-		extend_selection(_doc.end());
-	}
-}
-
-void Editor::View::key_shift_left() {
-	extend_selection(_doc.prev_char(_cursor));
-}
-
-void Editor::View::key_shift_right() {
-	extend_selection(_doc.next_char(_cursor));
-}
-
-void Editor::View::key_page_up() {
-	// move the cursor to the last line of the previous page
-	move_cursor(_doc.home(_scroll.v - std::min(_scroll.v, 1U)));
-}
-
-void Editor::View::key_page_down() {
-	// move the cursor to the first line of the next page
-	move_cursor(_doc.home(_scroll.v + _height));
-}
-
-void Editor::View::key_home() {
-	move_cursor(_doc.home(_cursor));
-}
-
-void Editor::View::key_end() {
-	move_cursor(_doc.end(_cursor));
-}
-
 void Editor::View::delete_selection() {
 	if (_selection.empty()) return;
 	_update.forward(_selection.begin());
@@ -641,16 +562,12 @@ void Editor::View::key_return(UI::Frame &ctx) {
 }
 
 void Editor::View::key_backspace(UI::Frame &ctx) {
-	if (_selection.empty()) {
-		extend_selection(_doc.prev_char(_cursor));
-	}
+	if (_selection.empty()) extend_selection(arrow_left());
 	delete_selection();
 }
 
 void Editor::View::key_delete(UI::Frame &ctx) {
-	if (_selection.empty()) {
-		extend_selection(_doc.next_char(_cursor));
-	}
+	if (_selection.empty()) extend_selection(arrow_right());
 	delete_selection();
 }
 
@@ -659,8 +576,7 @@ void Editor::View::move_cursor(location_t loc) {
 	// selection if one previously existed.
 	_update.range(_selection);
 	_update.at(loc);
-	_anchor = _cursor = loc;
-	_selection.reset(_anchor, _cursor);
+	_selection.reset(_anchor = _cursor = loc);
 }
 
 void Editor::View::extend_selection(location_t loc) {
@@ -676,6 +592,46 @@ Editor::column_t Editor::View::column(location_t loc) {
 	// On which screen column does the character at this location appear?
 	DisplayLine line(_doc.line(loc.line), _config, _syntax);
 	return line.column(loc.offset);
+}
+
+Editor::location_t Editor::View::arrow_up() {
+	// Find the corresponding location on the line above the cursor.
+	// We are concerned about columns, not characters, so we must consider
+	// indentation.
+	column_t h = column(_cursor);
+	location_t dest = _doc.prev_char(_doc.home(_cursor));
+	while (column(dest) > h) {
+		dest = _doc.prev_char(dest);
+	}
+	return dest;
+}
+
+Editor::location_t Editor::View::arrow_down() {
+	// Find the corresponding location on the line following the cursor,
+	// taking into account indentation width and the fact that the next line
+	// may not be as long as the current one.
+	column_t h = column(_cursor);
+	location_t dest = _doc.end(_doc.next_char(_doc.end(_cursor)));
+	while (column(dest) > h) {
+		dest = _doc.prev_char(dest);
+	}
+	return dest;
+}
+
+Editor::location_t Editor::View::arrow_left() {
+	return _doc.prev_char(_cursor);
+}
+
+Editor::location_t Editor::View::arrow_right() {
+	return _doc.next_char(_cursor);
+}
+
+Editor::location_t Editor::View::page_up() {
+	return _doc.home(_scroll.v - std::min(_scroll.v, 1U));
+}
+
+Editor::location_t Editor::View::page_down() {
+	return _doc.home(_scroll.v + _height);
 }
 
 void Editor::View::save(UI::Frame &ctx, std::string dest) {

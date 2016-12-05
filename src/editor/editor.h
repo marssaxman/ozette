@@ -59,20 +59,6 @@ private:
 	void ctl_redo(UI::Frame &ctx);
 	void ctl_open_next(UI::Frame &ctx);
 
-	// Navigation keystrokes move the cursor around the document.
-	void key_up();
-	void key_down();
-	void key_left();
-	void key_right();
-	void key_shift_up();
-	void key_shift_down();
-	void key_shift_left();
-	void key_shift_right();
-	void key_page_up();
-	void key_page_down();
-	void key_home();
-	void key_end();
-
 	// Data-entry keystrokes generally begin by deleting whatever was
 	// previously selected and possibly replacing it with something else.
 	void delete_selection();
@@ -86,10 +72,19 @@ private:
 	void key_delete(UI::Frame &ctx);
 	void key_escape(UI::Frame &ctx);
 
+	// Place the cursor (and anchor) at a specific location in document space.
 	void move_cursor(location_t loc);
+	// Stretch the selection from the anchor to the new cursor point.
 	void extend_selection(location_t loc);
-	// On which screen column does the character at this location appear?
+	// On which screen column does this character location appear?
 	column_t column(location_t);
+	// Find some location relative to the cursor location.
+	location_t arrow_up();
+	location_t arrow_down();
+	location_t arrow_left();
+	location_t arrow_right();
+	location_t page_up();
+	location_t page_down();
 
 	void save(UI::Frame &ctx, std::string dest);
 	bool find(UI::Frame &ctx, location_t anchor, std::string pattern);
