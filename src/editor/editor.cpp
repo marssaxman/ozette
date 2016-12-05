@@ -64,10 +64,12 @@ void Editor::View::paint_into(WINDOW *dest, State state) {
 	for (unsigned i = 0; i < _height; ++i) {
 		paint_line(dest, i, state);
 	}
-	position_t curs = to_position(_cursor);
-	curs.h -= std::min(curs.h, _scroll.h);
-	curs.v -= std::min(curs.v, _scroll.v);
-	wmove(dest, curs.v, curs.h);
+	position_t cpos;
+	cpos.v = std::min(_doc.maxline(), _cursor.line);
+	cpos.h = column(_cursor);
+	cpos.v -= std::min(cpos.v, _scroll.v);
+	cpos.h -= std::min(cpos.h, _scroll.h);
+	wmove(dest, cpos.v, cpos.h);
 	bool show_cursor = (state == State::Focused) && _selection.empty();
 	curs_set(show_cursor ? 1 : 0);
 	_update.reset();
@@ -198,9 +200,11 @@ void Editor::View::reveal_cursor() {
 	}
 	// Try to keep the view scrolled left if possible, but if that would put the
 	// cursor offscreen, scroll right by the cursor position plus a few extra.
-	position_t pos = to_position(_cursor);
-	if (pos.h >= _width) {
-		column_t newh = pos.h + 4 - _width;
+	column_t col = column(_cursor);
+	if (col >= _width) {
+		// The scroll increment is only coincidentally equal to the default
+		// indent size; this does not need to be configurable.
+		column_t newh = col + 4 - _width;
 		if (newh != _scroll.h) {
 			_scroll.h = newh;
 			_update.all();
@@ -679,13 +683,10 @@ void Editor::View::extend_selection(location_t loc) {
 	_selection.reset(_anchor, _cursor);
 }
 
-Editor::position_t Editor::View::to_position(const location_t &loc) {
-	// Compute the screen position for this document location.
-	position_t out;
-	out.v = std::min(_doc.maxline(), loc.line);
+Editor::column_t Editor::View::column(location_t loc) {
+	// On which screen column does the character at this location appear?
 	DisplayLine line(_doc.line(loc.line), _config, _syntax);
-	out.h = line.column(loc.offset);
-	return out;
+	return line.column(loc.offset);
 }
 
 void Editor::View::save(UI::Frame &ctx, std::string dest) {

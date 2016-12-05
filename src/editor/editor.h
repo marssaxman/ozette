@@ -94,8 +94,8 @@ private:
 
 	void move_cursor(location_t loc);
 	void extend_selection(location_t loc);
-	// Convert back and forth between document and screen coordinates.
-	position_t to_position(const location_t &in_document);
+	// On which screen column does the character at this location appear?
+	column_t column(location_t);
 
 	void save(UI::Frame &ctx, std::string dest);
 	bool find(UI::Frame &ctx, location_t anchor, std::string pattern);
