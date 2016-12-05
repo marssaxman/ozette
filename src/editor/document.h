@@ -45,7 +45,9 @@ public:
 	location_t end();
 	// Where are the beginning and end of this specific line?
 	location_t home(line_t index);
+	location_t home(location_t loc) { return home(loc.line); }
 	location_t end(line_t index);
+	location_t end(location_t loc) { return end(loc.line); }
 	// Which is the last valid line index in the document?
 	line_t maxline() const { return _maxline; }
 

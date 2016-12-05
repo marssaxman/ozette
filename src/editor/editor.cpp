@@ -456,24 +456,24 @@ void Editor::View::key_up() {
 	// Move up the screen by the specified number of rows, stopping when we
 	// reach zero. If the cursor was already positioned on the top row, move
 	// the cursor left to the beginning of the line.
-	if (_cursor.line) {
-		location_t dest{_cursor.line - 1, _cursor.offset};
-		move_cursor(dest);
-	} else {
-		move_cursor(_doc.home());
+	column_t h = column(_cursor);
+	location_t dest = _doc.prev_char(_doc.home(_cursor));
+	while (column(dest) > h) {
+		dest = _doc.prev_char(dest);
 	}
+	move_cursor(dest);
 }
 
 void Editor::View::key_down() {
 	// Move to the next row down the screen, stopping at the maximum row. 
 	// If the cursor was already positioned on the maximum row, move the cursor
 	// right to the end of the line.
-	if (_cursor.line < _doc.maxline()) {
-		location_t dest{_cursor.line + 1, _cursor.offset};
-		move_cursor(dest);
-	} else {
-		move_cursor(_doc.end());
+	column_t h = column(_cursor);
+	location_t dest = _doc.end(_doc.next_char(_doc.end(_cursor)));
+	while (column(dest) > h) {
+		dest = _doc.prev_char(dest);
 	}
+	move_cursor(dest);
 }
 
 void Editor::View::key_left() {
@@ -524,11 +524,11 @@ void Editor::View::key_page_down() {
 }
 
 void Editor::View::key_home() {
-	move_cursor(_doc.home(_cursor.line));
+	move_cursor(_doc.home(_cursor));
 }
 
 void Editor::View::key_end() {
-	move_cursor(_doc.end(_cursor.line));
+	move_cursor(_doc.end(_cursor));
 }
 
 void Editor::View::delete_selection() {
@@ -641,20 +641,16 @@ void Editor::View::key_return(UI::Frame &ctx) {
 
 void Editor::View::key_backspace(UI::Frame &ctx) {
 	if (_selection.empty()) {
-		move_cursor(_doc.erase(Range(_doc.prev_char(_cursor), _cursor)));
-		_update.forward(_cursor);
-	} else {
-		delete_selection();
+		extend_selection(_doc.prev_char(_cursor));
 	}
+	delete_selection();
 }
 
 void Editor::View::key_delete(UI::Frame &ctx) {
 	if (_selection.empty()) {
-		move_cursor(_doc.erase(Range(_cursor, _doc.next_char(_cursor))));
-		_update.forward(_cursor);
-	} else {
-		delete_selection();
+		extend_selection(_doc.next_char(_cursor));
 	}
+	delete_selection();
 }
 
 void Editor::View::drop_selection() {

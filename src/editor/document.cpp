@@ -85,6 +85,9 @@ Editor::location_t Editor::Document::next_char(location_t loc) {
 	} else if (loc.line < _maxline) {
 		loc.offset = 0;
 		loc.line++;
+	} else {
+		loc.line = _maxline;
+		loc.offset = _lines[loc.line].size();
 	}
 	return loc;
 }
@@ -95,6 +98,9 @@ Editor::location_t Editor::Document::prev_char(location_t loc) {
 	} else if (loc.line > 0) {
 		loc.line--;
 		loc.offset = _lines[loc.line].size();
+	} else {
+		loc.line = 0;
+		loc.offset = 0;
 	}
 	return loc;
 }
