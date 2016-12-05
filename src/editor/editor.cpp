@@ -94,16 +94,16 @@ bool Editor::View::process(UI::Frame &ctx, int ch) {
 		case Control::Redo: ctl_redo(ctx); break;
 		case Control::DownArrow: ctl_open_next(ctx); break;
 
-		case KEY_DOWN: key_down(false); break;
-		case KEY_UP: key_up(false); break;
+		case KEY_DOWN: key_down(); break;
+		case KEY_UP: key_up(); break;
 		case KEY_LEFT: key_left(); break;
 		case KEY_RIGHT: key_right(); break;
 		case KEY_NPAGE: key_page_down(); break;
 		case KEY_PPAGE: key_page_up(); break;
-		case KEY_HOME: key_home(); break; // move to beginning of line
-		case KEY_END: key_end(); break; // move to end of line
-		case KEY_SF: key_down(true); break; // shifted down-arrow
-		case KEY_SR: key_up(true); break; // shifted up-arrow
+		case KEY_HOME: key_home(); break;
+		case KEY_END: key_end(); break;
+		case KEY_SF: key_shift_down(); break;
+		case KEY_SR: key_shift_up(); break;
 		case KEY_SLEFT: key_shift_left(); break;
 		case KEY_SRIGHT: key_shift_right(); break;
 
@@ -137,9 +137,11 @@ void Editor::View::set_help(UI::HelpBar::Panel &panel) {
 }
 
 void Editor::View::select(UI::Frame &ctx, Range range) {
+	_update.range(_selection);
 	_anchor = range.begin();
+	_cursor = range.end();
 	_selection = range;
-	move_cursor(range.end());
+	_update.range(range);
 	reveal_cursor();
 	ctx.repaint();
 }
@@ -325,7 +327,6 @@ void Editor::View::ctl_toline(UI::Frame &ctx) {
 		long valnum = std::stol(value) - 1;
 		size_t index = (valnum >= 0) ? valnum : 0;
 		move_cursor(_doc.home(index));
-		drop_selection();
 		postprocess(ctx);
 	};
 	dialog.show(ctx);
@@ -401,14 +402,10 @@ void Editor::View::ctl_find_next(UI::Frame &ctx) {
 
 void Editor::View::ctl_undo(UI::Frame &ctx) {
 	move_cursor(_doc.undo(_update));
-	drop_selection();
-	postprocess(ctx);
 }
 
 void Editor::View::ctl_redo(UI::Frame &ctx) {
 	move_cursor(_doc.redo(_update));
-	drop_selection();
-	postprocess(ctx);
 }
 
 void Editor::View::ctl_open_next(UI::Frame &ctx) {
@@ -451,7 +448,7 @@ void Editor::View::ctl_open_next(UI::Frame &ctx) {
 	ctx.app().edit_file(dirpath + "/" + match);
 }
 
-void Editor::View::key_up(bool extend) {
+void Editor::View::key_up() {
 	// Move up the screen by the specified number of rows, stopping when we
 	// reach zero. If the cursor was already positioned on the top row, move
 	// the cursor left to the beginning of the line.
@@ -461,10 +458,9 @@ void Editor::View::key_up(bool extend) {
 	} else {
 		move_cursor(_doc.home());
 	}
-	adjust_selection(extend);
 }
 
-void Editor::View::key_down(bool extend) {
+void Editor::View::key_down() {
 	// Move to the next row down the screen, stopping at the maximum row. 
 	// If the cursor was already positioned on the maximum row, move the cursor
 	// right to the end of the line.
@@ -474,56 +470,67 @@ void Editor::View::key_down(bool extend) {
 	} else {
 		move_cursor(_doc.end());
 	}
-	adjust_selection(extend);
 }
 
 void Editor::View::key_left() {
 	move_cursor(_doc.prev_char(_cursor));
-	drop_selection();
 }
 
 void Editor::View::key_right() {
 	move_cursor(_doc.next_char(_cursor));
-	drop_selection();
+}
+
+void Editor::View::key_shift_up() {
+	// Move up the screen by the specified number of rows, stopping when we
+	// reach zero. If the cursor was already positioned on the top row, move
+	// the cursor left to the beginning of the line.
+	if (_cursor.line) {
+		location_t dest{_cursor.line - 1, _cursor.offset};
+		extend_selection(dest);
+	} else {
+		extend_selection(_doc.home());
+	}
+}
+
+void Editor::View::key_shift_down() {
+	if (_cursor.line < _doc.maxline()) {
+		location_t dest{_cursor.line + 1, _cursor.offset};
+		extend_selection(dest);
+	} else {
+		extend_selection(_doc.end());
+	}
 }
 
 void Editor::View::key_shift_left() {
-	move_cursor(_doc.prev_char(_cursor));
-	_selection.reset(_anchor, _cursor);
+	extend_selection(_doc.prev_char(_cursor));
 }
 
 void Editor::View::key_shift_right() {
-	move_cursor(_doc.next_char(_cursor));
-	_selection.reset(_anchor, _cursor);
+	extend_selection(_doc.next_char(_cursor));
 }
 
 void Editor::View::key_page_up() {
 	// move the cursor to the last line of the previous page
 	move_cursor(_doc.home(_scroll.v - std::min(_scroll.v, 1U)));
-	drop_selection();
 }
 
 void Editor::View::key_page_down() {
 	// move the cursor to the first line of the next page
 	move_cursor(_doc.home(_scroll.v + _height));
-	drop_selection();
 }
 
 void Editor::View::key_home() {
 	move_cursor(_doc.home(_cursor.line));
-	drop_selection();
 }
 
 void Editor::View::key_end() {
 	move_cursor(_doc.end(_cursor.line));
-	drop_selection();
 }
 
 void Editor::View::delete_selection() {
 	if (_selection.empty()) return;
 	_update.forward(_selection.begin());
 	move_cursor(_doc.erase(_selection));
-	drop_selection();
 }
 
 void Editor::View::replace_selection(std::string clip) {
@@ -534,15 +541,12 @@ void Editor::View::replace_selection(std::string clip) {
 		_update.forward(oldloc);
 	}
 	move_cursor(newloc);
-	drop_selection();
 	_doc.commit();
 }
 
 void Editor::View::key_insert(char ch) {
 	delete_selection();
 	move_cursor(_doc.insert(_cursor, ch));
-	_anchor = _cursor;
-	_selection.reset(_anchor);
 }
 
 void Editor::View::key_tab(UI::Frame &ctx) {
@@ -570,8 +574,7 @@ void Editor::View::key_tab(UI::Frame &ctx) {
 			}
 		}
 		_anchor = _doc.home(begin);
-		move_cursor(_doc.end(end));
-		_selection.reset(_anchor, _cursor);
+		extend_selection(_doc.end(end));
 		_update.range(_selection);
 	}
 }
@@ -604,8 +607,7 @@ void Editor::View::key_btab(UI::Frame &ctx) {
 		}
 	}
 	_anchor = _doc.home(begin);
-	move_cursor(_doc.end(end));
-	_selection.reset(_anchor, _cursor);
+	extend_selection(_doc.end(end));
 	_update.range(_selection);
 }
 
@@ -659,26 +661,22 @@ void Editor::View::drop_selection() {
 	_selection.reset(_anchor);
 }
 
-void Editor::View::adjust_selection(bool extend) {
-	if (extend) {
-		// The cursor has moved in range-selection mode.
-		// Leave the anchor where it is, then extend the
-		// selection to include the new cursor point.
-		_selection.reset(_anchor, _cursor);
-	} else {
-		// The cursor moved but did not extend the selection.
-		drop_selection();
-	}
+void Editor::View::move_cursor(location_t loc) {
+	// Place the cursor at an absolute document location, dropping the
+	// selection if one previously existed.
+	_update.range(_selection);
+	_update.at(loc);
+	_anchor = _cursor = loc;
+	_selection.reset(_anchor, _cursor);
 }
 
-void Editor::View::move_cursor(location_t loc) {
-	// Place the cursor at an absolute document location.
+void Editor::View::extend_selection(location_t loc) {
+	// Select everything from the anchor to the new location, which becomes
+	// the new cursor position.
 	_update.at(_cursor);
+	_update.at(loc);
 	_cursor = loc;
-	// We have updated the cursor's location in the document.
-	// Tell the viewer what to redraw, then update the display
-	// position according to the new location.
-	_update.at(_cursor);
+	_selection.reset(_anchor, _cursor);
 }
 
 Editor::position_t Editor::View::to_position(const location_t &loc) {

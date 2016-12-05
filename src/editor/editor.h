@@ -60,10 +60,12 @@ private:
 	void ctl_open_next(UI::Frame &ctx);
 
 	// Navigation keystrokes move the cursor around the document.
-	void key_up(bool extend);
-	void key_down(bool extend);
+	void key_up();
+	void key_down();
 	void key_left();
 	void key_right();
+	void key_shift_up();
+	void key_shift_down();
 	void key_shift_left();
 	void key_shift_right();
 	void key_page_up();
@@ -89,9 +91,9 @@ private:
 	// simple cursor. The only exception is when we've extended the
 	// selection using shift-arrow-key movement.
 	void drop_selection();
-	void adjust_selection(bool extend);
 
 	void move_cursor(location_t loc);
+	void extend_selection(location_t loc);
 	// Convert back and forth between document and screen coordinates.
 	position_t to_position(const location_t &in_document);
 
