@@ -86,12 +86,6 @@ private:
 	void key_delete(UI::Frame &ctx);
 	void key_escape(UI::Frame &ctx);
 
-	// If there was a selection, pressing a key usually does something
-	// to it, so we need to release the selection and start over with a
-	// simple cursor. The only exception is when we've extended the
-	// selection using shift-arrow-key movement.
-	void drop_selection();
-
 	void move_cursor(location_t loc);
 	void extend_selection(location_t loc);
 	// On which screen column does the character at this location appear?

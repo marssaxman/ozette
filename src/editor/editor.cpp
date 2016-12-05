@@ -616,7 +616,8 @@ void Editor::View::key_btab(UI::Frame &ctx) {
 }
 
 void Editor::View::key_escape(UI::Frame &ctx) {
-	drop_selection();
+	_update.range(_selection);
+	_selection.reset(_anchor = _cursor);
 }
 
 void Editor::View::key_enter(UI::Frame &ctx) {
@@ -651,14 +652,6 @@ void Editor::View::key_delete(UI::Frame &ctx) {
 		extend_selection(_doc.next_char(_cursor));
 	}
 	delete_selection();
-}
-
-void Editor::View::drop_selection() {
-	// The selection is no longer interesting. Move the anchor to the
-	// current cursor location and reset the selection around it.
-	_update.range(_selection);
-	_anchor = _cursor;
-	_selection.reset(_anchor);
 }
 
 void Editor::View::move_cursor(location_t loc) {
