@@ -30,6 +30,15 @@ public:
 private:
 	bool _indent_with_tabs = true;
 	unsigned _indent_size = 4;
+
+	// Additional EditorConfig properties we may want to support in the future
+	enum { TAB, SPACE } _indent_style;
+	unsigned _tab_width;
+	enum { LF, CRLF, CR } _end_of_line;
+	enum { LATIN1, UTF8, UTF16BE, UTF16LE } _charset;
+	bool _trim_trailing_whitespace;
+	bool _insert_final_newline;
+	unsigned _max_line_length;
 };
 } // namespace Editor
 
