@@ -144,8 +144,7 @@ void Editor::View::select(UI::Frame &ctx, Range range) {
 	_cursor = range.end();
 	_selection = range;
 	_update.range(range);
-	reveal_cursor();
-	ctx.repaint();
+	postprocess(ctx);
 }
 
 void Editor::View::postprocess(UI::Frame &ctx) {
@@ -590,8 +589,15 @@ void Editor::View::extend_selection(location_t loc) {
 
 Editor::column_t Editor::View::column(location_t loc) {
 	// On which screen column does the character at this location appear?
-	DisplayLine line(_doc.line(loc.line), _config, _syntax);
-	return line.column(loc.offset);
+	column_t col = 0;
+	for (location_t i = _doc.home(loc); i < loc; i = _doc.next_char(i)) {
+		++col;
+		uint32_t ch = _doc.codepoint(i);
+		if (ch == '\t') {
+			col += (_config.indent_size() - col % _config.indent_size());
+		}
+	}
+	return col;
 }
 
 Editor::location_t Editor::View::arrow_up() {
