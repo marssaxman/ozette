@@ -122,10 +122,47 @@ const std::string &Editor::Document::line(line_t index) const {
 }
 
 uint32_t Editor::Document::codepoint(location_t loc) const {
-	// we don't actually support UTF-8 yet, but someday that'll change
-	return _lines[loc.line][loc.offset];
+	auto iter = _lines[loc.line].begin() + loc.offset;
+	char ch = *iter;
+	// we assume shorter sequences occur more frequently, and we'll do a quick
+	// exit for the most common case, which is a 7-bit ASCII character.
+	if (0 == (ch & 0x80)) {
+		return ch;
+	}
+	// Any byte with its high bit set must be part of a multi-byte sequence
+	// followed by some number of continuation bytes.
+	const uint32_t replacement_character = 0xFFFD;
+	uint32_t out = 0;
+	unsigned continuations = 0;
+	unsigned minimum = 0;
+	if ((ch & 0xE0) == 0xC0) { // two bytes
+		out = ch & 0x1F;
+		continuations = 1;
+		minimum = 0x80;
+	} else if ((ch & 0xF) == 0xE0) { // three bytes
+		out = ch & 0x0F;
+		continuations = 2;
+		minimum = 0x800;
+	} else if ((ch & 0xF8) == 0xF0) { // four bytes
+		out = ch & 0x07;
+		continuations = 3;
+		minimum = 0x10000;
+	} else {
+		// all other leading bytes are illegal: it's either an overlong sequence
+		// (5 or 6 bytes) or it's an out-of-place continuation character.
+		return replacement_character;
+	}
+	// Look for the continuation characters we expect and decode the full
+	// character value.
+	while (continuations--) {
+		ch = *++iter;
+		// detect broken sequences with too few continuation bytes
+		if ((ch & 0xC0) != 0x80) return replacement_character;
+		out = (out << 6) | (ch & 0x3F);
+	}
+	// guard against overlong sequences and undefined characters
+	return (out >= minimum && out <= 0x10FFFF)? out: replacement_character;
 }
-
 
 std::string Editor::Document::text(const Range &span) const {
 	std::stringstream out;
