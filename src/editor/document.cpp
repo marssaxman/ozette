@@ -121,6 +121,12 @@ const std::string &Editor::Document::line(line_t index) const {
 	return index < _lines.size()? _lines[index]: _blank;
 }
 
+uint32_t Editor::Document::codepoint(location_t loc) const {
+	// we don't actually support UTF-8 yet, but someday that'll change
+	return _lines[loc.line][loc.offset];
+}
+
+
 std::string Editor::Document::text(const Range &span) const {
 	std::stringstream out;
 	location_t loc = span.begin();

@@ -619,11 +619,28 @@ Editor::location_t Editor::View::arrow_down() {
 }
 
 Editor::location_t Editor::View::arrow_left() {
-	return _doc.prev_char(_cursor);
+	location_t out = _doc.prev_char(_cursor);
+	unsigned h = column(out);
+	uint32_t ch = _doc.codepoint(out);
+	while (ch == ' ' && h % _config.indent_size()) {
+		location_t prev = _doc.prev_char(out);
+		ch = _doc.codepoint(prev);
+		if (ch != ' ') break;
+		out = prev;
+		h--;
+	}
+	return out;
 }
 
 Editor::location_t Editor::View::arrow_right() {
-	return _doc.next_char(_cursor);
+	location_t out = _doc.next_char(_cursor);
+	if (' ' == _doc.codepoint(_cursor)) {
+		unsigned h = column(out);
+		while (' ' == _doc.codepoint(out) && h++ % _config.indent_size()) {
+			out = _doc.next_char(out);
+		}
+	}
+	return out;
 }
 
 Editor::location_t Editor::View::page_up() {
