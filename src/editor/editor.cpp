@@ -600,8 +600,10 @@ Editor::location_t Editor::View::arrow_up() {
 	// indentation.
 	column_t h = column(_cursor);
 	location_t dest = _doc.prev_char(_doc.home(_cursor));
-	while (column(dest) > h) {
-		dest = _doc.prev_char(dest);
+	if (dest.line != _cursor.line) {
+		while (column(dest) > h) {
+			dest = _doc.prev_char(dest);
+		}
 	}
 	return dest;
 }
@@ -612,8 +614,10 @@ Editor::location_t Editor::View::arrow_down() {
 	// may not be as long as the current one.
 	column_t h = column(_cursor);
 	location_t dest = _doc.end(_doc.next_char(_doc.end(_cursor)));
-	while (column(dest) > h) {
-		dest = _doc.prev_char(dest);
+	if (dest.line != _cursor.line) {
+		while (column(dest) > h) {
+			dest = _doc.prev_char(dest);
+		}
 	}
 	return dest;
 }
