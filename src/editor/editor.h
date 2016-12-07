@@ -62,7 +62,7 @@ private:
 	// Data-entry keystrokes generally begin by deleting whatever was
 	// previously selected and possibly replacing it with something else.
 	void delete_selection();
-	void replace_selection(std::string);
+	Range replace_selection(std::string);
 	void key_insert(char ch);
 	void key_tab(UI::Frame &ctx);
 	void key_btab(UI::Frame &ctx);

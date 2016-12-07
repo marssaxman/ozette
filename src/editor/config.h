@@ -25,20 +25,17 @@ class Config {
 public:
 	Config() {}
 	void load(std::string path) {} // load config settings for this file
-	bool indent_with_tabs() const { return _indent_with_tabs; }
+	char indent_style() const { return _indent_style; }
 	unsigned indent_size() const { return _indent_size; }
 private:
-	bool _indent_with_tabs = true;
+	enum { TAB = '\t', SPACE = ' ' } _indent_style = TAB;
 	unsigned _indent_size = 4;
-
-	// Additional EditorConfig properties we may want to support in the future
-	enum { TAB, SPACE } _indent_style;
-	unsigned _tab_width;
-	enum { LF, CRLF, CR } _end_of_line;
-	enum { LATIN1, UTF8, UTF16BE, UTF16LE } _charset;
-	bool _trim_trailing_whitespace;
-	bool _insert_final_newline;
-	unsigned _max_line_length;
+	unsigned _tab_width = 0;
+	enum { LF, CRLF, CR } _end_of_line = LF;
+	enum { LATIN1, UTF8, UTF16BE, UTF16LE } _charset = UTF8;
+	bool _trim_trailing_whitespace = true;
+	bool _insert_final_newline = true;
+	unsigned _max_line_length = 0;
 };
 } // namespace Editor
 

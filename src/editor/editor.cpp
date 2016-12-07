@@ -457,7 +457,7 @@ void Editor::View::delete_selection() {
 	move_cursor(_doc.erase(_selection));
 }
 
-void Editor::View::replace_selection(std::string clip) {
+Editor::Range Editor::View::replace_selection(std::string clip) {
 	delete_selection();
 	location_t oldloc = _cursor;
 	location_t newloc = _doc.insert(oldloc, clip);
@@ -466,6 +466,7 @@ void Editor::View::replace_selection(std::string clip) {
 	}
 	move_cursor(newloc);
 	_doc.commit();
+	return Range(oldloc, newloc);
 }
 
 void Editor::View::key_insert(char ch) {
@@ -477,29 +478,27 @@ void Editor::View::key_tab(UI::Frame &ctx) {
 	if (_selection.empty()) {
 		// move the cursor forward to the next tab stop, using either a tab
 		// character or a series of spaces, as the user requires
-		if (_config.indent_with_tabs()) {
-			key_insert('\t');
-		} else do {
-			key_insert(' ');
-		} while (0 != _cursor.offset % _config.indent_size());
+		do {
+			key_insert(_config.indent_style());
+		} while (0 != column(_cursor) % _config.indent_size());
 	} else {
-		// indent all lines touched by the selection one more tab then extend
-		// the selection to encompass all of those lines, because that's what
-		// VS does and I like it that way.
-		line_t begin = _selection.begin().line;
-		line_t end = _selection.end().line;
-		if (end > begin && 0 == _selection.end().offset) end--;
-		std::string indent_spaces(_config.indent_size(), ' ');
-		for (line_t index = begin; index <= end; ++index) {
-			if (_config.indent_with_tabs()) {
-				_doc.insert(_doc.home(index), '\t');
-			} else {
-				_doc.insert(_doc.home(index), indent_spaces);
-			}
+		location_t begin = _doc.home(_selection.begin());
+		location_t end = _doc.end(_selection.end());
+		select(ctx, Range(begin, end));
+		std::string text = _doc.text(_selection);
+		// Add an additional indent to the beginning of each selected line.
+		// Replace the selection with the new text. We do this as a single
+		// replacement operation so that it can be undone as a single action
+		// instead of a series of line-by-line adjustments.
+		char indent_char = _config.indent_style();
+		size_t indent_count = ('\t' == indent_char)? 1: _config.indent_size();
+		size_t offset = 0;
+		while (offset != std::string::npos && offset < text.size()) {
+			text.insert(offset, indent_count, indent_char);
+			offset = text.find_first_of("\n\r", offset);
+			offset = text.find_first_not_of("\n\r", offset);
 		}
-		_anchor = _doc.home(begin);
-		extend_selection(_doc.end(end));
-		_update.range(_selection);
+		_selection = replace_selection(text);
 	}
 }
 
@@ -509,30 +508,25 @@ void Editor::View::key_btab(UI::Frame &ctx) {
 	// Remove the leftmost tab character or indent-sized sequence of spaces
 	// from each of the selected lines, then extend the selection to encompass
 	// all of those lines.
-	std::string spaceindent(' ', _config.indent_size());
-	line_t begin = _selection.begin().line;
-	line_t end = _selection.end().line;
-	if (end > begin && 0 == _selection.end().offset) end--;
-	for (line_t index = begin; index <= end; ++index) {
-		std::string text = _doc.line(index);
-		if (text.empty()) continue;
-		location_t pretab = _doc.home(index);
-		location_t posttab = pretab;
-		if ('\t' == text.front()) {
-			posttab = _doc.next_char(pretab);
-		} else for (auto ch: text) {
-			if (' ' != ch) break;
-			if (posttab.offset >= _config.indent_size()) break;
-			posttab.offset++;
+	location_t begin = _doc.home(_selection.begin());
+	location_t end = _doc.end(_selection.end());
+	select(ctx, Range(begin, end));
+	std::string text = _doc.text(_selection);
+	size_t offset = 0;
+	while (offset != std::string::npos && offset < text.size()) {
+		size_t munch = offset;
+		while (text[munch] == ' ' && munch < text.size()) {
+			if (munch - offset >= _config.indent_size()) break;
+			++munch;
 		}
-		Range indent(pretab, posttab);
-		if (!indent.empty()) {
-			_doc.erase(indent);
+		if ('\t' == text[offset]) ++munch;
+		if (munch > offset) {
+			text.erase(offset, munch - offset);
 		}
+		offset = text.find_first_of("\n\r", offset);
+		offset = text.find_first_not_of("\n\r", offset);
 	}
-	_anchor = _doc.home(begin);
-	extend_selection(_doc.end(end));
-	_update.range(_selection);
+	_selection = replace_selection(text);
 }
 
 void Editor::View::key_escape(UI::Frame &ctx) {
