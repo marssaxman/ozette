@@ -80,27 +80,44 @@ Editor::location_t Editor::Document::end(line_t index) {
 }
 
 Editor::location_t Editor::Document::next_char(location_t loc) {
-	if (loc.offset < _lines[loc.line].size()) {
+	const std::string &text = _lines[loc.line];
+	if (loc.offset == text.size()) {
+		return (loc.line < _maxline)? home(loc.line + 1): end();
+	}
+	// If this char begins a multibyte sequence, attempt to consume the number
+	// of continuation bytes which ought to follow it.
+	char ch = text[loc.offset++];
+	unsigned continuations = 0;
+	if (0xC0 == (0xE0 & ch)) continuations = 1;
+	if (0xE0 == (0xF0 & ch)) continuations = 2;
+	if (0xF0 == (0xF8 & ch)) continuations = 3;
+	if (0xF8 == (0xFC & ch)) continuations = 4;
+	if (0xFC == (0xFE & ch)) continuations = 5;
+	while (continuations-- && (0x80 == (text[loc.offset] & 0xC0))) {
 		loc.offset++;
-	} else if (loc.line < _maxline) {
-		loc.offset = 0;
-		loc.line++;
-	} else {
-		loc.line = _maxline;
-		loc.offset = _lines[loc.line].size();
 	}
 	return loc;
 }
 
 Editor::location_t Editor::Document::prev_char(location_t loc) {
-	if (loc.offset > 0) {
-		loc.offset--;
-	} else if (loc.line > 0) {
-		loc.line--;
-		loc.offset = _lines[loc.line].size();
-	} else {
-		loc.line = 0;
-		loc.offset = 0;
+	if (0 == loc.offset) {
+		return (loc.line > 0)? end(loc.line - 1): home();
+	}
+	// If this byte is a continuation, scan backward until we find a byte which
+	// could be the beginning of a character sequence. If this continuation
+	// byte could feasibly serve as a member of that sequence, jump back to the
+	// beginning of the sequence; otherwise return it on its own, since it is
+	// an erroneous character encoding.
+	const std::string &text = _lines[loc.line];
+	offset_t scan = --loc.offset;
+	while (0x80 == (text[scan] & 0xC0)) {
+		--scan;
+	}
+	char ch = text[scan];
+	switch (loc.offset - scan) {
+		case 1: if (0xC0 == (0xE0 & ch)) loc.offset = scan; break;
+		case 2: if (0xE0 == (0xF0 & ch)) loc.offset = scan; break;
+		case 3: if (0xF0 == (0xF8 & ch)) loc.offset = scan; break;
 	}
 	return loc;
 }
