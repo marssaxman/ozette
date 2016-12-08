@@ -308,6 +308,7 @@ void Editor::View::ctl_save_as(UI::Frame &ctx) {
 		// Update the editor to point at the new path.
 		ctx.app().rename_file(_targetpath, path);
 		_targetpath = path;
+		_config.load(_targetpath);
 		ctx.set_title(path);
 	};
 	dialog.show(ctx);
@@ -658,7 +659,6 @@ Editor::location_t Editor::View::page_down() {
 void Editor::View::save(UI::Frame &ctx, std::string dest) {
 	_doc.commit();
 	_doc.Write(dest);
-	_config.load(dest);
 	ctx.set_status(_doc.status());
 	std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
 	stat += (_doc.maxline() >= 1) ? " lines" : " line";

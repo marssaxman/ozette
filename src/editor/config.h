@@ -20,22 +20,30 @@
 
 #include <string>
 
+// This is an implementation of the editorconfig standard:
+//     http://www.editorconfig.org/
+// Any behavior divergent from that specification is unintentional.
+
 namespace Editor {
 class Config {
 public:
-	Config() {}
-	void load(std::string path) {} // load config settings for this file
+	Config() { reset(); }
+	void load(std::string path);
+	// Properties which control behaviors that this editor actually implements:
 	char indent_style() const { return _indent_style; }
 	unsigned indent_size() const { return _indent_size; }
+	// Other properties are supported, as per the standard, but have no effect.
 private:
-	enum { TAB = '\t', SPACE = ' ' } _indent_style = TAB;
-	unsigned _indent_size = 4;
-	unsigned _tab_width = 0;
-	enum { LF, CRLF, CR } _end_of_line = LF;
-	enum { LATIN1, UTF8, UTF16BE, UTF16LE } _charset = UTF8;
-	bool _trim_trailing_whitespace = true;
-	bool _insert_final_newline = true;
-	unsigned _max_line_length = 0;
+	void reset();
+	void apply(std::string key, std::string val);
+	enum { TAB = '\t', SPACE = ' ' } _indent_style;
+	unsigned _indent_size;
+	unsigned _tab_width;
+	enum { LF, CRLF, CR } _end_of_line;
+	enum { LATIN1, UTF8, UTF8BOM, UTF16BE, UTF16LE } _charset;
+	bool _trim_trailing_whitespace;
+	bool _insert_final_newline;
+	unsigned _max_line_length;
 };
 } // namespace Editor
 
