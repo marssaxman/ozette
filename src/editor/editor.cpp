@@ -23,7 +23,6 @@
 #include "app/path.h"
 #include "dialog/confirmation.h"
 #include "dialog/form.h"
-#include "editor/displayline.h"
 #include "editor/editor.h"
 #include "ui/colors.h"
 #include "search/dialog.h"
@@ -159,9 +158,52 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, State state) {
 	size_t index = v + _scroll.v;
 	if (!_update.is_dirty(index)) return;
 	wmove(dest, (int)v, 0);
-	DisplayLine line(_doc.line(index), _config, _syntax);
-	line.paint(dest, _scroll.h, _width, state != State::Inactive);
-	if (state == State::Inactive) return;
+	const std::string &text = _doc.line(index);
+
+	std::vector<int> style(text.size());
+	static Regex trailing_space("[[:space:]]+$");
+	Regex::Match m = trailing_space.find(text);
+	if (!m.empty()) {
+		for (size_t i= m.begin; i < m.end; ++i) {
+			style[i] = UI::Colors::error();
+		}
+	}
+	for (auto &token: Syntax::parse(_syntax, text)) {
+		for (size_t i = token.begin; i < token.end; ++i) {
+			style[i] = token.style();
+		}
+	}
+
+	bool active = state != State::Inactive;
+	unsigned hoff = _scroll.h;
+	column_t h = 0;
+	unsigned width = _width + hoff;
+	size_t style_index = 0;
+	for (char ch: text) {
+		if (h == width) break;
+		if (active) {
+			wattrset(dest, style[style_index++]);
+		}
+		// If it's a normal character, just draw it. If it's a tab, draw a
+		// bullet, then add spaces up til the next tab stop.
+		if (ch != '\t') {
+			if (h >= hoff) waddch(dest, ch);
+			h++;
+		} else {
+			chtype bullet = ACS_BULLET;
+			do {
+				if (h >= hoff) waddch(dest, bullet);
+				h++;
+				bullet = ' ';
+			} while (h < width && 0 != h % _config.indent_size());
+		}
+	}
+	wattrset(dest, UI::Colors::content(active));
+	if (h < width) {
+		wclrtoeol(dest);
+	}
+
+	if (!active) return;
 	if (_selection.empty()) return;
 	column_t selbegin = 0;
 	unsigned selcount = 0;
@@ -170,13 +212,13 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, State state) {
 	if (begin_line < index && end_line > index) {
 		selcount = _width;
 	} else if (begin_line < index && end_line == index) {
-		selcount = line.column(_selection.end().offset);
+		selcount = column(_selection.end());
 	} else if (begin_line == index && end_line > index) {
-		selbegin = line.column(_selection.begin().offset);
+		selbegin = column(_selection.begin());
 		selcount = _width - selbegin;
 	} else if (begin_line == index && end_line == index) {
-		selbegin = line.column(_selection.begin().offset);
-		selcount = line.column(_selection.end().offset) - selbegin;
+		selbegin = column(_selection.begin());
+		selcount = column(_selection.end()) - selbegin;
 	}
 	if (selcount > 0) {
 		// DisplayLine should probably be responsible for this, since setting
