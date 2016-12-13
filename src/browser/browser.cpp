@@ -118,6 +118,7 @@ bool Browser::View::process(UI::Frame &ctx, int ch) {
 		case KEY_DOWN: key_down(ctx); break;
 		case KEY_PPAGE: key_page_up(ctx); break;
 		case KEY_NPAGE: key_page_down(ctx); break;
+		case '/': key_slash(ctx); break;
 		default: {
 			if(isprint(ch)) key_char(ctx, ch);
 			else clear_filter(ctx);
@@ -300,6 +301,26 @@ void Browser::View::key_backspace(UI::Frame &ctx) {
 	if (_path_filter.empty()) return;
 	_path_filter.pop_back();
 	update_filter(ctx);
+}
+
+void Browser::View::key_slash(UI::Frame &ctx) {
+	// Typing a slash means the user's selection filter is going to descend
+	// into the current directory. Make sure the directory is expanded, so they
+	// can see and select items within the directory; the user shouldn't have
+	// to stop and manually open it before selecting something inside it.
+	auto &display = _list[_selection];
+	if (display.entry->is_directory()) {
+		std::string path = display.entry->path();
+		if (!display.expanded) {
+			_expanded_items.insert(path);
+			display.expanded = true;
+			insert_rows(_selection + 1, display.indent + 1, display.entry);
+		}
+		_path_filter = Path::display(path) + "/";
+	} else {
+		_path_filter.push_back('/');
+	}
+	ctx.repaint();
 }
 
 void Browser::View::key_char(UI::Frame &ctx, char ch) {

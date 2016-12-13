@@ -61,6 +61,7 @@ private:
 	void key_tab(UI::Frame &ctx);
 	void key_backspace(UI::Frame &ctx);
 	void key_char(UI::Frame &ctx, char ch);
+	void key_slash(UI::Frame &ctx);
 	void update_filter(UI::Frame &ctx);
 	void clear_filter(UI::Frame &ctx);
 	bool matches_filter(size_t index);
