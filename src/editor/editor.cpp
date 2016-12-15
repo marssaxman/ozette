@@ -629,7 +629,7 @@ Editor::column_t Editor::View::column(location_t loc) {
 	column_t col = 0;
 	for (location_t i = _doc.home(loc); i < loc; i = _doc.next_char(i)) {
 		++col;
-		uint32_t ch = _doc.codepoint(i);
+		char32_t ch = _doc.codepoint(i);
 		if (ch == '\t') {
 			col += (_config.indent_size() - col % _config.indent_size());
 		}
@@ -668,7 +668,7 @@ Editor::location_t Editor::View::arrow_down() {
 Editor::location_t Editor::View::arrow_left() {
 	location_t out = _doc.prev_char(_cursor);
 	unsigned h = column(out);
-	uint32_t ch = _doc.codepoint(out);
+	char32_t ch = _doc.codepoint(out);
 	while (ch == ' ' && h % _config.indent_size()) {
 		location_t prev = _doc.prev_char(out);
 		ch = _doc.codepoint(prev);

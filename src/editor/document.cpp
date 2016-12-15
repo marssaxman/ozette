@@ -138,7 +138,7 @@ const std::string &Editor::Document::line(line_t index) const {
 	return index < _lines.size()? _lines[index]: _blank;
 }
 
-uint32_t Editor::Document::codepoint(location_t loc) const {
+char32_t Editor::Document::codepoint(location_t loc) const {
 	auto iter = _lines[loc.line].begin() + loc.offset;
 	char ch = *iter;
 	// we assume shorter sequences occur more frequently, and we'll do a quick
@@ -148,8 +148,8 @@ uint32_t Editor::Document::codepoint(location_t loc) const {
 	}
 	// Any byte with its high bit set must be part of a multi-byte sequence
 	// followed by some number of continuation bytes.
-	const uint32_t replacement_character = 0xFFFD;
-	uint32_t out = 0;
+	const char32_t replacement_character = 0xFFFD;
+	char32_t out = 0;
 	unsigned continuations = 0;
 	unsigned minimum = 0;
 	if ((ch & 0xE0) == 0xC0) { // two bytes

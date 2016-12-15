@@ -60,7 +60,7 @@ public:
 	// Get the raw text of the indexed source line.
 	const std::string &line(line_t index) const;
 	// Get a specific codepoint.
-	uint32_t codepoint(location_t) const;
+	char32_t codepoint(location_t) const;
 	// Retrieve the text within the range as a contiguous string.
 	std::string text(const Range &span) const;
 
