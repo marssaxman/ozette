@@ -12,7 +12,7 @@ search and replace. F5 invokes 'make' in the current directory and captures
 output in a new tab. The editor offers syntax highlighting for C, C++, Ruby,
 Python, Javascript, Go, and protobufs.
 
-====
+----
 
 Ozette is an opinionated tool; I wrote it for my own use, and it is tailored to
 my personal preferences. It began as a quick hack, solving one problem for one
@@ -33,7 +33,7 @@ daily use.
 If you do happen to find that this editor suits your taste, I would be happy
 to hear from you, and to discuss any issues you might encounter with it.
 
-====
+----
 
 Build it:
 
