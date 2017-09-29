@@ -16,6 +16,10 @@ My focus for future development will be on more integrated, IDE-like features:
 integration with git/svn, a better console capable of running gdb/lldb, and
 syntax awareness for editor highlighting and identifier search.
 
+![editor screenshot](screenshots/2017-09-29_10-50-22.png?raw=true)
+
+![browser screenshot](screenshots/2017-09-29_10-54-10.png?raw=true)
+
 ====
 
 Build it:
