@@ -24,7 +24,7 @@ namespace Syntax {
 
 const Rule cpreproc{"^#[A-Za-z]+", Token::Type::Keyword};
 const Rule strdq{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String};
-const Rule strsq{"\\\'([^\\\']|(\\\\.))*\\\'", Token::Type::String};
+const Rule strsq{"'([^']|(\\\\.))*'", Token::Type::String};
 const Rule cident{"[A-Za-z_][A-Za-z0-9_]*", Token::Type::Identifier};
 const Rule cnumber{"(0([Xx][0-9A-Fa-f]+)?)|([1-9]+)", Token::Type::Literal};
 const Rule slashcomment{"//(.*)$", Token::Type::Comment};
