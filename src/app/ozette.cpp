@@ -207,9 +207,27 @@ void Ozette::change_directory() {
 }
 
 void Ozette::new_file() {
+	// Is one of our editors the active window? If so, ask for the target path
+	// for its document and use that as the default location for the new file.
+	std::string path = _current_dir;
+	for (auto wpair: _editors) {
+		if (wpair.second.window == _shell.active()) {
+			if (!wpair.first.empty()) {
+				path = Path::absolute(wpair.first);
+				size_t trunc = path.find_last_of('/');
+				if (trunc == std::string::npos) {
+					trunc = 0;
+				}
+				path.resize(trunc);
+			}
+			break;
+		}
+	}
+	// Bring up the dialog allowing the user to enter a name for the file
+	// and change its location if they wish.
 	Dialog::Form dialog;
 	dialog.fields = {
-		{"New File", Path::display(_current_dir) + "/", &Path::complete_file}
+		{"New File", Path::display(path) + "/", &Path::complete_file}
 	};
 	dialog.commit = [this](UI::Frame &ctx, Dialog::Form::Result &result) {
 		std::string path = Path::absolute(result.selected_value);
