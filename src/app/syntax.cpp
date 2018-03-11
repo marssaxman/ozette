@@ -141,7 +141,7 @@ const std::map<std::string, const Grammar&> extensions = {
 	{"rb", ruby},
 	{"mk", make},
 	{"s", assembly},
-	{"py", python},
+	{"py", python}, {"pyx", python},
 	{"js", js},
 	{"proto", protobuf},
 	{"go", golang},
