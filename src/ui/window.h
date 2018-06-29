@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2016 Mars J. Saxman
+// Copyright (C) 2014-2018 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ public:
 	bool process(int ch);
 	bool poll();
 	virtual void show_dialog(std::unique_ptr<View> &&dialog) override;
-	View::Priority priority() const { return _view->priority(); }
+	virtual View::Priority priority() const { return _view->priority(); }
 protected:
 	virtual void repaint() override { _dirty_content = true; }
 	virtual Controller &app() override { return _app; }

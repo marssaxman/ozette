@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2015-2016 Mars J. Saxman
+// Copyright (C) 2015-2018 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+#include <cstdlib>
 #include "dialog/input.h"
 
 Dialog::Input::Input(std::string value, Completer completer, Updater updater):
@@ -71,9 +72,9 @@ void Dialog::Input::paint(
 		curs_set(focused? 1: 0);
 	} else {
 		if (focused) {
-			int selbegin = h + std::min(_cursor_pos, _anchor_pos);
-			int selcount = std::abs((int)_cursor_pos - (int)_anchor_pos);
-			mvwchgat(view, v, selbegin, selcount, A_NORMAL, 0, NULL);
+			int begin = h + std::min(_cursor_pos, _anchor_pos);
+			int count = std::abs(static_cast<int>(_cursor_pos - _anchor_pos));
+			mvwchgat(view, v, begin, count, A_NORMAL, 0, NULL);
 		}
 		curs_set(0);
 	}

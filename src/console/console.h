@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2016 Mars J. Saxman
+// Copyright (C) 2014-2018 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ public:
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual bool poll(UI::Frame &ctx) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
-	virtual Priority priority() const { return Priority::Secondary; }
+	virtual Priority priority() const override { return Priority::Secondary; }
 protected:
 	View();
 	~View();

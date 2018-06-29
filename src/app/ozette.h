@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2016 Mars J. Saxman
+// Copyright (C) 2014-2018 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ public:
 	virtual void edit_file(std::string path) override;
 	virtual void rename_file(std::string from, std::string to) override;
 	virtual void close_file(std::string path) override;
-	virtual void find_in_file(std::string path, Editor::line_t index);
+	virtual void find_in_file(std::string path, Editor::line_t index) override;
 	virtual void set_clipboard(std::string text) override;
 	virtual std::string get_clipboard() override;
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) override;
