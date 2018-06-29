@@ -16,6 +16,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include "editor/document.h"
+#include <cstring>
+#include <exception>
 #include <fstream>
 #include <sstream>
 #include <assert.h>
@@ -51,12 +53,21 @@ Editor::Document::Document(std::string path) {
 }
 
 void Editor::Document::Write(std::string path) {
-	std::ofstream file(path, std::ios::trunc | std::ios::out);
-	for (auto &line: _lines) {
-		file << line << std::endl;
+	std::ofstream file;
+	file.exceptions(std::ios::failbit);
+	try {
+		file.open(path, std::ios::trunc | std::ios::out);
+		for (auto &line: _lines) {
+			file << line << std::endl;
+		}
+		file.close();
+		clear_modify();
+	} catch (...) {
+		int local_errno = errno;
+		std::string err = "Failed to write (" + std::to_string(local_errno);
+		err += ": " + std::string(std::strerror(local_errno)) + ")";
+		throw std::runtime_error(err);
 	}
-	file.close();
-	clear_modify();
 }
 
 Editor::location_t Editor::Document::home() {

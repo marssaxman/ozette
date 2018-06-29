@@ -86,7 +86,7 @@ private:
 	location_t page_up();
 	location_t page_down();
 
-	void save(UI::Frame &ctx, std::string dest);
+	bool save(UI::Frame &ctx, std::string dest);
 	bool find(UI::Frame &ctx, location_t anchor, std::string pattern);
 
 	// Information about the file being edited

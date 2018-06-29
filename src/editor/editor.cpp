@@ -313,9 +313,10 @@ void Editor::View::ctl_close(UI::Frame &ctx) {
 	Dialog::Confirmation dialog;
 	dialog.text = "You have modified this file. Save changes before closing?";
 	dialog.yes = [this](UI::Frame &ctx) {
-		// save the file
-		_doc.Write(_targetpath);
-		ctx.app().close_file(_targetpath);
+		// attempt to save, close if successful
+		if (save(ctx, _targetpath)) {
+			ctx.app().close_file(_targetpath);
+		}
 	};
 	dialog.no = [this](UI::Frame &ctx) {
 		// just close it
@@ -346,12 +347,13 @@ void Editor::View::ctl_save_as(UI::Frame &ctx) {
 			return;
 		}
 		// Write the file to disk at its new location.
-		save(ctx, path);
-		// Update the editor to point at the new path.
-		ctx.app().rename_file(_targetpath, path);
-		_targetpath = path;
-		_config.load(_targetpath);
-		ctx.set_title(path);
+		if (save(ctx, path)) {
+			// Update the editor to point at the new path.
+			ctx.app().rename_file(_targetpath, path);
+			_targetpath = path;
+			_config.load(_targetpath);
+			ctx.set_title(path);
+		}
 	};
 	dialog.show(ctx);
 }
@@ -698,13 +700,20 @@ Editor::location_t Editor::View::page_down() {
 	return _doc.home(_scroll.v + _height);
 }
 
-void Editor::View::save(UI::Frame &ctx, std::string dest) {
+bool Editor::View::save(UI::Frame &ctx, std::string dest) {
 	_doc.commit();
-	_doc.Write(dest);
+	bool good = false;
+	try {
+		_doc.Write(dest);
+		std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
+		stat += (_doc.maxline() >= 1) ? " lines" : " line";
+		ctx.show_result(stat);
+		good = true;
+	} catch (const std::runtime_error &e) {
+		ctx.show_result(e.what());
+	}
 	ctx.set_status(_doc.status());
-	std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
-	stat += (_doc.maxline() >= 1) ? " lines" : " line";
-	ctx.show_result(stat);
+	return good;
 }
 
 bool Editor::View::find(
