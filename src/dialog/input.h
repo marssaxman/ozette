@@ -18,6 +18,7 @@
 #ifndef DIALOG_INPUT_H
 #define DIALOG_INPUT_H
 
+#include <functional>
 #include "ui/view.h"
 #include "ui/frame.h"
 #include "ui/helpbar.h"

@@ -18,6 +18,7 @@
 #ifndef DIALOG_CONFIRMATION_H
 #define DIALOG_CONFIRMATION_H
 
+#include <functional>
 #include "ui/view.h"
 
 // A confirmation box asks the user a question, then waits for their answer.
