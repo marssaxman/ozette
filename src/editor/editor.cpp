@@ -292,7 +292,12 @@ void Editor::View::ctl_cut(UI::Frame &ctx) {
 }
 
 void Editor::View::ctl_copy(UI::Frame &ctx) {
-	if (_selection.empty()) return;
+	if (_selection.empty()) {
+		// copy line containing the cursor, including linebreak
+		auto begin = _doc.home(_cursor);
+		auto endl = _doc.next_char(_doc.end(_cursor));
+		select(ctx, Range(begin, endl));
+	}
 	std::string clip = _doc.text(_selection);
 	ctx.app().set_clipboard(clip);
 }
