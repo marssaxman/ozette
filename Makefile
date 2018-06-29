@@ -1,5 +1,5 @@
 # ozette-specific settings
-TARGET:=ozette
+EXECNAME:=ozette
 CCFLAGS:=-Werror -Wall -g
 LDFLAGS:=-lpanel -lncurses -lpthread -lstdc++
 
@@ -7,9 +7,9 @@ LDFLAGS:=-lpanel -lncurses -lpthread -lstdc++
 SOURCES:=$(shell find src -name *.c -o -name *.cpp)
 OBJECTS:=$(addsuffix .o,$(basename $(patsubst src/%,bin/%,$(SOURCES))))
 CCFLAGS+=-Isrc -MD -MP
-$(TARGET): bin/$(TARGET)
+TARGET:=bin/$(EXECNAME)
 default: $(TARGET)
-bin/$(TARGET): $(OBJECTS)
+$(TARGET): $(OBJECTS)
 	@mkdir -p $(@D)
 	g++ -o $@ $^ $(LDFLAGS)
 bin/%.o: src/%.cpp
@@ -21,8 +21,8 @@ bin/%.o: src/%.c
 clean:
 	-rm -rf bin
 install:
-	cp bin/$(TARGET) /usr/bin/$(TARGET)
-.PHONY: clean $(TARGET) install
+	cp $(TARGET) /usr/bin/$(EXECNAME)
+.PHONY: clean install
 -include $(shell find bin -name *.d)
 
 # regenerate the help file
