@@ -541,7 +541,9 @@ void Editor::View::key_tab(UI::Frame &ctx) {
 		while (offset != std::string::npos && offset < text.size()) {
 			text.insert(offset, indent_count, indent_char);
 			offset = text.find_first_of("\n\r", offset);
-			offset = text.find_first_not_of("\n\r", offset);
+			if (offset != std::string::npos) {
+				offset = text.find_first_not_of("\n\r", offset);
+			}
 		}
 		_selection = replace_selection(text);
 	}
