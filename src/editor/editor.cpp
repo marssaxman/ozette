@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2022 Mars J. Saxman
+// Copyright (C) 2014-2023 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -533,9 +533,7 @@ void Editor::View::key_tab(UI::Frame &ctx) {
 			key_insert(_config.indent_style());
 		} while (0 != column(_cursor) % _config.indent_size());
 	} else {
-		location_t begin = _doc.home(_selection.begin());
-		location_t end = _doc.end(_selection.end());
-		select(ctx, Range(begin, end));
+		line_frame_selection();
 		std::string text = _doc.text(_selection);
 		// Add an additional indent to the beginning of each selected line.
 		// Replace the selection with the new text. We do this as a single
@@ -561,9 +559,7 @@ void Editor::View::key_btab(UI::Frame &ctx) {
 	// Remove the leftmost tab character or indent-sized sequence of spaces
 	// from each of the selected lines, then extend the selection to encompass
 	// all of those lines.
-	location_t begin = _doc.home(_selection.begin());
-	location_t end = _doc.end(_selection.end());
-	select(ctx, Range(begin, end));
+	line_frame_selection();
 	std::string text = _doc.text(_selection);
 	size_t offset = 0;
 	while (offset != std::string::npos && offset < text.size()) {
@@ -632,6 +628,22 @@ void Editor::View::extend_selection(location_t loc) {
 	_update.at(loc);
 	_cursor = loc;
 	_selection.reset(_anchor, _cursor);
+}
+
+void Editor::View::line_frame_selection() {
+	// If the beginning of the selection is not at the beginning of the line,
+	// move it back to home.
+	location_t begin = _selection.begin();
+	if (begin.offset) {
+		begin = _doc.home(begin);
+	}
+	// If the end of the selection is not at the beginning of its line,
+	// move it forward to the end of the line.
+	location_t end = _selection.end();
+	if (end.offset) {
+		end = _doc.end(end);
+	}
+	_selection.reset(begin, end);
 }
 
 Editor::column_t Editor::View::column(location_t loc) {

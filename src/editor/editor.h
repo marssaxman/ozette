@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2016 Mars J. Saxman
+// Copyright (C) 2014-2023 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -76,6 +76,8 @@ private:
 	void move_cursor(location_t loc);
 	// Stretch the selection from the anchor to the new cursor point.
 	void extend_selection(location_t loc);
+	// Square the selection to the beginning and end of each line.
+	void line_frame_selection();
 	// On which screen column does this character location appear?
 	column_t column(location_t);
 	// Find some location relative to the cursor location.
