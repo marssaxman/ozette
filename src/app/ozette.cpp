@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2016 Mars J. Saxman
+// Copyright (C) 2014-2023 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 #include <assert.h>
 #include <atomic>
 #include <fstream>
+#include <cstdlib>
 #include <sys/stat.h>
 #include <unistd.h>
 #include "app/control.h"
@@ -32,14 +33,18 @@ std::atomic_bool sig_io_flag;
 
 Ozette::Ozette():
 		_shell(*this),
-		_home_dir(getenv("HOME")),
-		_cache_dir(_home_dir + "/.ozette") {
+		_home_dir(std::getenv("HOME")) {
 	char *cwd = getcwd(NULL, 0);
 	if (cwd) {
 		_current_dir = cwd;
 		free(cwd);
 	} else {
 		_current_dir = _home_dir;
+	}
+	if (const char *cache = std::getenv("XDG_CACHE_HOME")) {
+		_cache_dir = std::string(cache);
+	} else {
+		_cache_dir = _home_dir + "/.cache/ozette";
 	}
 }
 
