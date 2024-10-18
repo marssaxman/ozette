@@ -161,8 +161,9 @@ const Grammar tablegen = {
 	{"[+-]?[0-9]+", Token::Type::Literal},
 	{"0x[0-9A-Fa-f]+", Token::Type::Literal},
 	{"0b[01]+", Token::Type::Literal},
+	{"\\$[A-Za-z0-9_]+", Token::Type::Identifier},
 	{"\\[\\{", Token::Type::String}, {"\\}\\]", Token::Type::String},
-	strdq, slashcomment,
+	cident, strdq, slashcomment,
 };
 
 const std::map<std::string, const Grammar&> extensions = {
