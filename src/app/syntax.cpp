@@ -145,10 +145,10 @@ const Grammar rust = {
 	}),
 	{"[r#]?[A-Za-z_][A-Za-z0-9_]*[?]?", Token::Type::Identifier},
 	// TODO: support raw, byte, and C strings
-	{"0b[01_]*([^eE][A-Za-z0-9_]*)?", Token::Type::Literal},
-	{"0o[0-7_]*([^eE][A-Za-z0-9_]*)?", Token::Type::Literal},
-	{"0x[0-9A-F_]*([^eE][A-Za-z0-9_]*)?", Token::Type::Literal},
-	{"[0-9_]*([^eE][A-Za-z0-9_]*)?", Token::Type::Literal},
+	{"0b[01_]+([A-DF-Za-df-z0-9_][A-Za-z0-9_]*)?", Token::Type::Literal},
+	{"0o[0-7_]+([A-DF-Za-df-z0-9_][A-Za-z0-9_]*)?", Token::Type::Literal},
+	{"0x[0-9A-F_]+([A-DF-Za-df-z0-9_][A-Za-z0-9_]*)?", Token::Type::Literal},
+	{"[0-9_]+([A-DF-Za-df-z0-9_][A-Za-z0-9_]*)?", Token::Type::Literal},
 	strdq, strsq, slashcomment,
 };
 
