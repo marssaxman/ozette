@@ -133,6 +133,25 @@ const Grammar golang = {
 	strdq, strsq, cident, cnumber, slashcomment,
 };
 
+const Grammar rust = {
+	Rule::keywords({
+		"abstract", "as", "async", "await", "become", "box", "break", "const",
+		"continue", "crate", "do", "dyn", "else", "enum", "extern", "false",
+		"final", "fn", "for", "if", "impl", "in", "let", "loop", "macro",
+		"match", "mod", "move", "mut", "override", "priv", "pub", "ref",
+		"return", "self", "Self", "static", "struct", "super", "trait", "true", "type",
+		"try", "typeof", "unsafe", "unsized", "use", "virtual", "where",
+		"while", "yield",
+	}),
+	{"[r#]?[A-Za-z_][A-Za-z0-9_]*[?]?", Token::Type::Identifier},
+	// TODO: support raw, byte, and C strings
+	{"0b[01_]*([^eE][A-Za-z0-9_]*)?", Token::Type::Literal},
+	{"0o[0-7_]*([^eE][A-Za-z0-9_]*)?", Token::Type::Literal},
+	{"0x[0-9A-F_]*([^eE][A-Za-z0-9_]*)?", Token::Type::Literal},
+	{"[0-9_]*([^eE][A-Za-z0-9_]*)?", Token::Type::Literal},
+	strdq, strsq, slashcomment,
+};
+
 const std::map<std::string, const Grammar&> extensions = {
 	{"c", c}, {"C", c},
 	{"h", cxx}, {"H", cxx},
@@ -145,6 +164,7 @@ const std::map<std::string, const Grammar&> extensions = {
 	{"js", js},
 	{"proto", protobuf},
 	{"go", golang},
+	{"rs", rust},
 };
 }
 
