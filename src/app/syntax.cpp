@@ -152,6 +152,19 @@ const Grammar rust = {
 	strdq, strsq, slashcomment,
 };
 
+const Grammar tablegen = {
+	Rule::keywords({
+		"assert", "bit", "bits", "class", "code", "dag", "def", "dump", "else",
+		"false", "foreach", "defm", "defset", "defvar", "field", "if", "in",
+		"include", "int", "let", "list", "multiclass", "string", "then", "true",
+	}),
+	{"[+-]?[0-9]+", Token::Type::Literal},
+	{"0x[0-9A-Fa-f]+", Token::Type::Literal},
+	{"0b[01]+", Token::Type::Literal},
+	{"\\[\\{", Token::Type::String}, {"\\}\\]", Token::Type::String},
+	strdq, slashcomment,
+};
+
 const std::map<std::string, const Grammar&> extensions = {
 	{"c", c}, {"C", c},
 	{"h", cxx}, {"H", cxx},
@@ -165,6 +178,7 @@ const std::map<std::string, const Grammar&> extensions = {
 	{"proto", protobuf},
 	{"go", golang},
 	{"rs", rust},
+	{"td", tablegen},
 };
 }
 
