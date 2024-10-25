@@ -149,7 +149,7 @@ const Grammar rust = {
 	{"0o[0-7_]+([A-DF-Za-df-z0-9_][A-Za-z0-9_]*)?", Token::Type::Literal},
 	{"0x[0-9A-F_]+([A-DF-Za-df-z0-9_][A-Za-z0-9_]*)?", Token::Type::Literal},
 	{"[0-9_]+([A-DF-Za-df-z0-9_][A-Za-z0-9_]*)?", Token::Type::Literal},
-	strdq, strsq, slashcomment,
+	strdq, slashcomment,
 };
 
 const Grammar tablegen = {
