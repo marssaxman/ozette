@@ -378,7 +378,16 @@ void Editor::View::ctl_toline(UI::Frame &ctx) {
 	dialog.commit = [this](UI::Frame &ctx, Dialog::Form::Result &result) {
 		std::string value = result.selected_value;
 		if (value.empty()) return;
-		long valnum = std::stol(value) - 1;
+		long valnum = 0;
+		try {
+			valnum = std::stol(value) - 1;
+		} catch (std::invalid_argument const& ex) {
+			ctx.show_result("\"" + value + "\" is not a line number");
+			return;
+		} catch (std::out_of_range const& ex) {
+			ctx.show_result("line number out of range");
+			return;
+		}
 		size_t index = (valnum >= 0) ? valnum : 0;
 		move_cursor(_doc.home(index));
 		postprocess(ctx);
@@ -510,6 +519,9 @@ void Editor::View::delete_selection() {
 
 Editor::Range Editor::View::replace_selection(std::string clip) {
 	delete_selection();
+	if (clip.empty()) {
+		return _selection;
+	}
 	location_t oldloc = _cursor;
 	location_t newloc = _doc.insert(oldloc, clip);
 	if (oldloc.line != newloc.line) {
