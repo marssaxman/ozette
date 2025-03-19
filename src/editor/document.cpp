@@ -167,7 +167,7 @@ char32_t Editor::Document::codepoint(location_t loc) const {
 		out = ch & 0x1F;
 		continuations = 1;
 		minimum = 0x80;
-	} else if ((ch & 0xF) == 0xE0) { // three bytes
+	} else if ((ch & 0xF0) == 0xE0) { // three bytes
 		out = ch & 0x0F;
 		continuations = 2;
 		minimum = 0x800;
