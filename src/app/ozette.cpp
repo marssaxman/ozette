@@ -123,7 +123,10 @@ void Ozette::cache_write(std::string name, const std::vector<std::string> &l) {
 	struct stat st;
 	if (stat(_cache_dir.c_str(), &st)) {
 		int err = mkdir(_cache_dir.c_str(), S_IRWXU);
-		assert(0 == err);
+		// if we failed to create the directory, don't try wriing to it
+		if (err) {
+			return;
+		}
 	}
 	std::ofstream file(_cache_dir + "/" + name, std::ios::trunc);
 	for (auto &line: l) {
