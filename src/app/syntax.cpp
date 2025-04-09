@@ -169,6 +169,23 @@ const Grammar tablegen = {
 	cident, strdq, slashcomment,
 };
 
+const Grammar docker = {
+	Rule::keywords({
+		"ADD", "ARG", "CMD", "COPY", "ENTRYPOINT", "ENV", "EXPOSE", "FROM",
+		"HEALTHCHECK", "LABEL", "MAINTAINER", "ONBUILD", "RUN", "SHELL",
+		"USER", "VOLUME", "WORKDIR",
+	}),
+	strdq, strsq, hashcomment,
+};
+
+const Grammar shell = {
+	Rule::keywords({
+		"case", "do", "done", "elif", "else", "esac", "fi", "for", "if", "in",
+		"then", "until", "while", "function", "select",
+	}),
+	strdq, strsq, hashcomment,
+};
+
 const std::map<std::string, const Grammar&> extensions = {
 	{"c", c}, {"C", c},
 	{"h", cxx}, {"H", cxx},
@@ -183,8 +200,11 @@ const std::map<std::string, const Grammar&> extensions = {
 	{"go", golang},
 	{"rs", rust},
 	{"td", tablegen},
+	{"Dockerfile", docker},
+	{"sh", shell},
 };
-}
+
+} // namespace Syntax
 
 using namespace Syntax;
 
