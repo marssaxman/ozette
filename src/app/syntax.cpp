@@ -265,12 +265,17 @@ const Grammar &Syntax::lookup(const std::string &path) {
 	if (iter != extensions.end()) {
 		return iter->second;
 	}
+	std::string stem;
 	if (slashpos != std::string::npos) {
-		if (path.substr(slashpos+1) == "Makefile") {
-			return make;
-		}
-	} else if (path == "Makefile") {
+		stem = path.substr(slashpos+1);
+	} else {
+		stem = path;
+	}
+	if (stem == "Makefile") {
 		return make;
+	}
+	if (stem == "Dockerfile") {
+		return docker;
 	}
 	return generic;
 }
