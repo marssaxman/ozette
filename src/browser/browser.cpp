@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2016 Mars J. Saxman
+// Copyright (C) 2014-2025 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@
 #include <assert.h>
 
 Browser::View *Browser::View::_instance;
-static std::string kExpansionStateKey = "expanded_dirs";
 
 void Browser::View::change_directory(std::string path) {
 	if (_instance) _instance->view(path);
@@ -48,7 +47,7 @@ void Browser::View::activate(UI::Frame &ctx) {
 	set_title(ctx);
 	if (_expanded_items.empty()) {
 		std::vector<std::string> paths;
-		ctx.app().cache_read(kExpansionStateKey, paths);
+		ctx.app().cache_read(CacheKey::kExpansionState, paths);
 		for (auto &path: paths) {
 			_expanded_items.insert(path);
 		}
@@ -64,7 +63,7 @@ void Browser::View::deactivate(UI::Frame &ctx) {
 	for (auto &line: _expanded_items) {
 		paths.push_back(line);
 	}
-	ctx.app().cache_write(kExpansionStateKey, paths);
+	ctx.app().cache_write(CacheKey::kExpansionState, paths);
 	clear_filter(ctx);
 }
 

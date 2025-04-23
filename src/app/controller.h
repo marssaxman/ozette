@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2016 Mars J. Saxman
+// Copyright (C) 2014-2025 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -37,6 +37,10 @@ public:
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) = 0;
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) = 0;
 };
+
+namespace CacheKey {
+extern const std::string kExpansionState;
+} // namespace CacheKey
 
 #endif //APP_CONTROLLER_H
 
