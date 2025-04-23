@@ -43,6 +43,7 @@ public:
 namespace CacheKey {
 extern const std::string kExpansionState;
 extern const std::string kSessionState;
+extern const std::string kSearchSpec;
 } // namespace CacheKey
 
 #endif //APP_CONTROLLER_H

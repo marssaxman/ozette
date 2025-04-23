@@ -166,6 +166,13 @@ void Ozette::search(Search::spec query) {
 	} else if (canontree == Path::absolute(_home_dir)) {
 		query.haystack = "~";
 	}
+	// Save these search options for later recall.
+	std::vector<std::string> lines = {
+		query.needle,
+		query.haystack,
+		query.filter,
+	};
+	cache_write(CacheKey::kSearchSpec, lines);
 	Search::View::exec(query, _shell);
 }
 
@@ -315,7 +322,15 @@ void Ozette::build() {
 
 void Ozette::search() {
 	show_browser();
-	Search::spec job = {"", Path::display("."), "*"};
+	// Restore the previous search settings, if we cached them.
+	std::vector<std::string> lines;
+	cache_read(CacheKey::kSearchSpec, lines);
+	// Prepare the new search job, using default values as needed.
+	Search::spec job = {
+		.needle = lines.size() > 0? lines[0]: "",
+		.haystack = lines.size() > 1? lines[1]: Path::display("."),
+		.filter = lines.size() > 2? lines[2]: "*"
+	};
 	Search::Dialog::show(*_shell.active(), job);
 }
 
