@@ -36,10 +36,13 @@ public:
 	virtual std::string get_clipboard() = 0;
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) = 0;
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) = 0;
+	virtual void save_session() = 0;
+	virtual void load_session() = 0;
 };
 
 namespace CacheKey {
 extern const std::string kExpansionState;
+extern const std::string kSessionState;
 } // namespace CacheKey
 
 #endif //APP_CONTROLLER_H

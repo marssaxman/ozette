@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2023 Mars J. Saxman
+// Copyright (C) 2014-2025 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -169,8 +169,33 @@ void Ozette::search(Search::spec query) {
 	Search::View::exec(query, _shell);
 }
 
+void Ozette::save_session() {
+	// Record the list of files currently being edited.
+	std::vector<std::string> files;
+	files.reserve(_editors.size());
+	for (auto wpair: _editors) {
+		files.push_back(wpair.first);
+	}
+	cache_write(CacheKey::kSessionState, files);
+}
+
+void Ozette::load_session() {
+	// Open all the files which were being edited during the last session if
+	// they fit under the current directory.
+	std::vector<std::string> files;
+	cache_read(CacheKey::kSessionState, files);
+	for (auto &f: files) {
+		if (f.substr(0, _current_dir.size()) == _current_dir) {
+			edit_file(f);
+		}
+	}
+}
+
 void Ozette::run() {
-	if (_editors.empty()) show_browser();
+	if (_editors.empty()) {
+		show_browser();
+		load_session();
+	}
 	timeout(100);
 	do {
 		if (sig_io_flag.exchange(false)) {

@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2018 Mars J. Saxman
+// Copyright (C) 2014-2025 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -39,6 +39,8 @@ public:
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) override;
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) override;
 	virtual void search(Search::spec query) override;
+	virtual void save_session() override;
+	virtual void load_session() override;
 	void run();
 	void sig_io();
 private:

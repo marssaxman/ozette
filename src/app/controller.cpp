@@ -19,4 +19,5 @@
 
 namespace CacheKey {
 const std::string kExpansionState = "expanded_dirs";
+const std::string kSessionState = "open_editors";
 } // namespace CacheKey

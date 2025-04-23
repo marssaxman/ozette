@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2016 Mars J. Saxman
+// Copyright (C) 2014-2025 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -108,6 +108,7 @@ void UI::Shell::key_right() {
 }
 
 void UI::Shell::ctl_quit() {
+	_app.save_session();
 	for (size_t index = _tabs.size(); index > 0; --index) {
 		if (!_tabs[index - 1]->process(Control::Close)) {
 			close_window(index - 1);
