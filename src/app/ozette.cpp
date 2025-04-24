@@ -177,13 +177,15 @@ void Ozette::search(Search::spec query) {
 }
 
 void Ozette::save_session() {
-	// Record the list of files currently being edited.
-	std::vector<std::string> files;
-	files.reserve(_editors.size());
-	for (auto wpair: _editors) {
-		files.push_back(wpair.first);
+	if (_browser_mode) {
+		// Record the list of files currently being edited.
+		std::vector<std::string> files;
+		files.reserve(_editors.size());
+		for (auto wpair: _editors) {
+			files.push_back(wpair.first);
+		}
+		cache_write(CacheKey::kSessionState, files);
 	}
-	cache_write(CacheKey::kSessionState, files);
 }
 
 void Ozette::load_session() {
@@ -200,6 +202,7 @@ void Ozette::load_session() {
 
 void Ozette::run() {
 	if (_editors.empty()) {
+		_browser_mode = true;
 		show_browser();
 		load_session();
 	}

@@ -66,6 +66,7 @@ private:
 	std::map<std::string, editor> _editors;
 	std::string _clipboard;
 	bool _done = false;
+	bool _browser_mode = false;
 };
 
 #endif //APP_OZETTE_H
