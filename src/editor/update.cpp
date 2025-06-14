@@ -17,6 +17,7 @@
 
 #include "editor/update.h"
 #include <climits>
+#include <cstdint>
 
 void Editor::Update::reset() {
 	_dirty = false;
