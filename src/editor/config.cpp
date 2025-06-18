@@ -18,7 +18,7 @@
 #include <algorithm>
 #include "app/path.h"
 #include "editor/config.h"
-#include <fnmatch.h>
+#include "editor/ec_fnmatch.h"
 #include <fstream>
 #include <map>
 #include <stack>
@@ -151,10 +151,11 @@ void Editor::Config::load(std::string file_path) {
 			// If the file's path matches this section's glob pattern, apply
 			// the section's definitions to the current configuration. 
 			int fnflag = 0;
-			if (sec.pattern.find_first_of('/') != std::string::npos) {
-				fnflag |= FNM_PATHNAME;
+			auto const &pattern = sec.pattern;
+			if (pattern.find_first_of('/') != std::string::npos) {
+				fnflag |= EC_FNM_PATHNAME;
 			}
-			if (0 == fnmatch(sec.pattern.c_str(), rel_path.c_str(), fnflag)) {
+			if (0 == ec_fnmatch(pattern.c_str(), rel_path.c_str(), fnflag)) {
 				for (auto &pair: sec.definitions) {
 					apply(pair.first, pair.second);
 				}
