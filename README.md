@@ -9,8 +9,9 @@ key bindings with a scheme based on familiar desktop application conventions.
 
 The browser offers a directory-wide regex search, and the editor has local
 search and replace. F5 invokes 'make' in the current directory and captures
-output in a new tab. The editor offers syntax highlighting for C, C++, Ruby,
-Python, Javascript, Go, and protobufs.
+output in a new tab. The editor offers syntax highlighting for C, C++, Rust,
+Ruby, Python, Javascript, Go, and shell scripts, plus protobufs, Dockerfiles,
+makefiles, and LLVM/MLIR tablegen files.
 
 ----
 
