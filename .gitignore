@@ -1,4 +1,3 @@
-# compiler output lives under ./bin
-bin/
-obj/
+# don't need to see build artifacts
+build/
 
