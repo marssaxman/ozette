@@ -194,9 +194,19 @@ void Ozette::load_session() {
 	std::vector<std::string> files;
 	cache_read(CacheKey::kSessionState, files);
 	for (auto &f: files) {
-		if (f.substr(0, _current_dir.size()) == _current_dir) {
-			edit_file(f);
+		if (f.substr(0, _current_dir.size()) != _current_dir) {
+			// don't reopen files outside the working directory
+			continue;
 		}
+		if (access(f.c_str(), F_OK) != 0) {
+			// don't reopen files which no longer exist
+			continue;
+		}
+		edit_file(f);
+	}
+	// Whatever was open, we reload with focus on the browser.
+	if (!files.empty()) {
+		show_browser();
 	}
 }
 
