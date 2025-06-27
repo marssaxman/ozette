@@ -86,6 +86,10 @@ bool Search::View::poll(UI::Frame &ctx) {
 	if (!_proc->poll()) {
 		_proc.reset(nullptr);
 		dirty = true;
+		if (!_match_lines) {
+			// didn't find anything? let the user try again
+			ctx.app().begin_search();
+		}
 	}
 	if (dirty) {
 		ctx.repaint();

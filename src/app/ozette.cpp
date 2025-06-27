@@ -157,7 +157,21 @@ Ozette::editor Ozette::open_editor(std::string path) {
 	return edrec;
 }
 
-void Ozette::search(Search::spec query) {
+void Ozette::begin_search() {
+	Search::View::show(_shell);
+	// Restore the previous search settings, if we cached them.
+	std::vector<std::string> lines;
+	cache_read(CacheKey::kSearchSpec, lines);
+	// Prepare the new search job, using default values as needed.
+	Search::spec job = {
+		.needle = lines.size() > 0? lines[0]: "",
+		.haystack = lines.size() > 1? lines[1]: Path::display("."),
+		.filter = lines.size() > 2? lines[2]: "*"
+	};
+	Search::Dialog::show(*_shell.active(), job);
+}
+
+void Ozette::search_for(Search::spec query) {
 	// Make the search results prettier: if we're searching in the working
 	// directory, use "." instead of the literal path.
 	std::string canontree = Path::absolute(query.haystack);
@@ -229,7 +243,7 @@ void Ozette::run() {
 			case Control::Directory: change_directory(); break;
 			case Control::Help: show_help(); break;
 			case Control::Execute: execute(); break;
-			case KEY_F(4): search(); break;
+			case KEY_F(4): begin_search(); break;
 			case KEY_F(5): build(); break;
 			default: _done |= !_shell.process(ch);
 		}
@@ -331,20 +345,6 @@ void Ozette::build() {
 		edit_pair.second.window->process(Control::Save);
 	}
 	exec("make");
-}
-
-void Ozette::search() {
-	Search::View::show(_shell);
-	// Restore the previous search settings, if we cached them.
-	std::vector<std::string> lines;
-	cache_read(CacheKey::kSearchSpec, lines);
-	// Prepare the new search job, using default values as needed.
-	Search::spec job = {
-		.needle = lines.size() > 0? lines[0]: "",
-		.haystack = lines.size() > 1? lines[1]: Path::display("."),
-		.filter = lines.size() > 2? lines[2]: "*"
-	};
-	Search::Dialog::show(*_shell.active(), job);
 }
 
 int Ozette::fix_control_quirks(int ch) {

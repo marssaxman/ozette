@@ -32,7 +32,7 @@ void Search::Dialog::show(UI::Frame &ctx, spec job) {
 			result.fields["Directory"],
 			result.fields["Filenames"]
 		};
-		ctx.app().search(job);
+		ctx.app().search_for(job);
 	};
 	dialog.show(ctx);
 }

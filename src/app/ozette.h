@@ -38,7 +38,8 @@ public:
 	virtual std::string get_clipboard() override;
 	virtual void cache_read(std::string name, std::vector<std::string> &lines) override;
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) override;
-	virtual void search(Search::spec query) override;
+	virtual void begin_search() override;
+	virtual void search_for(Search::spec query) override;
 	virtual void save_session() override;
 	virtual void load_session() override;
 	void run();
@@ -55,7 +56,6 @@ private:
 	void show_help();
 	void execute();
 	void build();
-	void search();
 	int fix_control_quirks(int ch);
 	void exec(std::string command);
 	editor open_editor(std::string path);
