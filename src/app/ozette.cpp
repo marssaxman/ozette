@@ -334,7 +334,7 @@ void Ozette::build() {
 }
 
 void Ozette::search() {
-	show_browser();
+	Search::View::show(_shell);
 	// Restore the previous search settings, if we cached them.
 	std::vector<std::string> lines;
 	cache_read(CacheKey::kSearchSpec, lines);

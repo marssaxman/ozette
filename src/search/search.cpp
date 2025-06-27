@@ -25,7 +25,7 @@
 
 Search::View *Search::View::_instance;
 
-void Search::View::exec(spec job, UI::Shell &shell) {
+void Search::View::show(UI::Shell &shell) {
 	if (_instance) {
 		shell.make_active(_instance->_window);
 	} else {
@@ -33,6 +33,11 @@ void Search::View::exec(spec job, UI::Shell &shell) {
 		std::unique_ptr<UI::View> view(_instance);
 		_instance->_window = shell.open_window(std::move(view));
 	}
+}
+
+void Search::View::exec(spec job, UI::Shell &shell) {
+	show(shell);
+	assert(_instance);
 	_instance->exec(job, *_instance->_window);
 }
 

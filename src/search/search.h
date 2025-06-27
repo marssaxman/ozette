@@ -28,6 +28,7 @@
 namespace Search {
 class View : public UI::View {
 public:
+	static void show(UI::Shell &shell);
 	static void exec(spec job, UI::Shell &shell);
 	virtual void activate(UI::Frame &ctx) override;
 	virtual void deactivate(UI::Frame &ctx) override;
