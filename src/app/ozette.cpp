@@ -25,6 +25,7 @@
 #include "app/ozette.h"
 #include "app/path.h"
 #include "console/console.h"
+#include "dialog/confirmation.h"
 #include "help/view.h"
 #include "search/dialog.h"
 #include "search/search.h"
@@ -224,6 +225,51 @@ void Ozette::load_session() {
 	}
 }
 
+void Ozette::quit() {
+	// Are there any open editors with unsaved changes?
+	std::vector<std::pair<std::string, editor>> modified;
+	for (auto wpair: _editors) {
+		if (wpair.second.view->is_modified()) {
+			modified.push_back(wpair);
+		}
+	}
+	save_session();
+	// There are no modified files, so just quit now.
+	if (modified.empty()) {
+		_shell.close_all();
+		return;
+	}
+	// Ask the user if they want to save or abandon the modified files.
+	Dialog::Confirmation dialog;
+	dialog.text = "You have modified files. Save changes before closing?";
+	for (auto wpair: modified) {
+		dialog.supplement.push_back(Path::display(wpair.first));
+	}
+	dialog.yes = [this, modified](UI::Frame &ctx) {
+		// Tell all of the modified files to save.
+		for (auto wpair: modified) {
+			wpair.second.view->process(ctx, Control::Save);
+		}
+		// If any of those files remain modified, the editor must have opened
+		// a dialog box asking for further input. Cancel the quit while the
+		// user works it out. Otherwise, close all windows now.
+		for (auto wpair: modified) {
+			if (wpair.second.view->is_modified()) {
+				return;
+			}
+		}
+		_shell.close_all();
+	};
+	dialog.no = [this, modified](UI::Frame &ctx) {
+		// The modifications are unimportant: just close the files.
+		for (auto wpair: modified) {
+			close_file(wpair.first);
+		}
+		_shell.close_all();
+	};
+	dialog.show(*_shell.active());
+}
+
 void Ozette::run() {
 	if (_editors.empty()) {
 		_browser_mode = true;
@@ -243,6 +289,7 @@ void Ozette::run() {
 			case Control::Directory: change_directory(); break;
 			case Control::Help: show_help(); break;
 			case Control::Execute: execute(); break;
+			case Control::Quit: quit(); break;
 			case KEY_F(4): begin_search(); break;
 			case KEY_F(5): build(); break;
 			default: _done |= !_shell.process(ch);

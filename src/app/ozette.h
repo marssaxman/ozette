@@ -40,8 +40,6 @@ public:
 	virtual void cache_write(std::string name, const std::vector<std::string> &lines) override;
 	virtual void begin_search() override;
 	virtual void search_for(Search::spec query) override;
-	virtual void save_session() override;
-	virtual void load_session() override;
 	void run();
 	void sig_io();
 private:
@@ -59,6 +57,9 @@ private:
 	int fix_control_quirks(int ch);
 	void exec(std::string command);
 	editor open_editor(std::string path);
+	void save_session();
+	void load_session();
+	void quit();
 	UI::Shell _shell;
 	std::string _home_dir;
 	std::string _current_dir;

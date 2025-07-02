@@ -77,7 +77,6 @@ bool UI::Shell::process(int ch) {
 		// whether or not the user is pressing the shift key.
 		case Control::LeftArrow: key_left(); break;
 		case Control::RightArrow: key_right(); break;
-		case Control::Quit: ctl_quit(); break;
 		case KEY_RESIZE: layout(); break;
 		default: send_to_focus(ch); break;
 	}
@@ -105,15 +104,6 @@ void UI::Shell::key_right() {
 		next = 0;
 	}
 	set_focus(next);
-}
-
-void UI::Shell::ctl_quit() {
-	_app.save_session();
-	for (size_t index = _tabs.size(); index > 0; --index) {
-		if (!_tabs[index - 1]->process(Control::Close)) {
-			close_window(index - 1);
-		}
-	}
 }
 
 void UI::Shell::reap() {
@@ -160,6 +150,14 @@ void UI::Shell::close_window(Window *window) {
 	for (unsigned i = 0; i < _tabs.size(); ++i) {
 		if (_tabs[i].get() == window) {
 			close_window(i);
+		}
+	}
+}
+
+void UI::Shell::close_all() {
+	for (size_t index = _tabs.size(); index > 0; --index) {
+		if (!_tabs[index - 1]->process(Control::Close)) {
+			close_window(index - 1);
 		}
 	}
 }
@@ -218,6 +216,9 @@ void UI::Shell::layout() {
 }
 
 void UI::Shell::send_to_focus(int ch) {
+	if (_tabs.empty()) {
+		return;
+	}
 	bool more = false;
 	if (ch == ERR) {
 		more = _tabs[_focus]->poll();

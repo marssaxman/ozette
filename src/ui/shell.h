@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2016 Mars J. Saxman
+// Copyright (C) 2014-2025 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,11 +31,11 @@ public:
 	void poll();
 	Window *open_window(std::unique_ptr<View> &&view);
 	void close_window(Window *window);
+	void close_all();
 	void make_active(Window *window);
 	Window *active() const { return _tabs[_focus].get(); }
 protected:
 	// handle some control actions
-	void ctl_quit();
 	void key_left();
 	void key_right();
 

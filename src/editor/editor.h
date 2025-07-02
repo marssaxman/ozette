@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2023 Mars J. Saxman
+// Copyright (C) 2014-2025 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ public:
 	virtual bool process(UI::Frame &ctx, int ch) override;
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
 	void select(UI::Frame &ctx, Range range);
+	bool is_modified() const;
 protected:
 	virtual void paint_into(WINDOW *view, State state) override;
 	virtual void clear_overlay() override;

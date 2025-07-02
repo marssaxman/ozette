@@ -1,5 +1,5 @@
 // ozette
-// Copyright (C) 2014-2023 Mars J. Saxman
+// Copyright (C) 2014-2025 Mars J. Saxman
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -145,6 +145,10 @@ void Editor::View::select(UI::Frame &ctx, Range range) {
 	_selection = range;
 	_update.range(range);
 	postprocess(ctx);
+}
+
+bool Editor::View::is_modified() const {
+	return _doc.modified();
 }
 
 void Editor::View::postprocess(UI::Frame &ctx) {
