@@ -75,6 +75,7 @@ void ConfirmationView::paint_into(WINDOW *view, State state) {
 	whline(view, ' ', width);
 	int row = 0;
 	mvwaddnstr(view, row++, 0, _spec.text.c_str(), width);
+	wattrset(view, UI::Colors::content(true));
 	for (std::string line: _spec.supplement) {
 		mvwhline(view, row, 0, ' ', width);
 		mvwaddnstr(view, row, 2, line.c_str(), width - 2);
