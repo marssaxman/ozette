@@ -11,7 +11,7 @@ TARGET:=build/$(EXECNAME)
 default: $(TARGET)
 $(TARGET): $(OBJECTS)
 	@mkdir -p $(@D)
-	g++ -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 build/%.o: src/%.cpp
 	@mkdir -p $(@D)
 	$(CC) -std=c++11 $(CCFLAGS) -c $< -o $@
