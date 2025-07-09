@@ -34,6 +34,7 @@ void UI::Colors::init() {
 	init_pair(3, COLOR_CYAN, -1);
 	init_pair(4, COLOR_RED, -1);
 	init_pair(5, COLOR_MAGENTA, -1);
+	init_pair(6, COLOR_BLUE, -1);
 }
 
 int UI::Colors::content(bool active) { return active? A_NORMAL: A_DIM; }
@@ -45,5 +46,6 @@ int UI::Colors::keyword() { return A_BOLD | COLOR_PAIR(1); }
 int UI::Colors::string() { return A_BOLD | COLOR_PAIR(2); }
 int UI::Colors::literal() { return A_BOLD | COLOR_PAIR(3); }
 int UI::Colors::comment() { return A_NORMAL | COLOR_PAIR(4); }
+int UI::Colors::symbol() { return A_NORMAL | COLOR_PAIR(6); }
 int UI::Colors::error() { return A_REVERSE | COLOR_PAIR(5); }
 

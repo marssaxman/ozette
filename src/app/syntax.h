@@ -33,6 +33,7 @@ struct Token {
 		String,
 		Literal,
 		Comment,
+		Symbol,
 		Error,
 	} type;
 	int style() const;

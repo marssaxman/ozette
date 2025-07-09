@@ -36,6 +36,7 @@ int keyword();
 int string();
 int literal();
 int comment();
+int symbol();
 int error();
 
 } // namespace Colors

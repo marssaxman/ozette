@@ -22,7 +22,7 @@
 
 namespace Syntax {
 
-const Rule cpreproc{"^#[A-Za-z]+", Token::Type::Keyword};
+const Rule cpreproc{"^#[A-Za-z]+", Token::Type::Symbol};
 const Rule strdq{"\\\"([^\\\"]|(\\\\.))*\\\"", Token::Type::String};
 const Rule strsq{"'([^']|(\\\\.))*'", Token::Type::String};
 const Rule cident{"[A-Za-z_][A-Za-z0-9_]*", Token::Type::Identifier};
@@ -97,6 +97,7 @@ const Grammar python = {
 		"import", "lambda", "pass", "print", "raise", "return", "try", "while",
 		"with", "yield", "yield from",
 	}),
+	{"@[A-Za-z0-9_]*", Token::Type::Symbol},
 	strdq, strsq, cident, cnumber, hashcomment,
 };
 
@@ -164,7 +165,7 @@ const Grammar tablegen = {
 	{"[+-]?[0-9]+", Token::Type::Literal},
 	{"0x[0-9A-Fa-f]+", Token::Type::Literal},
 	{"0b[01]+", Token::Type::Literal},
-	{"\\$[A-Za-z0-9_]+", Token::Type::Identifier},
+	{"\\$[A-Za-z0-9_]+", Token::Type::Symbol},
 	{"\\[\\{", Token::Type::String}, {"\\}\\]", Token::Type::String},
 	cident, strdq, slashcomment,
 };
@@ -186,6 +187,15 @@ const Grammar shell = {
 	strdq, strsq, hashcomment,
 };
 
+const Grammar mlir = {
+	Rule::keywords({
+		"module", "return",
+	}),
+	{"\%[A-Za-z0-9_]*", Token::Type::Symbol},
+	{"@[A-Za-z0-9_]*", Token::Type::Symbol},
+	cnumber, slashcomment,
+};
+
 const std::map<std::string, const Grammar&> extensions = {
 	{"c", c}, {"C", c},
 	{"h", cxx}, {"H", cxx},
@@ -202,6 +212,7 @@ const std::map<std::string, const Grammar&> extensions = {
 	{"td", tablegen},
 	{"Dockerfile", docker},
 	{"sh", shell},
+	{"mlir", mlir},
 };
 
 } // namespace Syntax
@@ -215,6 +226,7 @@ int Token::style() const {
 		case Type::String: return UI::Colors::string();
 		case Type::Literal: return UI::Colors::literal();
 		case Type::Comment: return UI::Colors::comment();
+		case Type::Symbol: return UI::Colors::symbol();
 		case Type::Error: return UI::Colors::error();
 		default: return 0;
 	}
