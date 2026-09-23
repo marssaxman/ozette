@@ -26,6 +26,7 @@
 namespace {
 class TestApp : public Ozette {
 public:
+	void cache_read(std::string, std::vector<std::string> &lines) override { lines.clear(); }
 	void cache_write(std::string, const std::vector<std::string> &) override {}
 	std::string get_clipboard() override {
 		if (wait_for_build) {
@@ -165,4 +166,15 @@ TEST_CASE("Build sees the saved contents of every editor") {
 	});
 	CHECK(dir.read("built-a") == "xold");
 	CHECK(dir.read("built-z") == "zother");
+}
+
+TEST_CASE("an initial read error leaves the application usable") {
+	TempDir dir;
+	REQUIRE(mkfifo(dir.file("pipe").c_str(), 0600) == 0);
+	dir.write("old");
+	run_app(dir, {'x', Control::Quit, 'y'}, [&](TestApp &app) {
+		app.edit_file(dir.file("pipe"));
+		app.edit_file(dir.file());
+	});
+	CHECK(dir.read() == "xold");
 }

@@ -33,7 +33,7 @@ public:
 	void close_window(Window *window);
 	void close_all();
 	void make_active(Window *window);
-	Window *active() const { return _tabs[_focus].get(); }
+	Window *active() const { return _focus < _tabs.size()? _tabs[_focus].get(): nullptr; }
 protected:
 	// handle some control actions
 	void key_left();
