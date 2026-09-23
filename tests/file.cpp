@@ -225,12 +225,27 @@ TEST_CASE("failed saves leave the buffer modified") {
 	if (geteuid() == 0) return;
 	TempDir dir;
 	dir.write("old");
+	REQUIRE(chmod(dir.file().c_str(), 0400) == 0);
 	Editor::Document doc(dir.file());
 	doc.insert(doc.home(), 'x');
-	REQUIRE(chmod(dir.file().c_str(), 0400) == 0);
-	CHECK_THROWS_AS(doc.Write(dir.file()), std::runtime_error);
+	CHECK_THROWS_WITH_AS(doc.Write(dir.file()),
+		doctest::Contains("Can't write"), std::runtime_error);
 	CHECK(doc.modified());
 	CHECK(dir.read() == "old");
+}
+
+TEST_CASE("temporary file creation failures preserve the destination") {
+	if (geteuid() == 0) return;
+	TempDir dir;
+	dir.write("old");
+	Editor::Document doc(dir.file());
+	doc.insert(doc.home(), 'x');
+	REQUIRE(chmod(dir.path.c_str(), 0500) == 0);
+	CHECK_THROWS_WITH_AS(doc.Write(dir.file()),
+		doctest::Contains("Can't create temporary file"), std::runtime_error);
+	CHECK(doc.modified());
+	CHECK(dir.read() == "old");
+	CHECK(chmod(dir.path.c_str(), 0700) == 0);
 }
 
 #ifdef __linux__
