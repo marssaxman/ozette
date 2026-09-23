@@ -49,6 +49,14 @@ or end of the current line.
 Cut, Copy, and Paste apply to a single clipboard which is shared across all
 editors.
 
+Saving preserves existing line endings and the presence or absence of a final
+newline. If the file changed on disk, you can overwrite it, reload it, or cancel.
+Reload asks before discarding your edits. Save As confirms existing destinations.
+Symlinks are preserved; files with multiple hard links require a separate copy.
+
+Build and Quit stop if a save fails or needs an answer. Resolve the problem or
+answer the dialog, then invoke Build or Quit again.
+
 Editor commands:
     ^X - Cut - place selected text on the clipboard, then delete
     ^C - Copy - place selected text on the clipboard
@@ -71,4 +79,3 @@ with Execute.
 
 Console commands:
     ^K - Kill - terminate the running command
-
