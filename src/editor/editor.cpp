@@ -86,7 +86,7 @@ bool Editor::View::process(UI::Frame &ctx, int ch) {
 		case Control::Copy: ctl_copy(ctx); break;
 		case Control::Paste: ctl_paste(ctx); break;
 		case Control::Close: ctl_close(ctx); break;
-		case Control::Save: ctl_save(ctx); break;
+		case Control::Save: save(ctx); break;
 		case Control::SaveAs: ctl_save_as(ctx); break;
 		case Control::ToLine: ctl_toline(ctx); break;
 		case Control::Find: ctl_find(ctx); break;
@@ -323,9 +323,13 @@ void Editor::View::ctl_close(UI::Frame &ctx) {
 	Dialog::Confirmation dialog;
 	dialog.text = "You have modified this file. Save changes before closing?";
 	dialog.yes = [this](UI::Frame &ctx) {
-		// attempt to save, close if successful
-		if (save(ctx, _targetpath)) {
+		auto close = [this](UI::Frame &ctx) {
 			ctx.app().close_file(_targetpath);
+		};
+		if (_targetpath.empty()) {
+			ctl_save_as(ctx, close);
+		} else {
+			write(ctx, _targetpath, false, close);
 		}
 	};
 	dialog.no = [this](UI::Frame &ctx) {
@@ -335,35 +339,29 @@ void Editor::View::ctl_close(UI::Frame &ctx) {
 	dialog.show(ctx);
 }
 
-void Editor::View::ctl_save(UI::Frame &ctx) {
-	if (!_doc.modified()) return;
+Editor::View::SaveResult Editor::View::save(UI::Frame &ctx) {
+	if (!_doc.modified()) return SaveResult::Saved;
 	if (_targetpath.empty()) {
 		ctl_save_as(ctx);
-		return;
+		return SaveResult::Pending;
 	}
-	save(ctx, _targetpath);
+	return write(ctx, _targetpath);
 }
 
-void Editor::View::ctl_save_as(UI::Frame &ctx) {
+void Editor::View::ctl_save_as(UI::Frame &ctx,
+		std::function<void(UI::Frame&)> saved) {
 	_doc.commit();
 	Dialog::Form dialog;
 	dialog.fields = {
 		{"Save As", _targetpath, &Path::complete_file}
 	};
-	dialog.commit = [this](UI::Frame &ctx, Dialog::Form::Result &result) {
+	dialog.commit = [this, saved](UI::Frame &ctx, Dialog::Form::Result &result) {
 		std::string path = result.selected_value;
 		if (path.empty()) {
 			ctx.show_result("Cancelled");
 			return;
 		}
-		// Write the file to disk at its new location.
-		if (save(ctx, path)) {
-			// Update the editor to point at the new path.
-			ctx.app().rename_file(_targetpath, path);
-			_targetpath = path;
-			_config.load(_targetpath);
-			ctx.set_title(path);
-		}
+		write(ctx, Path::absolute(path), false, saved);
 	};
 	dialog.show(ctx);
 }
@@ -736,20 +734,66 @@ Editor::location_t Editor::View::page_down() {
 	return _doc.home(_scroll.v + _height);
 }
 
-bool Editor::View::save(UI::Frame &ctx, std::string dest) {
+Editor::View::SaveResult Editor::View::write(UI::Frame &ctx, std::string dest,
+		bool overwrite, std::function<void(UI::Frame&)> saved) {
 	_doc.commit();
-	bool good = false;
 	try {
-		_doc.Write(dest);
+		_doc.Write(dest, overwrite);
+		if (dest != _targetpath) {
+			ctx.app().rename_file(_targetpath, dest);
+			_targetpath = dest;
+			_config.load(_targetpath);
+			ctx.set_title(Path::display(dest));
+		}
 		std::string stat = "Wrote " + std::to_string(_doc.maxline()+1);
 		stat += (_doc.maxline() >= 1) ? " lines" : " line";
 		ctx.show_result(stat);
-		good = true;
+	} catch (const File::Changed &e) {
+		Dialog::Confirmation dialog;
+		bool current = dest == _targetpath;
+		dialog.text = current ? "File changed on disk. Overwrite it?" :
+			"File already exists. Overwrite it?";
+		dialog.supplement = {Path::display(dest)};
+		if (current) {
+			dialog.supplement.push_back("Yes: overwrite. No: reload. Escape: keep editing.");
+		}
+		dialog.yes = [this, dest, saved](UI::Frame &ctx) {
+			write(ctx, dest, true, saved);
+		};
+		dialog.no = [this, current](UI::Frame &ctx) {
+			if (!current) {
+				ctx.show_result("Cancelled");
+				return;
+			}
+			Dialog::Confirmation reload;
+			reload.text = "Discard your edits and reload?";
+			reload.yes = [this](UI::Frame &ctx) { this->reload(ctx); };
+			reload.no = [](UI::Frame &ctx) { ctx.show_result("Cancelled"); };
+			reload.show(ctx);
+		};
+		dialog.show(ctx);
+		return SaveResult::Pending;
+	} catch (const std::runtime_error &e) {
+		ctx.show_result(e.what());
+		return SaveResult::Failed;
+	}
+	ctx.set_status(_doc.status());
+	if (saved) saved(ctx);
+	return SaveResult::Saved;
+}
+
+void Editor::View::reload(UI::Frame &ctx) {
+	try {
+		Document replacement(_targetpath);
+		_doc = std::move(replacement);
+		_scroll = {0, 0};
+		move_cursor(_doc.home());
+		_update.all();
+		postprocess(ctx);
+		ctx.show_result("Reloaded");
 	} catch (const std::runtime_error &e) {
 		ctx.show_result(e.what());
 	}
-	ctx.set_status(_doc.status());
-	return good;
 }
 
 bool Editor::View::find(

@@ -18,6 +18,7 @@
 #ifndef EDITOR_EDITOR_H
 #define EDITOR_EDITOR_H
 
+#include <functional>
 #include "app/syntax.h"
 #include "editor/config.h"
 #include "editor/document.h"
@@ -35,6 +36,8 @@ public:
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
 	void select(UI::Frame &ctx, Range range);
 	bool is_modified() const;
+	enum class SaveResult { Saved, Pending, Failed };
+	SaveResult save(UI::Frame &ctx);
 protected:
 	virtual void paint_into(WINDOW *view, State state) override;
 	virtual void clear_overlay() override;
@@ -50,8 +53,7 @@ private:
 	void ctl_copy(UI::Frame &ctx);
 	void ctl_paste(UI::Frame &ctx);
 	void ctl_close(UI::Frame &ctx);
-	void ctl_save(UI::Frame &ctx);
-	void ctl_save_as(UI::Frame &ctx);
+	void ctl_save_as(UI::Frame &ctx, std::function<void(UI::Frame&)> saved = {});
 	void ctl_toline(UI::Frame &ctx);
 	void ctl_find(UI::Frame &ctx);
 	void ctl_replace(UI::Frame &ctx);
@@ -89,7 +91,9 @@ private:
 	location_t page_up();
 	location_t page_down();
 
-	bool save(UI::Frame &ctx, std::string dest);
+	SaveResult write(UI::Frame &ctx, std::string dest, bool overwrite = false,
+		std::function<void(UI::Frame&)> saved = {});
+	void reload(UI::Frame &ctx);
 	bool find(UI::Frame &ctx, location_t anchor, std::string pattern);
 
 	// Information about the file being edited
