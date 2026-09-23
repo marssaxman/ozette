@@ -25,6 +25,7 @@ namespace Editor {
 class File {
 public:
 	std::string read(std::string path);
+	void write(std::string path, const std::string &text);
 	bool exists() const { return _exists; }
 private:
 	std::string _path;

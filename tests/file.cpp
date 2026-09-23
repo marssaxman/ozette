@@ -19,6 +19,12 @@
 #include "editor/document.h"
 #include "files.h"
 #include <sys/stat.h>
+#include <sys/resource.h>
+#include <sys/wait.h>
+#include <signal.h>
+#ifdef __linux__
+#include <sys/xattr.h>
+#endif
 
 TEST_CASE("missing and empty files have a valid empty document") {
 	TempDir dir;
@@ -112,3 +118,131 @@ TEST_CASE("the final newline can be inserted and removed") {
 	doc.Write(dir.file());
 	CHECK(dir.read() == "text");
 }
+
+TEST_CASE("failed writes preserve the original file and modified buffer") {
+	TempDir dir;
+	const std::string original(100, 'a');
+	dir.write(original);
+	pid_t child = fork();
+	REQUIRE(child >= 0);
+	if (child == 0) {
+		Editor::Document doc(dir.file());
+		doc.insert(doc.home(), 'b');
+		signal(SIGXFSZ, SIG_IGN);
+		struct rlimit limit = {8, 8};
+		if (setrlimit(RLIMIT_FSIZE, &limit)) _exit(2);
+		try {
+			doc.Write(dir.file());
+		} catch (const std::runtime_error &) {
+			_exit(doc.modified()? 0: 3);
+		}
+		_exit(1);
+	}
+	int status;
+	REQUIRE(waitpid(child, &status, 0) == child);
+	REQUIRE(WIFEXITED(status));
+	CHECK(WEXITSTATUS(status) == 0);
+	CHECK(dir.read() == original);
+	DIR *entries = opendir(dir.path.c_str());
+	REQUIRE(entries != nullptr);
+	while (auto entry = readdir(entries)) {
+		CHECK(std::string(entry->d_name).find(".ozette-") != 0);
+	}
+	closedir(entries);
+}
+
+TEST_CASE("saving preserves permissions and ownership") {
+	TempDir dir;
+	dir.write("script\n");
+	REQUIRE(chmod(dir.file().c_str(), 0751) == 0);
+	struct stat before, after;
+	REQUIRE(stat(dir.file().c_str(), &before) == 0);
+	Editor::Document doc(dir.file());
+	doc.insert(doc.home(), '#');
+	doc.Write(dir.file());
+	REQUIRE(stat(dir.file().c_str(), &after) == 0);
+	CHECK((after.st_mode & 07777) == 0751);
+	CHECK(after.st_uid == before.st_uid);
+	CHECK(after.st_gid == before.st_gid);
+	CHECK(after.st_ino != before.st_ino);
+	CHECK(dir.read() == "#script\n");
+	CHECK_FALSE(doc.modified());
+}
+
+TEST_CASE("new files respect the process umask") {
+	TempDir dir;
+	Editor::Document doc(dir.file());
+	doc.insert(doc.home(), 'x');
+	mode_t previous = umask(0027);
+	try { doc.Write(dir.file()); }
+	catch (...) { umask(previous); throw; }
+	umask(previous);
+	struct stat info;
+	REQUIRE(stat(dir.file().c_str(), &info) == 0);
+	CHECK((info.st_mode & 0777) == 0640);
+}
+
+TEST_CASE("saving a new empty file clears its new status") {
+	TempDir dir;
+	Editor::Document doc(dir.file());
+	doc.Write(dir.file());
+	CHECK(dir.read().empty());
+	CHECK(doc.status().empty());
+	CHECK_FALSE(doc.modified());
+}
+
+TEST_CASE("saving through a symlink preserves the link") {
+	TempDir dir;
+	dir.write("old");
+	REQUIRE(symlink("file", dir.file("link").c_str()) == 0);
+	Editor::Document doc(dir.file("link"));
+	doc.insert(doc.home(), 'x');
+	doc.Write(dir.file("link"));
+	struct stat info;
+	REQUIRE(lstat(dir.file("link").c_str(), &info) == 0);
+	CHECK(S_ISLNK(info.st_mode));
+	CHECK(dir.read() == "xold");
+	CHECK(dir.read("link") == "xold");
+}
+
+TEST_CASE("saving refuses to break hard links") {
+	TempDir dir;
+	dir.write("old");
+	REQUIRE(link(dir.file().c_str(), dir.file("alias").c_str()) == 0);
+	Editor::Document doc(dir.file());
+	doc.insert(doc.home(), 'x');
+	CHECK_THROWS_WITH_AS(doc.Write(dir.file()),
+		doctest::Contains("multiple hard links"), std::runtime_error);
+	CHECK(dir.read() == "old");
+	CHECK(dir.read("alias") == "old");
+	CHECK(doc.modified());
+	doc.Write(dir.file("copy"));
+	CHECK(dir.read("copy") == "xold");
+}
+
+TEST_CASE("failed saves leave the buffer modified") {
+	if (geteuid() == 0) return;
+	TempDir dir;
+	dir.write("old");
+	Editor::Document doc(dir.file());
+	doc.insert(doc.home(), 'x');
+	REQUIRE(chmod(dir.file().c_str(), 0400) == 0);
+	CHECK_THROWS_AS(doc.Write(dir.file()), std::runtime_error);
+	CHECK(doc.modified());
+	CHECK(dir.read() == "old");
+}
+
+#ifdef __linux__
+TEST_CASE("saving preserves extended attributes") {
+	TempDir dir;
+	dir.write("old");
+	REQUIRE(setxattr(dir.file().c_str(), "user.ozette-test", "value", 5, 0) == 0);
+	Editor::Document doc(dir.file());
+	doc.insert(doc.home(), 'x');
+	doc.Write(dir.file());
+	char value[16];
+	ssize_t size = getxattr(dir.file().c_str(), "user.ozette-test", value, sizeof(value));
+	REQUIRE(size == 5);
+	CHECK(std::string(value, size) == "value");
+}
+#endif

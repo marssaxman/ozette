@@ -16,12 +16,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include "editor/document.h"
-#include <cstring>
-#include <exception>
-#include <fstream>
 #include <sstream>
 #include <assert.h>
-#include <sys/stat.h>
 
 Editor::Document::Document(std::string path) {
 	std::string contents = _file.read(path);
@@ -41,22 +37,13 @@ Editor::Document::Document(std::string path) {
 }
 
 void Editor::Document::Write(std::string path) {
-	std::ofstream file;
-	file.exceptions(std::ios::failbit | std::ios::badbit);
-	try {
-		file.open(path, std::ios::trunc | std::ios::out);
-		for (size_t i = 0; i < _lines.size(); ++i) {
-			file << _lines[i];
-			if (i < _endings.size()) file << _endings[i];
-		}
-		file.close();
-		clear_modify();
-	} catch (...) {
-		int local_errno = errno;
-		std::string err = "Failed to write (" + std::to_string(local_errno);
-		err += ": " + std::string(std::strerror(local_errno)) + ")";
-		throw std::runtime_error(err);
+	std::string text;
+	for (size_t i = 0; i < _lines.size(); ++i) {
+		text += _lines[i];
+		if (i < _endings.size()) text += _endings[i];
 	}
+	_file.write(path, text);
+	clear_modify();
 }
 
 Editor::location_t Editor::Document::home() {
@@ -343,8 +330,6 @@ bool Editor::Document::attempt_modify() {
 }
 
 void Editor::Document::clear_modify() {
-	if (_modified) {
-		_modified = false;
-		_status.clear();
-	}
+	_modified = false;
+	_status.clear();
 }
