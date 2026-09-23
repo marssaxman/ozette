@@ -28,24 +28,26 @@ Editor::Document::Document(std::string path) {
 	_lines.clear();
 	if (!_file.exists()) _status = "New";
 
-	std::string str;
-	std::istringstream file(contents);
-	// We will read every file using LF as delimiter. When reading a Windows
-	// formatted text file, we will then strip the trailing CR.
-	while (std::getline(file, str, '\x0A')) {
-		if (!str.empty() && str.back() == '\x0D') str.pop_back();
-		_maxline = append_line(str);
+	size_t start = 0;
+	for (size_t end; (end = contents.find('\n', start)) != std::string::npos;) {
+		bool crlf = end > start && contents[end - 1] == '\r';
+		_lines.push_back(contents.substr(start, end - start - (crlf? 1: 0)));
+		_endings.push_back(crlf? "\r\n": "\n");
+		start = end + 1;
 	}
-	if (_lines.empty()) append_line("");
+	_lines.push_back(contents.substr(start));
+	_maxline = _lines.size() - 1;
+	if (!_endings.empty()) _newline = _endings.front();
 }
 
 void Editor::Document::Write(std::string path) {
 	std::ofstream file;
-	file.exceptions(std::ios::failbit);
+	file.exceptions(std::ios::failbit | std::ios::badbit);
 	try {
 		file.open(path, std::ios::trunc | std::ios::out);
-		for (auto &line: _lines) {
-			file << line << std::endl;
+		for (size_t i = 0; i < _lines.size(); ++i) {
+			file << _lines[i];
+			if (i < _endings.size()) file << _endings[i];
 		}
 		file.close();
 		clear_modify();
@@ -202,6 +204,7 @@ Editor::location_t Editor::Document::erase(const Range &chars) {
 	location_t end = sanitize(chars.end());
 	std::string suffix = substr_to_end(end);
 	size_t index = begin.line;
+	_endings.erase(_endings.begin() + begin.line, _endings.begin() + end.line);
 	auto beginter = _lines.begin();
 	_lines.erase(beginter + begin.line + 1, beginter + end.line + 1);
 	_maxline = _lines.size() - 1;
@@ -296,11 +299,13 @@ void Editor::Document::update_line(line_t index, std::string text) {
 }
 
 void Editor::Document::insert_line(line_t index, std::string text) {
+	_endings.insert(_endings.begin() + index - 1, _newline);
 	_lines.emplace(_lines.begin() + index, text);
 	_maxline = _lines.size() - 1;
 }
 
 Editor::line_t Editor::Document::append_line(std::string text) {
+	if (!_lines.empty()) _endings.push_back(_newline);
 	_maxline = _lines.size();
 	_lines.emplace_back(text);
 	return _maxline;

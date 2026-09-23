@@ -90,6 +90,8 @@ private:
 
 	std::string _blank;
 	std::vector<std::string> _lines = {""};
+	std::vector<std::string> _endings;
+	std::string _newline = "\n";
 	File _file;
 	line_t _maxline = 0;	// ubound, not size
 

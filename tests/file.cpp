@@ -72,3 +72,43 @@ TEST_CASE("read failures are not treated as empty files") {
 		doctest::Contains("Can't read"), std::runtime_error);
 }
 #endif
+
+TEST_CASE("loading and saving preserves file bytes") {
+	TempDir dir;
+	const std::string samples[] = {
+		"", "plain", "plain\n", "\n", "\r\n", "one\r\ntwo\r\n",
+		"one\r\ntwo\nthree", "one\rtwo\r", std::string("a\0b\n", 4)
+	};
+	for (const auto &text: samples) {
+		CAPTURE(text);
+		dir.write(text);
+		Editor::Document doc(dir.file());
+		doc.Write(dir.file());
+		CHECK(dir.read() == text);
+		CHECK_FALSE(doc.modified());
+	}
+}
+
+TEST_CASE("editing preserves existing line endings") {
+	TempDir dir;
+	dir.write("a\r\nb\nc\r\n");
+	Editor::Document doc(dir.file());
+	doc.erase(Editor::Range({0, 1}, {1, 0}));
+	doc.Write(dir.file());
+	CHECK(dir.read() == "ab\nc\r\n");
+	doc.split({0, 1});
+	doc.Write(dir.file());
+	CHECK(dir.read() == "a\r\nb\nc\r\n");
+}
+
+TEST_CASE("the final newline can be inserted and removed") {
+	TempDir dir;
+	dir.write("text");
+	Editor::Document doc(dir.file());
+	doc.split(doc.end());
+	doc.Write(dir.file());
+	CHECK(dir.read() == "text\n");
+	doc.erase(Editor::Range(doc.end(0), doc.home(1)));
+	doc.Write(dir.file());
+	CHECK(dir.read() == "text");
+}
