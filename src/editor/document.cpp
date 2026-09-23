@@ -24,32 +24,19 @@
 #include <sys/stat.h>
 
 Editor::Document::Document(std::string path) {
+	std::string contents = _file.read(path);
 	_lines.clear();
-	_edits.clear();
-	_modified = false;
-	_read_only = false;
-	struct stat sb;
-	if (stat(path.c_str(), &sb)) {
-		_status = "New";
-		_maxline = append_line("");
-	} else if (S_ISDIR(sb.st_mode)) {
-		_status = "Directory!";
-		_read_only = true;
-	} else if (!S_ISREG(sb.st_mode)) {
-		_status = "Not a file!";
-		_read_only = true;
-	} else {
-		_status.clear();
-	}
+	if (!_file.exists()) _status = "New";
 
 	std::string str;
-	std::ifstream file(path);
+	std::istringstream file(contents);
 	// We will read every file using LF as delimiter. When reading a Windows
 	// formatted text file, we will then strip the trailing CR.
 	while (std::getline(file, str, '\x0A')) {
-		if (str.back() == '\x0D') str.pop_back();
+		if (!str.empty() && str.back() == '\x0D') str.pop_back();
 		_maxline = append_line(str);
 	}
+	if (_lines.empty()) append_line("");
 }
 
 void Editor::Document::Write(std::string path) {

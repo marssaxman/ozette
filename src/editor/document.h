@@ -23,6 +23,7 @@
 #include <vector>
 #include "editor/coordinates.h"
 #include "editor/changelist.h"
+#include "editor/file.h"
 
 // A document breaks a text buffer into lines, then maps those lines onto an
 // infinite plane of equally sized character cells.
@@ -88,7 +89,8 @@ private:
 	void clear_modify();
 
 	std::string _blank;
-	std::vector<std::string> _lines;
+	std::vector<std::string> _lines = {""};
+	File _file;
 	line_t _maxline = 0;	// ubound, not size
 
 	// is the user allowed to make changes in this document?

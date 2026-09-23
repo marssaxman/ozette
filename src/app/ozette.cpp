@@ -19,6 +19,7 @@
 #include <atomic>
 #include <fstream>
 #include <cstdlib>
+#include <stdexcept>
 #include <sys/stat.h>
 #include <unistd.h>
 #include "app/control.h"
@@ -150,8 +151,15 @@ Ozette::editor Ozette::open_editor(std::string path) {
 		return existing->second;
 	}
 	// We don't have an editor for this file, so we should create one.
-	editor edrec;
-	edrec.view = new Editor::View(path);
+	editor edrec = {};
+	try {
+		edrec.view = new Editor::View(path);
+	} catch (const std::runtime_error &e) {
+		if (!_shell.active()) show_browser();
+		UI::Frame *ctx = _shell.active();
+		ctx->show_result(e.what());
+		return edrec;
+	}
 	std::unique_ptr<UI::View> edptr(edrec.view);
 	edrec.window = _shell.open_window(std::move(edptr));
 	_editors[path] = edrec;
@@ -350,7 +358,12 @@ void Ozette::new_file() {
 			return;
 		}
 		editor edrec;
-		edrec.view = new Editor::View(path);
+		try {
+			edrec.view = new Editor::View(path);
+		} catch (const std::runtime_error &e) {
+			ctx.show_result(e.what());
+			return;
+		}
 		std::unique_ptr<UI::View> edptr(edrec.view);
 		edrec.window = _shell.open_window(std::move(edptr));
 		_editors[path] = edrec;
@@ -432,4 +445,3 @@ int Ozette::fix_control_quirks(int ch) {
 	return ch;
 	}
 }
-
