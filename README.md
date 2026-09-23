@@ -28,8 +28,9 @@ While I would be delighted if others found Ozette useful and chose to adopt it
 for their own purposes, the broad availability and wide variety of other, more
 mature, powerful, configurable, sophisticated, popular, and innovative editors
 makes that prospect seem unlikely. I have therefore put no effort into making
-Ozette configurable or scriptable, and I have done no testing beyond my regular
-daily use.
+Ozette configurable or scriptable. For most of its life, testing consisted of
+my regular daily use; a small automated test suite now covers some core editing
+behaviors.
 
 If you do happen to find that this editor suits your taste, I would be happy
 to hear from you, and to discuss any issues you might encounter with it.
@@ -40,6 +41,10 @@ Build it:
 
 	sudo apt install libncurses5-dev
 	make
+
+Run the tests:
+
+	make test
 
 Install it in /usr/bin/:
 
@@ -52,7 +57,6 @@ Open the browser in the current directory:
 Edit a specific file or files, with no browser:
 
 	ozette foo bar baz
-
 
 
 
