@@ -54,6 +54,7 @@ private:
 	void show_help();
 	void execute();
 	void build();
+	bool save_all();
 	int fix_control_quirks(int ch);
 	void exec(std::string command);
 	editor open_editor(std::string path);
@@ -71,4 +72,3 @@ private:
 };
 
 #endif //APP_OZETTE_H
-

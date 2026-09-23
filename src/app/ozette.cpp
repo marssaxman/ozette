@@ -253,20 +253,8 @@ void Ozette::quit() {
 	for (auto wpair: modified) {
 		dialog.supplement.push_back(Path::display(wpair.first));
 	}
-	dialog.yes = [this, modified](UI::Frame &ctx) {
-		// Tell all of the modified files to save.
-		for (auto wpair: modified) {
-			wpair.second.view->process(ctx, Control::Save);
-		}
-		// If any of those files remain modified, the editor must have opened
-		// a dialog box asking for further input. Cancel the quit while the
-		// user works it out. Otherwise, close all windows now.
-		for (auto wpair: modified) {
-			if (wpair.second.view->is_modified()) {
-				return;
-			}
-		}
-		_shell.close_all();
+	dialog.yes = [this](UI::Frame &ctx) {
+		if (save_all()) _shell.close_all();
 	};
 	dialog.no = [this, modified](UI::Frame &ctx) {
 		// The modifications are unimportant: just close the files.
@@ -400,11 +388,18 @@ void Ozette::execute() {
 }
 
 void Ozette::build() {
-	// Save all open editors. Execute the build command for this directory.
+	if (save_all()) exec("make");
+}
+
+bool Ozette::save_all() {
 	for (auto &edit_pair: _editors) {
-		edit_pair.second.window->process(Control::Save);
+		auto &editor = edit_pair.second;
+		if (editor.view->save(*editor.window) != Editor::View::SaveResult::Saved) {
+			if (_shell.active() != editor.window) _shell.make_active(editor.window);
+			return false;
+		}
 	}
-	exec("make");
+	return true;
 }
 
 int Ozette::fix_control_quirks(int ch) {
