@@ -36,13 +36,13 @@ Editor::Document::Document(std::string path) {
 	if (!_endings.empty()) _newline = _endings.front();
 }
 
-void Editor::Document::Write(std::string path) {
+void Editor::Document::Write(std::string path, bool overwrite) {
 	std::string text;
 	for (size_t i = 0; i < _lines.size(); ++i) {
 		text += _lines[i];
 		if (i < _endings.size()) text += _endings[i];
 	}
-	_file.write(path, text);
+	_file.write(path, text, overwrite);
 	clear_modify();
 }
 

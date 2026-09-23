@@ -32,7 +32,7 @@ class Document {
 public:
 	Document() {}
 	Document(std::string path);
-	void Write(std::string path);
+	void Write(std::string path, bool overwrite = false);
 	std::string status() const { return _status; }
 	bool modified() const { return _modified; }
 	bool can_undo() const { return _edits.can_undo(); }

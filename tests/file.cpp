@@ -22,6 +22,7 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <fcntl.h>
 #ifdef __linux__
 #include <sys/xattr.h>
 #endif
@@ -246,3 +247,77 @@ TEST_CASE("saving preserves extended attributes") {
 	CHECK(std::string(value, size) == "value");
 }
 #endif
+
+TEST_CASE("external edits require explicit overwrite") {
+	TempDir dir;
+	dir.write("old");
+	Editor::Document doc(dir.file());
+	doc.insert(doc.home(), 'x');
+	dir.write("external");
+	CHECK_THROWS_AS(doc.Write(dir.file()), Editor::File::Changed);
+	CHECK(dir.read() == "external");
+	CHECK(doc.line(0) == "xold");
+	CHECK(doc.modified());
+	doc.Write(dir.file(), true);
+	CHECK(dir.read() == "xold");
+	CHECK_FALSE(doc.modified());
+	doc.insert(doc.home(), 'y');
+	CHECK_NOTHROW(doc.Write(dir.file()));
+	CHECK(dir.read() == "yxold");
+}
+
+TEST_CASE("external replacement and removal are detected") {
+	TempDir dir;
+	dir.write("old");
+	Editor::Document doc(dir.file());
+	doc.insert(doc.home(), 'x');
+	SUBCASE("replacement with the same size and modification time") {
+		struct stat info;
+		REQUIRE(stat(dir.file().c_str(), &info) == 0);
+		dir.write("new", "replacement");
+#ifdef __APPLE__
+		struct timespec times[] = {info.st_atimespec, info.st_mtimespec};
+#else
+		struct timespec times[] = {info.st_atim, info.st_mtim};
+#endif
+		REQUIRE(utimensat(AT_FDCWD, dir.file("replacement").c_str(), times, 0) == 0);
+		REQUIRE(rename(dir.file("replacement").c_str(), dir.file().c_str()) == 0);
+		CHECK_THROWS_AS(doc.Write(dir.file()), Editor::File::Changed);
+		CHECK(dir.read() == "new");
+	}
+	SUBCASE("removal") {
+		REQUIRE(unlink(dir.file().c_str()) == 0);
+		CHECK_THROWS_AS(doc.Write(dir.file()), Editor::File::Changed);
+		CHECK(access(dir.file().c_str(), F_OK) != 0);
+		doc.Write(dir.file(), true);
+		CHECK(dir.read() == "xold");
+	}
+}
+
+TEST_CASE("new and Save As destinations do not overwrite existing files silently") {
+	TempDir dir;
+	Editor::Document doc(dir.file());
+	doc.insert(doc.home(), 'x');
+	dir.write("created elsewhere");
+	CHECK_THROWS_AS(doc.Write(dir.file()), Editor::File::Changed);
+	CHECK(dir.read() == "created elsewhere");
+	dir.write("another file", "other");
+	CHECK_THROWS_AS(doc.Write(dir.file("other")), Editor::File::Changed);
+	CHECK(dir.read("other") == "another file");
+	doc.Write(dir.file("other"), true);
+	CHECK(dir.read("other") == "x");
+}
+
+TEST_CASE("retargeted symlinks require confirmation") {
+	TempDir dir;
+	dir.write("old");
+	dir.write("other", "other");
+	REQUIRE(symlink("file", dir.file("link").c_str()) == 0);
+	Editor::Document doc(dir.file("link"));
+	doc.insert(doc.home(), 'x');
+	REQUIRE(unlink(dir.file("link").c_str()) == 0);
+	REQUIRE(symlink("other", dir.file("link").c_str()) == 0);
+	CHECK_THROWS_AS(doc.Write(dir.file("link")), Editor::File::Changed);
+	CHECK(dir.read() == "old");
+	CHECK(dir.read("other") == "other");
+}

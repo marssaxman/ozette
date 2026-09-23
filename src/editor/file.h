@@ -19,13 +19,17 @@
 #define EDITOR_FILE_H
 
 #include <string>
+#include <stdexcept>
 #include <sys/stat.h>
 
 namespace Editor {
 class File {
 public:
+	struct Changed : std::runtime_error {
+		explicit Changed(std::string message): std::runtime_error(message) {}
+	};
 	std::string read(std::string path);
-	void write(std::string path, const std::string &text);
+	void write(std::string path, const std::string &text, bool overwrite = false);
 	bool exists() const { return _exists; }
 private:
 	std::string _path;

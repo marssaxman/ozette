@@ -44,6 +44,27 @@ std::runtime_error io_error(std::string action, std::string path) {
 	return std::runtime_error(action + " " + path + ": " + std::strerror(code));
 }
 
+bool same_file(const struct stat &a, const struct stat &b) {
+#ifdef __APPLE__
+	const auto &am = a.st_mtimespec, &bm = b.st_mtimespec;
+	const auto &ac = a.st_ctimespec, &bc = b.st_ctimespec;
+#else
+	const auto &am = a.st_mtim, &bm = b.st_mtim;
+	const auto &ac = a.st_ctim, &bc = b.st_ctim;
+#endif
+	return a.st_dev == b.st_dev && a.st_ino == b.st_ino &&
+		a.st_size == b.st_size && a.st_mode == b.st_mode &&
+		a.st_uid == b.st_uid && a.st_gid == b.st_gid && a.st_nlink == b.st_nlink &&
+		am.tv_sec == bm.tv_sec && am.tv_nsec == bm.tv_nsec &&
+		ac.tv_sec == bc.tv_sec && ac.tv_nsec == bc.tv_nsec;
+}
+
+bool inspect(std::string path, struct stat &info) {
+	if (stat(path.c_str(), &info) == 0) return true;
+	if (errno == ENOENT) return false;
+	throw io_error("Can't inspect", path);
+}
+
 std::string resolve(std::string path) {
 	char *resolved = realpath(path.c_str(), nullptr);
 	if (!resolved) throw io_error("Can't resolve", path);
@@ -142,28 +163,42 @@ std::string Editor::File::read(std::string path) {
 		}
 		text.append(buf, count);
 	}
+	struct stat after;
+	if (fstat(file.fd, &after)) throw io_error("Can't read", path);
+	if (!same_file(info, after) || !inspect(path, after) || !same_file(info, after)) {
+		throw Changed("File changed while reading: " + path);
+	}
 	_path = path;
 	_info = info;
 	_exists = true;
 	return text;
 }
 
-void Editor::File::write(std::string path, const std::string &text) {
+void Editor::File::write(std::string path, const std::string &text, bool overwrite) {
 	path = Path::absolute(path);
 	std::string target = destination(path);
 	std::string directory = target.substr(0, target.find_last_of('/'));
 	if (directory.empty()) directory = "/";
 	struct stat info;
-	bool exists = stat(target.c_str(), &info) == 0;
-	if (!exists && errno != ENOENT) throw io_error("Can't write", path);
+	bool exists = inspect(target, info);
+	if (!overwrite) {
+		if (path == _path) {
+			if (exists != _exists || (exists && !same_file(info, _info))) {
+				throw Changed("File changed on disk: " + path);
+			}
+		} else if (exists) {
+			throw Changed("File already exists: " + path);
+		}
+	}
 	Descriptor original(-1);
 	mode_t mode;
 	if (exists) {
 		if (!S_ISREG(info.st_mode)) throw std::runtime_error("Not a regular file: " + path);
 		original.fd = open(target.c_str(), O_WRONLY | O_NONBLOCK | O_CLOEXEC | O_NOFOLLOW);
 		if (original.fd < 0) throw io_error("Can't write", path);
-		if (fstat(original.fd, &info)) throw io_error("Can't inspect", path);
-		if (!S_ISREG(info.st_mode)) throw std::runtime_error("Not a regular file: " + path);
+		struct stat opened;
+		if (fstat(original.fd, &opened)) throw io_error("Can't inspect", path);
+		if (!same_file(info, opened)) throw Changed("File changed on disk: " + path);
 		if (info.st_nlink > 1) {
 			throw std::runtime_error("File has multiple hard links; use Save As: " + path);
 		}
@@ -199,6 +234,12 @@ void Editor::File::write(std::string path, const std::string &text) {
 	int fd = temp.file.fd;
 	temp.file.fd = -1;
 	if (::close(fd)) throw io_error("Can't close", path);
+	struct stat current;
+	bool present = inspect(path, current);
+	if (present != exists || (present && !same_file(info, current)) ||
+			destination(path) != target) {
+		throw Changed("File changed while saving: " + path);
+	}
 	if (rename(temp.name.c_str(), target.c_str())) throw io_error("Can't replace", path);
 	temp.name.clear();
 	_path = path;
