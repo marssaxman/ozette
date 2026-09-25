@@ -19,6 +19,7 @@
 #define EDITOR_CHANGELIST_H
 
 #include <string>
+#include <cstdint>
 #include <stack>
 #include <vector>
 #include "editor/coordinates.h"
@@ -44,6 +45,8 @@ public:
 	void end(bool finish = true);
 	bool can_undo() const { return !_done.empty(); }
 	bool can_redo() const { return !_undone.empty(); }
+	void mark_saved();
+	bool modified() const { return _position != _saved; }
 private:
 	struct change_t {
 		bool erased = false;
@@ -53,6 +56,8 @@ private:
 	};
 	struct transaction_t {
 		std::vector<change_t> changes;
+		uint64_t before = 0;
+		uint64_t after = 0;
 	};
 	void record(change_t change);
 	bool can_join(const change_t &change) const;
@@ -64,6 +69,10 @@ private:
 	transaction_t *_inverse = nullptr;
 	unsigned _depth = 0;
 	bool _committed = true;
+	// Unique positions distinguish a new branch from discarded saved history.
+	uint64_t _position = 0;
+	uint64_t _saved = 0;
+	uint64_t _next_position = 0;
 };
 } // namespace Editor
 

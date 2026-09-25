@@ -24,6 +24,7 @@ void Editor::ChangeList::clear() {
 	_done = {};
 	_undone = {};
 	_committed = true;
+	_position = _saved = _next_position = 0;
 }
 
 void Editor::ChangeList::erase(const Range &loc, std::string text,
@@ -52,6 +53,7 @@ void Editor::ChangeList::record(change_t change) {
 	_undone = {};
 	if (_committed || (!_depth && !can_join(change))) {
 		_done.push(transaction_t());
+		_done.top().before = _position;
 	}
 	auto &changes = _done.top().changes;
 	if (!changes.empty() && !change.erased && !changes.back().erased &&
@@ -62,6 +64,7 @@ void Editor::ChangeList::record(change_t change) {
 		changes.push_back(std::move(change));
 	}
 	_committed = false;
+	_done.top().after = _position = ++_next_position;
 }
 
 bool Editor::ChangeList::can_join(const change_t &change) const {
@@ -100,6 +103,12 @@ void Editor::ChangeList::commit() {
 	if (!_depth) _committed = true;
 }
 
+void Editor::ChangeList::mark_saved() {
+	assert(!_depth && !_inverse);
+	commit();
+	_saved = _position;
+}
+
 void Editor::ChangeList::begin() {
 	commit();
 	++_depth;
@@ -114,6 +123,8 @@ void Editor::ChangeList::end(bool finish) {
 Editor::location_t Editor::ChangeList::replay(Document &doc, Update &update,
 		const transaction_t &source, transaction_t &inverse) {
 	assert(!_inverse);
+	inverse.before = source.after;
+	inverse.after = source.before;
 	_inverse = &inverse;
 	location_t out;
 	try {
@@ -131,5 +142,6 @@ Editor::location_t Editor::ChangeList::replay(Document &doc, Update &update,
 		throw;
 	}
 	_inverse = nullptr;
+	_position = source.before;
 	return out;
 }

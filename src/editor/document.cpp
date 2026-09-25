@@ -43,7 +43,8 @@ void Editor::Document::Write(std::string path, bool overwrite) {
 		if (i < _endings.size()) text += _endings[i];
 	}
 	_file.write(path, text, overwrite);
-	clear_modify();
+	_edits.mark_saved();
+	_status.clear();
 }
 
 Editor::location_t Editor::Document::home() {
@@ -186,7 +187,7 @@ Editor::location_t Editor::Document::erase(const Range &chars) {
 	if (_lines.empty()) return home();
 	Range span(sanitize(chars.begin()), sanitize(chars.end()));
 	if (span.empty()) return span.begin();
-	if (!attempt_modify()) return chars.begin();
+	if (_read_only) return span.begin();
 	location_t begin = span.begin();
 	std::string prefix = substr_from_home(begin);
 	location_t end = span.end();
@@ -205,7 +206,7 @@ Editor::location_t Editor::Document::erase(const Range &chars) {
 Editor::location_t Editor::Document::insert(location_t begin, char ch) {
 	sanitize(&begin);
 	location_t loc = begin;
-	if (!attempt_modify()) return loc;
+	if (_read_only) return loc;
 	if (loc.line < _lines.size()) {
 		std::string text = _lines[loc.line];
 		text.insert(loc.offset, 1, ch);
@@ -228,7 +229,7 @@ Editor::location_t Editor::Document::insert(location_t cur, std::string text,
 	sanitize(&cur);
 	location_t loc = cur;
 	if (text.empty()) return loc;
-	if (!attempt_modify()) return loc;
+	if (_read_only) return loc;
 
 	std::string suffix;
 	if (loc.line < _lines.size()) {
@@ -270,7 +271,7 @@ Editor::location_t Editor::Document::insert(location_t cur, std::string text,
 }
 
 Editor::location_t Editor::Document::split(location_t loc) {
-	if (!attempt_modify()) return loc;
+	if (_read_only) return loc;
 	sanitize(&loc);
 	Edit edit(*this);
 	location_t begin = loc;
@@ -334,17 +335,4 @@ Editor::location_t Editor::Document::sanitize(const location_t &loc) {
 
 void Editor::Document::sanitize(location_t *loc) {
 	*loc = sanitize(*loc);
-}
-
-bool Editor::Document::attempt_modify() {
-	if (!_modified && !_read_only) {
-		_modified = true;
-		_status = "Modified";
-	}
-	return _modified;
-}
-
-void Editor::Document::clear_modify() {
-	_modified = false;
-	_status.clear();
 }

@@ -175,4 +175,94 @@ TEST_CASE("empty edits leave undo and redo alone") {
 	{ Editor::Document::Edit edit(doc); }
 	CHECK_FALSE(doc.can_undo());
 	CHECK(doc.can_redo());
+	CHECK_FALSE(doc.modified());
+}
+
+TEST_CASE("undo and redo recognize loaded and saved history positions") {
+	TempDir dir;
+	dir.write("old");
+	Editor::Document doc(dir.file());
+	Editor::Update update;
+	doc.insert(doc.end(), 'a');
+	CHECK(doc.modified());
+	CHECK(doc.status() == "Modified");
+	doc.undo(update);
+	CHECK_FALSE(doc.modified());
+	CHECK(doc.status().empty());
+	doc.redo(update);
+	CHECK(doc.modified());
+	doc.Write(dir.file());
+	CHECK_FALSE(doc.modified());
+	doc.undo(update);
+	CHECK(doc.modified());
+	doc.redo(update);
+	CHECK_FALSE(doc.modified());
+	// Saving must also split an otherwise contiguous run of typing.
+	doc.insert(doc.end(), 'b');
+	doc.undo(update);
+	CHECK(doc.line(0) == "olda");
+	CHECK_FALSE(doc.modified());
+}
+
+TEST_CASE("a new history branch cannot impersonate the saved position") {
+	TempDir dir;
+	Editor::Document doc;
+	Editor::Update update;
+	doc.insert(doc.home(), 'a');
+	doc.Write(dir.file());
+	doc.undo(update);
+	doc.insert(doc.home(), 'b');
+	CHECK(doc.modified());
+	CHECK_FALSE(doc.can_redo());
+	doc.undo(update);
+	CHECK(doc.modified());
+	doc.redo(update);
+	CHECK(doc.modified());
+	CHECK(doc.line(0) == "b");
+}
+
+TEST_CASE("saving after undo retains redo and establishes a new saved position") {
+	TempDir dir;
+	Editor::Document doc;
+	Editor::Update update;
+	doc.insert(doc.home(), 'a');
+	doc.commit();
+	doc.insert(doc.end(), 'b');
+	doc.undo(update);
+	doc.Write(dir.file());
+	REQUIRE(doc.can_redo());
+	doc.redo(update);
+	CHECK(doc.line(0) == "ab");
+	CHECK(doc.modified());
+	doc.undo(update);
+	CHECK_FALSE(doc.modified());
+	doc.undo(update);
+	CHECK(doc.modified());
+	doc.redo(update);
+	CHECK_FALSE(doc.modified());
+}
+
+TEST_CASE("a failed save leaves the previous saved position intact") {
+	TempDir dir;
+	dir.write("old");
+	Editor::Document doc(dir.file());
+	doc.insert(doc.end(), 'x');
+	dir.write("external");
+	CHECK_THROWS_AS(doc.Write(dir.file()), Editor::File::Changed);
+	CHECK(doc.modified());
+	Editor::Update update;
+	doc.undo(update);
+	CHECK_FALSE(doc.modified());
+	doc.redo(update);
+	CHECK(doc.modified());
+}
+
+TEST_CASE("undoing edits to a new file restores its new status") {
+	TempDir dir;
+	Editor::Document doc(dir.file());
+	doc.insert(doc.home(), 'x');
+	Editor::Update update;
+	doc.undo(update);
+	CHECK_FALSE(doc.modified());
+	CHECK(doc.status() == "New");
 }

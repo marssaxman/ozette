@@ -33,8 +33,8 @@ public:
 	Document() {}
 	Document(std::string path);
 	void Write(std::string path, bool overwrite = false);
-	std::string status() const { return _status; }
-	bool modified() const { return _modified; }
+	std::string status() const { return modified()? "Modified": _status; }
+	bool modified() const { return _edits.modified(); }
 	bool can_undo() const { return _edits.can_undo(); }
 	bool can_redo() const { return _edits.can_redo(); }
 	location_t undo(Update &update) { return _edits.undo(*this, update); }
@@ -101,8 +101,6 @@ private:
 	line_t append_line(std::string text);
 	void sanitize(location_t *loc);
 	location_t sanitize(const location_t &loc);
-	bool attempt_modify();
-	void clear_modify();
 
 	std::string _blank;
 	std::vector<std::string> _lines = {""};
@@ -113,8 +111,6 @@ private:
 
 	// is the user allowed to make changes in this document?
 	bool _read_only = false;
-	// has the document been edited since it was last read?
-	bool _modified = false;
 	// what is our user-friendly summary of the file state?
 	std::string _status;
 	// record of all the edits made to this document
