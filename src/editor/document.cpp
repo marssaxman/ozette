@@ -184,12 +184,15 @@ std::string Editor::Document::text(const Range &span) const {
 
 Editor::location_t Editor::Document::erase(const Range &chars) {
 	if (_lines.empty()) return home();
+	Range span(sanitize(chars.begin()), sanitize(chars.end()));
+	if (span.empty()) return span.begin();
 	if (!attempt_modify()) return chars.begin();
-	_edits.erase(chars, text(chars));
-	location_t begin = sanitize(chars.begin());
+	location_t begin = span.begin();
 	std::string prefix = substr_from_home(begin);
-	location_t end = sanitize(chars.end());
+	location_t end = span.end();
 	std::string suffix = substr_to_end(end);
+	_edits.erase(span, text(span),
+		{_endings.begin() + begin.line, _endings.begin() + end.line});
 	size_t index = begin.line;
 	_endings.erase(_endings.begin() + begin.line, _endings.begin() + end.line);
 	auto beginter = _lines.begin();
@@ -217,8 +220,14 @@ Editor::location_t Editor::Document::insert(location_t begin, char ch) {
 }
 
 Editor::location_t Editor::Document::insert(location_t cur, std::string text) {
+	return insert(cur, text, {});
+}
+
+Editor::location_t Editor::Document::insert(location_t cur, std::string text,
+		const std::vector<std::string> &endings) {
 	sanitize(&cur);
 	location_t loc = cur;
+	if (text.empty()) return loc;
 	if (!attempt_modify()) return loc;
 
 	std::string suffix;
@@ -252,6 +261,10 @@ Editor::location_t Editor::Document::insert(location_t cur, std::string text) {
 	append_to_line(loc.line, text.substr(startoff, endoff));
 	loc.offset = _lines[loc.line].size();
 	append_to_line(loc.line, suffix);
+	if (!endings.empty()) {
+		assert(endings.size() == loc.line - cur.line);
+		std::copy(endings.begin(), endings.end(), _endings.begin() + cur.line);
+	}
 	_edits.insert(Range(cur, loc));
 	return loc;
 }
@@ -259,12 +272,14 @@ Editor::location_t Editor::Document::insert(location_t cur, std::string text) {
 Editor::location_t Editor::Document::split(location_t loc) {
 	if (!attempt_modify()) return loc;
 	sanitize(&loc);
-	_edits.split(loc);
+	Edit edit(*this);
+	location_t begin = loc;
 	std::string text = line(loc.line);
 	update_line(loc.line, text.substr(0, loc.offset));
 	loc.line++;
 	insert_line(loc.line, text.substr(loc.offset, std::string::npos));
 	loc.offset = 0;
+	_edits.insert(Range(begin, loc));
 	return loc;
 }
 

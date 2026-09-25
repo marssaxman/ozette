@@ -292,8 +292,8 @@ void Editor::View::set_status(UI::Frame &ctx) {
 
 void Editor::View::ctl_cut(UI::Frame &ctx) {
 	ctl_copy(ctx);
+	Document::Edit edit(_doc);
 	delete_selection();
-	_doc.commit();
 }
 
 void Editor::View::ctl_copy(UI::Frame &ctx) {
@@ -520,6 +520,7 @@ void Editor::View::delete_selection() {
 }
 
 Editor::Range Editor::View::replace_selection(std::string clip) {
+	Document::Edit edit(_doc);
 	delete_selection();
 	if (clip.empty()) {
 		return _selection;
@@ -530,12 +531,16 @@ Editor::Range Editor::View::replace_selection(std::string clip) {
 		_update.forward(oldloc);
 	}
 	move_cursor(newloc);
-	_doc.commit();
 	return Range(oldloc, newloc);
 }
 
 void Editor::View::key_insert(char ch) {
-	delete_selection();
+	if (!_selection.empty()) {
+		Document::Edit edit(_doc, false);
+		delete_selection();
+		move_cursor(_doc.insert(_cursor, ch));
+		return;
+	}
 	move_cursor(_doc.insert(_cursor, ch));
 }
 
@@ -599,6 +604,7 @@ void Editor::View::key_escape(UI::Frame &ctx) {
 
 void Editor::View::key_enter(UI::Frame &ctx) {
 	// Split the line at the cursor position, but don't move the cursor.
+	Document::Edit edit(_doc);
 	delete_selection();
 	_doc.split(_cursor);
 	_update.forward(_cursor);
@@ -606,6 +612,7 @@ void Editor::View::key_enter(UI::Frame &ctx) {
 
 void Editor::View::key_return(UI::Frame &ctx) {
 	// Split the line at the cursor position and move the cursor to the new line.
+	Document::Edit edit(_doc);
 	delete_selection();
 	line_t old_index = _cursor.line;
 	move_cursor(_doc.split(_cursor));

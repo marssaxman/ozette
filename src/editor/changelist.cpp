@@ -20,177 +20,116 @@
 #include <assert.h>
 
 void Editor::ChangeList::clear() {
-	while (!_done.empty()) _done.pop();
-	while (!_undone.empty()) _undone.pop();
-	_committed = false;
+	assert(!_depth && !_inverse);
+	_done = {};
+	_undone = {};
+	_committed = true;
 }
 
-void Editor::ChangeList::erase(const Range &loc, std::string text) {
-	while(!_undone.empty()) _undone.pop();
+void Editor::ChangeList::erase(const Range &loc, std::string text,
+		std::vector<std::string> endings) {
 	assert(!loc.empty());
-	if (combine_erase(loc, text)) return;
-	change_t temp;
-	temp.erase = true;
-	temp.eraseloc = loc;
-	temp.erasetext = text;
-	_done.push(temp);
-	_committed = false;
+	change_t change;
+	change.erased = true;
+	change.loc = loc;
+	change.text = std::move(text);
+	change.endings = std::move(endings);
+	record(std::move(change));
 }
 
 void Editor::ChangeList::insert(const Range &loc) {
-	while(!_undone.empty()) _undone.pop();
 	assert(!loc.empty());
-	if (combine_insert(loc)) return;
-	change_t temp;
-	temp.insert = true;
-	temp.insertloc = loc;
-	_done.push(temp);
+	change_t change;
+	change.loc = loc;
+	record(std::move(change));
+}
+
+void Editor::ChangeList::record(change_t change) {
+	if (_inverse) {
+		_inverse->changes.push_back(std::move(change));
+		return;
+	}
+	_undone = {};
+	if (_committed || (!_depth && !can_join(change))) {
+		_done.push(transaction_t());
+	}
+	auto &changes = _done.top().changes;
+	if (!changes.empty() && !change.erased && !changes.back().erased &&
+			changes.back().loc.end() == change.loc.begin()) {
+		// A run of typing needs only its combined range, not one record per byte.
+		changes.back().loc.extend(change.loc.end());
+	} else {
+		changes.push_back(std::move(change));
+	}
 	_committed = false;
 }
 
-void Editor::ChangeList::split(location_t loc) {
-	while(!_undone.empty()) _undone.pop();
-	if (combine_split(loc)) return;
-	change_t temp;
-	temp.split = true;
-	temp.splitloc = loc;
-	_done.push(temp);
-	_committed = false;
+bool Editor::ChangeList::can_join(const change_t &change) const {
+	if (_done.empty()) return false;
+	const auto &last = _done.top().changes.back();
+	if (last.erased != change.erased) return false;
+	if (!change.erased) return last.loc.end() == change.loc.begin();
+	// Forward deletes reuse the same cursor; backspaces move toward the start.
+	return last.loc.begin() == change.loc.begin() ||
+		last.loc.begin() == change.loc.end();
 }
 
 Editor::location_t Editor::ChangeList::undo(Document &doc, Update &update) {
+	assert(!_depth);
+	commit();
 	if (_done.empty()) return location_t();
-	std::stack<change_t> undone = std::move(_undone);
-	// Remove the last change from the done list, then reverse its effect.
-	change_t temp = _done.top();
+	transaction_t inverse;
+	location_t out = replay(doc, update, _done.top(), inverse);
 	_done.pop();
-	location_t out = temp.rollback(doc, update);
-	// Reversing the effect of the last change is a new change, which will go
-	// onto the undo stack. That's great but this is really the inverse of a
-	// change, so we will pop it off the "done" stack and put it onto the
-	// "undone" stack, so that the next undo will apply to the previous "done"
-	// action. We can undo the undo by invoking "redo". This is how we get to
-	// have multilevel undo.
-	_undone = std::move(undone);
-	_undone.push(_done.top());
-	_done.pop();
-	_committed = true;
+	_undone.push(std::move(inverse));
 	return out;
 }
 
 Editor::location_t Editor::ChangeList::redo(Document &doc, Update &update) {
+	assert(!_depth);
+	commit();
 	if (_undone.empty()) return location_t();
-	// Remove the most recent change from the undone list, then reverse its
-	// effect. This will re-implement whatever the original change was, which
-	// will push a new action onto the _done list, effectively transferring the
-	// change from the "undone" list to the "done" list.
-	change_t temp = _undone.top();
+	transaction_t inverse;
+	location_t out = replay(doc, update, _undone.top(), inverse);
 	_undone.pop();
-	std::stack<change_t> undone = std::move(_undone);
-	location_t out = temp.rollback(doc, update);
-	_undone = std::move(undone);
-	_committed = true;
+	_done.push(std::move(inverse));
 	return out;
 }
 
 void Editor::ChangeList::commit() {
-	while (!_undone.empty()) _undone.pop();
-	if (_done.empty()) return;
-	_committed = true;
+	if (!_depth) _committed = true;
 }
 
-bool Editor::ChangeList::combine_erase(const Range &loc, std::string text) {
-	if (_done.empty()) return false;
-	auto &top = _done.top();
-	if (_committed) return false;
-	if (top.split) return false;
-	if (top.insert) return false;
-	if (top.erase) {
-		// This change already includes an erase. Can we combine this erase
-		// with the previous one? This works if the new range immediately
-		// precedes or succeeds the existing range.
-		if (loc.begin() == top.eraseloc.end()) {
-			top.erasetext = top.erasetext + text;
-			top.eraseloc.extend(loc.end());
-			return true;
-		}
-		if (loc.end() == top.eraseloc.begin()) {
-			top.erasetext = text + top.erasetext;
-			top.eraseloc.extend(loc.begin());
-			return true;
-		}
-		return false;
-	}
-	top.erase = true;
-	top.eraseloc = loc;
-	top.erasetext = text;
-	return true;
+void Editor::ChangeList::begin() {
+	commit();
+	++_depth;
 }
 
-bool Editor::ChangeList::combine_insert(const Range &loc) {
-	if (_done.empty()) return false;
-	auto &top = _done.top();
-	if (_committed) return false;
-	if (top.split) return false;
-	if (top.insert) {
-		// The topmost change already includes an insert. If this insert
-		// immediately follows the previous one, we can combine them; otherwise
-		// they must be recorded as separate edits.
-		if (loc.begin() == top.insertloc.end()) {
-			top.insertloc.extend(loc.end());
-			return true;
-		}
-		return false;
-	}
-	top.insert = true;
-	top.insertloc = loc;
-	return true;
+void Editor::ChangeList::end(bool finish) {
+	assert(_depth);
+	--_depth;
+	if (finish) commit();
 }
 
-bool Editor::ChangeList::combine_split(location_t loc) {
-	// Try to combine this split with the topmost change. If we cannot combine,
-	// return false so the caller knows it's time for a new change record.
-	if (_done.empty()) return false;
-	auto &top = _done.top();
-	if (_committed) return false;
-	if (top.split) return false;
-	top.split = true;
-	top.splitloc = loc;
-	return true;
-}
-
-Editor::location_t Editor::ChangeList::change_t::rollback(
-		Document &doc, Update &update) {
+Editor::location_t Editor::ChangeList::replay(Document &doc, Update &update,
+		const transaction_t &source, transaction_t &inverse) {
+	assert(!_inverse);
+	_inverse = &inverse;
 	location_t out;
-	if (split) {
-		// We inserted a linebreak at the splitloc. Delete it.
-		Range span(splitloc, doc.next_char(splitloc));
-		doc.erase(span);
-		update.range(span);
-		out = splitloc;
-	}
-	if (insert) {
-		// We inserted some text, which now occupies the range specified by
-		// insertloc. Delete that text.
-		doc.erase(insertloc);
-		out = insertloc.begin();
-		if (insertloc.multiline()) {
-			update.forward(out);
-		} else {
-			update.range(insertloc);
+	try {
+		for (auto it = source.changes.rbegin(); it != source.changes.rend(); ++it) {
+			if (it->erased) {
+				out = doc.insert(it->loc.begin(), it->text, it->endings);
+			} else {
+				out = doc.erase(it->loc);
+			}
+			if (it->loc.multiline()) update.forward(it->loc.begin());
+			else update.range(it->loc);
 		}
+	} catch (...) {
+		_inverse = nullptr;
+		throw;
 	}
-	if (erase) {
-		// We erased some text, which was at the range specified by eraseloc,
-		// and which we have saved as erasetext. Re-insert it at the beginning
-		// of the eraseloc.
-		doc.insert(eraseloc.begin(), erasetext);
-		if (eraseloc.multiline()) {
-			update.forward(eraseloc.begin());
-		} else {
-			update.range(eraseloc);
-		}
-		out = eraseloc.end();
-	}
+	_inverse = nullptr;
 	return out;
 }

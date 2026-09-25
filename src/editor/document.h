@@ -40,6 +40,19 @@ public:
 	location_t undo(Update &update) { return _edits.undo(*this, update); }
 	location_t redo(Update &update) { return _edits.redo(*this, update); }
 	void commit() { _edits.commit(); }
+	// Keep a command's component edits together, including nested commands.
+	class Edit {
+	public:
+		// A typed replacement may leave its group open for further typing.
+		explicit Edit(Document &doc, bool finish = true):
+				_edits(doc._edits), _finish(finish) { _edits.begin(); }
+		~Edit() { _edits.end(_finish); }
+		Edit(const Edit &) = delete;
+		Edit &operator=(const Edit &) = delete;
+	private:
+		ChangeList &_edits;
+		bool _finish;
+	};
 
 	// Where are the beginning and end of the document?
 	location_t home();
@@ -76,6 +89,9 @@ public:
 	location_t split(location_t loc);
 
 private:
+	friend class ChangeList;
+	location_t insert(location_t loc, std::string text,
+		const std::vector<std::string> &endings);
 	std::string substr_to_end(const location_t &loc) const;
 	std::string substr_from_home(const location_t &loc);
 	void update_line(line_t index, std::string text);

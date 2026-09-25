@@ -20,6 +20,7 @@
 
 #include <string>
 #include <stack>
+#include <vector>
 #include "editor/coordinates.h"
 #include "editor/update.h"
 
@@ -27,40 +28,43 @@ namespace Editor {
 class Document;
 class ChangeList {
 public:
-	// Forget about all of the changes
+	// Forget about all of the changes.
 	void clear();
-	// Record a change that has been made
-	void erase(const Range &loc, std::string text);
+	// Record a change that has been made, retaining removed line endings.
+	void erase(const Range &loc, std::string text, std::vector<std::string> endings);
 	void insert(const Range &loc);
-	void split(location_t loc);
-	// Roll back the last change, or re-apply the most recently undone change.
+	// Roll back the last transaction, or re-apply the most recently undone one.
 	// Return value is the new cursor position.
 	location_t undo(Document &doc, Update &update);
 	location_t redo(Document &doc, Update &update);
-	// If we have undone some actions, forget them, because we are committing
-	// to the current state and beginning a new edit.
+	// End a typing group without discarding redo. Only an edit starts a branch.
 	void commit();
-	// Can we currently undo or redo an action?
+	// Group all edits within a command into one transaction. May be nested.
+	void begin();
+	void end(bool finish = true);
 	bool can_undo() const { return !_done.empty(); }
 	bool can_redo() const { return !_undone.empty(); }
 private:
-	bool combine_erase(const Range &loc, std::string text);
-	bool combine_insert(const Range &loc);
-	bool combine_split(location_t loc);
 	struct change_t {
-		location_t rollback(Document &doc, Update &update);
-		bool erase = false;
-		Range eraseloc;
-		std::string erasetext;
-		bool insert = false;
-		Range insertloc;
-		bool split = false;
-		location_t splitloc;
+		bool erased = false;
+		Range loc;
+		std::string text;
+		std::vector<std::string> endings;
 	};
-	std::stack<change_t> _done;
-	std::stack<change_t> _undone;
-	bool _committed = false;
+	struct transaction_t {
+		std::vector<change_t> changes;
+	};
+	void record(change_t change);
+	bool can_join(const change_t &change) const;
+	location_t replay(Document &doc, Update &update,
+		const transaction_t &source, transaction_t &inverse);
+	std::stack<transaction_t> _done;
+	std::stack<transaction_t> _undone;
+	// Replayed edits go here, never into the ordinary history stacks.
+	transaction_t *_inverse = nullptr;
+	unsigned _depth = 0;
+	bool _committed = true;
 };
 } // namespace Editor
 
-#endif //EDITOR_CHANGELIST_H
+#endif // EDITOR_CHANGELIST_H
