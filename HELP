@@ -49,6 +49,13 @@ or end of the current line.
 Cut, Copy, and Paste apply to a single clipboard which is shared across all
 editors.
 
+Undo groups consecutive typing or deletion until you move the cursor or switch
+windows. Replacements, indentation, line splitting (including automatic
+indentation), Cut, and Paste each undo as a single command.
+
+Switching windows or saving after Undo preserves Redo. A new edit discards the
+redo branch. Returning to the last saved history position clears Modified.
+
 Saving preserves existing line endings and the presence or absence of a final
 newline. If the file changed on disk, you can overwrite it, reload it, or cancel.
 Reload asks before discarding your edits. Save As confirms existing destinations.
