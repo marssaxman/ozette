@@ -178,3 +178,26 @@ TEST_CASE("an initial read error leaves the application usable") {
 	});
 	CHECK(dir.read() == "xold");
 }
+
+TEST_CASE("separate deletions survive undo through the command loop") {
+	TempDir dir;
+	dir.write("abcdefgh");
+	run_app(dir, {KEY_DC, KEY_RIGHT, KEY_RIGHT, KEY_DC,
+		Control::Undo, Control::Undo, 'x', Control::Quit, 'y'},
+		[&](TestApp &app) { app.edit_file(dir.file()); });
+	CHECK(dir.read() == "axbcdefgh");
+}
+
+TEST_CASE("switching editor tabs after undo preserves redo") {
+	TempDir dir;
+	dir.write("old", "a");
+	dir.write("other", "z");
+	run_app(dir, {'x', Control::Undo, Control::LeftArrow,
+		Control::RightArrow, Control::Redo, Control::Quit, 'y'},
+		[&](TestApp &app) {
+			app.edit_file(dir.file("a"));
+			app.edit_file(dir.file("z"));
+		});
+	CHECK(dir.read("a") == "old");
+	CHECK(dir.read("z") == "xother");
+}

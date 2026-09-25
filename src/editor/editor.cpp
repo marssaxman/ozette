@@ -81,6 +81,16 @@ void Editor::View::clear_overlay() {
 
 bool Editor::View::process(UI::Frame &ctx, int ch) {
 	if (ERR == ch) return true;
+	// Cursor movement ends a typing group even if it returns to the same spot.
+	switch (ch) {
+		case KEY_DOWN: case KEY_UP: case KEY_LEFT: case KEY_RIGHT:
+		case KEY_NPAGE: case KEY_PPAGE: case KEY_HOME: case KEY_END:
+		case KEY_SF: case KEY_SR: case KEY_SLEFT: case KEY_SRIGHT:
+		case Control::Escape: case Control::Copy: case Control::ToLine:
+		case Control::Find: case Control::Replace:
+			_doc.commit();
+			break;
+	}
 	switch (ch) {
 		case Control::Cut: ctl_cut(ctx); break;
 		case Control::Copy: ctl_copy(ctx); break;
@@ -139,6 +149,7 @@ void Editor::View::set_help(UI::HelpBar::Panel &panel) {
 }
 
 void Editor::View::select(UI::Frame &ctx, Range range) {
+	_doc.commit();
 	_update.range(_selection);
 	_anchor = range.begin();
 	_cursor = range.end();
@@ -466,11 +477,11 @@ void Editor::View::ctl_find_next(UI::Frame &ctx) {
 }
 
 void Editor::View::ctl_undo(UI::Frame &ctx) {
-	move_cursor(_doc.undo(_update));
+	if (_doc.can_undo()) move_cursor(_doc.undo(_update));
 }
 
 void Editor::View::ctl_redo(UI::Frame &ctx) {
-	move_cursor(_doc.redo(_update));
+	if (_doc.can_redo()) move_cursor(_doc.redo(_update));
 }
 
 void Editor::View::ctl_open_next(UI::Frame &ctx) {
@@ -545,6 +556,7 @@ void Editor::View::key_insert(char ch) {
 }
 
 void Editor::View::key_tab(UI::Frame &ctx) {
+	Document::Edit edit(_doc);
 	if (_selection.empty()) {
 		// move the cursor forward to the next tab stop, using either a tab
 		// character or a series of spaces, as the user requires
