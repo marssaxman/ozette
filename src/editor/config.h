@@ -20,9 +20,8 @@
 
 #include <string>
 
-// This is an implementation of the editorconfig standard:
-//     http://www.editorconfig.org/
-// Any behavior divergent from that specification is unintentional.
+// Read EditorConfig indentation settings. Other properties have no effect.
+// See HELP for the supported subset and recovery behavior.
 
 namespace Editor {
 class Config {
@@ -32,18 +31,10 @@ public:
 	// Properties which control behaviors that this editor actually implements:
 	char indent_style() const { return _indent_style; }
 	unsigned indent_size() const { return _indent_size; }
-	// Other properties are supported, as per the standard, but have no effect.
 private:
 	void reset();
-	void apply(std::string key, std::string val);
 	enum { TAB = '\t', SPACE = ' ' } _indent_style;
 	unsigned _indent_size;
-	unsigned _tab_width;
-	enum { LF, CRLF, CR } _end_of_line;
-	enum { LATIN1, UTF8, UTF8BOM, UTF16BE, UTF16LE } _charset;
-	bool _trim_trailing_whitespace;
-	bool _insert_final_newline;
-	unsigned _max_line_length;
 };
 } // namespace Editor
 

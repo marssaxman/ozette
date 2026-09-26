@@ -176,6 +176,8 @@ int ec_fnmatch(const char *pattern, const char *string, int flags)
 
                 for (;;) {
                     comma_brace = strpbrk(pattern, ",}");
+                    if (comma_brace == NULL)
+                        return (EC_FNM_NOMATCH);
 
                     /* {str0,,str1,str2}, we are on the empty one. Remember the
                      * {} case is handled in the block above */
@@ -193,6 +195,7 @@ int ec_fnmatch(const char *pattern, const char *string, int flags)
                          * Handle them carefully by counting the number of
                          * backslashes */
                         for (bs_count = 0;
+                                comma_brace - bs_count > pattern1 &&
                                 *(comma_brace - bs_count - 1) == '\\';
                                 ++ bs_count)
                             ;
