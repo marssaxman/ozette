@@ -371,3 +371,127 @@ TEST_CASE("a refused save preserves the target and unsaved edits") {
 	CHECK(frame.controller.closed == nullptr);
 	CHECK(view.is_modified());
 }
+
+TEST_CASE("empty files tolerate navigation deletion indentation and painting") {
+	TestScreen screen;
+	TestFrame frame;
+	TempDir dir;
+	dir.write("");
+	Editor::View view(dir.file());
+	for (int key: std::vector<int>{KEY_END, KEY_HOME, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN,
+		KEY_PPAGE, KEY_NPAGE, Control::Backspace, KEY_DC, KEY_BTAB}) {
+		view.process(frame, key);
+		view.paint(UI::View::State::Focused);
+	}
+	CHECK_FALSE(view.is_modified());
+	view.process(frame, Control::Return);
+	view.process(frame, Control::Undo);
+	CHECK_FALSE(view.is_modified());
+	CHECK(view.save(frame) == SaveResult::Saved);
+	CHECK(dir.read().empty());
+}
+
+TEST_CASE("editor navigation and undo preserve malformed file bytes") {
+	TestScreen screen;
+	TestFrame frame;
+	TempDir dir;
+	const std::string bytes = "\x80\xbf\xed\xa0\x80\xc3\xa9\xf0\x9f";
+	dir.write(bytes);
+	Editor::View view(dir.file());
+	view.process(frame, KEY_END);
+	for (unsigned i = 0; i < 12; ++i) view.process(frame, KEY_LEFT);
+	for (unsigned i = 0; i < 12; ++i) view.process(frame, KEY_RIGHT);
+	view.paint(UI::View::State::Focused);
+	CHECK_FALSE(view.is_modified());
+	view.process(frame, Control::Backspace);
+	CHECK(view.save(frame) == SaveResult::Saved);
+	CHECK(dir.read() == bytes.substr(0, bytes.size() - 1));
+	view.process(frame, Control::Undo);
+	CHECK(view.save(frame) == SaveResult::Saved);
+	CHECK(dir.read() == bytes);
+	view.process(frame, Control::Redo);
+	CHECK(view.save(frame) == SaveResult::Saved);
+	CHECK(dir.read() == bytes.substr(0, bytes.size() - 1));
+}
+
+TEST_CASE("configuration failures do not prevent editing and indentation") {
+	TestScreen screen;
+	TestFrame frame;
+	TempDir dir;
+	for (const auto &value: {"tab", "0", "-1", "999999999999999999999999", "bad"}) {
+		CAPTURE(value);
+		dir.write("root = true\n[*]\nindent_style = space\nindent_size = " +
+			std::string(value) + "\ntab_width = 3\nmax_line_length = off\n", ".editorconfig");
+		dir.write("");
+		Editor::View view(dir.file());
+		view.process(frame, Control::Tab);
+		view.paint(UI::View::State::Focused);
+		view.process(frame, 'x');
+		CHECK(view.save(frame) == SaveResult::Saved);
+		CHECK(dir.read() == (std::string(value) == "tab"? "   x": "    x"));
+		view.process(frame, KEY_HOME);
+		view.process(frame, KEY_BTAB);
+		CHECK(view.save(frame) == SaveResult::Saved);
+		CHECK(dir.read() == "x");
+	}
+}
+
+TEST_CASE("unsupported configuration properties do not alter saved representation") {
+	TestScreen screen;
+	TestFrame frame;
+	TempDir dir;
+	dir.write("root = true\n[*]\nend_of_line = lf\ncharset = utf-16le\n"
+		"trim_trailing_whitespace = true\ninsert_final_newline = true\nmax_line_length = off\n",
+		".editorconfig");
+	const std::string bytes = "\x80  \r\nlast  ";
+	dir.write(bytes);
+	Editor::View view(dir.file());
+	CHECK(view.save(frame) == SaveResult::Saved);
+	CHECK(dir.read() == bytes);
+}
+
+TEST_CASE("external selections are bounded before navigation") {
+	TestScreen screen;
+	TestFrame frame;
+	TempDir dir;
+	dir.write("abc\nxy");
+	Editor::View view(dir.file());
+	view.select(frame, Editor::Range({0, 1}, {size_t(-1), size_t(-1)}));
+	view.process(frame, Control::Copy);
+	CHECK(frame.controller.clipboard == "bc\nxy");
+	view.process(frame, 'z');
+	CHECK(view.save(frame) == SaveResult::Saved);
+	CHECK(dir.read() == "az");
+}
+
+TEST_CASE("go to line safely bounds negative and enormous numbers") {
+	TestScreen screen;
+	TestFrame frame;
+	TempDir dir;
+	dir.write("abc\nxy");
+	Editor::View view(dir.file());
+	for (const auto &value: {"-9223372036854775808", "999999999999999999999999"}) {
+		view.process(frame, Control::ToLine);
+		frame.enter(value);
+		view.paint(UI::View::State::Focused);
+	}
+	view.process(frame, 'z');
+	CHECK(view.save(frame) == SaveResult::Saved);
+	CHECK(dir.read() == "zabc\nxy");
+}
+
+TEST_CASE("unindenting at home handles whitespace ending at the last byte") {
+	TestScreen screen;
+	TestFrame frame;
+	TempDir dir;
+	for (const auto &bytes: {" ", "    ", "\t", " \n  "}) {
+		dir.write(bytes);
+		Editor::View view(dir.file());
+		view.process(frame, KEY_BTAB);
+		CHECK(view.save(frame) == SaveResult::Saved);
+		CHECK(dir.read() == (std::string(bytes) == " \n  "? "\n  ": ""));
+		view.process(frame, Control::Undo);
+		CHECK(view.save(frame) == SaveResult::Saved);
+		CHECK(dir.read() == bytes);
+	}
+}

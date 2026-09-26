@@ -27,6 +27,7 @@
 #include "editor/editor.h"
 #include "ui/colors.h"
 #include "search/dialog.h"
+#include <climits>
 
 Editor::View::View():
 		_syntax(Syntax::lookup("")) {
@@ -128,7 +129,7 @@ bool Editor::View::process(UI::Frame &ctx, int ch) {
 		case Control::Escape: key_escape(ctx); break;
 
 		default: {
-			if (isprint(ch)) key_insert(ch);
+			if (ch >= 0 && ch <= UCHAR_MAX && isprint(ch)) key_insert(ch);
 			else ctx.show_result("Unknown control: " + std::to_string(ch));
 		} break;
 	}
@@ -149,6 +150,7 @@ void Editor::View::set_help(UI::HelpBar::Panel &panel) {
 }
 
 void Editor::View::select(UI::Frame &ctx, Range range) {
+	range.reset(_doc.clamp(range.begin()), _doc.clamp(range.end()));
 	_doc.commit();
 	_update.range(_selection);
 	_anchor = range.begin();
@@ -393,7 +395,7 @@ void Editor::View::ctl_toline(UI::Frame &ctx) {
 		if (value.empty()) return;
 		long valnum = 0;
 		try {
-			valnum = std::stol(value) - 1;
+			valnum = std::stol(value);
 		} catch (std::invalid_argument const& ex) {
 			ctx.show_result("\"" + value + "\" is not a line number");
 			return;
@@ -401,7 +403,7 @@ void Editor::View::ctl_toline(UI::Frame &ctx) {
 			ctx.show_result("line number out of range");
 			return;
 		}
-		size_t index = (valnum >= 0) ? valnum : 0;
+		size_t index = (valnum > 0)? valnum - 1: 0;
 		move_cursor(_doc.home(index));
 		postprocess(ctx);
 	};
@@ -590,12 +592,13 @@ void Editor::View::key_btab(UI::Frame &ctx) {
 	// Remove the leftmost tab character or indent-sized sequence of spaces
 	// from each of the selected lines, then extend the selection to encompass
 	// all of those lines.
+	if (_selection.empty()) _selection.reset(_doc.home(_cursor), _doc.end(_cursor));
 	line_frame_selection();
 	std::string text = _doc.text(_selection);
 	size_t offset = 0;
 	while (offset != std::string::npos && offset < text.size()) {
 		size_t munch = offset;
-		while (text[munch] == ' ' && munch < text.size()) {
+		while (munch < text.size() && text[munch] == ' ') {
 			if (munch - offset >= _config.indent_size()) break;
 			++munch;
 		}
@@ -630,7 +633,7 @@ void Editor::View::key_return(UI::Frame &ctx) {
 	move_cursor(_doc.split(_cursor));
 	// Add whatever string of whitespace characters begins the previous line.
 	for (char ch: _doc.line(old_index)) {
-		if (!isspace(ch)) break;
+		if (!isspace(static_cast<unsigned char>(ch))) break;
 		key_insert(ch);
 	}
 	_update.forward(_cursor);
@@ -647,6 +650,7 @@ void Editor::View::key_delete(UI::Frame &ctx) {
 }
 
 void Editor::View::move_cursor(location_t loc) {
+	loc = _doc.clamp(loc);
 	// Place the cursor at an absolute document location, dropping the
 	// selection if one previously existed.
 	_update.range(_selection);
@@ -655,6 +659,7 @@ void Editor::View::move_cursor(location_t loc) {
 }
 
 void Editor::View::extend_selection(location_t loc) {
+	loc = _doc.clamp(loc);
 	// Select everything from the anchor to the new location, which becomes
 	// the new cursor position.
 	_update.at(_cursor);

@@ -447,3 +447,24 @@ TEST_CASE("saving rechecks aliases changed after opening") {
 	CHECK(dir.read("other") == "old");
 	CHECK(dir.read("copy") == "xold");
 }
+
+TEST_CASE("empty files and zero indentation remain usable through the command loop") {
+	TempDir dir;
+	dir.write("");
+	dir.write("root = true\n[*]\nindent_style = space\nindent_size = 0\n", ".editorconfig");
+	std::vector<int> keys = {KEY_END, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN,
+		Control::Backspace, KEY_DC, Control::Tab, 'x', Control::Save, Control::Quit};
+	run_app(dir, keys, [&](TestApp &app) { app.edit_file(dir.file()); });
+	CHECK(dir.read() == "    x");
+}
+
+TEST_CASE("symbolic indentation and malformed text survive the command loop") {
+	TempDir dir;
+	dir.write("\x80\xbf\xf0\x9f");
+	dir.write("root = true\n[*]\nindent_style = space\nindent_size = tab\n"
+		"tab_width = 3\nmax_line_length = off\n", ".editorconfig");
+	std::vector<int> keys = {KEY_END, KEY_LEFT, KEY_LEFT, KEY_LEFT, KEY_LEFT,
+		Control::Tab, Control::Save, Control::Quit};
+	run_app(dir, keys, [&](TestApp &app) { app.edit_file(dir.file()); });
+	CHECK(dir.read() == "   \x80\xbf\xf0\x9f");
+}
