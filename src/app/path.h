@@ -40,10 +40,12 @@ std::string complete_file(std::string partial_path);
 // the target or just another link in the ultimate chain.
 std::string complete_dir(std::string partial_path);
 
-// Reformat this path into its canonical absolute form. We will find the
-// appropriate base directory, expand tildes and parent refs, strip any
-// duplicate separators, and return a clean absolute path.
+// Expand this path from the current directory, retaining symlinks but resolving
+// parent refs through them. Strip redundant separators and dot components.
 std::string absolute(std::string path);
+
+// Do these paths name the same target, including aliases and missing files?
+bool same_file(std::string a, std::string b);
 
 // Format this path for compact user display.
 std::string display(std::string path);
@@ -51,5 +53,4 @@ std::string display(std::string path);
 } // namespace Path
 
 #endif // APP_PATH_H
-
 

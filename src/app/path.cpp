@@ -20,7 +20,31 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <cstring>
+#include <cstdlib>
 #include <assert.h>
+
+namespace {
+std::string resolved(std::string path) {
+	char *name = realpath(path.c_str(), nullptr);
+	if (!name) return "";
+	std::string out(name);
+	free(name);
+	return out;
+}
+
+std::string target(std::string path) {
+	// New files have no inode. Resolve as much of their parent path as exists.
+	std::string suffix;
+	for (;;) {
+		std::string base = resolved(path);
+		if (!base.empty()) return (base == "/" && !suffix.empty()? "": base) + suffix;
+		size_t slash = path.find_last_of('/');
+		if (slash == std::string::npos || path == "/") return path + suffix;
+		suffix = path.substr(slash) + suffix;
+		path.resize(slash? slash: 1);
+	}
+}
+} // namespace
 
 std::string Path::home_dir() {
 	return std::string(getenv("HOME"));
@@ -98,8 +122,7 @@ std::string Path::complete_dir(std::string partial_path) {
 }
 
 std::string Path::absolute(std::string path) {
-	// Canonicalize this path and expand it as necessary to produce
-	// a full path relative to the filesystem root.
+	// Expand this path to a full path relative to the filesystem root.
 	if (path.empty()) {
 		return current_dir();
 	}
@@ -107,12 +130,13 @@ std::string Path::absolute(std::string path) {
 	size_t offset = 0;
 	if (path[0] == '/') {
 		offset = 1;
-	} else if (path[0] == '~') {
+	} else if (path == "~" || path.substr(0, 2) == "~/") {
 		offset = 1;
 		out = home_dir();
 	} else {
 		out = current_dir();
 	}
+	if (out == "/") out.clear();
 	while (offset != std::string::npos) {
 		size_t segpos = path.find_first_of('/', offset);
 		std::string seg;
@@ -126,27 +150,37 @@ std::string Path::absolute(std::string path) {
 		if (seg.empty()) continue;
 		if (seg == ".") continue;
 		if (seg == "..") {
-			size_t trunc = out.find_last_of('/');
-			if (trunc == std::string::npos) {
-				trunc = 0;
-			}
-			out.resize(trunc);
+			std::string parent = resolved(out + "/..");
+			if (parent.empty()) out += "/..";
+			else out = parent == "/"? "": parent;
 			continue;
 		}
 		out += "/" + seg;
 	}
-	return out;
+	return out.empty()? "/": out;
+}
+
+bool Path::same_file(std::string a, std::string b) {
+	a = absolute(a);
+	b = absolute(b);
+	if (a == b) return true;
+	struct stat first, second;
+	if (stat(a.c_str(), &first) == 0 && stat(b.c_str(), &second) == 0 &&
+			first.st_dev == second.st_dev && first.st_ino == second.st_ino) return true;
+	return target(a) == target(b);
 }
 
 std::string Path::display(std::string path) {
 	std::string cwd = current_dir();
 	size_t cwdsize = cwd.size();
-	if (path.size() > cwdsize && path.substr(0, cwdsize) == cwd) {
-		return path.substr(1 + cwdsize);
+	if (cwd == "/" && path.size() > 1 && path[0] == '/') return path.substr(1);
+	if (path.size() > cwdsize && path.substr(0, cwdsize) == cwd && path[cwdsize] == '/') {
+		return path.substr(cwdsize + 1);
 	}
 	std::string home = home_dir();
 	size_t homesize = home.size();
-	if (path.substr(0, homesize) == home) {
+	if (path == home || (path.size() > homesize &&
+			path.substr(0, homesize) == home && path[homesize] == '/')) {
 		return "~" + path.substr(homesize);
 	}
 	return path;
