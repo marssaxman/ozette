@@ -45,6 +45,7 @@ private:
 	struct editor {
 		UI::Window *window;
 		Editor::View *view;
+		size_t id; // Pending dialogs may outlive this editor.
 	};
 	void show_browser();
 	void change_directory();
@@ -58,6 +59,7 @@ private:
 	void exec(std::string command);
 	editor find_editor(std::string path, const Editor::View *except = nullptr);
 	editor open_editor(std::string path);
+	void close_editor(size_t id);
 	void save_session();
 	void load_session();
 	void quit();
@@ -66,6 +68,7 @@ private:
 	std::string _current_dir;
     std::string _cache_dir;
 	std::vector<editor> _editors;
+	size_t _next_editor_id = 0;
 	std::string _clipboard;
 	bool _done = false;
 	bool _browser_mode = false;

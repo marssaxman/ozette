@@ -79,8 +79,17 @@ bool Ozette::can_save_file(const Editor::View &view, std::string path) {
 }
 
 void Ozette::close_file(Editor::View &view) {
+	for (auto edrec: _editors) {
+		if (edrec.view == &view) {
+			close_editor(edrec.id);
+			return;
+		}
+	}
+}
+
+void Ozette::close_editor(size_t id) {
 	for (auto iter = _editors.begin(); iter != _editors.end(); ++iter) {
-		if (iter->view == &view) {
+		if (iter->id == id) {
 			_shell.close_window(iter->window);
 			_editors.erase(iter);
 			return;
@@ -168,6 +177,7 @@ Ozette::editor Ozette::open_editor(std::string path) {
 	}
 	std::unique_ptr<UI::View> edptr(edrec.view);
 	edrec.window = _shell.open_window(std::move(edptr));
+	edrec.id = ++_next_editor_id;
 	_editors.push_back(edrec);
 	return edrec;
 }
@@ -265,7 +275,7 @@ void Ozette::quit() {
 	dialog.no = [this, modified](UI::Frame &ctx) {
 		// The modifications are unimportant: just close the files.
 		for (auto edrec: modified) {
-			close_file(*edrec.view);
+			close_editor(edrec.id);
 		}
 		_shell.close_all();
 	};

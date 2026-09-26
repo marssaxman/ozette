@@ -340,3 +340,20 @@ TEST_CASE("Save As detects missing open destinations through directory aliases")
 	CHECK(dir.read() == "xzold");
 	CHECK(dir.read("new") == "y");
 }
+
+TEST_CASE("a pending Quit does not discard edits in a reopened editor") {
+	TempDir dir;
+	dir.write("old", "a");
+	dir.write("other", "b");
+	std::vector<int> keys = {'y', Control::LeftArrow, 'x', Control::Quit,
+		Control::RightArrow, Control::Close, 'n'};
+	keys.push_back(Control::UpArrow);
+	enter_path(keys, Control::Open, "b");
+	keys.insert(keys.end(), {'z', Control::LeftArrow, 'n', 'y', Control::Quit});
+	run_app(dir, keys, [&](TestApp &app) {
+		app.edit_file("a");
+		app.edit_file("b");
+	});
+	CHECK(dir.read("a") == "old");
+	CHECK(dir.read("b") == "zother");
+}
