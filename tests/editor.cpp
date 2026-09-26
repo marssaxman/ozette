@@ -96,13 +96,13 @@ TEST_CASE("Save As changes the editor target only after a successful write") {
 	frame.enter(dir.file("other"));
 	frame.answer('n');
 	CHECK(view.is_modified());
-	CHECK(frame.controller.renamed.empty());
+	CHECK(view.target_path() == dir.file());
 	CHECK(dir.read("other") == "other");
 	view.process(frame, Control::SaveAs);
 	frame.enter(dir.file("other"));
 	frame.answer('y');
 	CHECK_FALSE(view.is_modified());
-	CHECK(frame.controller.renamed == dir.file("other"));
+	CHECK(view.target_path() == dir.file("other"));
 	CHECK(dir.read("other") == "xold");
 	CHECK(dir.read() == "old");
 	view.process(frame, 'y');
@@ -120,14 +120,14 @@ TEST_CASE("closing waits for a successful save after resolving a conflict") {
 	dir.write("external");
 	view.process(frame, Control::Close);
 	frame.answer('y');
-	CHECK(frame.controller.closed.empty());
+	CHECK(frame.controller.closed == nullptr);
 	frame.answer(Control::Escape);
-	CHECK(frame.controller.closed.empty());
+	CHECK(frame.controller.closed == nullptr);
 	CHECK(view.is_modified());
 	view.process(frame, Control::Close);
 	frame.answer('y');
 	frame.answer('y');
-	CHECK(frame.controller.closed == dir.file());
+	CHECK(frame.controller.closed == &view);
 	CHECK(dir.read() == "xold");
 }
 

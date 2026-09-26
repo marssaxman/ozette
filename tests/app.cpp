@@ -65,10 +65,14 @@ void run_app(const TempDir &dir, std::vector<int> keys,
 	REQUIRE(WEXITSTATUS(status) == 0);
 }
 
-void save_copy(std::vector<int> &keys) {
-	keys.push_back(Control::SaveAs);
-	for (char ch: std::string("copy")) keys.push_back(ch);
+void enter_path(std::vector<int> &keys, int command, std::string path) {
+	keys.push_back(command);
+	for (char ch: path) keys.push_back(ch);
 	keys.push_back(Control::Return);
+}
+
+void save_copy(std::vector<int> &keys) {
+	enter_path(keys, Control::SaveAs, "copy");
 }
 } // namespace
 
@@ -200,4 +204,78 @@ TEST_CASE("switching editor tabs after undo preserves redo") {
 		});
 	CHECK(dir.read("a") == "old");
 	CHECK(dir.read("z") == "xother");
+}
+
+TEST_CASE("Open and New reuse an editor with unsaved changes") {
+	TempDir dir;
+	dir.write("old");
+	int command = Control::Open;
+	SUBCASE("Open") { command = Control::Open; }
+	SUBCASE("New") { command = Control::NewFile; }
+	std::vector<int> keys = {'x'};
+	enter_path(keys, command, "./file");
+	keys.push_back('y');
+	enter_path(keys, command, "file");
+	keys.insert(keys.end(), {'z', Control::Close, 'y'});
+	run_app(dir, keys, [&](TestApp &app) { app.edit_file("file"); });
+	CHECK(dir.read() == "xyzold");
+}
+
+TEST_CASE("Open and New share missing targets through directory aliases") {
+	TempDir dir;
+	REQUIRE(symlink(".", dir.file("directory").c_str()) == 0);
+	std::vector<int> keys = {'x'};
+	enter_path(keys, Control::NewFile, "directory/file");
+	keys.push_back('y');
+	enter_path(keys, Control::Open, "file");
+	keys.insert(keys.end(), {'z', Control::Quit, 'y'});
+	run_app(dir, keys, [&](TestApp &app) { app.edit_file("./file"); });
+	CHECK(dir.read() == "xyz");
+}
+
+TEST_CASE("opening a file alias reuses the original editor") {
+	TempDir dir;
+	dir.write("old");
+	SUBCASE("symbolic link") {
+		REQUIRE(symlink("file", dir.file("alias").c_str()) == 0);
+	}
+	SUBCASE("hard link") {
+		REQUIRE(link(dir.file().c_str(), dir.file("alias").c_str()) == 0);
+	}
+	std::vector<int> keys = {'x'};
+	enter_path(keys, Control::Open, "alias");
+	keys.push_back('y');
+	save_copy(keys);
+	keys.push_back(Control::Close);
+	run_app(dir, keys, [&](TestApp &app) { app.edit_file("file"); });
+	CHECK(dir.read() == "old");
+	CHECK(dir.read("copy") == "xyold");
+}
+
+TEST_CASE("relative Save As survives directory changes and reopening") {
+	TempDir dir;
+	dir.write("old");
+	REQUIRE(mkdir(dir.file("sub").c_str(), 0700) == 0);
+	std::vector<int> keys = {'x'};
+	enter_path(keys, Control::SaveAs, "renamed");
+	enter_path(keys, Control::Directory, "sub");
+	keys.insert(keys.end(), {'y', Control::Save});
+	enter_path(keys, Control::Open, "../renamed");
+	keys.insert(keys.end(), {'z', Control::Close, 'y'});
+	run_app(dir, keys, [&](TestApp &app) { app.edit_file("file"); });
+	CHECK(dir.read() == "old");
+	CHECK(dir.read("renamed") == "xyzold");
+	CHECK(access(dir.file("sub/renamed").c_str(), F_OK) != 0);
+}
+
+TEST_CASE("Save As releases the old target for a separate editor") {
+	TempDir dir;
+	dir.write("old");
+	std::vector<int> keys = {'x'};
+	save_copy(keys);
+	enter_path(keys, Control::Open, "file");
+	keys.insert(keys.end(), {'y', Control::Quit, 'y'});
+	run_app(dir, keys, [&](TestApp &app) { app.edit_file("file"); });
+	CHECK(dir.read() == "yold");
+	CHECK(dir.read("copy") == "xold");
 }

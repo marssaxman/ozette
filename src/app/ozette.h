@@ -18,7 +18,6 @@
 #ifndef APP_OZETTE_H
 #define APP_OZETTE_H
 
-#include <map>
 #include <string>
 #include <vector>
 #include "app/controller.h"
@@ -31,8 +30,7 @@ public:
 	Ozette();
 	virtual void change_dir(std::string path) override;
 	virtual void edit_file(std::string path) override;
-	virtual void rename_file(std::string from, std::string to) override;
-	virtual void close_file(std::string path) override;
+	virtual void close_file(Editor::View &view) override;
 	virtual void find_in_file(std::string path, Editor::line_t index) override;
 	virtual void set_clipboard(std::string text) override;
 	virtual std::string get_clipboard() override;
@@ -57,6 +55,7 @@ private:
 	bool save_all();
 	int fix_control_quirks(int ch);
 	void exec(std::string command);
+	editor find_editor(std::string path);
 	editor open_editor(std::string path);
 	void save_session();
 	void load_session();
@@ -65,7 +64,7 @@ private:
 	std::string _home_dir;
 	std::string _current_dir;
     std::string _cache_dir;
-	std::map<std::string, editor> _editors;
+	std::vector<editor> _editors;
 	std::string _clipboard;
 	bool _done = false;
 	bool _browser_mode = false;

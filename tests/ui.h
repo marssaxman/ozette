@@ -44,8 +44,7 @@ struct TestScreen {
 struct TestController : Controller {
 	void change_dir(std::string) override {}
 	void edit_file(std::string) override {}
-	void rename_file(std::string from, std::string to) override { renamed = to; }
-	void close_file(std::string path) override { closed = path; }
+	void close_file(Editor::View &view) override { closed = &view; }
 	void find_in_file(std::string, size_t) override {}
 	void begin_search() override {}
 	void search_for(Search::spec) override {}
@@ -53,7 +52,8 @@ struct TestController : Controller {
 	std::string get_clipboard() override { return clipboard; }
 	void cache_read(std::string, std::vector<std::string> &) override {}
 	void cache_write(std::string, const std::vector<std::string> &) override {}
-	std::string closed, renamed, clipboard;
+	Editor::View *closed = nullptr;
+	std::string clipboard;
 };
 
 struct TestFrame : UI::Frame {

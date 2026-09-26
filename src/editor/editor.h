@@ -36,6 +36,7 @@ public:
 	virtual void set_help(UI::HelpBar::Panel &panel) override;
 	void select(UI::Frame &ctx, Range range);
 	bool is_modified() const;
+	const std::string &target_path() const { return _targetpath; }
 	enum class SaveResult { Saved, Pending, Failed };
 	SaveResult save(UI::Frame &ctx);
 protected:

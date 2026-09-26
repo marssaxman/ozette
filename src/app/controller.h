@@ -22,14 +22,15 @@
 #include <vector>
 #include "search/engine.h"
 
+namespace Editor { class View; }
+
 // Abstract interface for centralized application actions.
 class Controller {
 public:
 	virtual ~Controller() = default;
 	virtual void change_dir(std::string path) = 0;
 	virtual void edit_file(std::string path) = 0;
-	virtual void rename_file(std::string from, std::string to) = 0;
-	virtual void close_file(std::string path) = 0;
+	virtual void close_file(Editor::View &view) = 0;
 	virtual void find_in_file(std::string path, size_t index) = 0;
 	virtual void begin_search() = 0;
 	virtual void search_for(Search::spec) = 0;

@@ -65,6 +65,7 @@ void Ozette::change_dir(std::string path) {
 }
 
 void Ozette::edit_file(std::string path) {
+	path = Path::absolute(path);
 	struct stat st;
 	if (0 == stat(path.c_str(), &st) && S_ISDIR(st.st_mode)) {
 		change_dir(path);
@@ -73,21 +74,13 @@ void Ozette::edit_file(std::string path) {
 	}
 }
 
-void Ozette::rename_file(std::string from, std::string to) {
-	// Somebody has moved or renamed a file. If there is an editor
-	// open for it, update our editor map.
-	auto existing = _editors.find(Path::absolute(from));
-	if (existing == _editors.end()) return;
-	auto edrec = existing->second;
-	_editors.erase(existing);
-	_editors[Path::absolute(to)] = edrec;
-}
-
-void Ozette::close_file(std::string path) {
-	auto iter = _editors.find(Path::absolute(path));
-	if (iter != _editors.end()) {
-		_shell.close_window(iter->second.window);
-		_editors.erase(iter);
+void Ozette::close_file(Editor::View &view) {
+	for (auto iter = _editors.begin(); iter != _editors.end(); ++iter) {
+		if (iter->view == &view) {
+			_shell.close_window(iter->window);
+			_editors.erase(iter);
+			return;
+		}
 	}
 }
 
@@ -142,13 +135,20 @@ void Ozette::exec(std::string command) {
 	Console::View::exec(command, "sh", argv, _shell);
 }
 
+Ozette::editor Ozette::find_editor(std::string path) {
+	for (auto edrec: _editors) {
+		if (Path::same_file(path, edrec.view->target_path())) return edrec;
+	}
+	return {};
+}
+
 Ozette::editor Ozette::open_editor(std::string path) {
 	// If we already have this file open, bring it forward.
 	path = Path::absolute(path);
-	auto existing = _editors.find(path);
-	if (existing != _editors.end()) {
-		_shell.make_active(existing->second.window);
-		return existing->second;
+	auto existing = find_editor(path);
+	if (existing.view) {
+		_shell.make_active(existing.window);
+		return existing;
 	}
 	// We don't have an editor for this file, so we should create one.
 	editor edrec = {};
@@ -162,7 +162,7 @@ Ozette::editor Ozette::open_editor(std::string path) {
 	}
 	std::unique_ptr<UI::View> edptr(edrec.view);
 	edrec.window = _shell.open_window(std::move(edptr));
-	_editors[path] = edrec;
+	_editors.push_back(edrec);
 	return edrec;
 }
 
@@ -204,8 +204,8 @@ void Ozette::save_session() {
 		// Record the list of files currently being edited.
 		std::vector<std::string> files;
 		files.reserve(_editors.size());
-		for (auto wpair: _editors) {
-			files.push_back(wpair.first);
+		for (auto edrec: _editors) {
+			files.push_back(edrec.view->target_path());
 		}
 		cache_write(CacheKey::kSessionState, files);
 	}
@@ -235,10 +235,10 @@ void Ozette::load_session() {
 
 void Ozette::quit() {
 	// Are there any open editors with unsaved changes?
-	std::vector<std::pair<std::string, editor>> modified;
-	for (auto wpair: _editors) {
-		if (wpair.second.view->is_modified()) {
-			modified.push_back(wpair);
+	std::vector<editor> modified;
+	for (auto edrec: _editors) {
+		if (edrec.view->is_modified()) {
+			modified.push_back(edrec);
 		}
 	}
 	save_session();
@@ -250,16 +250,16 @@ void Ozette::quit() {
 	// Ask the user if they want to save or abandon the modified files.
 	Dialog::Confirmation dialog;
 	dialog.text = "You have modified files. Save changes before closing?";
-	for (auto wpair: modified) {
-		dialog.supplement.push_back(Path::display(wpair.first));
+	for (auto edrec: modified) {
+		dialog.supplement.push_back(Path::display(edrec.view->target_path()));
 	}
 	dialog.yes = [this](UI::Frame &ctx) {
 		if (save_all()) _shell.close_all();
 	};
 	dialog.no = [this, modified](UI::Frame &ctx) {
 		// The modifications are unimportant: just close the files.
-		for (auto wpair: modified) {
-			close_file(wpair.first);
+		for (auto edrec: modified) {
+			close_file(*edrec.view);
 		}
 		_shell.close_all();
 	};
@@ -320,16 +320,11 @@ void Ozette::new_file() {
 	// Is one of our editors the active window? If so, ask for the target path
 	// for its document and use that as the default location for the new file.
 	std::string path = _current_dir;
-	for (auto wpair: _editors) {
-		if (wpair.second.window == _shell.active()) {
-			if (!wpair.first.empty()) {
-				path = Path::absolute(wpair.first);
-				size_t trunc = path.find_last_of('/');
-				if (trunc == std::string::npos) {
-					trunc = 0;
-				}
-				path.resize(trunc);
-			}
+	for (auto edrec: _editors) {
+		if (edrec.window == _shell.active()) {
+			path = edrec.view->target_path();
+			path.resize(path.find_last_of('/'));
+			if (path.empty()) path = "/";
 			break;
 		}
 	}
@@ -337,24 +332,14 @@ void Ozette::new_file() {
 	// and change its location if they wish.
 	Dialog::Form dialog;
 	dialog.fields = {
-		{"New File", Path::display(path) + "/", &Path::complete_file}
+		{"New File", Path::display(path) + (path == "/"? "": "/"), &Path::complete_file}
 	};
 	dialog.commit = [this](UI::Frame &ctx, Dialog::Form::Result &result) {
-		std::string path = Path::absolute(result.selected_value);
-		if (path.empty()) {
+		if (result.selected_value.empty()) {
 			ctx.show_result("Cancelled");
 			return;
 		}
-		editor edrec;
-		try {
-			edrec.view = new Editor::View(path);
-		} catch (const std::runtime_error &e) {
-			ctx.show_result(e.what());
-			return;
-		}
-		std::unique_ptr<UI::View> edptr(edrec.view);
-		edrec.window = _shell.open_window(std::move(edptr));
-		_editors[path] = edrec;
+		open_editor(result.selected_value);
 	};
 	dialog.show(*_shell.active());
 }
@@ -392,8 +377,7 @@ void Ozette::build() {
 }
 
 bool Ozette::save_all() {
-	for (auto &edit_pair: _editors) {
-		auto &editor = edit_pair.second;
+	for (auto editor: _editors) {
 		if (editor.view->save(*editor.window) != Editor::View::SaveResult::Saved) {
 			if (_shell.active() != editor.window) _shell.make_active(editor.window);
 			return false;

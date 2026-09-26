@@ -34,10 +34,10 @@ Editor::View::View():
 }
 
 Editor::View::View(std::string targetpath):
-		_targetpath(targetpath),
-		_doc(targetpath),
-		_syntax(Syntax::lookup(targetpath)) {
-	_config.load(targetpath);
+		_targetpath(Path::absolute(targetpath)),
+		_doc(_targetpath),
+		_syntax(Syntax::lookup(_targetpath)) {
+	_config.load(_targetpath);
 }
 
 void Editor::View::activate(UI::Frame &ctx) {
@@ -327,7 +327,7 @@ void Editor::View::ctl_paste(UI::Frame &ctx) {
 void Editor::View::ctl_close(UI::Frame &ctx) {
 	if (!_doc.modified()) {
 		// no formality needed, we're done
-		ctx.app().close_file(_targetpath);
+		ctx.app().close_file(*this);
 		return;
 	}
 	// ask the user if they want to save first
@@ -335,7 +335,7 @@ void Editor::View::ctl_close(UI::Frame &ctx) {
 	dialog.text = "You have modified this file. Save changes before closing?";
 	dialog.yes = [this](UI::Frame &ctx) {
 		auto close = [this](UI::Frame &ctx) {
-			ctx.app().close_file(_targetpath);
+			ctx.app().close_file(*this);
 		};
 		if (_targetpath.empty()) {
 			ctl_save_as(ctx, close);
@@ -345,7 +345,7 @@ void Editor::View::ctl_close(UI::Frame &ctx) {
 	};
 	dialog.no = [this](UI::Frame &ctx) {
 		// just close it
-		ctx.app().close_file(_targetpath);
+		ctx.app().close_file(*this);
 	};
 	dialog.show(ctx);
 }
@@ -759,7 +759,6 @@ Editor::View::SaveResult Editor::View::write(UI::Frame &ctx, std::string dest,
 	try {
 		_doc.Write(dest, overwrite);
 		if (dest != _targetpath) {
-			ctx.app().rename_file(_targetpath, dest);
 			_targetpath = dest;
 			_config.load(_targetpath);
 			ctx.set_title(Path::display(dest));
