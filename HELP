@@ -26,7 +26,7 @@ back out toward the root of the working directory with the left arrow.
 
 Browser commands:
     ^O - Open - open a file in an editor window
-    ^N - New - ask for path and name, then open a new, empty editor
+    ^N - New - ask for path and name, then open an editor
     ^D - Directory - change the current working directory
     ^E - Execute - run some command and log output to the console
     ^F - Find - search for text across all files in the directory
@@ -49,6 +49,10 @@ or end of the current line.
 Cut, Copy, and Paste apply to a single clipboard which is shared across all
 editors.
 
+Open and New bring an existing editor forward when the file is already open,
+including through symbolic or hard links. New loads an existing file or starts
+an empty buffer for a missing file. Changing directories does not redirect saves.
+
 Undo groups consecutive typing or deletion until you move the cursor or switch
 windows. Replacements, indentation, line splitting (including automatic
 indentation), Cut, and Paste each undo as a single command.
@@ -58,7 +62,10 @@ redo branch. Returning to the last saved history position clears Modified.
 
 Saving preserves existing line endings and the presence or absence of a final
 newline. If the file changed on disk, you can overwrite it, reload it, or cancel.
-Reload asks before discarding your edits. Save As confirms existing destinations.
+Reload asks before discarding your edits. Save As confirms existing closed files
+and refuses destinations held by another editor, even if it has no unsaved edits.
+Close that editor first or choose another destination. A failed or cancelled
+Save As keeps the original target.
 Symlinks are preserved; files with multiple hard links require a separate copy.
 
 Build and Quit stop if a save fails or needs an answer. Resolve the problem or
