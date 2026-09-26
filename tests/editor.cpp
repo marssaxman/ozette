@@ -351,3 +351,23 @@ TEST_CASE("successive replacements undo separately, including empty replacements
 	view.process(frame, Control::Redo);
 	check_text(view, frame, replacement + " " + replacement);
 }
+
+TEST_CASE("a refused save preserves the target and unsaved edits") {
+	TestScreen screen;
+	TestFrame frame;
+	TempDir dir;
+	dir.write("old");
+	Editor::View view(dir.file());
+	view.process(frame, 'x');
+	frame.controller.allow_save = false;
+	CHECK(view.save(frame) == SaveResult::Failed);
+	CHECK_FALSE(frame.dialog);
+	CHECK(frame.result.find("File already open") != std::string::npos);
+	CHECK(view.is_modified());
+	CHECK(view.target_path() == dir.file());
+	CHECK(dir.read() == "old");
+	view.process(frame, Control::Close);
+	frame.answer('y');
+	CHECK(frame.controller.closed == nullptr);
+	CHECK(view.is_modified());
+}

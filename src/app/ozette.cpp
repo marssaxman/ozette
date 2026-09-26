@@ -74,6 +74,10 @@ void Ozette::edit_file(std::string path) {
 	}
 }
 
+bool Ozette::can_save_file(const Editor::View &view, std::string path) {
+	return !find_editor(path, &view).view;
+}
+
 void Ozette::close_file(Editor::View &view) {
 	for (auto iter = _editors.begin(); iter != _editors.end(); ++iter) {
 		if (iter->view == &view) {
@@ -135,9 +139,11 @@ void Ozette::exec(std::string command) {
 	Console::View::exec(command, "sh", argv, _shell);
 }
 
-Ozette::editor Ozette::find_editor(std::string path) {
+Ozette::editor Ozette::find_editor(std::string path, const Editor::View *except) {
 	for (auto edrec: _editors) {
-		if (Path::same_file(path, edrec.view->target_path())) return edrec;
+		if (edrec.view != except && Path::same_file(path, edrec.view->target_path())) {
+			return edrec;
+		}
 	}
 	return {};
 }

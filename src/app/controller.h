@@ -30,6 +30,7 @@ public:
 	virtual ~Controller() = default;
 	virtual void change_dir(std::string path) = 0;
 	virtual void edit_file(std::string path) = 0;
+	virtual bool can_save_file(const Editor::View &view, std::string path) = 0;
 	virtual void close_file(Editor::View &view) = 0;
 	virtual void find_in_file(std::string path, size_t index) = 0;
 	virtual void begin_search() = 0;
@@ -47,4 +48,3 @@ extern const std::string kSearchSpec;
 } // namespace CacheKey
 
 #endif //APP_CONTROLLER_H
-

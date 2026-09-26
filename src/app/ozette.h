@@ -30,6 +30,7 @@ public:
 	Ozette();
 	virtual void change_dir(std::string path) override;
 	virtual void edit_file(std::string path) override;
+	virtual bool can_save_file(const Editor::View &view, std::string path) override;
 	virtual void close_file(Editor::View &view) override;
 	virtual void find_in_file(std::string path, Editor::line_t index) override;
 	virtual void set_clipboard(std::string text) override;
@@ -55,7 +56,7 @@ private:
 	bool save_all();
 	int fix_control_quirks(int ch);
 	void exec(std::string command);
-	editor find_editor(std::string path);
+	editor find_editor(std::string path, const Editor::View *except = nullptr);
 	editor open_editor(std::string path);
 	void save_session();
 	void load_session();

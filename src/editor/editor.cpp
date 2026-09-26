@@ -756,6 +756,10 @@ Editor::location_t Editor::View::page_down() {
 Editor::View::SaveResult Editor::View::write(UI::Frame &ctx, std::string dest,
 		bool overwrite, std::function<void(UI::Frame&)> saved) {
 	_doc.commit();
+	if (!ctx.app().can_save_file(*this, dest)) {
+		ctx.show_result("File already open: " + Path::display(dest));
+		return SaveResult::Failed;
+	}
 	try {
 		_doc.Write(dest, overwrite);
 		if (dest != _targetpath) {

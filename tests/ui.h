@@ -44,6 +44,7 @@ struct TestScreen {
 struct TestController : Controller {
 	void change_dir(std::string) override {}
 	void edit_file(std::string) override {}
+	bool can_save_file(const Editor::View &, std::string) override { return allow_save; }
 	void close_file(Editor::View &view) override { closed = &view; }
 	void find_in_file(std::string, size_t) override {}
 	void begin_search() override {}
@@ -53,6 +54,7 @@ struct TestController : Controller {
 	void cache_read(std::string, std::vector<std::string> &) override {}
 	void cache_write(std::string, const std::vector<std::string> &) override {}
 	Editor::View *closed = nullptr;
+	bool allow_save = true;
 	std::string clipboard;
 };
 

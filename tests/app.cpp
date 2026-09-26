@@ -279,3 +279,64 @@ TEST_CASE("Save As releases the old target for a separate editor") {
 	CHECK(dir.read() == "yold");
 	CHECK(dir.read("copy") == "xold");
 }
+
+TEST_CASE("Save As refuses another editor's target") {
+	TempDir dir;
+	dir.write("old");
+	bool existing = true, modified = true;
+	SUBCASE("modified file") {}
+	SUBCASE("unmodified file") { modified = false; }
+	SUBCASE("new file") { existing = false; }
+	if (existing) dir.write("other", "other");
+	std::vector<int> keys;
+	if (modified) keys.push_back('y');
+	keys.insert(keys.end(), {Control::LeftArrow, 'x'});
+	enter_path(keys, Control::SaveAs, "other");
+	keys.insert(keys.end(), {'z', Control::Close, 'y', 'w', Control::Close, 'y'});
+	run_app(dir, keys, [&](TestApp &app) {
+		app.edit_file("file");
+		app.edit_file("other");
+	});
+	CHECK(dir.read() == "xzold");
+	CHECK(dir.read("other") == (modified? "yw": "w") + std::string(existing? "other": ""));
+}
+
+TEST_CASE("Save As detects open destinations through aliases") {
+	TempDir dir;
+	dir.write("old");
+	dir.write("other", "other");
+	SUBCASE("symbolic link") {
+		REQUIRE(symlink("other", dir.file("alias").c_str()) == 0);
+	}
+	SUBCASE("hard link") {
+		REQUIRE(link(dir.file("other").c_str(), dir.file("alias").c_str()) == 0);
+	}
+	std::vector<int> keys = {'y', Control::LeftArrow, 'x'};
+	enter_path(keys, Control::SaveAs, "alias");
+	keys.insert(keys.end(), {'z', Control::Close, 'y'});
+	save_copy(keys);
+	keys.push_back(Control::Close);
+	run_app(dir, keys, [&](TestApp &app) {
+		app.edit_file("file");
+		app.edit_file("other");
+	});
+	CHECK(dir.read() == "xzold");
+	CHECK(dir.read("other") == "other");
+	CHECK(dir.read("alias") == "other");
+	CHECK(dir.read("copy") == "yother");
+}
+
+TEST_CASE("Save As detects missing open destinations through directory aliases") {
+	TempDir dir;
+	dir.write("old");
+	REQUIRE(symlink(".", dir.file("directory").c_str()) == 0);
+	std::vector<int> keys = {'y', Control::LeftArrow, 'x'};
+	enter_path(keys, Control::SaveAs, "directory/new");
+	keys.insert(keys.end(), {'z', Control::Quit, 'y'});
+	run_app(dir, keys, [&](TestApp &app) {
+		app.edit_file("file");
+		app.edit_file("new");
+	});
+	CHECK(dir.read() == "xzold");
+	CHECK(dir.read("new") == "y");
+}
