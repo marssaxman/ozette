@@ -71,6 +71,10 @@ Symlinks are preserved; files with multiple hard links require a separate copy.
 Build and Quit stop if a save fails or needs an answer. Resolve the problem or
 answer the dialog, then invoke Build or Quit again.
 
+EditorConfig support is limited to indent_style and indent_size, with tab_width
+used to resolve tab indentation. Tabs and indentation share one width; defaults
+are tabs and four columns.
+
 Editor commands:
     ^X - Cut - place selected text on the clipboard, then delete
     ^C - Copy - place selected text on the clipboard

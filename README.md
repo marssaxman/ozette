@@ -13,6 +13,9 @@ output in a new tab. The editor offers syntax highlighting for C, C++, Rust,
 Ruby, Python, Javascript, Go, and shell scripts, plus protobufs, Dockerfiles,
 makefiles, and LLVM/MLIR tablegen files.
 
+A small subset of EditorConfig controls indentation. The built-in help lists
+supported properties.
+
 ----
 
 Ozette is an opinionated tool; I wrote it for my own use, and it is tailored to
