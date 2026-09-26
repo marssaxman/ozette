@@ -25,8 +25,10 @@
 #include "editor/changelist.h"
 #include "editor/file.h"
 
-// A document breaks a text buffer into lines, then maps those lines onto an
-// infinite plane of equally sized character cells.
+// A document contains at least one line, with one separator between each pair
+// of lines. Empty files have one empty line. Locations use byte offsets, including
+// the position just after a line's last byte; editing may address individual bytes.
+// Operations accepting locations clamp them to the document's bounds.
 namespace Editor {
 class Document {
 public:
@@ -63,7 +65,9 @@ public:
 	location_t end(line_t index);
 	location_t end(location_t loc) { return end(loc.line); }
 	// Which is the last valid line index in the document?
-	line_t maxline() const { return _maxline; }
+	line_t maxline() const { return _lines.size() - 1; }
+	// Clamp both dimensions of a byte location to the document's bounds.
+	location_t clamp(location_t loc) const;
 
 	// Where is the character which follows or precedes this one?
 	location_t next_char(location_t loc);
@@ -71,9 +75,10 @@ public:
 	// Where is the next occurrence of the specified string?
 	Range find(std::string text, location_t begin);
 
-	// Get the raw text of the indexed source line.
+	// Get the raw text of the indexed source line, or blank text past the last line.
 	const std::string &line(line_t index) const;
-	// Get a specific codepoint.
+	// Get a codepoint, U+FFFD for an invalid byte, or zero at end of line.
+	// Navigation consumes valid UTF-8 sequences together and invalid bytes singly.
 	char32_t codepoint(location_t) const;
 	// Retrieve the text within the range as a contiguous string.
 	std::string text(const Range &span) const;
@@ -96,18 +101,13 @@ private:
 	std::string substr_from_home(const location_t &loc);
 	void update_line(line_t index, std::string text);
 	void insert_line(line_t index, std::string text);
-	void push_to_line(line_t index, std::string prefix);
 	void append_to_line(line_t index, std::string suffix);
-	line_t append_line(std::string text);
-	void sanitize(location_t *loc);
-	location_t sanitize(const location_t &loc);
 
 	std::string _blank;
 	std::vector<std::string> _lines = {""};
 	std::vector<std::string> _endings;
 	std::string _newline = "\n";
 	File _file;
-	line_t _maxline = 0;	// ubound, not size
 
 	// is the user allowed to make changes in this document?
 	bool _read_only = false;

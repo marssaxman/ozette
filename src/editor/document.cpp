@@ -19,6 +19,38 @@
 #include <sstream>
 #include <assert.h>
 
+namespace {
+struct character {
+	char32_t value;
+	size_t length;
+};
+
+character decode(const std::string &text, size_t offset) {
+	if (offset >= text.size()) return {0, 0};
+	unsigned char lead = text[offset];
+	if (lead < 0x80) return {lead, 1};
+	const character invalid = {0xFFFD, 1};
+	size_t length;
+	char32_t value, minimum;
+	if (lead >= 0xC2 && lead <= 0xDF) {
+		length = 2; value = lead & 0x1F; minimum = 0x80;
+	} else if (lead >= 0xE0 && lead <= 0xEF) {
+		length = 3; value = lead & 0x0F; minimum = 0x800;
+	} else if (lead >= 0xF0 && lead <= 0xF4) {
+		length = 4; value = lead & 0x07; minimum = 0x10000;
+	} else return invalid;
+	if (text.size() - offset < length) return invalid;
+	for (size_t i = 1; i < length; ++i) {
+		unsigned char byte = text[offset + i];
+		if ((byte & 0xC0) != 0x80) return invalid;
+		value = (value << 6) | (byte & 0x3F);
+	}
+	if (value < minimum || value > 0x10FFFF ||
+			(value >= 0xD800 && value <= 0xDFFF)) return invalid;
+	return {value, length};
+}
+} // namespace
+
 Editor::Document::Document(std::string path) {
 	std::string contents = _file.read(path);
 	_lines.clear();
@@ -32,7 +64,6 @@ Editor::Document::Document(std::string path) {
 		start = end + 1;
 	}
 	_lines.push_back(contents.substr(start));
-	_maxline = _lines.size() - 1;
 	if (!_endings.empty()) _newline = _endings.front();
 }
 
@@ -52,73 +83,59 @@ Editor::location_t Editor::Document::home() {
 }
 
 Editor::location_t Editor::Document::end() {
-	return end(_maxline);
+	return end(maxline());
 }
 
 Editor::location_t Editor::Document::home(line_t index) {
-	location_t loc = {std::min(index, _maxline), 0};
+	location_t loc = {std::min(index, maxline()), 0};
 	return loc;
 }
 
 Editor::location_t Editor::Document::end(line_t index) {
-	if (index > _maxline) index = _maxline;
+	if (index > maxline()) index = maxline();
 	assert(index < _lines.size());
 	location_t loc = {index, _lines[index].size()};
 	return loc;
 }
 
 Editor::location_t Editor::Document::next_char(location_t loc) {
+	loc = clamp(loc);
 	const std::string &text = _lines[loc.line];
 	if (loc.offset == text.size()) {
-		return (loc.line < _maxline)? home(loc.line + 1): end();
+		return (loc.line < maxline())? home(loc.line + 1): end();
 	}
-	// If this char begins a multibyte sequence, attempt to consume the number
-	// of continuation bytes which ought to follow it.
-	char ch = text[loc.offset++];
-	unsigned continuations = 0;
-	if (0xC0 == (0xE0 & ch)) continuations = 1;
-	if (0xE0 == (0xF0 & ch)) continuations = 2;
-	if (0xF0 == (0xF8 & ch)) continuations = 3;
-	if (0xF8 == (0xFC & ch)) continuations = 4;
-	if (0xFC == (0xFE & ch)) continuations = 5;
-	while (continuations-- && (0x80 == (text[loc.offset] & 0xC0))) {
-		loc.offset++;
-	}
+	loc.offset += decode(text, loc.offset).length;
 	return loc;
 }
 
 Editor::location_t Editor::Document::prev_char(location_t loc) {
-	if (0 == loc.offset) {
+	loc = clamp(loc);
+	if (loc.offset == 0) {
 		return (loc.line > 0)? end(loc.line - 1): home();
 	}
-	// If this byte is a continuation, scan backward until we find a byte which
-	// could be the beginning of a character sequence. If this continuation
-	// byte could feasibly serve as a member of that sequence, jump back to the
-	// beginning of the sequence; otherwise return it on its own, since it is
-	// an erroneous character encoding.
+	// Only a complete valid sequence ending here may consume multiple bytes.
+	// Looking back at most four bytes keeps malformed input bounded too.
 	const std::string &text = _lines[loc.line];
-	offset_t scan = --loc.offset;
-	while (0x80 == (text[scan] & 0xC0)) {
-		--scan;
+	for (size_t length = 2; length <= 4 && length <= loc.offset; ++length) {
+		if (decode(text, loc.offset - length).length == length) {
+			loc.offset -= length;
+			return loc;
+		}
 	}
-	char ch = text[scan];
-	switch (loc.offset - scan) {
-		case 1: if (0xC0 == (0xE0 & ch)) loc.offset = scan; break;
-		case 2: if (0xE0 == (0xF0 & ch)) loc.offset = scan; break;
-		case 3: if (0xF0 == (0xF8 & ch)) loc.offset = scan; break;
-	}
+	--loc.offset;
 	return loc;
 }
 
 Editor::Range Editor::Document::find(std::string needle, location_t loc) {
+	loc = clamp(loc);
 	do {
 		loc.offset = _lines[loc.line].find(needle, loc.offset);
 		if (loc.offset != std::string::npos) {
 			location_t match = {loc.line, loc.offset + needle.size()};
-			return Range(loc, sanitize(match));
+			return Range(loc, clamp(match));
 		}
 		loc.offset = 0;
-	} while (loc.line++ < _maxline);
+	} while (loc.line++ < maxline());
 	return Range(end(), end());
 }
 
@@ -127,52 +144,15 @@ const std::string &Editor::Document::line(line_t index) const {
 }
 
 char32_t Editor::Document::codepoint(location_t loc) const {
-	auto iter = _lines[loc.line].begin() + loc.offset;
-	char ch = *iter;
-	// we assume shorter sequences occur more frequently, and we'll do a quick
-	// exit for the most common case, which is a 7-bit ASCII character.
-	if (0 == (ch & 0x80)) {
-		return ch;
-	}
-	// Any byte with its high bit set must be part of a multi-byte sequence
-	// followed by some number of continuation bytes.
-	const char32_t replacement_character = 0xFFFD;
-	char32_t out = 0;
-	unsigned continuations = 0;
-	unsigned minimum = 0;
-	if ((ch & 0xE0) == 0xC0) { // two bytes
-		out = ch & 0x1F;
-		continuations = 1;
-		minimum = 0x80;
-	} else if ((ch & 0xF0) == 0xE0) { // three bytes
-		out = ch & 0x0F;
-		continuations = 2;
-		minimum = 0x800;
-	} else if ((ch & 0xF8) == 0xF0) { // four bytes
-		out = ch & 0x07;
-		continuations = 3;
-		minimum = 0x10000;
-	} else {
-		// all other leading bytes are illegal: it's either an overlong sequence
-		// (5 or 6 bytes) or it's an out-of-place continuation character.
-		return replacement_character;
-	}
-	// Look for the continuation characters we expect and decode the full
-	// character value.
-	while (continuations--) {
-		ch = *++iter;
-		// detect broken sequences with too few continuation bytes
-		if ((ch & 0xC0) != 0x80) return replacement_character;
-		out = (out << 6) | (ch & 0x3F);
-	}
-	// guard against overlong sequences and undefined characters
-	return (out >= minimum && out <= 0x10FFFF)? out: replacement_character;
+	loc = clamp(loc);
+	return decode(_lines[loc.line], loc.offset).value;
 }
 
 std::string Editor::Document::text(const Range &span) const {
 	std::stringstream out;
-	location_t loc = span.begin();
-	location_t end = span.end();
+	Range bounded(clamp(span.begin()), clamp(span.end()));
+	location_t loc = bounded.begin();
+	location_t end = bounded.end();
 	std::string chunk = substr_to_end(loc);
 	while (loc.line < end.line) {
 		out << chunk << '\n';
@@ -184,8 +164,7 @@ std::string Editor::Document::text(const Range &span) const {
 }
 
 Editor::location_t Editor::Document::erase(const Range &chars) {
-	if (_lines.empty()) return home();
-	Range span(sanitize(chars.begin()), sanitize(chars.end()));
+	Range span(clamp(chars.begin()), clamp(chars.end()));
 	if (span.empty()) return span.begin();
 	if (_read_only) return span.begin();
 	location_t begin = span.begin();
@@ -198,24 +177,16 @@ Editor::location_t Editor::Document::erase(const Range &chars) {
 	_endings.erase(_endings.begin() + begin.line, _endings.begin() + end.line);
 	auto beginter = _lines.begin();
 	_lines.erase(beginter + begin.line + 1, beginter + end.line + 1);
-	_maxline = _lines.size() - 1;
 	update_line(index, prefix + suffix);
 	return location_t(index, prefix.size());
 }
 
 Editor::location_t Editor::Document::insert(location_t begin, char ch) {
-	sanitize(&begin);
-	location_t loc = begin;
-	if (_read_only) return loc;
-	if (loc.line < _lines.size()) {
-		std::string text = _lines[loc.line];
-		text.insert(loc.offset, 1, ch);
-		update_line(loc.line, text);
-		loc.offset++;
-	} else {
-		loc.line = append_line(std::string(1, ch));
-		loc.offset = 1;
-	}
+	if (ch == '\n') return insert(begin, std::string(1, ch));
+	begin = clamp(begin);
+	if (_read_only) return begin;
+	_lines[begin.line].insert(begin.offset, 1, ch);
+	location_t loc(begin.line, begin.offset + 1);
 	_edits.insert(Range(begin, loc));
 	return loc;
 }
@@ -226,22 +197,15 @@ Editor::location_t Editor::Document::insert(location_t cur, std::string text) {
 
 Editor::location_t Editor::Document::insert(location_t cur, std::string text,
 		const std::vector<std::string> &endings) {
-	sanitize(&cur);
+	cur = clamp(cur);
 	location_t loc = cur;
 	if (text.empty()) return loc;
 	if (_read_only) return loc;
 
-	std::string suffix;
-	if (loc.line < _lines.size()) {
-		// Split this line apart around the insertion point. We will insert
-		// the new text in between these halves. We will temporarily delete
-		// the suffix from its line, since we're likely to be appending more
-		// text for a while, but we'll append the suffix back on at the end.
-		suffix = substr_to_end(loc);
-		update_line(loc.line, substr_from_home(loc));
-	} else {
-		loc.line = append_line(std::string());
-	}
+	// Insert between the two halves of the current line, restoring its suffix
+	// after the final inserted line.
+	std::string suffix = substr_to_end(loc);
+	update_line(loc.line, substr_from_home(loc));
 
 	// Search the text for linebreaks. Every time we find one, we'll
 	// cut all the chars from our search position to the linebreak and
@@ -271,8 +235,8 @@ Editor::location_t Editor::Document::insert(location_t cur, std::string text,
 }
 
 Editor::location_t Editor::Document::split(location_t loc) {
+	loc = clamp(loc);
 	if (_read_only) return loc;
-	sanitize(&loc);
 	Edit edit(*this);
 	location_t begin = loc;
 	std::string text = line(loc.line);
@@ -294,45 +258,20 @@ std::string Editor::Document::substr_to_end(const location_t &loc) const {
 }
 
 void Editor::Document::update_line(line_t index, std::string text) {
-	if (index < _lines.size()) {
-		_lines[index] = text;
-	} else {
-		_lines.emplace_back(text);
-	}
+	_lines[index] = std::move(text);
 }
 
 void Editor::Document::insert_line(line_t index, std::string text) {
 	_endings.insert(_endings.begin() + index - 1, _newline);
-	_lines.emplace(_lines.begin() + index, text);
-	_maxline = _lines.size() - 1;
-}
-
-Editor::line_t Editor::Document::append_line(std::string text) {
-	if (!_lines.empty()) _endings.push_back(_newline);
-	_maxline = _lines.size();
-	_lines.emplace_back(text);
-	return _maxline;
+	_lines.emplace(_lines.begin() + index, std::move(text));
 }
 
 void Editor::Document::append_to_line(line_t index, std::string suffix) {
-	update_line(index, _lines[index] + suffix);
+	_lines[index] += suffix;
 }
 
-void Editor::Document::push_to_line(line_t index, std::string prefix) {
-	update_line(index, prefix + _lines[index]);
-}
-
-Editor::location_t Editor::Document::sanitize(const location_t &loc) {
-	// Verify that this location refers to a real place.
-	// Fix it if either of its dimensions would be out-of-bounds.
-	line_t index = std::min(loc.line, _lines.size()-1);
-	offset_t offset = 0;
-	if (!_lines.empty()) {
-		offset = std::min(loc.offset, _lines[index].size());
-	}
-	return location_t(index, offset);
-}
-
-void Editor::Document::sanitize(location_t *loc) {
-	*loc = sanitize(*loc);
+Editor::location_t Editor::Document::clamp(location_t loc) const {
+	loc.line = std::min(loc.line, maxline());
+	loc.offset = std::min(loc.offset, _lines[loc.line].size());
+	return loc;
 }
