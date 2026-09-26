@@ -19,6 +19,7 @@
 #include <atomic>
 #include <fstream>
 #include <cstdlib>
+#include <limits>
 #include <stdexcept>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -164,6 +165,9 @@ Ozette::editor Ozette::open_editor(std::string path) {
 	if (existing.view) {
 		_shell.make_active(existing.window);
 		return existing;
+	}
+	if (_next_editor_id == std::numeric_limits<size_t>::max()) {
+		throw std::overflow_error("Editor IDs exhausted");
 	}
 	// We don't have an editor for this file, so we should create one.
 	editor edrec = {};
