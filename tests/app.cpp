@@ -341,6 +341,76 @@ TEST_CASE("Save As detects missing open destinations through directory aliases")
 	CHECK(dir.read("new") == "y");
 }
 
+TEST_CASE("Save As rechecks the registry after overwrite confirmation") {
+	TempDir dir;
+	dir.write("old");
+	dir.write("other", "other");
+	std::vector<int> keys = {'x'};
+	enter_path(keys, Control::SaveAs, "other");
+	keys.push_back(Control::UpArrow);
+	enter_path(keys, Control::Open, "other");
+	keys.insert(keys.end(), {'y', Control::LeftArrow, 'y', 'z',
+		Control::Close, 'y', Control::Close, 'y', Control::Quit});
+	run_app(dir, keys, [&](TestApp &app) { app.edit_file("file"); });
+	CHECK(dir.read() == "xzold");
+	CHECK(dir.read("other") == "yother");
+}
+
+TEST_CASE("cancelled and failed Save As leave the original editor registered") {
+	TempDir dir;
+	dir.write("old");
+	dir.write("other", "other");
+	std::vector<int> keys = {'x'};
+	SUBCASE("cancelled overwrite") {
+		enter_path(keys, Control::SaveAs, "other");
+		keys.push_back(Control::Escape);
+	}
+	SUBCASE("failed write") { enter_path(keys, Control::SaveAs, "missing/copy"); }
+	enter_path(keys, Control::Open, "file");
+	keys.insert(keys.end(), {'y', Control::Close, 'y'});
+	run_app(dir, keys, [&](TestApp &app) { app.edit_file("file"); });
+	CHECK(dir.read() == "xyold");
+	CHECK(dir.read("other") == "other");
+}
+
+TEST_CASE("Save As can adopt the editor's own symlink alias") {
+	TempDir dir;
+	dir.write("old");
+	REQUIRE(symlink("file", dir.file("alias").c_str()) == 0);
+	std::vector<int> keys = {'x'};
+	enter_path(keys, Control::SaveAs, "alias");
+	keys.push_back('y');
+	enter_path(keys, Control::Open, "file");
+	keys.insert(keys.end(), {'z', Control::Close, 'y'});
+	run_app(dir, keys, [&](TestApp &app) { app.edit_file("file"); });
+	CHECK(dir.read() == "xzold");
+	CHECK(dir.read("alias") == "xzold");
+	struct stat info;
+	REQUIRE(lstat(dir.file("alias").c_str(), &info) == 0);
+	CHECK(S_ISLNK(info.st_mode));
+}
+
+TEST_CASE("an atomic save keeps the editor reachable through file aliases") {
+	TempDir dir;
+	dir.write("old");
+	REQUIRE(symlink("file", dir.file("alias").c_str()) == 0);
+	std::vector<int> keys = {'x', Control::Save};
+	enter_path(keys, Control::Open, "alias");
+	keys.insert(keys.end(), {'y', Control::Quit, 'y'});
+	run_app(dir, keys, [&](TestApp &app) { app.edit_file("file"); });
+	CHECK(dir.read() == "xyold");
+}
+
+TEST_CASE("closing remains possible after the target disappears") {
+	TempDir dir;
+	dir.write("old");
+	run_app(dir, {'x', Control::Close, 'n'}, [&](TestApp &app) {
+		app.edit_file("file");
+		if (unlink(dir.file().c_str())) throw std::runtime_error("unlink failed");
+	});
+	CHECK(access(dir.file().c_str(), F_OK) != 0);
+}
+
 TEST_CASE("a pending Quit does not discard edits in a reopened editor") {
 	TempDir dir;
 	dir.write("old", "a");
@@ -356,4 +426,24 @@ TEST_CASE("a pending Quit does not discard edits in a reopened editor") {
 	});
 	CHECK(dir.read("a") == "old");
 	CHECK(dir.read("b") == "zother");
+}
+
+TEST_CASE("saving rechecks aliases changed after opening") {
+	TempDir dir;
+	dir.write("old");
+	dir.write("other", "other");
+	std::vector<int> keys = {'y', Control::LeftArrow, 'x', Control::Save};
+	save_copy(keys);
+	keys.insert(keys.end(), {Control::Close, Control::Close, 'n'});
+	run_app(dir, keys, [&](TestApp &app) {
+		app.edit_file("file");
+		app.edit_file("other");
+		if (unlink(dir.file("other").c_str()) ||
+				symlink("file", dir.file("other").c_str())) {
+			throw std::runtime_error("symlink failed");
+		}
+	});
+	CHECK(dir.read() == "old");
+	CHECK(dir.read("other") == "old");
+	CHECK(dir.read("copy") == "xold");
 }
