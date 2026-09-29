@@ -15,12 +15,13 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#ifndef EDITOR_UTF8_H
-#define EDITOR_UTF8_H
+#ifndef TEXT_UTF8_H
+#define TEXT_UTF8_H
 
+#include <cstddef>
 #include <string>
 
-namespace Editor { namespace UTF8 {
+namespace Text { namespace UTF8 {
 struct Character {
 	char32_t value;
 	size_t length;
@@ -29,6 +30,6 @@ struct Character {
 // Invalid encodings consume one byte and report U+FFFD, preserving byte offsets.
 Character decode(const std::string &text, size_t offset);
 size_t previous(const std::string &text, size_t offset);
-} } // namespace Editor::UTF8
+} } // namespace Text::UTF8
 
-#endif // EDITOR_UTF8_H
+#endif // TEXT_UTF8_H

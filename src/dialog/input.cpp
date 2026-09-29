@@ -19,7 +19,7 @@
 #include <climits>
 #include "dialog/input.h"
 #include "editor/layout.h"
-#include "editor/utf8.h"
+#include "text/utf8.h"
 #include "ui/text.h"
 
 Dialog::Input::Input(std::string value, Completer completer, Updater updater):
@@ -139,14 +139,14 @@ void Dialog::Input::arrow_right(UI::Frame &ctx) {
 
 void Dialog::Input::select_left(UI::Frame &ctx) {
 	if (_cursor_pos > 0) {
-		_cursor_pos = Editor::UTF8::previous(_value, _cursor_pos);
+		_cursor_pos = Text::UTF8::previous(_value, _cursor_pos);
 		ctx.repaint();
 	}
 }
 
 void Dialog::Input::select_right(UI::Frame &ctx) {
 	if (_cursor_pos < _value.size()) {
-		_cursor_pos += Editor::UTF8::decode(_value, _cursor_pos).length;
+		_cursor_pos += Text::UTF8::decode(_value, _cursor_pos).length;
 		ctx.repaint();
 	}
 }

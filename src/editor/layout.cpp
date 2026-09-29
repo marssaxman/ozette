@@ -16,7 +16,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include "editor/layout.h"
-#include "editor/utf8.h"
+#include "text/utf8.h"
 #include <algorithm>
 #include <limits>
 #include <wchar.h>
@@ -26,7 +26,7 @@ Editor::LineLayout::LineLayout(const std::string &text, unsigned tab_width):
 	tab_width = std::max(1U, tab_width);
 	bool can_combine = false;
 	for (offset_t offset = 0; offset < text.size();) {
-		auto decoded = UTF8::decode(text, offset);
+		auto decoded = Text::UTF8::decode(text, offset);
 		char32_t value = decoded.value;
 		column_t width;
 		if (value == '\t') {

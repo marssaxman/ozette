@@ -15,10 +15,10 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#include "editor/utf8.h"
+#include "text/utf8.h"
 #include <algorithm>
 
-namespace Editor { namespace UTF8 {
+namespace Text { namespace UTF8 {
 Character decode(const std::string &text, size_t offset) {
 	if (offset >= text.size()) return {0, 0};
 	unsigned char lead = text[offset];
@@ -53,4 +53,4 @@ size_t previous(const std::string &text, size_t offset) {
 	}
 	return offset - 1;
 }
-} } // namespace Editor::UTF8
+} } // namespace Text::UTF8

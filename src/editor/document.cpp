@@ -16,7 +16,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include "editor/document.h"
-#include "editor/utf8.h"
+#include "text/utf8.h"
 #include <sstream>
 #include <assert.h>
 
@@ -73,7 +73,7 @@ Editor::location_t Editor::Document::next_char(location_t loc) {
 	if (loc.offset == text.size()) {
 		return (loc.line < maxline())? home(loc.line + 1): end();
 	}
-	loc.offset += UTF8::decode(text, loc.offset).length;
+	loc.offset += Text::UTF8::decode(text, loc.offset).length;
 	return loc;
 }
 
@@ -83,7 +83,7 @@ Editor::location_t Editor::Document::prev_char(location_t loc) {
 		return (loc.line > 0)? end(loc.line - 1): home();
 	}
 	const std::string &text = _lines[loc.line];
-	loc.offset = UTF8::previous(text, loc.offset);
+	loc.offset = Text::UTF8::previous(text, loc.offset);
 	return loc;
 }
 
@@ -106,7 +106,7 @@ const std::string &Editor::Document::line(line_t index) const {
 
 char32_t Editor::Document::codepoint(location_t loc) const {
 	loc = clamp(loc);
-	return UTF8::decode(_lines[loc.line], loc.offset).value;
+	return Text::UTF8::decode(_lines[loc.line], loc.offset).value;
 }
 
 std::string Editor::Document::text(const Range &span) const {
