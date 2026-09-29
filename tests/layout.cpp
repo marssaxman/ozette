@@ -84,3 +84,13 @@ TEST_CASE("empty layouts and a zero tab width remain bounded") {
 	CHECK(tab.offset(0) == 0);
 	CHECK(tab.offset(1) == 1);
 }
+
+TEST_CASE("layouts use bounded replacements when the locale cannot display Unicode") {
+	TestLocale locale;
+	REQUIRE(setlocale(LC_CTYPE, "C") != nullptr);
+	Editor::LineLayout layout("\xc3\xa9\xe7\x95\x8c", 4);
+	CHECK(layout.width() == 2);
+	CHECK(layout.characters()[0].value == '?');
+	CHECK(layout.characters()[1].value == '?');
+	CHECK(layout.offset(1) == 2);
+}

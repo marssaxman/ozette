@@ -255,3 +255,23 @@ TEST_CASE("painting reveals the cursor after resizing to a narrow viewport") {
 		check_cursor(dest.window, 0, width > 13? 13: std::max(0, width - 4));
 	}
 }
+
+TEST_CASE("long combining sequences stay within the terminal cell capacity") {
+	TestLocale locale;
+	TestScreen screen;
+	TestFrame frame;
+	TempDir dir;
+	TestWindow dest(8);
+	std::string text = "abcdefge";
+	for (unsigned i = 0; i < 32; ++i) text += "\xcc\x81";
+	dir.write(text);
+	TestEditor view(dir.file());
+	view.draw(dest.window);
+	CHECK(cell(dest.window, 0, 7).front() == L'e');
+	CHECK(cell(dest.window, 0, 7).size() <= CCHARW_MAX);
+	CHECK(cell(dest.window, 1, 0) == L" ");
+	view.process(frame, KEY_END);
+	view.process(frame, 'X');
+	REQUIRE(view.save(frame) == Editor::View::SaveResult::Saved);
+	CHECK(dir.read() == text + "X");
+}
