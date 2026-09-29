@@ -25,6 +25,7 @@
 #include "dialog/confirmation.h"
 #include "dialog/form.h"
 #include "editor/editor.h"
+#include "editor/layout.h"
 #include "ui/colors.h"
 #include "search/dialog.h"
 #include <climits>
@@ -685,44 +686,22 @@ void Editor::View::line_frame_selection() {
 }
 
 Editor::column_t Editor::View::column(location_t loc) {
-	// On which screen column does the character at this location appear?
-	column_t col = 0;
-	for (location_t i = _doc.home(loc); i < loc; i = _doc.next_char(i)) {
-		++col;
-		char32_t ch = _doc.codepoint(i);
-		if (ch == '\t') {
-			col += (_config.indent_size() - col % _config.indent_size());
-		}
-	}
-	return col;
+	loc = _doc.clamp(loc);
+	return LineLayout(_doc.line(loc.line), _config.indent_size()).column(loc.offset);
 }
 
 Editor::location_t Editor::View::arrow_up() {
-	// Find the corresponding location on the line above the cursor.
-	// We are concerned about columns, not characters, so we must consider
-	// indentation.
-	column_t h = column(_cursor);
-	location_t dest = _doc.prev_char(_doc.home(_cursor));
-	if (dest.line != _cursor.line) {
-		while (column(dest) > h) {
-			dest = _doc.prev_char(dest);
-		}
-	}
-	return dest;
+	if (_cursor.line == 0) return _doc.home();
+	line_t line = _cursor.line - 1;
+	LineLayout layout(_doc.line(line), _config.indent_size());
+	return {line, layout.offset(column(_cursor))};
 }
 
 Editor::location_t Editor::View::arrow_down() {
-	// Find the corresponding location on the line following the cursor,
-	// taking into account indentation width and the fact that the next line
-	// may not be as long as the current one.
-	column_t h = column(_cursor);
-	location_t dest = _doc.end(_doc.next_char(_doc.end(_cursor)));
-	if (dest.line != _cursor.line) {
-		while (column(dest) > h) {
-			dest = _doc.prev_char(dest);
-		}
-	}
-	return dest;
+	if (_cursor.line == _doc.maxline()) return _doc.end();
+	line_t line = _cursor.line + 1;
+	LineLayout layout(_doc.line(line), _config.indent_size());
+	return {line, layout.offset(column(_cursor))};
 }
 
 Editor::location_t Editor::View::arrow_left() {
