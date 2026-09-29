@@ -27,8 +27,10 @@
 #include "editor/editor.h"
 #include "editor/layout.h"
 #include "ui/colors.h"
+#include "ui/text.h"
 #include "search/dialog.h"
 #include <climits>
+#include <limits>
 
 Editor::View::View():
 		_syntax(Syntax::lookup("")) {
@@ -58,6 +60,7 @@ void Editor::View::deactivate(UI::Frame &ctx) {
 
 void Editor::View::paint_into(WINDOW *dest, State state) {
 	update_dimensions(dest);
+	reveal_cursor();
 	if (state != _last_state || dest != _last_dest) {
 		_update.all();
 		_last_state = state;
@@ -72,7 +75,8 @@ void Editor::View::paint_into(WINDOW *dest, State state) {
 	cpos.v -= std::min(cpos.v, _scroll.v);
 	cpos.h -= std::min(cpos.h, _scroll.h);
 	wmove(dest, cpos.v, cpos.h);
-	bool show_cursor = (state == State::Focused) && _selection.empty();
+	bool show_cursor = state == State::Focused && _selection.empty() &&
+		cpos.v < _height && cpos.h < _width;
 	curs_set(show_cursor ? 1 : 0);
 	_update.reset();
 }
@@ -194,57 +198,21 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, State state) {
 	}
 
 	bool active = state != State::Inactive;
-	unsigned hoff = _scroll.h;
-	column_t h = 0;
-	unsigned width = _width + hoff;
-	size_t style_index = 0;
-	for (char ch: text) {
-		if (h == width) break;
-		if (active) {
-			wattrset(dest, style[style_index++]);
-		}
-		// If it's a normal character, just draw it. If it's a tab, draw a
-		// bullet, then add spaces up til the next tab stop.
-		if (ch != '\t') {
-			if (h >= hoff) waddch(dest, ch);
-			h++;
-		} else {
-			chtype bullet = ACS_BULLET;
-			do {
-				if (h >= hoff) waddch(dest, bullet);
-				h++;
-				bullet = ' ';
-			} while (h < width && 0 != h % _config.indent_size());
+	LineLayout layout(text, _config.indent_size());
+	LineLayout::Span selection;
+	if (active && !_selection.empty() && index >= _selection.begin().line &&
+			index <= _selection.end().line) {
+		offset_t begin = index == _selection.begin().line? _selection.begin().offset: 0;
+		offset_t end = index == _selection.end().line? _selection.end().offset: text.size();
+		selection = layout.span(begin, end);
+		if (index < _selection.end().line) {
+			if (begin == end) selection.begin = layout.column(begin);
+			selection.end = std::numeric_limits<column_t>::max();
 		}
 	}
-	wattrset(dest, UI::Colors::content(active));
-	if (h < width) {
-		wclrtoeol(dest);
-	}
-
-	if (!active) return;
-	if (_selection.empty()) return;
-	column_t selbegin = 0;
-	unsigned selcount = 0;
-	line_t begin_line = _selection.begin().line;
-	line_t end_line = _selection.end().line;
-	if (begin_line < index && end_line > index) {
-		selcount = _width;
-	} else if (begin_line < index && end_line == index) {
-		selcount = column(_selection.end());
-	} else if (begin_line == index && end_line > index) {
-		selbegin = column(_selection.begin());
-		selcount = _width - selbegin;
-	} else if (begin_line == index && end_line == index) {
-		selbegin = column(_selection.begin());
-		selcount = column(_selection.end()) - selbegin;
-	}
-	if (selcount > 0) {
-		// DisplayLine should probably be responsible for this, since setting
-		// A_REVERSE also clears A_ALTCHARSET, which leaves our tab bullets
-		// looking a little strange.
-		mvwchgat(dest, v, selbegin, selcount, A_REVERSE, 0, NULL);
-	}
+	if (!active) style.clear();
+	UI::paint_text(dest, v, 0, _width, layout, _scroll.h,
+		UI::Colors::content(active), style, selection);
 }
 
 void Editor::View::reveal_cursor() {
@@ -261,10 +229,10 @@ void Editor::View::reveal_cursor() {
 	// Try to keep the view scrolled left if possible, but if that would put the
 	// cursor offscreen, scroll right by the cursor position plus a few extra.
 	column_t col = column(_cursor);
-	if (col >= _width) {
+	if (_width && col >= _width) {
 		// The scroll increment is only coincidentally equal to the default
 		// indent size; this does not need to be configurable.
-		column_t newh = col + 4 - _width;
+		column_t newh = col - _width + std::min(4U, _width);
 		if (newh != _scroll.h) {
 			_scroll.h = newh;
 			_update.all();

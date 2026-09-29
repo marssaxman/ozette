@@ -1,7 +1,7 @@
 # ozette-specific settings
 EXECNAME:=ozette
 CCFLAGS:=-Werror -Wall -g
-LDFLAGS:=-lpanel -lncurses -lpthread -lstdc++
+LDFLAGS:=-lpanelw -lncursesw -lpthread -lstdc++
 
 # boilerplate rules
 SOURCES:=$(shell find src -name '*.c' -o -name '*.cpp')

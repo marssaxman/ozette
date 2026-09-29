@@ -29,11 +29,18 @@ public:
 		column_t column, width;
 		char32_t value;
 	};
+	struct Span {
+		Span(column_t a = 0, column_t b = 0): begin(a), end(b) {}
+		column_t begin, end;
+	};
 	LineLayout(const std::string &text, unsigned tab_width);
 	// Interior bytes map to their character's beginning. Columns inside a tab
 	// or wide character map to its beginning; equal columns skip combining marks.
 	column_t column(offset_t offset) const;
 	offset_t offset(column_t column) const;
+	// Highlight every cell touched by these bytes, including the base of a
+	// selected combining mark and any partially selected multibyte character.
+	Span span(offset_t begin, offset_t end) const;
 	column_t width() const { return _width; }
 	const std::vector<Character> &characters() const { return _characters; }
 private:

@@ -63,3 +63,15 @@ Editor::offset_t Editor::LineLayout::offset(column_t column) const {
 		[](column_t column, const Character &ch) { return column < ch.column; });
 	return found == _characters.begin()? 0: (--found)->begin;
 }
+
+Editor::LineLayout::Span Editor::LineLayout::span(offset_t begin, offset_t end) const {
+	if (begin >= end || begin >= _length) return {};
+	auto first = std::upper_bound(_characters.begin(), _characters.end(), begin,
+		[](offset_t offset, const Character &ch) { return offset < ch.end; });
+	auto last = std::lower_bound(_characters.begin(), _characters.end(), end,
+		[](const Character &ch, offset_t offset) { return ch.begin < offset; });
+	--last;
+	while (first != _characters.begin() && first->width == 0) --first;
+	while (last != _characters.begin() && last->width == 0) --last;
+	return {first->column, last->column + last->width};
+}
