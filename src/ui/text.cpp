@@ -19,8 +19,8 @@
 #include <algorithm>
 
 void UI::paint_text(WINDOW *dest, int v, int h, int width,
-		const Editor::LineLayout &layout, Editor::column_t scroll, int normal,
-		const std::vector<int> &styles, Editor::LineLayout::Span selection) {
+		const Text::LineLayout &layout, unsigned scroll, int normal,
+		const std::vector<int> &styles, Text::LineLayout::Span selection) {
 	if (width <= 0) return;
 	wattrset(dest, normal);
 	mvwhline(dest, v, h, ' ', width);

@@ -15,39 +15,40 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#ifndef EDITOR_LAYOUT_H
-#define EDITOR_LAYOUT_H
+#ifndef TEXT_LAYOUT_H
+#define TEXT_LAYOUT_H
 
+#include <cstddef>
+#include <string>
 #include <vector>
-#include "editor/coordinates.h"
 
-namespace Editor {
+namespace Text {
 class LineLayout {
 public:
 	struct Character {
-		offset_t begin, end;
-		column_t column, width;
+		size_t begin, end;
+		unsigned column, width;
 		char32_t value;
 	};
 	struct Span {
-		Span(column_t a = 0, column_t b = 0): begin(a), end(b) {}
-		column_t begin, end;
+		Span(unsigned a = 0, unsigned b = 0): begin(a), end(b) {}
+		unsigned begin, end;
 	};
 	LineLayout(const std::string &text, unsigned tab_width);
 	// Interior bytes map to their character's beginning. Columns inside a tab
 	// or wide character map to its beginning; equal columns skip combining marks.
-	column_t column(offset_t offset) const;
-	offset_t offset(column_t column) const;
+	unsigned column(size_t offset) const;
+	size_t offset(unsigned column) const;
 	// Highlight every cell touched by these bytes, including the base of a
 	// selected combining mark and any partially selected multibyte character.
-	Span span(offset_t begin, offset_t end) const;
-	column_t width() const { return _width; }
+	Span span(size_t begin, size_t end) const;
+	unsigned width() const { return _width; }
 	const std::vector<Character> &characters() const { return _characters; }
 private:
 	std::vector<Character> _characters;
-	offset_t _length;
-	column_t _width = 0;
+	size_t _length;
+	unsigned _width = 0;
 };
-} // namespace Editor
+} // namespace Text
 
-#endif // EDITOR_LAYOUT_H
+#endif // TEXT_LAYOUT_H

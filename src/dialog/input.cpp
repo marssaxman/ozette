@@ -18,7 +18,7 @@
 #include <cstdlib>
 #include <climits>
 #include "dialog/input.h"
-#include "editor/layout.h"
+#include "text/layout.h"
 #include "text/utf8.h"
 #include "ui/text.h"
 
@@ -63,10 +63,10 @@ void Dialog::Input::paint(
 		curs_set(0);
 		return;
 	}
-	Editor::LineLayout layout(_value, 4);
+	Text::LineLayout layout(_value, 4);
 	unsigned column = layout.column(_cursor_pos);
 	unsigned scroll = column >= static_cast<unsigned>(width)? column - width + 1: 0;
-	Editor::LineLayout::Span selection;
+	Text::LineLayout::Span selection;
 	if (focused) selection = layout.span(std::min(_cursor_pos, _anchor_pos),
 		std::max(_cursor_pos, _anchor_pos));
 	UI::paint_text(view, v, h, width, layout, scroll, getattrs(view), {}, selection);

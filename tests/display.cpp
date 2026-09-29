@@ -139,7 +139,7 @@ TEST_CASE("viewport edges do not split wide characters or leak into another row"
 	TestLocale locale;
 	TestScreen screen;
 	TestWindow dest(8);
-	Editor::LineLayout layout("\xe7\x95\x8c" "AB\xe7\x95\x8c" "C", 4);
+	Text::LineLayout layout("\xe7\x95\x8c" "AB\xe7\x95\x8c" "C", 4);
 	mvwaddstr(dest.window, 1, 0, "sentinel");
 	UI::paint_text(dest.window, 0, 0, 4, layout, 1, A_NORMAL);
 	CHECK(cell(dest.window, 0, 0) == L" ");
@@ -155,7 +155,7 @@ TEST_CASE("viewport edges do not split wide characters or leak into another row"
 TEST_CASE("selected tabs retain their bullet and clipped fragments remain spaces") {
 	TestScreen screen;
 	TestWindow dest(8);
-	Editor::LineLayout layout("\tab", 4);
+	Text::LineLayout layout("\tab", 4);
 	UI::paint_text(dest.window, 0, 0, 8, layout, 0, A_NORMAL, {}, layout.span(0, 1));
 	chtype bullet = mvwinch(dest.window, 0, 0);
 	CHECK((bullet & A_REVERSE) != 0);
@@ -172,8 +172,8 @@ TEST_CASE("selected tabs retain their bullet and clipped fragments remain spaces
 TEST_CASE("selection clipping handles ranges outside either viewport edge") {
 	TestScreen screen;
 	TestWindow dest(8);
-	Editor::LineLayout layout("0123456789abcdefghij", 4);
-	for (const auto &span: {Editor::LineLayout::Span(0, 5), {12, 20}, {0, 20}, {6, 10}}) {
+	Text::LineLayout layout("0123456789abcdefghij", 4);
+	for (const auto &span: {Text::LineLayout::Span(0, 5), {12, 20}, {0, 20}, {6, 10}}) {
 		UI::paint_text(dest.window, 0, 0, 5, layout, 5, A_NORMAL, {}, span);
 		for (unsigned column = 0; column < 5; ++column) {
 			bool selected = column + 5 >= span.begin && column + 5 < span.end;
@@ -206,7 +206,7 @@ TEST_CASE("controls and invalid bytes draw bounded replacements") {
 	TestLocale locale;
 	TestScreen screen;
 	TestWindow dest(8);
-	Editor::LineLayout layout(std::string("\0\r\x1b\x80x", 5), 4);
+	Text::LineLayout layout(std::string("\0\r\x1b\x80x", 5), 4);
 	UI::paint_text(dest.window, 0, 0, 8, layout, 0, A_NORMAL);
 	for (int column = 0; column < 3; ++column) CHECK(cell(dest.window, 0, column) == L"?");
 	CHECK(cell(dest.window, 0, 3) == L"\ufffd");
@@ -218,7 +218,7 @@ TEST_CASE("painting takes each character's style from its byte offset") {
 	TestLocale locale;
 	TestScreen screen;
 	TestWindow dest(8);
-	Editor::LineLayout layout("\xc3\xa9\xe7\x95\x8cX", 4);
+	Text::LineLayout layout("\xc3\xa9\xe7\x95\x8cX", 4);
 	std::vector<int> styles = {A_BOLD, A_NORMAL, A_UNDERLINE, A_NORMAL, A_NORMAL, A_DIM};
 	UI::paint_text(dest.window, 0, 0, 8, layout, 0, A_NORMAL, styles);
 	CHECK((mvwinch(dest.window, 0, 0) & A_BOLD) != 0);

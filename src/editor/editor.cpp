@@ -25,7 +25,7 @@
 #include "dialog/confirmation.h"
 #include "dialog/form.h"
 #include "editor/editor.h"
-#include "editor/layout.h"
+#include "text/layout.h"
 #include "ui/colors.h"
 #include "ui/text.h"
 #include "search/dialog.h"
@@ -199,8 +199,8 @@ void Editor::View::paint_line(WINDOW *dest, row_t v, State state) {
 	}
 
 	bool active = state != State::Inactive;
-	LineLayout layout(text, _config.indent_size());
-	LineLayout::Span selection;
+	Text::LineLayout layout(text, _config.indent_size());
+	Text::LineLayout::Span selection;
 	if (active && !_selection.empty() && index >= _selection.begin().line &&
 			index <= _selection.end().line) {
 		offset_t begin = index == _selection.begin().line? _selection.begin().offset: 0;
@@ -656,20 +656,20 @@ void Editor::View::line_frame_selection() {
 
 Editor::column_t Editor::View::column(location_t loc) {
 	loc = _doc.clamp(loc);
-	return LineLayout(_doc.line(loc.line), _config.indent_size()).column(loc.offset);
+	return Text::LineLayout(_doc.line(loc.line), _config.indent_size()).column(loc.offset);
 }
 
 Editor::location_t Editor::View::arrow_up() {
 	if (_cursor.line == 0) return _doc.home();
 	line_t line = _cursor.line - 1;
-	LineLayout layout(_doc.line(line), _config.indent_size());
+	Text::LineLayout layout(_doc.line(line), _config.indent_size());
 	return {line, layout.offset(column(_cursor))};
 }
 
 Editor::location_t Editor::View::arrow_down() {
 	if (_cursor.line == _doc.maxline()) return _doc.end();
 	line_t line = _cursor.line + 1;
-	LineLayout layout(_doc.line(line), _config.indent_size());
+	Text::LineLayout layout(_doc.line(line), _config.indent_size());
 	return {line, layout.offset(column(_cursor))};
 }
 

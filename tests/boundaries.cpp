@@ -17,7 +17,9 @@
 
 #include "doctest.h"
 #include "editor/document.h"
+#include "text/layout.h"
 #include "files.h"
+#include "utf8_locale.h"
 #include <limits>
 #include <random>
 
@@ -248,4 +250,18 @@ TEST_CASE("malformed bytes survive navigation deletion undo redo and saving") {
 	while (doc.can_redo()) check_location(doc, doc.redo(update));
 	doc.Write(dir.file());
 	CHECK((dir.read().empty()));
+}
+
+TEST_CASE("document navigation agrees with layout for unprintable and malformed bytes") {
+	TestLocale locale;
+	const std::string bytes = std::string("\xcc\x81\t\xcc\x81") +
+		std::string("\0\r\x1b", 3) + "\x80\xe2\x82";
+	Text::LineLayout layout(bytes, 4);
+	Editor::Document doc;
+	doc.insert(doc.home(), bytes);
+	for (auto loc = doc.home(); loc != doc.end(); loc = doc.next_char(loc)) {
+		unsigned column = layout.column(loc.offset);
+		CHECK(layout.offset(column) == loc.offset);
+	}
+	CHECK(doc.line(0) == bytes);
 }

@@ -15,20 +15,20 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#include "editor/layout.h"
+#include "text/layout.h"
 #include "text/utf8.h"
 #include <algorithm>
 #include <limits>
 #include <wchar.h>
 
-Editor::LineLayout::LineLayout(const std::string &text, unsigned tab_width):
+Text::LineLayout::LineLayout(const std::string &text, unsigned tab_width):
 		_length(text.size()) {
 	tab_width = std::max(1U, tab_width);
 	bool can_combine = false;
-	for (offset_t offset = 0; offset < text.size();) {
-		auto decoded = Text::UTF8::decode(text, offset);
+	for (size_t offset = 0; offset < text.size();) {
+		auto decoded = UTF8::decode(text, offset);
 		char32_t value = decoded.value;
-		column_t width;
+		unsigned width;
 		if (value == '\t') {
 			width = tab_width - _width % tab_width;
 			can_combine = false;
@@ -44,32 +44,32 @@ Editor::LineLayout::LineLayout(const std::string &text, unsigned tab_width):
 			width = cells;
 			can_combine = true;
 		}
-		width = std::min(width, std::numeric_limits<column_t>::max() - _width);
+		width = std::min(width, std::numeric_limits<unsigned>::max() - _width);
 		_characters.push_back({offset, offset + decoded.length, _width, width, value});
 		_width += width;
 		offset += decoded.length;
 	}
 }
 
-Editor::column_t Editor::LineLayout::column(offset_t offset) const {
+unsigned Text::LineLayout::column(size_t offset) const {
 	auto found = std::upper_bound(_characters.begin(), _characters.end(), offset,
-		[](offset_t offset, const Character &ch) { return offset < ch.end; });
+		[](size_t offset, const Character &ch) { return offset < ch.end; });
 	return found == _characters.end()? _width: found->column;
 }
 
-Editor::offset_t Editor::LineLayout::offset(column_t column) const {
+size_t Text::LineLayout::offset(unsigned column) const {
 	if (column >= _width) return _length;
 	auto found = std::upper_bound(_characters.begin(), _characters.end(), column,
-		[](column_t column, const Character &ch) { return column < ch.column; });
+		[](unsigned column, const Character &ch) { return column < ch.column; });
 	return found == _characters.begin()? 0: (--found)->begin;
 }
 
-Editor::LineLayout::Span Editor::LineLayout::span(offset_t begin, offset_t end) const {
+Text::LineLayout::Span Text::LineLayout::span(size_t begin, size_t end) const {
 	if (begin >= end || begin >= _length) return {};
 	auto first = std::upper_bound(_characters.begin(), _characters.end(), begin,
-		[](offset_t offset, const Character &ch) { return offset < ch.end; });
+		[](size_t offset, const Character &ch) { return offset < ch.end; });
 	auto last = std::lower_bound(_characters.begin(), _characters.end(), end,
-		[](const Character &ch, offset_t offset) { return ch.begin < offset; });
+		[](const Character &ch, size_t offset) { return ch.begin < offset; });
 	--last;
 	while (first != _characters.begin() && first->width == 0) --first;
 	while (last != _characters.begin() && last->width == 0) --last;

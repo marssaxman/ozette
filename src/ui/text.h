@@ -19,14 +19,14 @@
 #define UI_TEXT_H
 
 #include <ncurses.h>
-#include "editor/layout.h"
+#include "text/layout.h"
 
 namespace UI {
 // Draw complete characters and tab fragments within a single row. Wide
 // characters cut by an edge leave blank cells; combining marks stay with a base.
 void paint_text(WINDOW *dest, int v, int h, int width,
-	const Editor::LineLayout &layout, Editor::column_t scroll, int normal,
-	const std::vector<int> &styles = {}, Editor::LineLayout::Span selection = {});
+	const Text::LineLayout &layout, unsigned scroll, int normal,
+	const std::vector<int> &styles = {}, Text::LineLayout::Span selection = {});
 } // namespace UI
 
 #endif // UI_TEXT_H

@@ -16,8 +16,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include "doctest.h"
-#include "editor/layout.h"
-#include "editor/document.h"
+#include "text/layout.h"
 #include "utf8_locale.h"
 #include <limits>
 
@@ -26,7 +25,7 @@ TEST_CASE("tabs advance to the next stop from every surrounding column") {
 		for (unsigned prefix = 0; prefix <= width * 2; ++prefix) {
 			CAPTURE(width);
 			CAPTURE(prefix);
-			Editor::LineLayout layout(std::string(prefix, 'a') + "\tx", width);
+			Text::LineLayout layout(std::string(prefix, 'a') + "\tx", width);
 			unsigned stop = prefix + width - prefix % width;
 			CHECK(layout.column(prefix) == prefix);
 			CHECK(layout.column(prefix + 1) == stop);
@@ -42,7 +41,7 @@ TEST_CASE("tabs advance to the next stop from every surrounding column") {
 TEST_CASE("line layout maps multibyte wide and combining characters") {
 	TestLocale locale;
 	// A, e-acute, CJK wide character, e plus combining acute, tab, Z.
-	Editor::LineLayout layout("A\xc3\xa9\xe7\x95\x8c" "e\xcc\x81\tZ", 4);
+	Text::LineLayout layout("A\xc3\xa9\xe7\x95\x8c" "e\xcc\x81\tZ", 4);
 	const unsigned columns[] = {0, 1, 1, 2, 2, 2, 4, 5, 5, 5, 8, 9};
 	for (size_t i = 0; i < sizeof(columns) / sizeof(*columns); ++i) {
 		CHECK(layout.column(i) == columns[i]);
@@ -60,26 +59,19 @@ TEST_CASE("unprintable and malformed bytes have stable display cells") {
 	TestLocale locale;
 	const std::string bytes = std::string("\xcc\x81\t\xcc\x81") +
 		std::string("\0\r\x1b", 3) + "\x80\xe2\x82";
-	Editor::LineLayout layout(bytes, 4);
+	Text::LineLayout layout(bytes, 4);
 	CHECK(layout.characters().front().value == '?');
 	CHECK(layout.characters()[2].value == '?');
 	CHECK(layout.width() == 11);
-	Editor::Document doc;
-	doc.insert(doc.home(), bytes);
-	for (auto loc = doc.home(); loc != doc.end(); loc = doc.next_char(loc)) {
-		unsigned column = layout.column(loc.offset);
-		CHECK(layout.offset(column) == loc.offset);
-	}
-	CHECK(doc.line(0) == bytes);
 }
 
 TEST_CASE("empty layouts and a zero tab width remain bounded") {
-	Editor::LineLayout empty("", 4);
+	Text::LineLayout empty("", 4);
 	CHECK(empty.width() == 0);
 	CHECK(empty.column(42) == 0);
 	CHECK(empty.offset(42) == 0);
 	CHECK(empty.characters().empty());
-	Editor::LineLayout tab("\t", 0);
+	Text::LineLayout tab("\t", 0);
 	CHECK(tab.width() == 1);
 	CHECK(tab.offset(0) == 0);
 	CHECK(tab.offset(1) == 1);
@@ -88,7 +80,7 @@ TEST_CASE("empty layouts and a zero tab width remain bounded") {
 TEST_CASE("layouts use bounded replacements when the locale cannot display Unicode") {
 	TestLocale locale;
 	REQUIRE(setlocale(LC_CTYPE, "C") != nullptr);
-	Editor::LineLayout layout("\xc3\xa9\xe7\x95\x8c", 4);
+	Text::LineLayout layout("\xc3\xa9\xe7\x95\x8c", 4);
 	CHECK(layout.width() == 2);
 	CHECK(layout.characters()[0].value == '?');
 	CHECK(layout.characters()[1].value == '?');
