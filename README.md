@@ -16,6 +16,9 @@ makefiles, and LLVM/MLIR tablegen files.
 A small subset of EditorConfig controls indentation. The built-in help lists
 supported properties.
 
+Text editing supports UTF-8 with the locale's terminal character widths. Build
+with the wide character ncurses and panel libraries and run in a UTF-8 locale.
+
 ----
 
 Ozette is an opinionated tool; I wrote it for my own use, and it is tailored to
@@ -42,7 +45,7 @@ to hear from you, and to discuss any issues you might encounter with it.
 
 Build it:
 
-	sudo apt install libncurses5-dev
+	sudo apt install libncurses-dev
 	make
 
 Run the tests:
@@ -60,6 +63,5 @@ Open the browser in the current directory:
 Edit a specific file or files, with no browser:
 
 	ozette foo bar baz
-
 
 

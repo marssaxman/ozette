@@ -49,6 +49,9 @@ or end of the current line.
 Cut, Copy, and Paste apply to a single clipboard which is shared across all
 editors.
 
+UTF-8 text uses the locale's terminal character widths and configured tab stops.
+Wide characters occupy two columns; combining marks share their preceding cell.
+
 Open and New bring an existing editor forward when the file is already open,
 including through symbolic or hard links. New loads an existing file or starts
 an empty buffer for a missing file. Changing directories does not redirect saves.
