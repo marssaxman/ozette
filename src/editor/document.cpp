@@ -16,40 +16,9 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include "editor/document.h"
+#include "editor/utf8.h"
 #include <sstream>
 #include <assert.h>
-
-namespace {
-struct character {
-	char32_t value;
-	size_t length;
-};
-
-character decode(const std::string &text, size_t offset) {
-	if (offset >= text.size()) return {0, 0};
-	unsigned char lead = text[offset];
-	if (lead < 0x80) return {lead, 1};
-	const character invalid = {0xFFFD, 1};
-	size_t length;
-	char32_t value, minimum;
-	if (lead >= 0xC2 && lead <= 0xDF) {
-		length = 2; value = lead & 0x1F; minimum = 0x80;
-	} else if (lead >= 0xE0 && lead <= 0xEF) {
-		length = 3; value = lead & 0x0F; minimum = 0x800;
-	} else if (lead >= 0xF0 && lead <= 0xF4) {
-		length = 4; value = lead & 0x07; minimum = 0x10000;
-	} else return invalid;
-	if (text.size() - offset < length) return invalid;
-	for (size_t i = 1; i < length; ++i) {
-		unsigned char byte = text[offset + i];
-		if ((byte & 0xC0) != 0x80) return invalid;
-		value = (value << 6) | (byte & 0x3F);
-	}
-	if (value < minimum || value > 0x10FFFF ||
-			(value >= 0xD800 && value <= 0xDFFF)) return invalid;
-	return {value, length};
-}
-} // namespace
 
 Editor::Document::Document(std::string path) {
 	std::string contents = _file.read(path);
@@ -104,7 +73,7 @@ Editor::location_t Editor::Document::next_char(location_t loc) {
 	if (loc.offset == text.size()) {
 		return (loc.line < maxline())? home(loc.line + 1): end();
 	}
-	loc.offset += decode(text, loc.offset).length;
+	loc.offset += UTF8::decode(text, loc.offset).length;
 	return loc;
 }
 
@@ -117,7 +86,7 @@ Editor::location_t Editor::Document::prev_char(location_t loc) {
 	// Looking back at most four bytes keeps malformed input bounded too.
 	const std::string &text = _lines[loc.line];
 	for (size_t length = 2; length <= 4 && length <= loc.offset; ++length) {
-		if (decode(text, loc.offset - length).length == length) {
+		if (UTF8::decode(text, loc.offset - length).length == length) {
 			loc.offset -= length;
 			return loc;
 		}
@@ -145,7 +114,7 @@ const std::string &Editor::Document::line(line_t index) const {
 
 char32_t Editor::Document::codepoint(location_t loc) const {
 	loc = clamp(loc);
-	return decode(_lines[loc.line], loc.offset).value;
+	return UTF8::decode(_lines[loc.line], loc.offset).value;
 }
 
 std::string Editor::Document::text(const Range &span) const {
