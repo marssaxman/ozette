@@ -82,16 +82,8 @@ Editor::location_t Editor::Document::prev_char(location_t loc) {
 	if (loc.offset == 0) {
 		return (loc.line > 0)? end(loc.line - 1): home();
 	}
-	// Only a complete valid sequence ending here may consume multiple bytes.
-	// Looking back at most four bytes keeps malformed input bounded too.
 	const std::string &text = _lines[loc.line];
-	for (size_t length = 2; length <= 4 && length <= loc.offset; ++length) {
-		if (UTF8::decode(text, loc.offset - length).length == length) {
-			loc.offset -= length;
-			return loc;
-		}
-	}
-	--loc.offset;
+	loc.offset = UTF8::previous(text, loc.offset);
 	return loc;
 }
 

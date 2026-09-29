@@ -468,3 +468,17 @@ TEST_CASE("symbolic indentation and malformed text survive the command loop") {
 	run_app(dir, keys, [&](TestApp &app) { app.edit_file(dir.file()); });
 	CHECK(dir.read() == "   \x80\xbf\xf0\x9f");
 }
+
+TEST_CASE("the application input loop accepts UTF-8 bytes alongside commands") {
+	TempDir dir;
+	dir.write("");
+	const std::string text = "\xc3\xa9\xe7\x95\x8c\xf0\x9f\x90\xb1\xc8\xab";
+	std::vector<int> keys;
+	for (unsigned char ch: text) keys.push_back(ch);
+	keys.push_back(KEY_LEFT);
+	keys.push_back('|');
+	keys.push_back(Control::Save);
+	keys.push_back(Control::Quit);
+	run_app(dir, keys, [&](TestApp &app) { app.edit_file(dir.file()); });
+	CHECK(dir.read() == text.substr(0, text.size() - 2) + "|" + text.substr(text.size() - 2));
+}

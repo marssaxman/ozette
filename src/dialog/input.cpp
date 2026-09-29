@@ -16,7 +16,11 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include <cstdlib>
+#include <climits>
 #include "dialog/input.h"
+#include "editor/layout.h"
+#include "editor/utf8.h"
+#include "ui/text.h"
 
 Dialog::Input::Input(std::string value, Completer completer, Updater updater):
 	_value(value),
@@ -41,7 +45,7 @@ void Dialog::Input::process(UI::Frame &ctx, int ch) {
 		case Control::Tab: tab_complete(ctx); break;
 		default:
 			// we only care about non-control chars now
-			if (ch < 32 || ch > 127) break;
+			if (ch < 32 || ch == 127 || ch > UCHAR_MAX) break;
 			// in all other situations, the keypress should be
 			// inserted into the field at the cursor point.
 			key_insert(ctx, ch);
@@ -54,30 +58,20 @@ void Dialog::Input::process(UI::Frame &ctx, int ch) {
 
 void Dialog::Input::paint(
 		WINDOW *view, int v, int h, int width, UI::View::State state) {
-	// Move to the specified window location and draw the value, truncated
-	// to fit in the available space.
-	mvwaddnstr(view, v, h, _value.c_str(), width);
-	// If there is empty space remaining, clear it out.
-	int remaining = width - _value.size();
-	if (remaining > 0) {
-		whline(view, ' ', remaining);
-	}
-
-	// Position the cursor, or draw the selection range.
 	bool focused = (state == UI::View::State::Focused);
-	if (_anchor_pos == _cursor_pos) {
-		// Put the cursor where it ought to be. Make it visible, if that
-		// would be appropriate for our activation state.
-		wmove(view, v, h + _cursor_pos);
-		curs_set(focused? 1: 0);
-	} else {
-		if (focused) {
-			int begin = h + std::min(_cursor_pos, _anchor_pos);
-			int count = std::abs(static_cast<int>(_cursor_pos - _anchor_pos));
-			mvwchgat(view, v, begin, count, A_NORMAL, 0, NULL);
-		}
+	if (width <= 0) {
 		curs_set(0);
+		return;
 	}
+	Editor::LineLayout layout(_value, 4);
+	unsigned column = layout.column(_cursor_pos);
+	unsigned scroll = column >= static_cast<unsigned>(width)? column - width + 1: 0;
+	Editor::LineLayout::Span selection;
+	if (focused) selection = layout.span(std::min(_cursor_pos, _anchor_pos),
+		std::max(_cursor_pos, _anchor_pos));
+	UI::paint_text(view, v, h, width, layout, scroll, getattrs(view), {}, selection);
+	wmove(view, v, h + column - scroll);
+	curs_set(focused && _anchor_pos == _cursor_pos? 1: 0);
 }
 
 void Dialog::Input::set_help(UI::HelpBar::Panel &panel) {
@@ -145,14 +139,14 @@ void Dialog::Input::arrow_right(UI::Frame &ctx) {
 
 void Dialog::Input::select_left(UI::Frame &ctx) {
 	if (_cursor_pos > 0) {
-		_cursor_pos--;
+		_cursor_pos = Editor::UTF8::previous(_value, _cursor_pos);
 		ctx.repaint();
 	}
 }
 
 void Dialog::Input::select_right(UI::Frame &ctx) {
 	if (_cursor_pos < _value.size()) {
-		_cursor_pos++;
+		_cursor_pos += Editor::UTF8::decode(_value, _cursor_pos).length;
 		ctx.repaint();
 	}
 }
@@ -203,4 +197,3 @@ void Dialog::Input::key_insert(UI::Frame &ctx, int ch) {
 	_anchor_pos = _cursor_pos;
 	ctx.repaint();
 }
-

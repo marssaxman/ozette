@@ -16,6 +16,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include "editor/utf8.h"
+#include <algorithm>
 
 namespace Editor { namespace UTF8 {
 Character decode(const std::string &text, size_t offset) {
@@ -42,5 +43,14 @@ Character decode(const std::string &text, size_t offset) {
 			(value >= 0xD800 && value <= 0xDFFF)) return invalid;
 	return {value, length};
 }
-} } // namespace Editor::UTF8
 
+size_t previous(const std::string &text, size_t offset) {
+	offset = std::min(offset, text.size());
+	if (offset == 0) return 0;
+	// Only a complete valid sequence ending here may consume multiple bytes.
+	for (size_t length = 2; length <= 4 && length <= offset; ++length) {
+		if (decode(text, offset - length).length == length) return offset - length;
+	}
+	return offset - 1;
+}
+} } // namespace Editor::UTF8

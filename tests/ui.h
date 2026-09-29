@@ -73,7 +73,7 @@ struct TestFrame : UI::Frame {
 		if (current->process(*this, ch)) dialog = std::move(current);
 	}
 	void enter(std::string text) {
-		for (char ch: text) answer(ch);
+		for (unsigned char ch: text) answer(ch);
 		answer(Control::Return);
 	}
 	TestController controller;

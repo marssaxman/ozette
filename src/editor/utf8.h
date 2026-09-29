@@ -28,6 +28,7 @@ struct Character {
 
 // Invalid encodings consume one byte and report U+FFFD, preserving byte offsets.
 Character decode(const std::string &text, size_t offset);
+size_t previous(const std::string &text, size_t offset);
 } } // namespace Editor::UTF8
 
 #endif // EDITOR_UTF8_H

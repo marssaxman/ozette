@@ -134,7 +134,8 @@ bool Editor::View::process(UI::Frame &ctx, int ch) {
 		case Control::Escape: key_escape(ctx); break;
 
 		default: {
-			if (ch >= 0 && ch <= UCHAR_MAX && isprint(ch)) key_insert(ch);
+			// getch delivers UTF-8 as bytes, separately from function key codes.
+			if (ch >= 0 && ch <= UCHAR_MAX && (ch >= 0x80 || isprint(ch))) key_insert(ch);
 			else ctx.show_result("Unknown control: " + std::to_string(ch));
 		} break;
 	}

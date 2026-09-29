@@ -29,7 +29,7 @@ void UI::paint_text(WINDOW *dest, int v, int h, int width,
 	unsigned selbegin = std::min<unsigned>(width, selection.begin - std::min(selection.begin, scroll));
 	unsigned selend = std::min<unsigned>(width, selection.end - std::min(selection.end, scroll));
 	if (selend > selbegin) {
-		wattrset(dest, A_REVERSE);
+		wattrset(dest, normal ^ A_REVERSE);
 		mvwhline(dest, v, h + selbegin, ' ', selend - selbegin);
 	}
 	const auto &characters = layout.characters();
@@ -46,7 +46,7 @@ void UI::paint_text(WINDOW *dest, int v, int h, int width,
 		if (left >= static_cast<unsigned>(width)) break;
 		unsigned right = std::min<unsigned>(width, ch.column + ch.width - scroll);
 		int style = ch.begin < styles.size()? styles[ch.begin]: normal;
-		if (left < selend && right > selbegin) style = A_REVERSE;
+		if (left < selend && right > selbegin) style = normal ^ A_REVERSE;
 		wattrset(dest, style);
 		if (ch.value == '\t' || ch.column < scroll || ch.width > right - left) {
 			for (unsigned column = left; column < right; ++column) {
