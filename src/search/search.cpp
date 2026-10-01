@@ -21,7 +21,7 @@
 #include "app/path.h"
 #include <assert.h>
 #include <algorithm>
-#include <unistd.h>
+#include "ui/text.h"
 
 Search::View *Search::View::_instance;
 
@@ -64,30 +64,50 @@ bool Search::View::process(UI::Frame &ctx, int ch) {
 }
 
 bool Search::View::poll(UI::Frame &ctx) {
-	// We only need to poll if we have an active subprocess.
-	if (!_proc.get()) return true;
+	if (!_proc) return true;
 	bool follow_edge = _scrollpos == maxscroll();
 	std::string output, errors;
-	bool got_bytes = _proc->read_out(output);
-	for (auto ch: output) read_one(ch);
-	if (_proc->read_err(errors)) ctx.show_result(errors);
-	bool dirty = got_bytes;
+	bool dirty = _proc->read_out(output);
+	dirty |= _proc->read_err(errors);
+	Match match;
+	bool retry = false;
+	for (auto ch: output) {
+		if (_parser.read(ch, match)) add_match(match);
+	}
+	for (auto ch: errors) read_error(ch);
+	if (!_proc->poll()) {
+		_parser.finish();
+		if (!_errorbuf.empty()) {
+			add_error(_errorbuf);
+			_errorbuf.clear();
+		}
+		auto result = _proc->result();
+		if (result.error || result.signal || result.cancelled) {
+			_status = result.message();
+			add_error(_status);
+		} else if (_parser.failed()) {
+			_status = "search failed: " + result.message();
+			add_error("invalid search result");
+		} else if (result.exit_code > 1 || result.exit_code < 0) {
+			_status = "search failed: " + result.message();
+			add_error(_status);
+		} else if (result.exit_code == 1) {
+			_status = "no matches (exit 1)";
+			retry = !_match_lines;
+		} else {
+			_status = std::to_string(_match_lines) + " matches in ";
+			_status += std::to_string(_match_files.size()) + " files (exit 0)";
+		}
+		_proc.reset();
+		dirty = true;
+	}
 	if (follow_edge && _scrollpos != maxscroll()) {
 		_scrollpos = maxscroll();
 		dirty = true;
 	}
-	if (!_proc->poll()) {
-		_proc.reset(nullptr);
-		dirty = true;
-		if (!_match_lines) {
-			// didn't find anything? let the user try again
-			ctx.app().begin_search();
-		}
-	}
-	if (dirty) {
-		ctx.repaint();
-	}
+	if (dirty) ctx.repaint();
 	set_title(ctx);
+	if (retry) ctx.app().begin_search();
 	return true;
 }
 
@@ -123,76 +143,71 @@ void Search::View::paint_into(WINDOW *view, State state) {
 		size_t i = row + _scrollpos;
 		// Sub one to create a blank leading line
 		if (i > 0 && i <= _lines.size()) {
-			waddnstr(view, _lines[i-1].text.c_str(), _width);
+			Text::LineLayout layout(_lines[i-1].text, 4);
+			UI::paint_text(view, row, 0, _width, layout, 0, getattrs(view));
+		} else {
+			wclrtoeol(view);
 		}
-		wclrtoeol(view);
 		if (state == State::Focused && i == 1+_selection && !_lines.empty()) {
 			mvwchgat(view, row, 0, _width, A_REVERSE, 0, NULL);
 		}
 	}
 }
 
-void Search::View::read_one(char ch) {
-	if ('\n' == ch) {
-		// we have just finished processing a line; we should have
-		// between zero and three chunks in our line buffer, which
-		// represent the file path, line number, and match text of
-		// each match returned by grep.
-		_match_lines++;
-		_linebuf.resize(3);
-		std::string file = _linebuf[0];
-		// If this is a new file, add a new match group.
-		if (_lines.empty() || _lines.back().path != file) {
-			line temp = {file + ":", file, 0};
-			_lines.push_back(temp);
-			_match_files++;
-		}
-		std::string linenumber = _linebuf[1] + ":";
-		std::string indent;
-		if (linenumber.size() < 8) {
-			indent.resize(8 - linenumber.size(), ' ');
-		}
-		// Line numbers are printed one-based for human consumption, but the
-		// actual line numbers are of course zero-based. Since we are parsing
-		// the result of some text printed by a tool intended for human use, we
-		// must subtract one to get real line numbers.
-		long index = std::stol(_linebuf[1]) - 1;
-		if (index < 0) index = 0;
-		line temp = {indent + linenumber + _linebuf[2], file, (size_t)index};
-		_lines.push_back(temp);
-		_linebuf.clear();
-	} else if (':' == ch && _linebuf.size() < 3) {
-		// as long as there are fewer than three chunks in the linebuf, add a
-		// new one which will accumulate further characters on this line; we
-		// divide the lines into three fields separated by colons, but the last
-		// field is the match text and may include colons as part of its value.
-		_linebuf.push_back(std::string());
-	} else if (isprint(ch)) {
-		// append the char to the last chunk in the linebuf
-		if (_linebuf.empty()) {
-			_linebuf.push_back(std::string());
-		}
-		_linebuf.back().push_back(ch);
+void Search::View::add_match(const Match &match) {
+	std::string path = match.path[0] == '/'? match.path: _directory + "/" + match.path;
+	if (_lines.empty() || _lines.back().path != path) {
+		line header = {match.path + ":", path, 0};
+		_lines.push_back(header);
+		_match_files.insert(path);
+	}
+	std::string number = std::to_string(match.index + 1) + ":";
+	std::string indent;
+	if (number.size() < 8) indent.resize(8 - number.size(), ' ');
+	line result = {indent + number + match.text, path, match.index};
+	_lines.push_back(result);
+	++_match_lines;
+}
+
+void Search::View::add_error(std::string text) {
+	line error = {text, "", 0};
+	_lines.push_back(error);
+}
+
+void Search::View::read_error(char ch) {
+	if (ch == '\n') {
+		add_error(_errorbuf);
+		_errorbuf.clear();
+	} else {
+		_errorbuf.push_back(ch);
 	}
 }
 
 void Search::View::exec(spec job, UI::Frame &ctx) {
 	_job = job;
-	_match_files = 0;
+	_match_files.clear();
 	_match_lines = 0;
 	_selection = 0;
 	_scrollpos = 0;
 	_lines.clear();
-	_linebuf.clear();
+	_parser = Parser();
+	_errorbuf.clear();
+	_status.clear();
+	_directory = Path::current_dir();
 	std::string filter = job.filter.empty()? "*": job.filter;
 	std::string targetfile = "--include=" + filter;
 	std::string targetdir = job.haystack;
 	if (targetdir.empty()) targetdir = ".";
-	const char *argv[6] = {
+	if (targetdir[0] == '~') targetdir = Path::absolute(targetdir);
+	if (targetdir[0] == '-') targetdir = "./" + targetdir;
+	const char *argv[] = {
 		"grep",
 		"-rnHI",
+		"--null",
 		targetfile.c_str(),
+		"-e",
 		job.needle.c_str(),
+		"--",
 		targetdir.c_str(),
 		nullptr
 	};
@@ -201,6 +216,7 @@ void Search::View::exec(spec job, UI::Frame &ctx) {
 	if (!job.haystack.empty()) {
 		_title += " under " + Path::display(job.haystack) + "/";
 	}
+	_proc.reset();
 	_proc.reset(new Process::Subproc(argv[0], argv));
 	ctx.repaint();
 	set_title(ctx);
@@ -220,11 +236,11 @@ void Search::View::search(UI::Frame &ctx) {
 void Search::View::key_return(UI::Frame &ctx) {
 	if (_selection >= _lines.size()) return;
 	auto &line = _lines[_selection];
-	ctx.app().find_in_file(line.path, line.index);
+	if (!line.path.empty()) ctx.app().find_in_file(line.path, line.index);
 }
 
 void Search::View::key_down(UI::Frame &ctx) {
-	if (_selection < _lines.size()) {
+	if (_selection + 1 < _lines.size()) {
 		_selection++;
 		ctx.repaint();
 	}
@@ -238,6 +254,7 @@ void Search::View::key_up(UI::Frame &ctx) {
 }
 
 void Search::View::key_page_down(UI::Frame &ctx) {
+	if (_lines.empty()) return;
 	_selection = std::min(_scrollpos + (size_t)_height, _lines.size()-1);
 	ctx.repaint();
 }
@@ -250,14 +267,7 @@ void Search::View::key_page_up(UI::Frame &ctx) {
 
 void Search::View::set_title(UI::Frame &ctx) {
 	ctx.set_title(_title);
-	std::string status;
-	if (_proc.get()) {
-		status = "running";
-	} else {
-		status = std::to_string(_match_lines) + " matches in ";
-		status += std::to_string(_match_files) + " files";
-	}
-	ctx.set_status(status);
+	ctx.set_status(_proc? (_proc->result().cancelled? "cancelling": "running"): _status);
 }
 
 unsigned Search::View::maxscroll() const {
@@ -266,4 +276,3 @@ unsigned Search::View::maxscroll() const {
 	int displines = (int)_lines.size() + 2;
 	return (displines > _height)? (displines - _height): 0;
 }
-

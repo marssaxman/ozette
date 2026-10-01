@@ -23,6 +23,7 @@
 #include "dialog/form.h"
 #include "process/subproc.h"
 #include "search/engine.h"
+#include "search/result.h"
 #include <set>
 
 namespace Search {
@@ -43,7 +44,9 @@ protected:
 	UI::Window *_window = nullptr;
 	virtual void paint_into(WINDOW *view, State state) override;
 private:
-	void read_one(char ch);
+	void add_match(const Match &match);
+	void read_error(char ch);
+	void add_error(std::string text);
 	void exec(spec job, UI::Frame &ctx);
 	void ctl_kill(UI::Frame &ctx);
 	void search(UI::Frame &ctx);
@@ -62,12 +65,14 @@ private:
 	};
 	spec _job;
 	std::vector<line> _lines;
-	unsigned _match_lines = 0;
-	unsigned _match_files = 0;
-	// connection to the shell running find and grep
+	size_t _match_lines = 0;
+	std::set<std::string> _match_files;
+	// connection to grep
 	std::unique_ptr<Process::Subproc> _proc;
-	// linebuf is temporary storage used while reading data from _proc
-	std::vector<std::string> _linebuf;
+	Parser _parser;
+	std::string _errorbuf;
+	std::string _status;
+	std::string _directory;
 	std::string _title;
 	unsigned _scrollpos = 0;
 	size_t _selection = 0;

@@ -46,8 +46,11 @@ struct TestController : Controller {
 	void edit_file(std::string) override {}
 	bool can_save_file(const Editor::View &, std::string) override { return allow_save; }
 	void close_file(Editor::View &view) override { closed = &view; }
-	void find_in_file(std::string, size_t) override {}
-	void begin_search() override {}
+	void find_in_file(std::string path, size_t index) override {
+		found_path = path;
+		found_index = index;
+	}
+	void begin_search() override { ++searches; }
 	void search_for(Search::spec) override {}
 	void set_clipboard(std::string text) override { clipboard = text; }
 	std::string get_clipboard() override { return clipboard; }
@@ -56,6 +59,9 @@ struct TestController : Controller {
 	Editor::View *closed = nullptr;
 	bool allow_save = true;
 	std::string clipboard;
+	std::string found_path;
+	size_t found_index = 0;
+	unsigned searches = 0;
 };
 
 struct TestFrame : UI::Frame {
