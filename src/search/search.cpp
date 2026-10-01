@@ -67,17 +67,10 @@ bool Search::View::poll(UI::Frame &ctx) {
 	// We only need to poll if we have an active subprocess.
 	if (!_proc.get()) return true;
 	bool follow_edge = _scrollpos == maxscroll();
-	bool got_bytes = false;
-	ssize_t actual = 0;
-	char buf[1024];
-	// read data from the input in chunks no larger than 1K until there is no
-	// more input to read
-	while ((actual = ::read(_proc->out_fd(), buf, 1024)) > 0) {
-		got_bytes = true;
-		for (ssize_t i = 0; i < actual; ++i) {
-			read_one(buf[i]);
-		}
-	}
+	std::string output, errors;
+	bool got_bytes = _proc->read_out(output);
+	for (auto ch: output) read_one(ch);
+	if (_proc->read_err(errors)) ctx.show_result(errors);
 	bool dirty = got_bytes;
 	if (follow_edge && _scrollpos != maxscroll()) {
 		_scrollpos = maxscroll();
@@ -208,14 +201,14 @@ void Search::View::exec(spec job, UI::Frame &ctx) {
 	if (!job.haystack.empty()) {
 		_title += " under " + Path::display(job.haystack) + "/";
 	}
-	_proc.reset(new Console::Subproc(argv[0], argv));
+	_proc.reset(new Process::Subproc(argv[0], argv));
 	ctx.repaint();
 	set_title(ctx);
 }
 
 void Search::View::ctl_kill(UI::Frame &ctx) {
 	if (_proc.get()) {
-		_proc.reset(nullptr);
+		_proc->cancel();
 		ctx.repaint();
 	}
 }

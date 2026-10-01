@@ -15,8 +15,7 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#include <unistd.h>
-#include <stdint.h>
+#include <cctype>
 #include "console/log.h"
 
 void Console::Log::layout(unsigned width) {
@@ -29,18 +28,9 @@ void Console::Log::layout(unsigned width) {
 	}
 }
 
-bool Console::Log::read(int fd) {
-	bool got_bytes = false;
-	ssize_t actual = 0;
-	char buf[1024];
-	while ((actual = ::read(fd, buf, 1024)) > 0) {
-		got_bytes = true;
-		_raw.append(buf, actual);
-		for (ssize_t i = 0; i < actual; ++i) {
-			read_one(buf[i]);
-		}
-	}
-	return got_bytes;
+void Console::Log::append(const std::string &text) {
+	_raw += text;
+	for (auto ch: text) read_one(ch);
 }
 
 void Console::Log::read_one(char ch) {
@@ -54,7 +44,7 @@ void Console::Log::read_one(char ch) {
 				tail.push_back(' ');
 			} while (tail.size() & 3);
 		} break;
-		default: if (isprint(ch)) {
+		default: if (isprint(static_cast<unsigned char>(ch))) {
 			if (tail.size() >= _width) {
 				_lines.emplace_back("    " + std::string(1, ch));
 			} else {

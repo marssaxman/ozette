@@ -40,7 +40,6 @@ public:
 	virtual void begin_search() override;
 	virtual void search_for(Search::spec query) override;
 	void run();
-	void sig_io();
 private:
 	struct editor {
 		UI::Window *window;

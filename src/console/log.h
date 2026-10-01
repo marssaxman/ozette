@@ -27,7 +27,7 @@ public:
 	Log(std::string command, unsigned width):
 		_command(command), _width(width), _lines(1) {}
 	void layout(unsigned width);
-	bool read(int fd);
+	void append(const std::string &text);
 	bool empty() const { return _lines.empty(); }
 	size_t size() const { return _lines.size(); }
 	const std::string &operator[](size_t index) const { return _lines[index]; }

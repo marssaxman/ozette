@@ -21,7 +21,7 @@
 #include "ui/view.h"
 #include "ui/shell.h"
 #include "dialog/form.h"
-#include "console/subproc.h"
+#include "process/subproc.h"
 #include "search/engine.h"
 #include <set>
 
@@ -65,7 +65,7 @@ private:
 	unsigned _match_lines = 0;
 	unsigned _match_files = 0;
 	// connection to the shell running find and grep
-	std::unique_ptr<Console::Subproc> _proc;
+	std::unique_ptr<Process::Subproc> _proc;
 	// linebuf is temporary storage used while reading data from _proc
 	std::vector<std::string> _linebuf;
 	std::string _title;

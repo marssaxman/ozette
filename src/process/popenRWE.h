@@ -14,11 +14,10 @@
  * element 1 (stdout) and 2 (stderr).
  */
 
-#ifndef CONSOLE_POPENRWE_H
-#define CONSOLE_POPENRWE_H
+#ifndef PROCESS_POPENRWE_H
+#define PROCESS_POPENRWE_H
 
 int popenRWE(int *rwepipe, const char *exe, const char *const argv[]);
-int pcloseRWE(int pid, int *rwepipe);
 
-#endif //CONSOLE_POPENRWE_H
+#endif //PROCESS_POPENRWE_H
 

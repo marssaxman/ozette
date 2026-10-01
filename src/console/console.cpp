@@ -60,8 +60,10 @@ bool Console::View::poll(UI::Frame &ctx) {
 	// We only need to poll if we have an active subprocess.
 	if (!_proc.get()) return true;
 	bool follow_edge = _scrollpos == maxscroll();
-	bool dirty = _log->read(_proc->out_fd());
-	dirty |= _log->read(_proc->err_fd());
+	std::string output;
+	bool dirty = _proc->read_out(output);
+	dirty |= _proc->read_err(output);
+	_log->append(output);
 	if (follow_edge && _scrollpos != maxscroll()) {
 		_scrollpos = maxscroll();
 		dirty = true;
@@ -118,7 +120,7 @@ void Console::View::exec(
 		argv[i++] = arg.c_str();
 	}
 	argv[i] = nullptr;
-	_proc.reset(new Subproc(exe.c_str(), argv));
+	_proc.reset(new Process::Subproc(exe.c_str(), argv));
 	delete[] argv;
 	_scrollpos = 0;
 	_log.reset(new Log(title, _width));
@@ -126,7 +128,7 @@ void Console::View::exec(
 
 void Console::View::ctl_kill(UI::Frame &ctx) {
 	if (_proc.get()) {
-		_proc.reset(nullptr);
+		_proc->cancel();
 		ctx.repaint();
 	}
 }

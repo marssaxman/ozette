@@ -21,7 +21,7 @@
 #include "ui/view.h"
 #include "ui/shell.h"
 #include "console/log.h"
-#include "console/subproc.h"
+#include "process/subproc.h"
 #include <memory>
 
 namespace Console {
@@ -56,7 +56,7 @@ private:
 	void key_page_down(UI::Frame &ctx);
 	void set_title(UI::Frame &ctx);
 	unsigned maxscroll() const;
-	std::unique_ptr<Subproc> _proc;
+	std::unique_ptr<Process::Subproc> _proc;
 	std::unique_ptr<Log> _log;
 	unsigned _scrollpos = 0;
 	int _height = 0;

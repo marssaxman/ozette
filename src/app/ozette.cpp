@@ -16,7 +16,6 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include <assert.h>
-#include <atomic>
 #include <fstream>
 #include <cstdlib>
 #include <limits>
@@ -27,12 +26,11 @@
 #include "app/ozette.h"
 #include "app/path.h"
 #include "console/console.h"
+#include "process/subproc.h"
 #include "dialog/confirmation.h"
 #include "help/view.h"
 #include "search/dialog.h"
 #include "search/search.h"
-
-std::atomic_bool sig_io_flag;
 
 Ozette::Ozette():
 		_shell(*this),
@@ -294,9 +292,8 @@ void Ozette::run() {
 	}
 	timeout(100);
 	do {
-		if (sig_io_flag.exchange(false)) {
-			_shell.poll();
-		}
+		Process::Subproc::reap();
+		_shell.poll();
 		int ch = fix_control_quirks(getch());
 		switch (ch) {
 			case Control::UpArrow: show_browser(); break;
@@ -313,10 +310,6 @@ void Ozette::run() {
 		update_panels();
 		doupdate();
 	} while (!_done);
-}
-
-void Ozette::sig_io() {
-	sig_io_flag.store(true);
 }
 
 void Ozette::show_browser() {
