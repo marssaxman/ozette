@@ -100,3 +100,8 @@ with Execute.
 
 Console commands:
     ^K - Kill - terminate the running command
+
+Kill stops the command and its process group, allowing half a second before
+forcing termination. Closing its window or starting another command stops the
+previous command immediately. Background children in the group are stopped when
+the command finishes.
