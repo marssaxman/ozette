@@ -23,8 +23,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <vector>
+#include <algorithm>
 
 namespace {
+std::vector<Process::Subproc *> active;
 std::vector<int> abandoned;
 
 void close_fd(int &fd) {
@@ -47,18 +49,21 @@ Process::Subproc::Subproc(const char *exe, const char **argv) {
 		_pid = 0;
 	}
 	close_fd(_rwepipe[0]);
+	if (_pid > 0) active.push_back(this);
 }
 
 Process::Subproc::~Subproc() {
+	active.erase(std::remove(active.begin(), active.end(), this), active.end());
 	if (_pid > 0) {
 		kill(-_pid, SIGKILL);
 		abandoned.push_back(_pid);
 	}
 	for (auto &fd: _rwepipe) close_fd(fd);
-	reap();
+	poll_all();
 }
 
-void Process::Subproc::reap() {
+void Process::Subproc::poll_all() {
+	for (auto proc: active) proc->poll();
 	for (auto it = abandoned.begin(); it != abandoned.end();) {
 		int rc = waitpid(*it, nullptr, WNOHANG);
 		if (rc == *it || (rc < 0 && errno == ECHILD)) {
@@ -82,17 +87,20 @@ bool Process::Subproc::poll() {
 			if (kill(-_pid, SIGKILL) < 0 && errno != ESRCH) _result.error = errno;
 			_killed = true;
 		}
-		int status = 0;
-		int rc = waitpid(_pid, &status, WNOHANG);
-		if (rc == _pid || (rc < 0 && errno != EINTR)) {
-			if (rc < 0) {
-				_result.error = errno;
-			} else if (WIFEXITED(status)) {
-				_result.exit_code = WEXITSTATUS(status);
-			} else if (WIFSIGNALED(status)) {
-				_result.signal = WTERMSIG(status);
+		siginfo_t info = {};
+		int rc = waitid(P_PID, _pid, &info, WEXITED | WNOHANG | WNOWAIT);
+		if (rc == 0 && info.si_pid == _pid) {
+			if (kill(-_pid, SIGKILL) < 0 && errno != ESRCH) _result.error = errno;
+			int status = 0;
+			rc = waitpid(_pid, &status, WNOHANG);
+			if (rc == _pid) {
+				if (WIFEXITED(status)) _result.exit_code = WEXITSTATUS(status);
+				if (WIFSIGNALED(status)) _result.signal = WTERMSIG(status);
+				_pid = 0;
 			}
-			if (rc == _pid) kill(-_pid, SIGKILL);
+		}
+		if (rc < 0 && errno != EINTR) {
+			_result.error = errno;
 			_pid = 0;
 		}
 	}
@@ -104,7 +112,7 @@ bool Process::Subproc::read(unsigned stream, std::string &text) {
 	if (fd < 0) return false;
 	size_t initial = text.size();
 	char buf[4096];
-	for (unsigned remaining = 16384; remaining > 0;) {
+	for (unsigned remaining = 65536; remaining > 0;) {
 		ssize_t actual = ::read(fd, buf, sizeof(buf));
 		if (actual > 0) {
 			text.append(buf, actual);

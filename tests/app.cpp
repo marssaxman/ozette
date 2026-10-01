@@ -29,12 +29,14 @@ public:
 	void cache_read(std::string, std::vector<std::string> &lines) override { lines.clear(); }
 	void cache_write(std::string, const std::vector<std::string> &) override {}
 	std::string get_clipboard() override {
-		if (wait_for_build) {
-			for (int i = 0; i < 200 && access("built-z", F_OK) != 0; ++i) usleep(10000);
+		const char *path = wait_for_command? "ready": (wait_for_build? "built-z": nullptr);
+		if (path) {
+			for (int i = 0; i < 200 && access(path, F_OK) != 0; ++i) usleep(10000);
 		}
 		return "";
 	}
 	bool wait_for_build = false;
+	bool wait_for_command = false;
 };
 
 void run_app(const TempDir &dir, std::vector<int> keys,
@@ -170,6 +172,22 @@ TEST_CASE("Build sees the saved contents of every editor") {
 	});
 	CHECK(dir.read("built-a") == "xold");
 	CHECK(dir.read("built-z") == "zother");
+}
+
+TEST_CASE("cancelling an uncooperative command leaves the editor responsive") {
+	TempDir dir;
+	dir.write("old");
+	std::vector<int> keys;
+	enter_path(keys, Control::Execute, "trap '' TERM; echo ready > ready; exec sleep 30");
+	keys.insert(keys.end(), {Control::RightArrow, Control::Paste,
+		Control::LeftArrow, Control::Kill, Control::RightArrow,
+		'x', Control::Quit, 'y'});
+	run_app(dir, keys, [&](TestApp &app) {
+		app.edit_file(dir.file());
+		app.wait_for_command = true;
+	});
+	CHECK(dir.read("ready") == "ready\n");
+	CHECK(dir.read() == "xold");
 }
 
 TEST_CASE("an initial read error leaves the application usable") {

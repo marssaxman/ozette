@@ -41,7 +41,7 @@ public:
 	bool read_out(std::string &text) { return read(1, text); }
 	bool read_err(std::string &text) { return read(2, text); }
 	const Result &result() const { return _result; }
-	static void reap();
+	static void poll_all();
 private:
 	bool read(unsigned stream, std::string &text);
 	int _rwepipe[3] = {-1,-1,-1};

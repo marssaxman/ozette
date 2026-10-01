@@ -292,7 +292,7 @@ void Ozette::run() {
 	}
 	timeout(100);
 	do {
-		Process::Subproc::reap();
+		Process::Subproc::poll_all();
 		_shell.poll();
 		int ch = fix_control_quirks(getch());
 		switch (ch) {
