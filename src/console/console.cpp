@@ -64,15 +64,18 @@ bool Console::View::poll(UI::Frame &ctx) {
 	bool dirty = _proc->read_out(output);
 	dirty |= _proc->read_err(output);
 	_log->append(output);
+	if (!_proc->poll()) {
+		_status = _proc->result().message();
+		_log->append("\n[" + _status + "]\n");
+		_proc.reset();
+		dirty = true;
+	}
 	if (follow_edge && _scrollpos != maxscroll()) {
 		_scrollpos = maxscroll();
 		dirty = true;
 	}
 	if (dirty) {
 		ctx.repaint();
-	}
-	if (!_proc->poll()) {
-		_proc.reset(nullptr);
 	}
 	set_title(ctx);
 	return true;
@@ -110,18 +113,14 @@ void Console::View::exec(
 		std::string title,
 		const std::string &exe,
 		const std::vector<std::string> &args) {
-	// Convert this vector into an old-style C array of chars.
-	// Allocate one extra slot at the beginning for the exe name,
-	// and one extra at the end to serve as terminator.
-	const char **argv = new const char*[1+args.size()+1];
-	unsigned i = 0;
-	argv[i++] = exe.c_str();
+	std::vector<const char *> argv = {exe.c_str()};
 	for (auto &arg: args) {
-		argv[i++] = arg.c_str();
+		argv.push_back(arg.c_str());
 	}
-	argv[i] = nullptr;
-	_proc.reset(new Process::Subproc(exe.c_str(), argv));
-	delete[] argv;
+	argv.push_back(nullptr);
+	_proc.reset();
+	_proc.reset(new Process::Subproc(exe.c_str(), argv.data()));
+	_status.clear();
 	_scrollpos = 0;
 	_log.reset(new Log(title, _width));
 }
@@ -162,7 +161,7 @@ void Console::View::key_page_up(UI::Frame &ctx) {
 void Console::View::set_title(UI::Frame &ctx) {
 	std::string title = (_log.get())? _log->command(): "Console";
 	ctx.set_title(title);
-	ctx.set_status(_proc.get()? "running": "");
+	ctx.set_status(_proc? (_proc->result().cancelled? "cancelling": "running"): _status);
 }
 
 unsigned Console::View::maxscroll() const {

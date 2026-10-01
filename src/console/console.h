@@ -58,6 +58,7 @@ private:
 	unsigned maxscroll() const;
 	std::unique_ptr<Process::Subproc> _proc;
 	std::unique_ptr<Log> _log;
+	std::string _status;
 	unsigned _scrollpos = 0;
 	int _height = 0;
 	int _width = 0;
