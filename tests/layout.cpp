@@ -19,6 +19,23 @@
 #include "text/layout.h"
 #include "utf8_locale.h"
 #include <limits>
+#include <random>
+
+namespace {
+void check_scans(const std::string &text, unsigned tab_width) {
+	Text::LineLayout layout(text, tab_width);
+	for (size_t offset = 0; offset <= text.size() + 1; ++offset) {
+		CAPTURE(offset);
+		CHECK(Text::column_at(text, offset, tab_width) == layout.column(offset));
+	}
+	for (unsigned column = 0; column <= layout.width() + 1; ++column) {
+		CAPTURE(column);
+		CHECK(Text::offset_at(text, column, tab_width) == layout.offset(column));
+	}
+	CHECK(Text::column_at(text, std::numeric_limits<size_t>::max(), tab_width) == layout.width());
+	CHECK(Text::offset_at(text, std::numeric_limits<unsigned>::max(), tab_width) == text.size());
+}
+} // namespace
 
 TEST_CASE("tabs advance to the next stop from every surrounding column") {
 	for (unsigned width: {1, 2, 3, 4, 8, 256}) {
@@ -45,10 +62,12 @@ TEST_CASE("line layout maps multibyte wide and combining characters") {
 	const unsigned columns[] = {0, 1, 1, 2, 2, 2, 4, 5, 5, 5, 8, 9};
 	for (size_t i = 0; i < sizeof(columns) / sizeof(*columns); ++i) {
 		CHECK(layout.column(i) == columns[i]);
+		CHECK(Text::column_at("A\xc3\xa9\xe7\x95\x8c" "e\xcc\x81\tZ", i, 4) == columns[i]);
 	}
 	const size_t offsets[] = {0, 1, 3, 3, 6, 9, 9, 9, 10, 11};
 	for (unsigned i = 0; i < sizeof(offsets) / sizeof(*offsets); ++i) {
 		CHECK(layout.offset(i) == offsets[i]);
+		CHECK(Text::offset_at("A\xc3\xa9\xe7\x95\x8c" "e\xcc\x81\tZ", i, 4) == offsets[i]);
 	}
 	CHECK(layout.width() == 9);
 	CHECK(layout.offset(std::numeric_limits<unsigned>::max()) == 11);
@@ -85,4 +104,35 @@ TEST_CASE("layouts use bounded replacements when the locale cannot display Unico
 	CHECK(layout.characters()[0].value == '?');
 	CHECK(layout.characters()[1].value == '?');
 	CHECK(layout.offset(1) == 2);
+	CHECK(Text::column_at("\xc3\xa9\xe7\x95\x8c", 2, 4) == 1);
+	CHECK(Text::offset_at("\xc3\xa9\xe7\x95\x8c", 1, 4) == 2);
+	check_scans("e\xcc\x81\t\xe7\x95\x8c", 4);
+}
+
+TEST_CASE("streaming column lookups agree with layouts at byte and cell boundaries") {
+	TestLocale locale;
+	const std::string samples[] = {
+		"", "ascii", "\tX\t", "abc\tZ", "\xc3\xa9\xe7\x95\x8c",
+		"e\xcc\x81\xcc\x88X", "e\xcc\x81", "\xcc\x81\t\xcc\x81",
+		"\xf0\x9f\x98\x80X", "\xe2\x82", "\xf4\x8f\xbf\xbf",
+		std::string("\0\r\x1b\x80", 4),
+	};
+	for (const auto &text: samples) {
+		CAPTURE(text);
+		for (unsigned tab_width: {0, 1, 4, 8, 256}) {
+			CAPTURE(tab_width);
+			check_scans(text, tab_width);
+		}
+	}
+}
+
+TEST_CASE("streaming column lookups preserve mappings in deterministic byte mixtures") {
+	TestLocale locale;
+	for (unsigned seed = 0; seed < 16; ++seed) {
+		CAPTURE(seed);
+		std::mt19937 random(seed);
+		std::string text;
+		for (unsigned i = 0; i < 64; ++i) text += char(random() & 255);
+		check_scans(text, seed % 8);
+	}
 }

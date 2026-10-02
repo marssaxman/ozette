@@ -117,3 +117,29 @@ TEST_CASE("vertical navigation handles long lines in both directions") {
 	REQUIRE(view.save(frame) == Editor::View::SaveResult::Saved);
 	CHECK(dir.read() == "x\n||" + text + "\nx");
 }
+
+TEST_CASE("navigation and selection near long line starts preserve Unicode positions") {
+	TestLocale locale;
+	TestScreen screen;
+	TestFrame frame;
+	TempDir dir;
+	const std::string suffix(1 << 20, 'a');
+	const std::string text = "A\t\xe7\x95\x8c" "e\xcc\x81Z" + suffix;
+	dir.write("abcde\n" + text);
+	Editor::View view(dir.file());
+	view.process(frame, KEY_DOWN);
+	view.process(frame, KEY_LEFT);
+	view.process(frame, KEY_RIGHT);
+	view.process(frame, KEY_RIGHT);
+	view.process(frame, KEY_SRIGHT);
+	view.process(frame, KEY_SRIGHT);
+	view.process(frame, KEY_SLEFT);
+	view.process(frame, 'X');
+	view.process(frame, KEY_UP);
+	view.process(frame, '|');
+	view.process(frame, KEY_DOWN);
+	view.process(frame, '^');
+	REQUIRE(view.save(frame) == Editor::View::SaveResult::Saved);
+	const std::string expected = "ab|cde\nAX^\xe7\x95\x8c" "e\xcc\x81Z" + suffix;
+	CHECK(dir.read().compare(expected) == 0);
+}

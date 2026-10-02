@@ -656,21 +656,19 @@ void Editor::View::line_frame_selection() {
 
 Editor::column_t Editor::View::column(location_t loc) {
 	loc = _doc.clamp(loc);
-	return Text::LineLayout(_doc.line(loc.line), _config.indent_size()).column(loc.offset);
+	return Text::column_at(_doc.line(loc.line), loc.offset, _config.indent_size());
 }
 
 Editor::location_t Editor::View::arrow_up() {
 	if (_cursor.line == 0) return _doc.home();
 	line_t line = _cursor.line - 1;
-	Text::LineLayout layout(_doc.line(line), _config.indent_size());
-	return {line, layout.offset(column(_cursor))};
+	return {line, Text::offset_at(_doc.line(line), column(_cursor), _config.indent_size())};
 }
 
 Editor::location_t Editor::View::arrow_down() {
 	if (_cursor.line == _doc.maxline()) return _doc.end();
 	line_t line = _cursor.line + 1;
-	Text::LineLayout layout(_doc.line(line), _config.indent_size());
-	return {line, layout.offset(column(_cursor))};
+	return {line, Text::offset_at(_doc.line(line), column(_cursor), _config.indent_size())};
 }
 
 Editor::location_t Editor::View::arrow_left() {

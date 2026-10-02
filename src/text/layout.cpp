@@ -21,16 +21,17 @@
 #include <limits>
 #include <wchar.h>
 
-Text::LineLayout::LineLayout(const std::string &text, unsigned tab_width):
-		_length(text.size()) {
-	tab_width = std::max(1U, tab_width);
-	bool can_combine = false;
-	for (size_t offset = 0; offset < text.size();) {
-		auto decoded = UTF8::decode(text, offset);
+namespace {
+struct LineScanner {
+	LineScanner(const std::string &text, unsigned tab_width):
+			text(text), tab_width(std::max(1U, tab_width)) {}
+
+	Text::LineLayout::Character next() {
+		auto decoded = Text::UTF8::decode(text, offset);
 		char32_t value = decoded.value;
 		unsigned width;
 		if (value == '\t') {
-			width = tab_width - _width % tab_width;
+			width = tab_width - column % tab_width;
 			can_combine = false;
 		} else {
 			int cells = wcwidth(static_cast<wchar_t>(value));
@@ -44,11 +45,46 @@ Text::LineLayout::LineLayout(const std::string &text, unsigned tab_width):
 			width = cells;
 			can_combine = true;
 		}
-		width = std::min(width, std::numeric_limits<unsigned>::max() - _width);
-		_characters.push_back({offset, offset + decoded.length, _width, width, value});
-		_width += width;
+		width = std::min(width, std::numeric_limits<unsigned>::max() - column);
+		Text::LineLayout::Character out = {offset, offset + decoded.length, column, width, value};
+		column += width;
 		offset += decoded.length;
+		return out;
 	}
+
+	const std::string &text;
+	unsigned tab_width;
+	size_t offset = 0;
+	unsigned column = 0;
+	bool can_combine = false;
+};
+} // namespace
+
+Text::LineLayout::LineLayout(const std::string &text, unsigned tab_width):
+		_length(text.size()) {
+	LineScanner scan(text, tab_width);
+	while (scan.offset < text.size()) _characters.push_back(scan.next());
+	_width = scan.column;
+}
+
+unsigned Text::column_at(const std::string &text, size_t offset, unsigned tab_width) {
+	LineScanner scan(text, tab_width);
+	while (scan.offset < text.size() && scan.offset < offset) {
+		auto ch = scan.next();
+		if (offset < ch.end) return ch.column;
+	}
+	return scan.column;
+}
+
+size_t Text::offset_at(const std::string &text, unsigned column, unsigned tab_width) {
+	LineScanner scan(text, tab_width);
+	while (scan.offset < text.size()) {
+		auto ch = scan.next();
+		// Continue through zero-width marks at this column before choosing the
+		// next visible character, matching LineLayout::offset().
+		if (scan.column > column) return ch.begin;
+	}
+	return text.size();
 }
 
 unsigned Text::LineLayout::column(size_t offset) const {

@@ -23,6 +23,11 @@
 #include <vector>
 
 namespace Text {
+// Allocation-free lookups stop after the required prefix, using LineLayout's
+// rules for tabs, character widths, combining marks, and malformed bytes.
+unsigned column_at(const std::string &text, size_t offset, unsigned tab_width);
+size_t offset_at(const std::string &text, unsigned column, unsigned tab_width);
+
 class LineLayout {
 public:
 	struct Character {
