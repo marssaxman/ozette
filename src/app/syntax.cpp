@@ -237,7 +237,7 @@ Rule Rule::keywords(std::list<std::string> words) {
 	std::string delim;
 	buf << "\\<(";
 	for (auto &word: words) {
-		buf << word << delim;
+		buf << delim << word;
 		delim = "|";
 	}
 	buf << ")\\>";
