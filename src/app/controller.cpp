@@ -17,8 +17,8 @@
 
 #include "app/controller.h"
 
-namespace CacheKey {
+namespace StateKey {
 const std::string kExpansionState = "expanded_dirs";
 const std::string kSessionState = "open_editors";
 const std::string kSearchSpec = "search_spec";
-} // namespace CacheKey
+} // namespace StateKey

@@ -54,8 +54,8 @@ struct TestController : Controller {
 	void search_for(Search::spec) override {}
 	void set_clipboard(std::string text) override { clipboard = text; }
 	std::string get_clipboard() override { return clipboard; }
-	void cache_read(std::string, std::vector<std::string> &) override {}
-	void cache_write(std::string, const std::vector<std::string> &) override {}
+	void state_read(std::string, std::vector<std::string> &) override {}
+	void state_write(std::string, const std::vector<std::string> &) override {}
 	Editor::View *closed = nullptr;
 	bool allow_save = true;
 	std::string clipboard;

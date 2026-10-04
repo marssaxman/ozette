@@ -47,7 +47,7 @@ void Browser::View::activate(UI::Frame &ctx) {
 	set_title(ctx);
 	if (_expanded_items.empty()) {
 		std::vector<std::string> paths;
-		ctx.app().cache_read(CacheKey::kExpansionState, paths);
+		ctx.app().state_read(StateKey::kExpansionState, paths);
 		for (auto &path: paths) {
 			_expanded_items.insert(path);
 		}
@@ -63,7 +63,7 @@ void Browser::View::deactivate(UI::Frame &ctx) {
 	for (auto &line: _expanded_items) {
 		paths.push_back(line);
 	}
-	ctx.app().cache_write(CacheKey::kExpansionState, paths);
+	ctx.app().state_write(StateKey::kExpansionState, paths);
 	clear_filter(ctx);
 }
 

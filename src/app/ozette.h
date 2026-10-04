@@ -35,8 +35,8 @@ public:
 	virtual void find_in_file(std::string path, Editor::line_t index) override;
 	virtual void set_clipboard(std::string text) override;
 	virtual std::string get_clipboard() override;
-	virtual void cache_read(std::string name, std::vector<std::string> &lines) override;
-	virtual void cache_write(std::string name, const std::vector<std::string> &lines) override;
+	virtual void state_read(std::string name, std::vector<std::string> &lines) override;
+	virtual void state_write(std::string name, const std::vector<std::string> &lines) override;
 	virtual void begin_search() override;
 	virtual void search_for(Search::spec query) override;
 	void run();
@@ -65,7 +65,7 @@ private:
 	UI::Shell _shell;
 	std::string _home_dir;
 	std::string _current_dir;
-    std::string _cache_dir;
+	std::string _state_dir;
 	std::vector<editor> _editors;
 	size_t _next_editor_id = 0;
 	std::string _clipboard;

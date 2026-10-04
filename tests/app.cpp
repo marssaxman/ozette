@@ -26,8 +26,8 @@
 namespace {
 class TestApp : public Ozette {
 public:
-	void cache_read(std::string, std::vector<std::string> &lines) override { lines.clear(); }
-	void cache_write(std::string, const std::vector<std::string> &) override {}
+	void state_read(std::string, std::vector<std::string> &lines) override { lines.clear(); }
+	void state_write(std::string, const std::vector<std::string> &) override {}
 	std::string get_clipboard() override {
 		const char *path = wait_for_command? "ready": (wait_for_build? "built-z": nullptr);
 		if (path) {

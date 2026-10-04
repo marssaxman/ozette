@@ -37,14 +37,14 @@ public:
 	virtual void search_for(Search::spec) = 0;
 	virtual void set_clipboard(std::string text) = 0;
 	virtual std::string get_clipboard() = 0;
-	virtual void cache_read(std::string name, std::vector<std::string> &lines) = 0;
-	virtual void cache_write(std::string name, const std::vector<std::string> &lines) = 0;
+	virtual void state_read(std::string name, std::vector<std::string> &lines) = 0;
+	virtual void state_write(std::string name, const std::vector<std::string> &lines) = 0;
 };
 
-namespace CacheKey {
+namespace StateKey {
 extern const std::string kExpansionState;
 extern const std::string kSessionState;
 extern const std::string kSearchSpec;
-} // namespace CacheKey
+} // namespace StateKey
 
 #endif //APP_CONTROLLER_H

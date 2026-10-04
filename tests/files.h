@@ -25,6 +25,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <string>
+#include <sys/stat.h>
 #include <unistd.h>
 
 struct TempDir {
@@ -34,12 +35,19 @@ struct TempDir {
 		if (!created) throw std::runtime_error("mkdtemp failed");
 		path = created;
 	}
-	~TempDir() {
+	~TempDir() { remove(path); }
+	static void remove(std::string path) {
+		struct stat st;
+		if (lstat(path.c_str(), &st) != 0) return;
+		if (!S_ISDIR(st.st_mode)) {
+			std::remove(path.c_str());
+			return;
+		}
 		DIR *dir = opendir(path.c_str());
 		if (dir) {
 			while (auto entry = readdir(dir)) {
 				std::string name = entry->d_name;
-				if (name != "." && name != "..") std::remove(file(name).c_str());
+				if (name != "." && name != "..") remove(path + "/" + name);
 			}
 			closedir(dir);
 		}

@@ -16,6 +16,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include <assert.h>
+#include <cerrno>
 #include <fstream>
 #include <cstdlib>
 #include <limits>
@@ -32,6 +33,20 @@
 #include "search/dialog.h"
 #include "search/search.h"
 
+namespace {
+bool create_directory(std::string path) {
+	struct stat st;
+	if (stat(path.c_str(), &st) == 0) return S_ISDIR(st.st_mode);
+	if (errno != ENOENT) return false;
+	size_t slash = path.find_last_of('/');
+	if (slash == std::string::npos ||
+			!create_directory(path.substr(0, slash? slash: 1))) return false;
+	if (mkdir(path.c_str(), S_IRWXU) == 0) return true;
+	return errno == EEXIST && stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
+}
+
+} // namespace
+
 Ozette::Ozette():
 		_shell(*this),
 		_home_dir(std::getenv("HOME")) {
@@ -42,11 +57,9 @@ Ozette::Ozette():
 	} else {
 		_current_dir = _home_dir;
 	}
-	if (const char *cache = std::getenv("XDG_CACHE_HOME")) {
-		_cache_dir = std::string(cache);
-	} else {
-		_cache_dir = _home_dir + "/.cache/ozette";
-	}
+	const char *state = std::getenv("XDG_STATE_HOME");
+	_state_dir = (state && state[0] == '/'? std::string(state):
+		_home_dir + "/.local/state") + "/ozette";
 }
 
 void Ozette::change_dir(std::string path) {
@@ -115,31 +128,16 @@ std::string Ozette::get_clipboard() {
 	return _clipboard;
 }
 
-void Ozette::cache_read(std::string name, std::vector<std::string> &lines) {
+void Ozette::state_read(std::string name, std::vector<std::string> &lines) {
 	lines.clear();
-	std::string str;
-	std::ifstream file(_cache_dir + "/" + name);
-	while (std::getline(file, str)) {
-		lines.push_back(str);
-	}
-	file.close();
+	std::ifstream file(_state_dir + "/" + name);
+	for (std::string line; std::getline(file, line);) lines.push_back(line);
 }
 
-void Ozette::cache_write(std::string name, const std::vector<std::string> &l) {
-	// if the ozette directory doesn't exist yet, create it
-	struct stat st;
-	if (stat(_cache_dir.c_str(), &st)) {
-		int err = mkdir(_cache_dir.c_str(), S_IRWXU);
-		// if we failed to create the directory, don't try wriing to it
-		if (err) {
-			return;
-		}
-	}
-	std::ofstream file(_cache_dir + "/" + name, std::ios::trunc);
-	for (auto &line: l) {
-		file << line << std::endl;
-	}
-	file.close();
+void Ozette::state_write(std::string name, const std::vector<std::string> &lines) {
+	if (!create_directory(_state_dir)) return;
+	std::ofstream file(_state_dir + "/" + name, std::ios::trunc);
+	for (auto &line: lines) file << line << std::endl;
 }
 
 void Ozette::exec(std::string command) {
@@ -186,9 +184,9 @@ Ozette::editor Ozette::open_editor(std::string path) {
 
 void Ozette::begin_search() {
 	Search::View::show(_shell);
-	// Restore the previous search settings, if we cached them.
+	// Restore the previous search settings.
 	std::vector<std::string> lines;
-	cache_read(CacheKey::kSearchSpec, lines);
+	state_read(StateKey::kSearchSpec, lines);
 	// Prepare the new search job, using default values as needed.
 	Search::spec job = {
 		.needle = lines.size() > 0? lines[0]: "",
@@ -213,7 +211,7 @@ void Ozette::search_for(Search::spec query) {
 		query.haystack,
 		query.filter,
 	};
-	cache_write(CacheKey::kSearchSpec, lines);
+	state_write(StateKey::kSearchSpec, lines);
 	Search::View::exec(query, _shell);
 }
 
@@ -225,7 +223,7 @@ void Ozette::save_session() {
 		for (auto edrec: _editors) {
 			files.push_back(edrec.view->target_path());
 		}
-		cache_write(CacheKey::kSessionState, files);
+		state_write(StateKey::kSessionState, files);
 	}
 }
 
@@ -233,7 +231,7 @@ void Ozette::load_session() {
 	// Open all the files which were being edited during the last session if
 	// they fit under the current directory.
 	std::vector<std::string> files;
-	cache_read(CacheKey::kSessionState, files);
+	state_read(StateKey::kSessionState, files);
 	for (auto &f: files) {
 		if (f.substr(0, _current_dir.size()) != _current_dir) {
 			// don't reopen files outside the working directory
